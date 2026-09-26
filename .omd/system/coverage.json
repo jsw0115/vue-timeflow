@@ -1,0 +1,100 @@
+{
+  "checks": {
+    "assets_fonts_licenses": {
+      "method": "controller-computed-system-graph-v2",
+      "pass": true
+    },
+    "bound_system_authority": {
+      "method": "controller-computed-system-graph-v2",
+      "pass": true
+    },
+    "component_state_coverage": {
+      "method": "controller-computed-system-graph-v2",
+      "pass": true
+    },
+    "contrast": {
+      "method": "controller-computed-system-graph-v2",
+      "pass": true
+    },
+    "implementation_contract_complete": {
+      "method": "controller-computed-system-graph-v2",
+      "pass": true
+    },
+    "opaque_extension_preservation": {
+      "method": "controller-computed-system-graph-v2",
+      "pass": true
+    },
+    "portable_core_structure": {
+      "method": "controller-computed-system-graph-v2",
+      "pass": true
+    },
+    "reduced_motion": {
+      "method": "controller-computed-system-graph-v2",
+      "pass": true
+    },
+    "responsive_320_200": {
+      "method": "controller-computed-system-graph-v2",
+      "pass": true
+    },
+    "token_reference_closure": {
+      "method": "controller-computed-system-graph-v2",
+      "pass": true
+    },
+    "unknown_absence": {
+      "method": "controller-computed-system-graph-v2",
+      "pass": true
+    }
+  },
+  "design_md_sha256": "19cbc861097b84866bc780a908d9f1ea510cfcc090b7bd31aa7dd0e7fc69c9e6",
+  "graph_sha256": "b2b3133eea28a1c0ed730d2e5dee41221c2e1754338dbff30bdced13836a85a0",
+  "groups": {
+    "components-states": {
+      "evidence": [
+        ".claude/data/references/elevenlabs/DESIGN.md",
+        ".omd/init-context.json"
+      ],
+      "status": "covered"
+    },
+    "content-locales": {
+      "evidence": [
+        "docs/product-spec-v2.md"
+      ],
+      "status": "covered"
+    },
+    "experience": {
+      "evidence": [
+        "docs/product-spec-v2.md",
+        ".omd/init-context.json"
+      ],
+      "status": "covered"
+    },
+    "foundations": {
+      "evidence": [
+        ".claude/data/references/elevenlabs/DESIGN.md",
+        ".omd/init-context.json"
+      ],
+      "status": "covered"
+    },
+    "governance": {
+      "evidence": [
+        ".omd/init-context.json"
+      ],
+      "status": "covered"
+    },
+    "layout-platforms": {
+      "evidence": [
+        "docs/product-spec-v2.md",
+        ".omd/init-context.json"
+      ],
+      "status": "covered"
+    },
+    "typography-assets": {
+      "evidence": [
+        ".claude/data/references/elevenlabs/DESIGN.md",
+        ".omd/init-context.json"
+      ],
+      "status": "covered"
+    }
+  },
+  "schema_version": "2.0.0"
+}

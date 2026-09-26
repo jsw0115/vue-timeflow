@@ -1,0 +1,13 @@
+image: node:22-alpine
+
+pages:
+  stage: deploy
+  script:
+    - cd frontend
+    - npm ci
+    - npm run build -- --base=/$CI_PROJECT_NAME/
+    - mv dist ../public
+  pages:
+    publish: public
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH

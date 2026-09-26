@@ -1,0 +1,47 @@
+{
+  "name": "timebar-diary-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "electron/main.cjs",
+  "engines": {
+    "node": ">=22.12.0",
+    "npm": ">=10"
+  },
+  "scripts": {
+    "dev": "vite",
+    "demo:mock": "vite --host 127.0.0.1 --open /mock-demo/",
+    "build": "vite build",
+    "build:web": "vite build",
+    "preview": "vite preview",
+    "mobile:sync": "npm run build:web && cap sync",
+    "android:open": "cap open android",
+    "ios:open": "cap open ios",
+    "desktop:dev": "concurrently -k \"vite\" \"wait-on tcp:5173 && electron .\"",
+    "desktop:build": "npm run build:web && electron-builder",
+    "dev:web": "vite --open /",
+    "dev:mobile": "vite --open /__preview?view=mobile",
+    "dev:devices": "vite --open /__preview",
+    "dev:lan": "vite --host 0.0.0.0",
+    "check:preview": "node --test tests/device-preview.test.mjs",
+    "docs:api": "node scripts/api-inventory.mjs",
+    "check:writing": "node --test tests/writing-flows.test.mjs"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/cli": "^7.4.3",
+    "@capacitor/core": "^7.4.3",
+    "@capacitor/ios": "^7.4.3",
+    "vue": "^3.5.13",
+    "vue-router": "^4.6.4"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.1",
+    "concurrently": "^9.2.1",
+    "electron": "^41.10.7",
+    "electron-builder": "^26.0.12",
+    "typescript": "^5.9.2",
+    "wait-on": "^8.0.4",
+    "vite": "^6.0.5"
+  }
+}

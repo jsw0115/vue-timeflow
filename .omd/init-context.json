@@ -1,0 +1,19 @@
+{
+  "reference_id": "elevenlabs",
+  "description": "지금부터 프로덕션급 프론트엔드 UI를 작성해 주세요. 일반적인 AI가 만든 것 같은 뻔한 디자인(정형화된 카드 레이아웃, 무난한 블루톤 그라데이션 등)을 피하고, 실제 유명 디자인 스튜디오의 웹사이트처럼 세련되고 독창적인 미감을 구현해 주세요. 다음 디자인 지침을 엄격히 따르세요: 타이포그래피: 본문과 제목의 폰트 대비를 극대화하고, 자간(tracking)과 행간(leading)을 여유 있게 설정할 것. 배색 및 톤앤매너: 무분별한 원색 사용을 금하며, 절제된 모노톤 혹은 트렌디한 깊은 딥컬러 기반에 포인트 컬러 딱 1개만 사용할 것. 여백과 레이아웃: 여백(whitespace)을 과감하게 넓게 쓰고, 컴포넌트 간의 시각적 위계(hierarchy)를 명확히 할 것. 인터랙션 및 디테일: 미세한 그림자(shadow), 부드러운 전환 효과(transition), 테두리 처리로 고급스러운 질감을 살릴 것.",
+  "mode": "inspired",
+  "delta_set": {
+    "axes": {},
+    "voiceHints": [
+      "담백하고 절제된 안내형 문장, 과도한 이모지/느낌표 지양",
+      "실패/미완료를 벌점화하지 않는 표현"
+    ],
+    "matchedKeywords": ["elegant", "premium", "minimal", "warm", "soft", "airy"],
+    "warnings": [
+      "카탈로그 키워드 점수로는 freee가 1위였으나 파란색 베이스라 사용자가 명시한 '블루톤 그라데이션 회피'와 정면으로 충돌해 제외함. elevenlabs(화이트/모노톤 베이스)를 채택.",
+      "elevenlabs 증거는 공개 마케팅 표면(홈/에디토리얼/프라이싱)에 한정되며 인증된 프로덕트 UI 팔레트를 주장하지 않음 — 포인트 컬러(그린), 넓은 섹션 여백(96px), Pretendard/JetBrains Mono 타이포는 evidence 범위 밖의 agent-proposed-greenfield-decision으로 별도 추가함."
+    ]
+  },
+  "requested_components": [],
+  "bootstrapped_at": "2026-08-22T12:00:00.000Z"
+}

@@ -1,0 +1,1744 @@
+[
+  {
+    "method": "POST",
+    "route": "/api/auth/signup",
+    "parameters": [
+      {
+        "name": "request",
+        "type": "SignupRequest",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 201,
+    "responseType": "SignupResponse",
+    "controller": "AuthController",
+    "kind": "서비스 연결",
+    "public": true
+  },
+  {
+    "method": "POST",
+    "route": "/api/auth/login",
+    "parameters": [
+      {
+        "name": "request",
+        "type": "LoginRequest",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "LoginResponse",
+    "controller": "AuthController",
+    "kind": "서비스 연결",
+    "public": true
+  },
+  {
+    "method": "POST",
+    "route": "/api/auth/logout",
+    "parameters": [
+      {
+        "name": "request",
+        "type": "RefreshRequest",
+        "location": "body",
+        "required": false
+      }
+    ],
+    "status": 200,
+    "responseType": "Void",
+    "controller": "AuthController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/auth/refresh",
+    "parameters": [
+      {
+        "name": "request",
+        "type": "RefreshRequest",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "TokenPairResponse",
+    "controller": "AuthController",
+    "kind": "서비스 연결",
+    "public": true
+  },
+  {
+    "method": "GET",
+    "route": "/api/auth/me",
+    "parameters": [],
+    "status": 200,
+    "responseType": "MeResponse",
+    "controller": "AuthController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/diary/calendar",
+    "parameters": [
+      {
+        "name": "year",
+        "type": "int",
+        "location": "query",
+        "required": true
+      },
+      {
+        "name": "month",
+        "type": "int",
+        "location": "query",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "GET /diary/calendar",
+    "responseType": "?",
+    "controller": "EventDiaryMemoController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/diary/{date}",
+    "parameters": [
+      {
+        "name": "date",
+        "type": "String",
+        "location": "path",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "GET /diary/{date}",
+    "responseType": "?",
+    "controller": "EventDiaryMemoController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/diary/{date}",
+    "parameters": [
+      {
+        "name": "date",
+        "type": "String",
+        "location": "path",
+        "required": true
+      },
+      {
+        "name": "body",
+        "type": "Map<String, Object>",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "POST /diary/{date}",
+    "responseType": "?",
+    "controller": "EventDiaryMemoController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "DELETE",
+    "route": "/api/diary/{date}",
+    "parameters": [
+      {
+        "name": "date",
+        "type": "String",
+        "location": "path",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "DELETE /diary/{date}",
+    "responseType": "?",
+    "controller": "EventDiaryMemoController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/memos",
+    "parameters": [
+      {
+        "name": "from",
+        "type": "String",
+        "location": "query",
+        "required": false
+      },
+      {
+        "name": "to",
+        "type": "String",
+        "location": "query",
+        "required": false
+      },
+      {
+        "name": "q",
+        "type": "String",
+        "location": "query",
+        "required": false
+      },
+      {
+        "name": "page",
+        "type": "Integer",
+        "location": "query",
+        "required": false
+      },
+      {
+        "name": "size",
+        "type": "Integer",
+        "location": "query",
+        "required": false
+      }
+    ],
+    "status": 200,
+    "stub": "GET /memos",
+    "responseType": "?",
+    "controller": "EventDiaryMemoController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/memos",
+    "parameters": [
+      {
+        "name": "body",
+        "type": "Map<String, Object>",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "POST /memos",
+    "responseType": "?",
+    "controller": "EventDiaryMemoController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "DELETE",
+    "route": "/api/memos/{id}",
+    "parameters": [
+      {
+        "name": "id",
+        "type": "String",
+        "location": "path",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "DELETE /memos/{id}",
+    "responseType": "?",
+    "controller": "EventDiaryMemoController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/memos/stt",
+    "parameters": [
+      {
+        "name": "file",
+        "type": "MultipartFile",
+        "location": "multipart",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "POST /memos/stt",
+    "responseType": "?",
+    "controller": "EventDiaryMemoController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/home/summary",
+    "parameters": [
+      {
+        "name": "date",
+        "type": "String",
+        "location": "query",
+        "required": false
+      }
+    ],
+    "status": 200,
+    "stub": "GET /home/summary",
+    "responseType": "?",
+    "controller": "InsightController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/stat/dashboard",
+    "parameters": [
+      {
+        "name": "range",
+        "type": "String",
+        "location": "query",
+        "required": true
+      },
+      {
+        "name": "date",
+        "type": "String",
+        "location": "query",
+        "required": false
+      }
+    ],
+    "status": 200,
+    "stub": "GET /stat/dashboard",
+    "responseType": "?",
+    "controller": "InsightController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/stat/category",
+    "parameters": [
+      {
+        "name": "range",
+        "type": "String",
+        "location": "query",
+        "required": true
+      },
+      {
+        "name": "from",
+        "type": "String",
+        "location": "query",
+        "required": false
+      },
+      {
+        "name": "to",
+        "type": "String",
+        "location": "query",
+        "required": false
+      }
+    ],
+    "status": 200,
+    "stub": "GET /stat/category",
+    "responseType": "?",
+    "controller": "InsightController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/stat/plan-actual",
+    "parameters": [
+      {
+        "name": "range",
+        "type": "String",
+        "location": "query",
+        "required": true
+      },
+      {
+        "name": "from",
+        "type": "String",
+        "location": "query",
+        "required": false
+      },
+      {
+        "name": "to",
+        "type": "String",
+        "location": "query",
+        "required": false
+      }
+    ],
+    "status": 200,
+    "stub": "GET /stat/plan-actual",
+    "responseType": "?",
+    "controller": "InsightController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/stat/focus",
+    "parameters": [
+      {
+        "name": "from",
+        "type": "String",
+        "location": "query",
+        "required": false
+      },
+      {
+        "name": "to",
+        "type": "String",
+        "location": "query",
+        "required": false
+      }
+    ],
+    "status": 200,
+    "stub": "GET /stat/focus",
+    "responseType": "?",
+    "controller": "InsightController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/focus/sessions",
+    "parameters": [
+      {
+        "name": "from",
+        "type": "String",
+        "location": "query",
+        "required": false
+      },
+      {
+        "name": "to",
+        "type": "String",
+        "location": "query",
+        "required": false
+      },
+      {
+        "name": "categoryId",
+        "type": "String",
+        "location": "query",
+        "required": false
+      }
+    ],
+    "status": 200,
+    "stub": "GET /focus/sessions",
+    "responseType": "?",
+    "controller": "InsightController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/focus/sessions",
+    "parameters": [
+      {
+        "name": "body",
+        "type": "Map<String, Object>",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "POST /focus/sessions",
+    "responseType": "?",
+    "controller": "InsightController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "PUT",
+    "route": "/api/focus/sessions/{id}",
+    "parameters": [
+      {
+        "name": "id",
+        "type": "String",
+        "location": "path",
+        "required": true
+      },
+      {
+        "name": "body",
+        "type": "Map<String, Object>",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "PUT /focus/sessions/{id}",
+    "responseType": "?",
+    "controller": "InsightController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "DELETE",
+    "route": "/api/focus/sessions/{id}",
+    "parameters": [
+      {
+        "name": "id",
+        "type": "String",
+        "location": "path",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "DELETE /focus/sessions/{id}",
+    "responseType": "?",
+    "controller": "InsightController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/settings",
+    "parameters": [],
+    "status": 200,
+    "stub": "GET /settings",
+    "responseType": "?",
+    "controller": "SettingsController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/settings",
+    "parameters": [
+      {
+        "name": "body",
+        "type": "Map<String, Object>",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "POST /settings",
+    "responseType": "?",
+    "controller": "SettingsController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/settings/categories",
+    "parameters": [],
+    "status": 200,
+    "stub": "GET /settings/categories",
+    "responseType": "?",
+    "controller": "SettingsController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/settings/categories",
+    "parameters": [
+      {
+        "name": "body",
+        "type": "Map<String, Object>",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "POST /settings/categories",
+    "responseType": "?",
+    "controller": "SettingsController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/settings/notifications",
+    "parameters": [],
+    "status": 200,
+    "stub": "GET /settings/notifications",
+    "responseType": "?",
+    "controller": "SettingsController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/settings/notifications",
+    "parameters": [
+      {
+        "name": "body",
+        "type": "Map<String, Object>",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "POST /settings/notifications",
+    "responseType": "?",
+    "controller": "SettingsController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/settings/share-visibility",
+    "parameters": [],
+    "status": 200,
+    "stub": "GET /settings/share-visibility",
+    "responseType": "?",
+    "controller": "SettingsController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/settings/share-visibility",
+    "parameters": [
+      {
+        "name": "body",
+        "type": "Map<String, Object>",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "POST /settings/share-visibility",
+    "responseType": "?",
+    "controller": "SettingsController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/settings/theme-sticker",
+    "parameters": [],
+    "status": 200,
+    "stub": "GET /settings/theme-sticker",
+    "responseType": "?",
+    "controller": "SettingsController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/settings/theme-sticker",
+    "parameters": [
+      {
+        "name": "body",
+        "type": "Map<String, Object>",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "POST /settings/theme-sticker",
+    "responseType": "?",
+    "controller": "SettingsController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/share/friends",
+    "parameters": [],
+    "status": 200,
+    "stub": "GET /share/friends",
+    "responseType": "?",
+    "controller": "ShareAdminReportController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/share/friends/invite",
+    "parameters": [
+      {
+        "name": "body",
+        "type": "Map<String,Object>",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "POST /share/friends/invite",
+    "responseType": "?",
+    "controller": "ShareAdminReportController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/share/friends/{id}/accept",
+    "parameters": [
+      {
+        "name": "id",
+        "type": "String",
+        "location": "path",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "POST /share/friends/{id}/accept",
+    "responseType": "?",
+    "controller": "ShareAdminReportController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/share/friends/{id}/reject",
+    "parameters": [
+      {
+        "name": "id",
+        "type": "String",
+        "location": "path",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "POST /share/friends/{id}/reject",
+    "responseType": "?",
+    "controller": "ShareAdminReportController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "DELETE",
+    "route": "/api/share/friends/{id}",
+    "parameters": [
+      {
+        "name": "id",
+        "type": "String",
+        "location": "path",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "DELETE /share/friends/{id}",
+    "responseType": "?",
+    "controller": "ShareAdminReportController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/share/groups",
+    "parameters": [],
+    "status": 200,
+    "stub": "GET /share/groups",
+    "responseType": "?",
+    "controller": "ShareAdminReportController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/share/groups",
+    "parameters": [
+      {
+        "name": "body",
+        "type": "Map<String,Object>",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "POST /share/groups",
+    "responseType": "?",
+    "controller": "ShareAdminReportController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/share/groups/{id}",
+    "parameters": [
+      {
+        "name": "id",
+        "type": "String",
+        "location": "path",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "GET /share/groups/{id}",
+    "responseType": "?",
+    "controller": "ShareAdminReportController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "PUT",
+    "route": "/api/share/groups/{id}",
+    "parameters": [
+      {
+        "name": "id",
+        "type": "String",
+        "location": "path",
+        "required": true
+      },
+      {
+        "name": "body",
+        "type": "Map<String,Object>",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "PUT /share/groups/{id}",
+    "responseType": "?",
+    "controller": "ShareAdminReportController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "DELETE",
+    "route": "/api/share/groups/{id}",
+    "parameters": [
+      {
+        "name": "id",
+        "type": "String",
+        "location": "path",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "DELETE /share/groups/{id}",
+    "responseType": "?",
+    "controller": "ShareAdminReportController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/share/groups/{id}/members",
+    "parameters": [
+      {
+        "name": "id",
+        "type": "String",
+        "location": "path",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "GET /share/groups/{id}/members",
+    "responseType": "?",
+    "controller": "ShareAdminReportController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/share/groups/{id}/members",
+    "parameters": [
+      {
+        "name": "id",
+        "type": "String",
+        "location": "path",
+        "required": true
+      },
+      {
+        "name": "body",
+        "type": "Map<String,Object>",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "POST /share/groups/{id}/members",
+    "responseType": "?",
+    "controller": "ShareAdminReportController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "DELETE",
+    "route": "/api/share/groups/{id}/members/{memberId}",
+    "parameters": [
+      {
+        "name": "id",
+        "type": "String",
+        "location": "path",
+        "required": true
+      },
+      {
+        "name": "memberId",
+        "type": "String",
+        "location": "path",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "DELETE /share/groups/{id}/members/{memberId}",
+    "responseType": "?",
+    "controller": "ShareAdminReportController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/admin/users",
+    "parameters": [
+      {
+        "name": "q",
+        "type": "String",
+        "location": "query",
+        "required": false
+      },
+      {
+        "name": "role",
+        "type": "String",
+        "location": "query",
+        "required": false
+      },
+      {
+        "name": "status",
+        "type": "String",
+        "location": "query",
+        "required": false
+      },
+      {
+        "name": "page",
+        "type": "Integer",
+        "location": "query",
+        "required": false
+      },
+      {
+        "name": "size",
+        "type": "Integer",
+        "location": "query",
+        "required": false
+      }
+    ],
+    "status": 200,
+    "stub": "GET /admin/users",
+    "responseType": "?",
+    "controller": "ShareAdminReportController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/admin/users/{id}",
+    "parameters": [
+      {
+        "name": "id",
+        "type": "String",
+        "location": "path",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "GET /admin/users/{id}",
+    "responseType": "?",
+    "controller": "ShareAdminReportController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/admin/users",
+    "parameters": [
+      {
+        "name": "body",
+        "type": "Map<String,Object>",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "POST /admin/users",
+    "responseType": "?",
+    "controller": "ShareAdminReportController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "PUT",
+    "route": "/api/admin/users/{id}",
+    "parameters": [
+      {
+        "name": "id",
+        "type": "String",
+        "location": "path",
+        "required": true
+      },
+      {
+        "name": "body",
+        "type": "Map<String,Object>",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "PUT /admin/users/{id}",
+    "responseType": "?",
+    "controller": "ShareAdminReportController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "DELETE",
+    "route": "/api/admin/users/{id}",
+    "parameters": [
+      {
+        "name": "id",
+        "type": "String",
+        "location": "path",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "DELETE /admin/users/{id}",
+    "responseType": "?",
+    "controller": "ShareAdminReportController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/reports/time-blocks",
+    "parameters": [
+      {
+        "name": "date",
+        "type": "String",
+        "location": "query",
+        "required": true
+      },
+      {
+        "name": "categoryName",
+        "type": "String",
+        "location": "query",
+        "required": false
+      }
+    ],
+    "status": 200,
+    "stub": "GET /reports/time-blocks",
+    "responseType": "?",
+    "controller": "ShareAdminReportController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/reports/draft",
+    "parameters": [
+      {
+        "name": "body",
+        "type": "Map<String,Object>",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "POST /reports/draft",
+    "responseType": "?",
+    "controller": "ShareAdminReportController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/reports/{reportKey}",
+    "parameters": [
+      {
+        "name": "reportKey",
+        "type": "String",
+        "location": "path",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "GET /reports/{reportKey}",
+    "responseType": "?",
+    "controller": "ShareAdminReportController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/reports/{reportKey}",
+    "parameters": [
+      {
+        "name": "reportKey",
+        "type": "String",
+        "location": "path",
+        "required": true
+      },
+      {
+        "name": "body",
+        "type": "Map<String,Object>",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "POST /reports/{reportKey}",
+    "responseType": "?",
+    "controller": "ShareAdminReportController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/reports/{reportKey}/sub-reports",
+    "parameters": [
+      {
+        "name": "reportKey",
+        "type": "String",
+        "location": "path",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "GET /reports/{reportKey}/sub-reports",
+    "responseType": "?",
+    "controller": "ShareAdminReportController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/user/profile",
+    "parameters": [],
+    "status": 200,
+    "stub": "GET /user/profile",
+    "responseType": "?",
+    "controller": "UserProfileController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "PUT",
+    "route": "/api/user/profile",
+    "parameters": [
+      {
+        "name": "body",
+        "type": "Map<String, Object>",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "PUT /user/profile",
+    "responseType": "?",
+    "controller": "UserProfileController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/events",
+    "parameters": [
+      {
+        "name": "from",
+        "type": "LocalDate",
+        "location": "query",
+        "required": false
+      },
+      {
+        "name": "to",
+        "type": "LocalDate",
+        "location": "query",
+        "required": false
+      },
+      {
+        "name": "keyword",
+        "type": "String",
+        "location": "query",
+        "required": false
+      },
+      {
+        "name": "category",
+        "type": "String",
+        "location": "query",
+        "required": false
+      }
+    ],
+    "status": 200,
+    "responseType": "List<EventResponse>",
+    "controller": "EventController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/events",
+    "parameters": [
+      {
+        "name": "request",
+        "type": "EventRequest",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 201,
+    "responseType": "EventResponse",
+    "controller": "EventController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "PUT",
+    "route": "/api/events/{eventId}",
+    "parameters": [
+      {
+        "name": "eventId",
+        "type": "Long",
+        "location": "path",
+        "required": true
+      },
+      {
+        "name": "request",
+        "type": "EventRequest",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "EventResponse",
+    "controller": "EventController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "DELETE",
+    "route": "/api/events/{eventId}",
+    "parameters": [
+      {
+        "name": "eventId",
+        "type": "Long",
+        "location": "path",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "Void",
+    "controller": "EventController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/events/recurring",
+    "parameters": [
+      {
+        "name": "request",
+        "type": "RecurringEventRequest",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 201,
+    "responseType": "List<EventResponse>",
+    "controller": "EventController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "PUT",
+    "route": "/api/events/{eventId}/following",
+    "parameters": [
+      {
+        "name": "eventId",
+        "type": "Long",
+        "location": "path",
+        "required": true
+      },
+      {
+        "name": "request",
+        "type": "EventRequest",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "List<EventResponse>",
+    "controller": "EventController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "DELETE",
+    "route": "/api/events/{eventId}/following",
+    "parameters": [
+      {
+        "name": "eventId",
+        "type": "Long",
+        "location": "path",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "Void",
+    "controller": "EventController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/planner/items",
+    "parameters": [
+      {
+        "name": "date",
+        "type": "LocalDate",
+        "location": "query",
+        "required": false
+      },
+      {
+        "name": "type",
+        "type": "PlannerItem.ItemType",
+        "location": "query",
+        "required": false
+      },
+      {
+        "name": "category",
+        "type": "String",
+        "location": "query",
+        "required": false
+      },
+      {
+        "name": "status",
+        "type": "PlannerItem.ItemStatus",
+        "location": "query",
+        "required": false
+      }
+    ],
+    "status": 200,
+    "responseType": "List<PlannerItem>",
+    "controller": "PlannerController",
+    "kind": "공용 메모리 시연",
+    "public": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/planner/items",
+    "parameters": [
+      {
+        "name": "item",
+        "type": "PlannerItem",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 201,
+    "responseType": "PlannerItem",
+    "controller": "PlannerController",
+    "kind": "공용 메모리 시연",
+    "public": false
+  },
+  {
+    "method": "PUT",
+    "route": "/api/planner/items/{id}",
+    "parameters": [
+      {
+        "name": "id",
+        "type": "long",
+        "location": "path",
+        "required": true
+      },
+      {
+        "name": "item",
+        "type": "PlannerItem",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "PlannerItem",
+    "controller": "PlannerController",
+    "kind": "공용 메모리 시연",
+    "public": false
+  },
+  {
+    "method": "PATCH",
+    "route": "/api/planner/items/{id}/status",
+    "parameters": [
+      {
+        "name": "id",
+        "type": "long",
+        "location": "path",
+        "required": true
+      },
+      {
+        "name": "status",
+        "type": "PlannerItem.ItemStatus",
+        "location": "query",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "PlannerItem",
+    "controller": "PlannerController",
+    "kind": "공용 메모리 시연",
+    "public": false
+  },
+  {
+    "method": "DELETE",
+    "route": "/api/planner/items/{id}",
+    "parameters": [
+      {
+        "name": "id",
+        "type": "long",
+        "location": "path",
+        "required": true
+      }
+    ],
+    "status": 204,
+    "responseType": "void",
+    "controller": "PlannerController",
+    "kind": "공용 메모리 시연",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/planner/daily",
+    "parameters": [
+      {
+        "name": "date",
+        "type": "LocalDate",
+        "location": "query",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "PlannerViewResponse",
+    "controller": "PlannerViewController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/planner/weekly",
+    "parameters": [
+      {
+        "name": "start",
+        "type": "LocalDate",
+        "location": "query",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "PlannerViewResponse",
+    "controller": "PlannerViewController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/planner/monthly",
+    "parameters": [
+      {
+        "name": "year",
+        "type": "int",
+        "location": "query",
+        "required": true
+      },
+      {
+        "name": "month",
+        "type": "int",
+        "location": "query",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "PlannerViewResponse",
+    "controller": "PlannerViewController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/planner/yearly",
+    "parameters": [
+      {
+        "name": "year",
+        "type": "int",
+        "location": "query",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "PlannerViewResponse",
+    "controller": "PlannerViewController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/planner/upcoming",
+    "parameters": [
+      {
+        "name": "days",
+        "type": "int",
+        "location": "query",
+        "required": false,
+        "default": "7"
+      }
+    ],
+    "status": 200,
+    "responseType": "List<EventResponse>",
+    "controller": "PlannerViewController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/routines",
+    "parameters": [],
+    "status": 200,
+    "responseType": "List<RoutineResponse>",
+    "controller": "RoutineController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/routines/quick",
+    "parameters": [
+      {
+        "name": "request",
+        "type": "RoutineQuickCreateRequest",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 201,
+    "responseType": "RoutineResponse",
+    "controller": "RoutineController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/routines",
+    "parameters": [
+      {
+        "name": "request",
+        "type": "RoutineRequest",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 201,
+    "responseType": "RoutineResponse",
+    "controller": "RoutineController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "PUT",
+    "route": "/api/routines/{routineId}",
+    "parameters": [
+      {
+        "name": "routineId",
+        "type": "String",
+        "location": "path",
+        "required": true
+      },
+      {
+        "name": "request",
+        "type": "RoutineRequest",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "RoutineResponse",
+    "controller": "RoutineController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "DELETE",
+    "route": "/api/routines/{routineId}",
+    "parameters": [
+      {
+        "name": "routineId",
+        "type": "String",
+        "location": "path",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "Void",
+    "controller": "RoutineController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/routines/{routineId}/history",
+    "parameters": [
+      {
+        "name": "routineId",
+        "type": "String",
+        "location": "path",
+        "required": true
+      },
+      {
+        "name": "days",
+        "type": "int",
+        "location": "query",
+        "required": false,
+        "default": "30"
+      }
+    ],
+    "status": 200,
+    "responseType": "RoutineHistoryGridResponse",
+    "controller": "RoutineController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "PATCH",
+    "route": "/api/routines/{routineId}/history/{date}/toggle",
+    "parameters": [
+      {
+        "name": "routineId",
+        "type": "String",
+        "location": "path",
+        "required": true
+      },
+      {
+        "name": "date",
+        "type": "LocalDate",
+        "location": "path",
+        "required": true
+      },
+      {
+        "name": "request",
+        "type": "ToggleRoutineLogRequest",
+        "location": "body",
+        "required": false
+      }
+    ],
+    "status": 200,
+    "responseType": "RoutineLogEntryResponse",
+    "controller": "RoutineController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "DELETE",
+    "route": "/api/routines/{routineId}/history/{date}",
+    "parameters": [
+      {
+        "name": "routineId",
+        "type": "String",
+        "location": "path",
+        "required": true
+      },
+      {
+        "name": "date",
+        "type": "LocalDate",
+        "location": "path",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "Void",
+    "controller": "RoutineController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/tasks",
+    "parameters": [],
+    "status": 200,
+    "responseType": "List<TaskResponse>",
+    "controller": "TaskController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/tasks/{taskId}",
+    "parameters": [
+      {
+        "name": "taskId",
+        "type": "String",
+        "location": "path",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "TaskResponse",
+    "controller": "TaskController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/tasks",
+    "parameters": [
+      {
+        "name": "request",
+        "type": "TaskRequest",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 201,
+    "responseType": "TaskResponse",
+    "controller": "TaskController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "PUT",
+    "route": "/api/tasks/{taskId}",
+    "parameters": [
+      {
+        "name": "taskId",
+        "type": "String",
+        "location": "path",
+        "required": true
+      },
+      {
+        "name": "request",
+        "type": "TaskRequest",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "TaskResponse",
+    "controller": "TaskController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "DELETE",
+    "route": "/api/tasks/{taskId}",
+    "parameters": [
+      {
+        "name": "taskId",
+        "type": "String",
+        "location": "path",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "Void",
+    "controller": "TaskController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "PATCH",
+    "route": "/api/tasks/{taskId}/status",
+    "parameters": [
+      {
+        "name": "taskId",
+        "type": "String",
+        "location": "path",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "TaskResponse",
+    "controller": "TaskController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/tasks/{taskId}/duplicate",
+    "parameters": [
+      {
+        "name": "taskId",
+        "type": "String",
+        "location": "path",
+        "required": true
+      }
+    ],
+    "status": 201,
+    "responseType": "TaskResponse",
+    "controller": "TaskController",
+    "kind": "서비스 연결",
+    "public": false
+  }
+]

@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "_doc": "OmD project hooks — auto-installed by `omd install-skills`. Re-run with --force to refresh.",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PROJECT_DIR}/.claude/hooks/skill-activation.cjs",
+            "timeout": 3000
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PROJECT_DIR}/.claude/hooks/session-state-loader.cjs",
+            "timeout": 3000
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PROJECT_DIR}/.claude/hooks/post-edit-watch.cjs",
+            "timeout": 2000
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PROJECT_DIR}/.claude/hooks/session-end-foldin.cjs",
+            "timeout": 5000
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(node \"C:/Users/jsw01/AppData/Local/Temp/claude/bundled-skills/2.1.239/6b076650ed0a7112c86686cca5c13cc9/design/seed-canvas.mjs\" --check timebar-diary-design-system.html)",
+      "Bash(node C:/Users/jsw01/AppData/Local/Temp/claude/bundled-skills/2.1.239/6b076650ed0a7112c86686cca5c13cc9/design/seed-canvas.mjs --template C:/Users/jsw01/AppData/Local/Temp/claude/bundled-skills/2.1.239/6b076650ed0a7112c86686cca5c13cc9/design/payload.template.html --out timebar-diary-auth-home.html --title 'Timebar Diary — 인증 & 홈' --artboard Main.dc.html --artboard Signup.dc.html --artboard PasswordReset.dc.html --artboard Onboarding.dc.html --artboard HomeDashboard.dc.html --artboard Notifications.dc.html --artboard DdayList.dc.html --canvas canvas.json)",
+      "Bash(node \"C:/Users/jsw01/AppData/Local/Temp/claude/bundled-skills/2.1.239/6b076650ed0a7112c86686cca5c13cc9/design/seed-canvas.mjs\" --check timebar-diary-auth-home.html)",
+      "Bash(node C:/Users/jsw01/AppData/Local/Temp/claude/bundled-skills/2.1.239/6b076650ed0a7112c86686cca5c13cc9/design/seed-canvas.mjs --template C:/Users/jsw01/AppData/Local/Temp/claude/bundled-skills/2.1.239/6b076650ed0a7112c86686cca5c13cc9/design/payload.template.html --out timebar-diary-auth-home.html --title 'Timebar Diary 인증·홈' --artboard Main.dc.html --artboard Signup.dc.html --artboard PasswordReset.dc.html --artboard Onboarding.dc.html --artboard HomeDashboard.dc.html --artboard Notifications.dc.html --artboard DdayList.dc.html --canvas canvas.json)",
+      "Bash(sed -i 's/#6954d4/#6954db/g' HomeDashboard.dc.html)",
+      "Bash(sed -i 's/#6954d3/#6954db/g' PasswordReset.dc.html DdayList.dc.html)",
+      "Bash(sed -i 's/전체 6/전체 5/' DdayList.dc.html)",
+      "Bash(node C:/Users/jsw01/AppData/Local/Temp/claude/bundled-skills/2.1.239/6b076650ed0a7112c86686cca5c13cc9/design/seed-canvas.mjs --template C:/Users/jsw01/AppData/Local/Temp/claude/bundled-skills/2.1.239/6b076650ed0a7112c86686cca5c13cc9/design/payload.template.html --out timebar-diary-planner.html --title 'Timebar Diary 플래너' --artboard Main.dc.html --artboard Weekly.dc.html --artboard Monthly.dc.html --artboard Yearly.dc.html --artboard Templates.dc.html --artboard ProjectCanvas.dc.html --canvas canvas.json)",
+      "Bash(node \"C:/Users/jsw01/AppData/Local/Temp/claude/bundled-skills/2.1.239/6b076650ed0a7112c86686cca5c13cc9/design/seed-canvas.mjs\" --check timebar-diary-planner.html)",
+      "Bash(node -e ' *)",
+      "Bash(node C:/Users/jsw01/AppData/Local/Temp/claude/bundled-skills/2.1.239/6b076650ed0a7112c86686cca5c13cc9/design/seed-canvas.mjs --template C:/Users/jsw01/AppData/Local/Temp/claude/bundled-skills/2.1.239/6b076650ed0a7112c86686cca5c13cc9/design/payload.template.html --out timebar-diary-auth-home.html --title 'Timebar Diary 인증·홈' --artboard Main.dc.html --artboard Signup.dc.html --artboard PasswordReset.dc.html --artboard Onboarding.dc.html --artboard SocialLogin.dc.html --artboard HomeDashboard.dc.html --artboard Notifications.dc.html --artboard DdayList.dc.html --canvas canvas.json)",
+      "Bash(node C:/Users/jsw01/AppData/Local/Temp/claude/bundled-skills/2.1.239/6b076650ed0a7112c86686cca5c13cc9/design/seed-canvas.mjs --template C:/Users/jsw01/AppData/Local/Temp/claude/bundled-skills/2.1.239/6b076650ed0a7112c86686cca5c13cc9/design/payload.template.html --out timebar-diary-gaps.html --title 'Timebar Diary 보충 화면' --artboard WidgetSettings.dc.html --artboard BillingSubscription.dc.html --artboard SystemMaintenance.dc.html --artboard PermissionRequest.dc.html --artboard LegalViewer.dc.html --artboard BlockList.dc.html --canvas canvas.json)",
+      "Bash(node \"C:/Users/jsw01/AppData/Local/Temp/claude/bundled-skills/2.1.239/6b076650ed0a7112c86686cca5c13cc9/design/seed-canvas.mjs\" --check timebar-diary-gaps.html)"
+    ]
+  }
+}

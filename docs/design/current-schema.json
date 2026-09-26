@@ -1,0 +1,3576 @@
+{
+  "tables": [
+    {
+      "name": "tbl_users",
+      "columns": [
+        {
+          "name": "id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "email",
+          "type": "VARCHAR(255)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "pw_hash",
+          "type": "VARCHAR(255)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "nick",
+          "type": "VARCHAR(80)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "role",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "st",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "tz",
+          "type": "VARCHAR(64)",
+          "nullable": false,
+          "default": "'Asia/Seoul'",
+          "auto": false
+        },
+        {
+          "name": "email_vfy",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "default": "FALSE",
+          "auto": false
+        },
+        {
+          "name": "last_login_utc",
+          "type": "DATETIME(6)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "pw_chg_utc",
+          "type": "DATETIME(6)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "c_at",
+          "type": "DATETIME(6)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "u_at",
+          "type": "DATETIME(6)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "d_at",
+          "type": "DATETIME(6)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "is_enabled",
+          "type": "TINYINT",
+          "nullable": true,
+          "default": "1",
+          "auto": false
+        }
+      ],
+      "constraints": [
+        "PRIMARY KEY (id)",
+        "UNIQUE KEY uk_users_email (email)",
+        "KEY ix_users_status (st, d_at)"
+      ],
+      "pk": "PRIMARY KEY (id)",
+      "foreignKeys": []
+    },
+    {
+      "name": "tbl_refresh_token",
+      "columns": [
+        {
+          "name": "id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "device_id",
+          "type": "VARCHAR(128)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "tok_hash",
+          "type": "VARCHAR(255)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "jti",
+          "type": "CHAR(36)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "exp_utc",
+          "type": "DATETIME(6)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "rev_utc",
+          "type": "DATETIME(6)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "last_used_utc",
+          "type": "DATETIME(6)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "c_at",
+          "type": "DATETIME(6)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        }
+      ],
+      "constraints": [
+        "PRIMARY KEY (id)",
+        "UNIQUE KEY uk_refresh_token_hash (tok_hash)",
+        "KEY ix_refresh_token_user (user_id, rev_utc, exp_utc)",
+        "CONSTRAINT fk_refresh_token_user FOREIGN KEY (user_id) REFERENCES users (id)"
+      ],
+      "pk": "PRIMARY KEY (id)",
+      "foreignKeys": [
+        {
+          "name": "fk_refresh_token_user",
+          "columns": "user_id",
+          "target": "users",
+          "targetColumns": "id",
+          "onDelete": "RESTRICT (기본)"
+        }
+      ]
+    },
+    {
+      "name": "tbl_login_throttle",
+      "columns": [
+        {
+          "name": "id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "fail_cnt",
+          "type": "INT",
+          "nullable": false,
+          "default": "0",
+          "auto": false
+        },
+        {
+          "name": "lock_utc",
+          "type": "DATETIME(6)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "last_fail_utc",
+          "type": "DATETIME(6)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "u_at",
+          "type": "DATETIME(6)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        }
+      ],
+      "constraints": [
+        "key_type VARCHAR(10) NOT NULL",
+        "key_val VARCHAR(255) NOT NULL",
+        "PRIMARY KEY (id)",
+        "UNIQUE KEY uk_login_throttle_key (key_type, key_val)",
+        "KEY ix_login_throttle_lock (lock_utc)"
+      ],
+      "pk": "PRIMARY KEY (id)",
+      "foreignKeys": []
+    },
+    {
+      "name": "tbl_events",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": true
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "title",
+          "type": "VARCHAR(255)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "category",
+          "type": "VARCHAR(255)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "date",
+          "type": "DATE",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "start_time",
+          "type": "TIME",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "end_time",
+          "type": "TIME",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "location",
+          "type": "VARCHAR(255)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "visibility",
+          "type": "VARCHAR(20)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "note",
+          "type": "VARCHAR(255)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "series_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME(6)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "updated_at",
+          "type": "DATETIME(6)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        }
+      ],
+      "constraints": [
+        "PRIMARY KEY (id)",
+        "KEY ix_events_user_date (user_id, date)",
+        "KEY ix_events_series_date (series_id, date)",
+        "CONSTRAINT fk_events_user FOREIGN KEY (user_id) REFERENCES users (id)"
+      ],
+      "pk": "PRIMARY KEY (id)",
+      "foreignKeys": [
+        {
+          "name": "fk_events_user",
+          "columns": "user_id",
+          "target": "users",
+          "targetColumns": "id",
+          "onDelete": "RESTRICT (기본)"
+        }
+      ]
+    },
+    {
+      "name": "tbl_task",
+      "columns": [
+        {
+          "name": "id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "title",
+          "type": "VARCHAR(200)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "note",
+          "type": "TEXT",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "st",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "pri",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "energy_lvl",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "duration_min",
+          "type": "INT",
+          "nullable": false,
+          "default": "30",
+          "auto": false
+        },
+        {
+          "name": "due",
+          "type": "DATE",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "cat_id",
+          "type": "CHAR(26)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "cat_name",
+          "type": "VARCHAR(60)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "cat_color",
+          "type": "CHAR(7)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "cat_icon",
+          "type": "VARCHAR(16)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "event_id",
+          "type": "CHAR(26)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "is_repeat",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "default": "FALSE",
+          "auto": false
+        },
+        {
+          "name": "c_at",
+          "type": "DATETIME(6)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "u_at",
+          "type": "DATETIME(6)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "d_at",
+          "type": "DATETIME(6)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        }
+      ],
+      "constraints": [
+        "PRIMARY KEY (id)",
+        "KEY ix_task_user_due (user_id, due, c_at)",
+        "KEY ix_task_user_status (user_id, st, d_at)",
+        "CONSTRAINT fk_task_user FOREIGN KEY (user_id) REFERENCES users (id)"
+      ],
+      "pk": "PRIMARY KEY (id)",
+      "foreignKeys": [
+        {
+          "name": "fk_task_user",
+          "columns": "user_id",
+          "target": "users",
+          "targetColumns": "id",
+          "onDelete": "RESTRICT (기본)"
+        }
+      ]
+    },
+    {
+      "name": "tbl_routine",
+      "columns": [
+        {
+          "name": "id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(200)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "icon",
+          "type": "VARCHAR(16)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "cat_id",
+          "type": "CHAR(26)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "cat_name",
+          "type": "VARCHAR(60)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "cat_color",
+          "type": "CHAR(7)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "cat_icon",
+          "type": "VARCHAR(16)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "at_time",
+          "type": "CHAR(5)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "days",
+          "type": "VARCHAR(32)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "onoff",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "default": "TRUE",
+          "auto": false
+        },
+        {
+          "name": "notify",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "default": "FALSE",
+          "auto": false
+        },
+        {
+          "name": "n_min",
+          "type": "INT",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "c_at",
+          "type": "DATETIME(6)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "u_at",
+          "type": "DATETIME(6)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "d_at",
+          "type": "DATETIME(6)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        }
+      ],
+      "constraints": [
+        "PRIMARY KEY (id)",
+        "KEY ix_routine_user_time (user_id, onoff, at_time)",
+        "CONSTRAINT fk_routine_user FOREIGN KEY (user_id) REFERENCES users (id)"
+      ],
+      "pk": "PRIMARY KEY (id)",
+      "foreignKeys": [
+        {
+          "name": "fk_routine_user",
+          "columns": "user_id",
+          "target": "users",
+          "targetColumns": "id",
+          "onDelete": "RESTRICT (기본)"
+        }
+      ]
+    },
+    {
+      "name": "tbl_routine_log",
+      "columns": [
+        {
+          "name": "id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "routine_id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "dt",
+          "type": "DATE",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "st",
+          "type": "VARCHAR(10)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "u_at",
+          "type": "DATETIME(6)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        }
+      ],
+      "constraints": [
+        "PRIMARY KEY (id)",
+        "UNIQUE KEY uk_routine_log_date (routine_id, dt)",
+        "KEY ix_routine_log_date (dt)",
+        "CONSTRAINT fk_routine_log_routine FOREIGN KEY (routine_id) REFERENCES routine (id)"
+      ],
+      "pk": "PRIMARY KEY (id)",
+      "foreignKeys": [
+        {
+          "name": "fk_routine_log_routine",
+          "columns": "routine_id",
+          "target": "routine",
+          "targetColumns": "id",
+          "onDelete": "RESTRICT (기본)"
+        }
+      ]
+    },
+    {
+      "name": "tbl_planner_item",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": true
+        },
+        {
+          "name": "type",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "title",
+          "type": "VARCHAR(255)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "category",
+          "type": "VARCHAR(255)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "date",
+          "type": "DATE",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "start_time",
+          "type": "TIME",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "end_time",
+          "type": "TIME",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "status",
+          "type": "VARCHAR(20)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "dday",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "default": "FALSE",
+          "auto": false
+        },
+        {
+          "name": "note",
+          "type": "VARCHAR(255)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME(6)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "updated_at",
+          "type": "DATETIME(6)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        }
+      ],
+      "constraints": [
+        "PRIMARY KEY (id)",
+        "KEY ix_planner_item_date_type (date, type)"
+      ],
+      "pk": "PRIMARY KEY (id)",
+      "foreignKeys": []
+    },
+    {
+      "name": "tbl_category",
+      "columns": [
+        {
+          "name": "id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(26)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "parent_id",
+          "type": "CHAR(26)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(60)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "color",
+          "type": "CHAR(7)",
+          "nullable": false,
+          "default": "'#64748b'",
+          "auto": false
+        },
+        {
+          "name": "icon",
+          "type": "VARCHAR(16)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "ord",
+          "type": "INT",
+          "nullable": false,
+          "default": "0",
+          "auto": false
+        },
+        {
+          "name": "scope",
+          "type": "VARCHAR(12)",
+          "nullable": false,
+          "default": "'ALL'",
+          "auto": false
+        },
+        {
+          "name": "is_pinned",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "default": "FALSE",
+          "auto": false
+        },
+        {
+          "name": "st",
+          "type": "VARCHAR(12)",
+          "nullable": false,
+          "default": "'ACTIVE'",
+          "auto": false
+        },
+        {
+          "name": "c_at",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "u_at",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "d_at",
+          "type": "DATETIME(3)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "d_by",
+          "type": "CHAR(26)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        }
+      ],
+      "constraints": [
+        "PRIMARY KEY (id)",
+        "UNIQUE KEY uk_category_user_name (user_id, name)",
+        "KEY ix_category_parent (user_id, parent_id)",
+        "KEY ix_category_state (user_id, st)",
+        "CONSTRAINT fk_category_user FOREIGN KEY (user_id) REFERENCES users (id)"
+      ],
+      "pk": "PRIMARY KEY (id)",
+      "foreignKeys": [
+        {
+          "name": "fk_category_user",
+          "columns": "user_id",
+          "target": "users",
+          "targetColumns": "id",
+          "onDelete": "RESTRICT (기본)"
+        }
+      ]
+    },
+    {
+      "name": "tbl_user_pref",
+      "columns": [
+        {
+          "name": "user_id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "start_scr",
+          "type": "VARCHAR(32)",
+          "nullable": false,
+          "default": "'home'",
+          "auto": false
+        },
+        {
+          "name": "date_fmt",
+          "type": "VARCHAR(32)",
+          "nullable": false,
+          "default": "'YYYY-MM-DD'",
+          "auto": false
+        },
+        {
+          "name": "time_fmt",
+          "type": "VARCHAR(3)",
+          "nullable": false,
+          "default": "'24h'",
+          "auto": false
+        },
+        {
+          "name": "theme_id",
+          "type": "VARCHAR(64)",
+          "nullable": false,
+          "default": "'default'",
+          "auto": false
+        },
+        {
+          "name": "push_on",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "default": "TRUE",
+          "auto": false
+        },
+        {
+          "name": "email_on",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "default": "FALSE",
+          "auto": false
+        },
+        {
+          "name": "inapp_on",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "default": "TRUE",
+          "auto": false
+        },
+        {
+          "name": "dnd_s",
+          "type": "CHAR(5)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "dnd_e",
+          "type": "CHAR(5)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "week_start",
+          "type": "VARCHAR(3)",
+          "nullable": false,
+          "default": "'MON'",
+          "auto": false
+        },
+        {
+          "name": "locale",
+          "type": "VARCHAR(16)",
+          "nullable": false,
+          "default": "'ko-KR'",
+          "auto": false
+        },
+        {
+          "name": "time_step_min",
+          "type": "INT",
+          "nullable": false,
+          "default": "10",
+          "auto": false
+        },
+        {
+          "name": "def_event_vis",
+          "type": "VARCHAR(12)",
+          "nullable": false,
+          "default": "'PRIVATE'",
+          "auto": false
+        },
+        {
+          "name": "def_event_all_day",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "default": "TRUE",
+          "auto": false
+        },
+        {
+          "name": "def_event_dur_min",
+          "type": "INT",
+          "nullable": false,
+          "default": "60",
+          "auto": false
+        },
+        {
+          "name": "def_reminder_min",
+          "type": "INT",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "overlap_warn_on",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "default": "TRUE",
+          "auto": false
+        },
+        {
+          "name": "u_at",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        }
+      ],
+      "constraints": [
+        "PRIMARY KEY (user_id)",
+        "CONSTRAINT fk_user_pref_user FOREIGN KEY (user_id) REFERENCES users (id)"
+      ],
+      "pk": "PRIMARY KEY (user_id)",
+      "foreignKeys": [
+        {
+          "name": "fk_user_pref_user",
+          "columns": "user_id",
+          "target": "users",
+          "targetColumns": "id",
+          "onDelete": "RESTRICT (기본)"
+        }
+      ]
+    },
+    {
+      "name": "tbl_dash_layout",
+      "columns": [
+        {
+          "name": "id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "scope",
+          "type": "VARCHAR(12)",
+          "nullable": false,
+          "default": "'all'",
+          "auto": false
+        },
+        {
+          "name": "bp",
+          "type": "VARCHAR(16)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "json",
+          "type": "LONGTEXT",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "c_at",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "u_at",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        }
+      ],
+      "constraints": [
+        "PRIMARY KEY (id)",
+        "UNIQUE KEY uk_dash_layout (user_id, scope, bp)",
+        "CONSTRAINT fk_dash_layout_user FOREIGN KEY (user_id) REFERENCES users (id)"
+      ],
+      "pk": "PRIMARY KEY (id)",
+      "foreignKeys": [
+        {
+          "name": "fk_dash_layout_user",
+          "columns": "user_id",
+          "target": "users",
+          "targetColumns": "id",
+          "onDelete": "RESTRICT (기본)"
+        }
+      ]
+    },
+    {
+      "name": "tbl_dash_portlet_pref",
+      "columns": [
+        {
+          "name": "id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "portlet_id",
+          "type": "VARCHAR(64)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "vis",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "default": "TRUE",
+          "auto": false
+        },
+        {
+          "name": "ord",
+          "type": "INT",
+          "nullable": false,
+          "default": "0",
+          "auto": false
+        },
+        {
+          "name": "cfg_json",
+          "type": "LONGTEXT",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "u_at",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        }
+      ],
+      "constraints": [
+        "PRIMARY KEY (id)",
+        "UNIQUE KEY uk_dash_portlet (user_id, portlet_id)",
+        "CONSTRAINT fk_dash_portlet_user FOREIGN KEY (user_id) REFERENCES users (id)"
+      ],
+      "pk": "PRIMARY KEY (id)",
+      "foreignKeys": [
+        {
+          "name": "fk_dash_portlet_user",
+          "columns": "user_id",
+          "target": "users",
+          "targetColumns": "id",
+          "onDelete": "RESTRICT (기본)"
+        }
+      ]
+    },
+    {
+      "name": "tbl_notif_pref",
+      "columns": [
+        {
+          "name": "id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "evt",
+          "type": "VARCHAR(64)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "push_on",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "default": "TRUE",
+          "auto": false
+        },
+        {
+          "name": "email_on",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "default": "FALSE",
+          "auto": false
+        },
+        {
+          "name": "inapp_on",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "default": "TRUE",
+          "auto": false
+        },
+        {
+          "name": "cfg_json",
+          "type": "LONGTEXT",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "u_at",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        }
+      ],
+      "constraints": [
+        "PRIMARY KEY (id)",
+        "UNIQUE KEY uk_notif_pref (user_id, evt)",
+        "CONSTRAINT fk_notif_pref_user FOREIGN KEY (user_id) REFERENCES users (id)"
+      ],
+      "pk": "PRIMARY KEY (id)",
+      "foreignKeys": [
+        {
+          "name": "fk_notif_pref_user",
+          "columns": "user_id",
+          "target": "users",
+          "targetColumns": "id",
+          "onDelete": "RESTRICT (기본)"
+        }
+      ]
+    },
+    {
+      "name": "tbl_user_device",
+      "columns": [
+        {
+          "name": "id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "device_id",
+          "type": "VARCHAR(128)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "platform",
+          "type": "VARCHAR(10)",
+          "nullable": false,
+          "default": "'WEB'",
+          "auto": false
+        },
+        {
+          "name": "push_tok",
+          "type": "VARCHAR(512)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "app_ver",
+          "type": "VARCHAR(32)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "last_seen_utc",
+          "type": "DATETIME(3)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "revoked_utc",
+          "type": "DATETIME(3)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "c_at",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "u_at",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        }
+      ],
+      "constraints": [
+        "PRIMARY KEY (id)",
+        "UNIQUE KEY uk_user_device (user_id, device_id)",
+        "CONSTRAINT fk_user_device_user FOREIGN KEY (user_id) REFERENCES users (id)"
+      ],
+      "pk": "PRIMARY KEY (id)",
+      "foreignKeys": [
+        {
+          "name": "fk_user_device_user",
+          "columns": "user_id",
+          "target": "users",
+          "targetColumns": "id",
+          "onDelete": "RESTRICT (기본)"
+        }
+      ]
+    },
+    {
+      "name": "tbl_data_file",
+      "columns": [
+        {
+          "name": "id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "kind",
+          "type": "VARCHAR(10)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "filename",
+          "type": "VARCHAR(255)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "mime",
+          "type": "VARCHAR(100)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "size_b",
+          "type": "BIGINT",
+          "nullable": false,
+          "default": "0",
+          "auto": false
+        },
+        {
+          "name": "sha256",
+          "type": "CHAR(64)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "storage_key",
+          "type": "VARCHAR(512)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "exp_utc",
+          "type": "DATETIME(3)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "c_at",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        }
+      ],
+      "constraints": [
+        "PRIMARY KEY (id)",
+        "KEY ix_data_file_user_kind (user_id, kind)",
+        "CONSTRAINT fk_data_file_user FOREIGN KEY (user_id) REFERENCES users (id)"
+      ],
+      "pk": "PRIMARY KEY (id)",
+      "foreignKeys": [
+        {
+          "name": "fk_data_file_user",
+          "columns": "user_id",
+          "target": "users",
+          "targetColumns": "id",
+          "onDelete": "RESTRICT (기본)"
+        }
+      ]
+    },
+    {
+      "name": "tbl_data_job",
+      "columns": [
+        {
+          "name": "id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "typ",
+          "type": "VARCHAR(10)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "fmt",
+          "type": "VARCHAR(8)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "st",
+          "type": "VARCHAR(10)",
+          "nullable": false,
+          "default": "'PENDING'",
+          "auto": false
+        },
+        {
+          "name": "params_json",
+          "type": "LONGTEXT",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "result_file_id",
+          "type": "CHAR(26)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "err_msg",
+          "type": "VARCHAR(500)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "c_at",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "s_utc",
+          "type": "DATETIME(3)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "e_utc",
+          "type": "DATETIME(3)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        }
+      ],
+      "constraints": [
+        "PRIMARY KEY (id)",
+        "KEY ix_data_job_user_state (user_id, st)",
+        "CONSTRAINT fk_data_job_user FOREIGN KEY (user_id) REFERENCES users (id)",
+        "CONSTRAINT fk_data_job_result FOREIGN KEY (result_file_id) REFERENCES data_file (id)"
+      ],
+      "pk": "PRIMARY KEY (id)",
+      "foreignKeys": [
+        {
+          "name": "fk_data_job_user",
+          "columns": "user_id",
+          "target": "users",
+          "targetColumns": "id",
+          "onDelete": "RESTRICT (기본)"
+        },
+        {
+          "name": "fk_data_job_result",
+          "columns": "result_file_id",
+          "target": "data_file",
+          "targetColumns": "id",
+          "onDelete": "RESTRICT (기본)"
+        }
+      ]
+    },
+    {
+      "name": "tbl_import_mapping_profile",
+      "columns": [
+        {
+          "name": "id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "src_typ",
+          "type": "VARCHAR(8)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(100)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "map_json",
+          "type": "LONGTEXT",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "rule_json",
+          "type": "LONGTEXT",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "c_at",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "u_at",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        }
+      ],
+      "constraints": [
+        "PRIMARY KEY (id)",
+        "KEY ix_import_mapping_user (user_id, src_typ)",
+        "CONSTRAINT fk_import_mapping_user FOREIGN KEY (user_id) REFERENCES users (id)"
+      ],
+      "pk": "PRIMARY KEY (id)",
+      "foreignKeys": [
+        {
+          "name": "fk_import_mapping_user",
+          "columns": "user_id",
+          "target": "users",
+          "targetColumns": "id",
+          "onDelete": "RESTRICT (기본)"
+        }
+      ]
+    },
+    {
+      "name": "tbl_ext_cal_account",
+      "columns": [
+        {
+          "name": "id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "provider",
+          "type": "VARCHAR(10)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "st",
+          "type": "VARCHAR(12)",
+          "nullable": false,
+          "default": "'CONNECTED'",
+          "auto": false
+        },
+        {
+          "name": "scopes",
+          "type": "VARCHAR(500)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "meta_json",
+          "type": "LONGTEXT",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "c_at",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "u_at",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        }
+      ],
+      "constraints": [
+        "PRIMARY KEY (id)",
+        "UNIQUE KEY uk_ext_cal_account (user_id, provider)",
+        "CONSTRAINT fk_ext_cal_user FOREIGN KEY (user_id) REFERENCES users (id)"
+      ],
+      "pk": "PRIMARY KEY (id)",
+      "foreignKeys": [
+        {
+          "name": "fk_ext_cal_user",
+          "columns": "user_id",
+          "target": "users",
+          "targetColumns": "id",
+          "onDelete": "RESTRICT (기본)"
+        }
+      ]
+    },
+    {
+      "name": "tbl_sync_run_log",
+      "columns": [
+        {
+          "name": "id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "provider",
+          "type": "VARCHAR(10)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "st",
+          "type": "VARCHAR(10)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "started_utc",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "ended_utc",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "pulled_cnt",
+          "type": "INT",
+          "nullable": false,
+          "default": "0",
+          "auto": false
+        },
+        {
+          "name": "pushed_cnt",
+          "type": "INT",
+          "nullable": false,
+          "default": "0",
+          "auto": false
+        },
+        {
+          "name": "conflict_cnt",
+          "type": "INT",
+          "nullable": false,
+          "default": "0",
+          "auto": false
+        },
+        {
+          "name": "err_msg",
+          "type": "VARCHAR(500)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "meta_json",
+          "type": "LONGTEXT",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        }
+      ],
+      "constraints": [
+        "PRIMARY KEY (id)",
+        "KEY ix_sync_run_user_time (user_id, started_utc)",
+        "CONSTRAINT fk_sync_run_user FOREIGN KEY (user_id) REFERENCES users (id)"
+      ],
+      "pk": "PRIMARY KEY (id)",
+      "foreignKeys": [
+        {
+          "name": "fk_sync_run_user",
+          "columns": "user_id",
+          "target": "users",
+          "targetColumns": "id",
+          "onDelete": "RESTRICT (기본)"
+        }
+      ]
+    },
+    {
+      "name": "tbl_support_ticket",
+      "columns": [
+        {
+          "name": "id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "typ",
+          "type": "VARCHAR(16)",
+          "nullable": false,
+          "default": "'OTHER'",
+          "auto": false
+        },
+        {
+          "name": "st",
+          "type": "VARCHAR(16)",
+          "nullable": false,
+          "default": "'OPEN'",
+          "auto": false
+        },
+        {
+          "name": "title",
+          "type": "VARCHAR(200)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "body",
+          "type": "LONGTEXT",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "meta_json",
+          "type": "LONGTEXT",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "c_at",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "u_at",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        }
+      ],
+      "constraints": [
+        "PRIMARY KEY (id)",
+        "KEY ix_support_ticket_state (st)",
+        "CONSTRAINT fk_support_ticket_user FOREIGN KEY (user_id) REFERENCES users (id)"
+      ],
+      "pk": "PRIMARY KEY (id)",
+      "foreignKeys": [
+        {
+          "name": "fk_support_ticket_user",
+          "columns": "user_id",
+          "target": "users",
+          "targetColumns": "id",
+          "onDelete": "RESTRICT (기본)"
+        }
+      ]
+    },
+    {
+      "name": "tbl_settings_audit_log",
+      "columns": [
+        {
+          "name": "id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "area",
+          "type": "VARCHAR(32)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "action",
+          "type": "VARCHAR(32)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "diff_json",
+          "type": "LONGTEXT",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "at_utc",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        }
+      ],
+      "constraints": [
+        "PRIMARY KEY (id)",
+        "KEY ix_settings_audit_user_time (user_id, at_utc)",
+        "CONSTRAINT fk_settings_audit_user FOREIGN KEY (user_id) REFERENCES users (id)"
+      ],
+      "pk": "PRIMARY KEY (id)",
+      "foreignKeys": [
+        {
+          "name": "fk_settings_audit_user",
+          "columns": "user_id",
+          "target": "users",
+          "targetColumns": "id",
+          "onDelete": "RESTRICT (기본)"
+        }
+      ]
+    },
+    {
+      "name": "tbl_event_policy",
+      "columns": [
+        {
+          "name": "event_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "editor_del",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "default": "FALSE",
+          "auto": false
+        },
+        {
+          "name": "def_edit_sc",
+          "type": "VARCHAR(8)",
+          "nullable": false,
+          "default": "'future'",
+          "auto": false
+        },
+        {
+          "name": "def_del_sc",
+          "type": "VARCHAR(8)",
+          "nullable": false,
+          "default": "'none'",
+          "auto": false
+        },
+        {
+          "name": "max_edit_sc",
+          "type": "VARCHAR(8)",
+          "nullable": false,
+          "default": "'future'",
+          "auto": false
+        },
+        {
+          "name": "max_del_sc",
+          "type": "VARCHAR(8)",
+          "nullable": false,
+          "default": "'future'",
+          "auto": false
+        },
+        {
+          "name": "u_at",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        }
+      ],
+      "constraints": [
+        "PRIMARY KEY (event_id)",
+        "CONSTRAINT fk_event_policy_event FOREIGN KEY (event_id) REFERENCES events (id) ON DELETE CASCADE"
+      ],
+      "pk": "PRIMARY KEY (event_id)",
+      "foreignKeys": [
+        {
+          "name": "fk_event_policy_event",
+          "columns": "event_id",
+          "target": "events",
+          "targetColumns": "id",
+          "onDelete": "CASCADE"
+        }
+      ]
+    },
+    {
+      "name": "tbl_event_share",
+      "columns": [
+        {
+          "name": "id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "event_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "role",
+          "type": "VARCHAR(8)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "edit_sc",
+          "type": "VARCHAR(8)",
+          "nullable": false,
+          "default": "'single'",
+          "auto": false
+        },
+        {
+          "name": "del_sc",
+          "type": "VARCHAR(8)",
+          "nullable": false,
+          "default": "'none'",
+          "auto": false
+        },
+        {
+          "name": "by_id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "at",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        }
+      ],
+      "constraints": [
+        "PRIMARY KEY (id)",
+        "UNIQUE KEY uk_event_share (event_id, user_id)",
+        "KEY ix_event_share_user (user_id)",
+        "CONSTRAINT fk_event_share_event FOREIGN KEY (event_id) REFERENCES events (id) ON DELETE CASCADE",
+        "CONSTRAINT fk_event_share_user FOREIGN KEY (user_id) REFERENCES users (id)"
+      ],
+      "pk": "PRIMARY KEY (id)",
+      "foreignKeys": [
+        {
+          "name": "fk_event_share_event",
+          "columns": "event_id",
+          "target": "events",
+          "targetColumns": "id",
+          "onDelete": "CASCADE"
+        },
+        {
+          "name": "fk_event_share_user",
+          "columns": "user_id",
+          "target": "users",
+          "targetColumns": "id",
+          "onDelete": "RESTRICT (기본)"
+        }
+      ]
+    },
+    {
+      "name": "tbl_event_ex",
+      "columns": [
+        {
+          "name": "id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "event_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "occ_start",
+          "type": "CHAR(16)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "cancel",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "default": "FALSE",
+          "auto": false
+        },
+        {
+          "name": "o_title",
+          "type": "VARCHAR(200)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "o_note",
+          "type": "TEXT",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "o_loc",
+          "type": "VARCHAR(255)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "o_start_utc",
+          "type": "DATETIME(3)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "o_end_utc",
+          "type": "DATETIME(3)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "o_all_day",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "o_tz",
+          "type": "VARCHAR(64)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "o_cat_id",
+          "type": "CHAR(26)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "o_cat_name",
+          "type": "VARCHAR(60)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "o_cat_color",
+          "type": "CHAR(7)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "o_cat_icon",
+          "type": "VARCHAR(16)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "by_id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "c_at",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "u_at",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        }
+      ],
+      "constraints": [
+        "PRIMARY KEY (id)",
+        "UNIQUE KEY uk_event_ex (event_id, occ_start)",
+        "CONSTRAINT fk_event_ex_event FOREIGN KEY (event_id) REFERENCES events (id) ON DELETE CASCADE"
+      ],
+      "pk": "PRIMARY KEY (id)",
+      "foreignKeys": [
+        {
+          "name": "fk_event_ex_event",
+          "columns": "event_id",
+          "target": "events",
+          "targetColumns": "id",
+          "onDelete": "CASCADE"
+        }
+      ]
+    },
+    {
+      "name": "tbl_event_ver",
+      "columns": [
+        {
+          "name": "id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "event_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "ver_no",
+          "type": "INT",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "at",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "by_id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "summary",
+          "type": "VARCHAR(255)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "snap",
+          "type": "LONGTEXT",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "diff",
+          "type": "LONGTEXT",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        }
+      ],
+      "constraints": [
+        "PRIMARY KEY (id)",
+        "UNIQUE KEY uk_event_version (event_id, ver_no)",
+        "CONSTRAINT fk_event_ver_event FOREIGN KEY (event_id) REFERENCES events (id) ON DELETE CASCADE"
+      ],
+      "pk": "PRIMARY KEY (id)",
+      "foreignKeys": [
+        {
+          "name": "fk_event_ver_event",
+          "columns": "event_id",
+          "target": "events",
+          "targetColumns": "id",
+          "onDelete": "CASCADE"
+        }
+      ]
+    },
+    {
+      "name": "tbl_time_entry",
+      "columns": [
+        {
+          "name": "id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "typ",
+          "type": "VARCHAR(8)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "title",
+          "type": "VARCHAR(200)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "start_utc",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "end_utc",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "tz",
+          "type": "VARCHAR(64)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "cat_id",
+          "type": "CHAR(26)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "cat_name",
+          "type": "VARCHAR(60)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "cat_color",
+          "type": "CHAR(7)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "cat_icon",
+          "type": "VARCHAR(16)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "event_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "memo",
+          "type": "TEXT",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "c_at",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "u_at",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "d_at",
+          "type": "DATETIME(3)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        }
+      ],
+      "constraints": [
+        "PRIMARY KEY (id)",
+        "KEY ix_time_entry_user_time (user_id, start_utc, end_utc)",
+        "KEY ix_time_entry_kind (user_id, typ, start_utc)",
+        "CONSTRAINT fk_time_entry_user FOREIGN KEY (user_id) REFERENCES users (id)",
+        "CONSTRAINT fk_time_entry_event FOREIGN KEY (event_id) REFERENCES events (id) ON DELETE SET NULL"
+      ],
+      "pk": "PRIMARY KEY (id)",
+      "foreignKeys": [
+        {
+          "name": "fk_time_entry_user",
+          "columns": "user_id",
+          "target": "users",
+          "targetColumns": "id",
+          "onDelete": "RESTRICT (기본)"
+        },
+        {
+          "name": "fk_time_entry_event",
+          "columns": "event_id",
+          "target": "events",
+          "targetColumns": "id",
+          "onDelete": "SET NULL"
+        }
+      ]
+    },
+    {
+      "name": "tbl_task_member",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": true
+        },
+        {
+          "name": "task_id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "joined_at",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        }
+      ],
+      "constraints": [
+        "PRIMARY KEY (id)",
+        "UNIQUE KEY uk_task_member (task_id, user_id)",
+        "KEY ix_task_member_user (user_id)",
+        "CONSTRAINT fk_task_member_task FOREIGN KEY (task_id) REFERENCES task (id) ON DELETE CASCADE",
+        "CONSTRAINT fk_task_member_user FOREIGN KEY (user_id) REFERENCES users (id)"
+      ],
+      "pk": "PRIMARY KEY (id)",
+      "foreignKeys": [
+        {
+          "name": "fk_task_member_task",
+          "columns": "task_id",
+          "target": "task",
+          "targetColumns": "id",
+          "onDelete": "CASCADE"
+        },
+        {
+          "name": "fk_task_member_user",
+          "columns": "user_id",
+          "target": "users",
+          "targetColumns": "id",
+          "onDelete": "RESTRICT (기본)"
+        }
+      ]
+    },
+    {
+      "name": "tbl_task_repeat_rule",
+      "columns": [
+        {
+          "name": "task_id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "freq",
+          "type": "VARCHAR(10)",
+          "nullable": false,
+          "default": "'DAILY'",
+          "auto": false
+        },
+        {
+          "name": "interval_val",
+          "type": "INT",
+          "nullable": false,
+          "default": "1",
+          "auto": false
+        },
+        {
+          "name": "weekdays",
+          "type": "VARCHAR(30)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "end_type",
+          "type": "VARCHAR(8)",
+          "nullable": false,
+          "default": "'NONE'",
+          "auto": false
+        },
+        {
+          "name": "end_until",
+          "type": "DATE",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        }
+      ],
+      "constraints": [
+        "PRIMARY KEY (task_id)",
+        "CONSTRAINT fk_task_repeat_task FOREIGN KEY (task_id) REFERENCES task (id) ON DELETE CASCADE"
+      ],
+      "pk": "PRIMARY KEY (task_id)",
+      "foreignKeys": [
+        {
+          "name": "fk_task_repeat_task",
+          "columns": "task_id",
+          "target": "task",
+          "targetColumns": "id",
+          "onDelete": "CASCADE"
+        }
+      ]
+    },
+    {
+      "name": "tbl_memo",
+      "columns": [
+        {
+          "name": "id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "typ",
+          "type": "VARCHAR(8)",
+          "nullable": false,
+          "default": "'text'",
+          "auto": false
+        },
+        {
+          "name": "title",
+          "type": "VARCHAR(200)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "body",
+          "type": "LONGTEXT",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "stt",
+          "type": "LONGTEXT",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "st",
+          "type": "VARCHAR(10)",
+          "nullable": false,
+          "default": "'inbox'",
+          "auto": false
+        },
+        {
+          "name": "tags",
+          "type": "VARCHAR(500)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "c_at",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "u_at",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "d_at",
+          "type": "DATETIME(3)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        }
+      ],
+      "constraints": [
+        "PRIMARY KEY (id)",
+        "KEY ix_memo_user_state (user_id, st)",
+        "CONSTRAINT fk_memo_user FOREIGN KEY (user_id) REFERENCES users (id)"
+      ],
+      "pk": "PRIMARY KEY (id)",
+      "foreignKeys": [
+        {
+          "name": "fk_memo_user",
+          "columns": "user_id",
+          "target": "users",
+          "targetColumns": "id",
+          "onDelete": "RESTRICT (기본)"
+        }
+      ]
+    },
+    {
+      "name": "tbl_diary",
+      "columns": [
+        {
+          "name": "id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "dt",
+          "type": "DATE",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "mood",
+          "type": "VARCHAR(10)",
+          "nullable": false,
+          "default": "'good'",
+          "auto": false
+        },
+        {
+          "name": "sumry",
+          "type": "TEXT",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "body",
+          "type": "TEXT",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "grat",
+          "type": "TEXT",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "c_at",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "u_at",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        }
+      ],
+      "constraints": [
+        "PRIMARY KEY (id)",
+        "UNIQUE KEY uk_diary_user_date (user_id, dt)",
+        "CONSTRAINT fk_diary_user FOREIGN KEY (user_id) REFERENCES users (id)"
+      ],
+      "pk": "PRIMARY KEY (id)",
+      "foreignKeys": [
+        {
+          "name": "fk_diary_user",
+          "columns": "user_id",
+          "target": "users",
+          "targetColumns": "id",
+          "onDelete": "RESTRICT (기본)"
+        }
+      ]
+    },
+    {
+      "name": "tbl_friend",
+      "columns": [
+        {
+          "name": "id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "a_id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "b_id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "st",
+          "type": "VARCHAR(10)",
+          "nullable": false,
+          "default": "'pending'",
+          "auto": false
+        },
+        {
+          "name": "req_by",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "c_at",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "u_at",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        }
+      ],
+      "constraints": [
+        "PRIMARY KEY (id)",
+        "UNIQUE KEY uk_friend_pair (a_id, b_id)",
+        "CONSTRAINT fk_friend_a FOREIGN KEY (a_id) REFERENCES users (id)",
+        "CONSTRAINT fk_friend_b FOREIGN KEY (b_id) REFERENCES users (id)"
+      ],
+      "pk": "PRIMARY KEY (id)",
+      "foreignKeys": [
+        {
+          "name": "fk_friend_a",
+          "columns": "a_id",
+          "target": "users",
+          "targetColumns": "id",
+          "onDelete": "RESTRICT (기본)"
+        },
+        {
+          "name": "fk_friend_b",
+          "columns": "b_id",
+          "target": "users",
+          "targetColumns": "id",
+          "onDelete": "RESTRICT (기본)"
+        }
+      ]
+    },
+    {
+      "name": "tbl_cal_group",
+      "columns": [
+        {
+          "name": "id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "owner_id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(80)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "note",
+          "type": "VARCHAR(255)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "c_at",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "u_at",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        }
+      ],
+      "constraints": [
+        "PRIMARY KEY (id)",
+        "CONSTRAINT fk_cal_group_owner FOREIGN KEY (owner_id) REFERENCES users (id)"
+      ],
+      "pk": "PRIMARY KEY (id)",
+      "foreignKeys": [
+        {
+          "name": "fk_cal_group_owner",
+          "columns": "owner_id",
+          "target": "users",
+          "targetColumns": "id",
+          "onDelete": "RESTRICT (기본)"
+        }
+      ]
+    },
+    {
+      "name": "tbl_cal_group_mem",
+      "columns": [
+        {
+          "name": "id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "gid",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "role",
+          "type": "VARCHAR(10)",
+          "nullable": false,
+          "default": "'member'",
+          "auto": false
+        },
+        {
+          "name": "at",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        }
+      ],
+      "constraints": [
+        "PRIMARY KEY (id)",
+        "UNIQUE KEY uk_cal_group_member (gid, user_id)",
+        "KEY ix_cal_group_member_user (user_id)",
+        "CONSTRAINT fk_cal_group_mem_group FOREIGN KEY (gid) REFERENCES cal_group (id) ON DELETE CASCADE",
+        "CONSTRAINT fk_cal_group_mem_user FOREIGN KEY (user_id) REFERENCES users (id)"
+      ],
+      "pk": "PRIMARY KEY (id)",
+      "foreignKeys": [
+        {
+          "name": "fk_cal_group_mem_group",
+          "columns": "gid",
+          "target": "cal_group",
+          "targetColumns": "id",
+          "onDelete": "CASCADE"
+        },
+        {
+          "name": "fk_cal_group_mem_user",
+          "columns": "user_id",
+          "target": "users",
+          "targetColumns": "id",
+          "onDelete": "RESTRICT (기본)"
+        }
+      ]
+    },
+    {
+      "name": "tbl_theme_catalog",
+      "columns": [
+        {
+          "name": "id",
+          "type": "VARCHAR(64)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(80)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "enabled",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "default": "TRUE",
+          "auto": false
+        },
+        {
+          "name": "ord",
+          "type": "INT",
+          "nullable": false,
+          "default": "0",
+          "auto": false
+        },
+        {
+          "name": "meta_json",
+          "type": "LONGTEXT",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "u_at",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        }
+      ],
+      "constraints": [
+        "PRIMARY KEY (id)"
+      ],
+      "pk": "PRIMARY KEY (id)",
+      "foreignKeys": []
+    },
+    {
+      "name": "tbl_sticker_pack",
+      "columns": [
+        {
+          "name": "id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "code",
+          "type": "VARCHAR(64)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(80)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "enabled",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "default": "TRUE",
+          "auto": false
+        },
+        {
+          "name": "ord",
+          "type": "INT",
+          "nullable": false,
+          "default": "0",
+          "auto": false
+        },
+        {
+          "name": "meta_json",
+          "type": "LONGTEXT",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "c_at",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "u_at",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        }
+      ],
+      "constraints": [
+        "PRIMARY KEY (id)",
+        "UNIQUE KEY uk_sticker_pack_code (code)"
+      ],
+      "pk": "PRIMARY KEY (id)",
+      "foreignKeys": []
+    },
+    {
+      "name": "tbl_sticker_item",
+      "columns": [
+        {
+          "name": "id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "pack_id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "code",
+          "type": "VARCHAR(64)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "label",
+          "type": "VARCHAR(80)",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "asset_url",
+          "type": "VARCHAR(512)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "ord",
+          "type": "INT",
+          "nullable": false,
+          "default": "0",
+          "auto": false
+        },
+        {
+          "name": "meta_json",
+          "type": "LONGTEXT",
+          "nullable": true,
+          "default": "명시 없음",
+          "auto": false
+        }
+      ],
+      "constraints": [
+        "PRIMARY KEY (id)",
+        "UNIQUE KEY uk_sticker_item (pack_id, code)",
+        "CONSTRAINT fk_sticker_item_pack FOREIGN KEY (pack_id) REFERENCES sticker_pack (id)"
+      ],
+      "pk": "PRIMARY KEY (id)",
+      "foreignKeys": [
+        {
+          "name": "fk_sticker_item_pack",
+          "columns": "pack_id",
+          "target": "sticker_pack",
+          "targetColumns": "id",
+          "onDelete": "RESTRICT (기본)"
+        }
+      ]
+    },
+    {
+      "name": "tbl_user_sticker_pack",
+      "columns": [
+        {
+          "name": "id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "user_id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "pack_id",
+          "type": "CHAR(26)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        },
+        {
+          "name": "installed",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "default": "TRUE",
+          "auto": false
+        },
+        {
+          "name": "pinned",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "default": "FALSE",
+          "auto": false
+        },
+        {
+          "name": "at",
+          "type": "DATETIME(3)",
+          "nullable": false,
+          "default": "명시 없음",
+          "auto": false
+        }
+      ],
+      "constraints": [
+        "PRIMARY KEY (id)",
+        "UNIQUE KEY uk_user_sticker_pack (user_id, pack_id)",
+        "CONSTRAINT fk_user_sticker_user FOREIGN KEY (user_id) REFERENCES users (id)",
+        "CONSTRAINT fk_user_sticker_pack FOREIGN KEY (pack_id) REFERENCES sticker_pack (id)"
+      ],
+      "pk": "PRIMARY KEY (id)",
+      "foreignKeys": [
+        {
+          "name": "fk_user_sticker_user",
+          "columns": "user_id",
+          "target": "users",
+          "targetColumns": "id",
+          "onDelete": "RESTRICT (기본)"
+        },
+        {
+          "name": "fk_user_sticker_pack",
+          "columns": "pack_id",
+          "target": "sticker_pack",
+          "targetColumns": "id",
+          "onDelete": "RESTRICT (기본)"
+        }
+      ]
+    }
+  ],
+  "unresolvedForeignKeys": [
+    {
+      "table": "tbl_refresh_token",
+      "name": "fk_refresh_token_user",
+      "columns": "user_id",
+      "target": "users",
+      "targetColumns": "id",
+      "onDelete": "RESTRICT (기본)"
+    },
+    {
+      "table": "tbl_events",
+      "name": "fk_events_user",
+      "columns": "user_id",
+      "target": "users",
+      "targetColumns": "id",
+      "onDelete": "RESTRICT (기본)"
+    },
+    {
+      "table": "tbl_task",
+      "name": "fk_task_user",
+      "columns": "user_id",
+      "target": "users",
+      "targetColumns": "id",
+      "onDelete": "RESTRICT (기본)"
+    },
+    {
+      "table": "tbl_routine",
+      "name": "fk_routine_user",
+      "columns": "user_id",
+      "target": "users",
+      "targetColumns": "id",
+      "onDelete": "RESTRICT (기본)"
+    },
+    {
+      "table": "tbl_routine_log",
+      "name": "fk_routine_log_routine",
+      "columns": "routine_id",
+      "target": "routine",
+      "targetColumns": "id",
+      "onDelete": "RESTRICT (기본)"
+    },
+    {
+      "table": "tbl_category",
+      "name": "fk_category_user",
+      "columns": "user_id",
+      "target": "users",
+      "targetColumns": "id",
+      "onDelete": "RESTRICT (기본)"
+    },
+    {
+      "table": "tbl_user_pref",
+      "name": "fk_user_pref_user",
+      "columns": "user_id",
+      "target": "users",
+      "targetColumns": "id",
+      "onDelete": "RESTRICT (기본)"
+    },
+    {
+      "table": "tbl_dash_layout",
+      "name": "fk_dash_layout_user",
+      "columns": "user_id",
+      "target": "users",
+      "targetColumns": "id",
+      "onDelete": "RESTRICT (기본)"
+    },
+    {
+      "table": "tbl_dash_portlet_pref",
+      "name": "fk_dash_portlet_user",
+      "columns": "user_id",
+      "target": "users",
+      "targetColumns": "id",
+      "onDelete": "RESTRICT (기본)"
+    },
+    {
+      "table": "tbl_notif_pref",
+      "name": "fk_notif_pref_user",
+      "columns": "user_id",
+      "target": "users",
+      "targetColumns": "id",
+      "onDelete": "RESTRICT (기본)"
+    },
+    {
+      "table": "tbl_user_device",
+      "name": "fk_user_device_user",
+      "columns": "user_id",
+      "target": "users",
+      "targetColumns": "id",
+      "onDelete": "RESTRICT (기본)"
+    },
+    {
+      "table": "tbl_data_file",
+      "name": "fk_data_file_user",
+      "columns": "user_id",
+      "target": "users",
+      "targetColumns": "id",
+      "onDelete": "RESTRICT (기본)"
+    },
+    {
+      "table": "tbl_data_job",
+      "name": "fk_data_job_user",
+      "columns": "user_id",
+      "target": "users",
+      "targetColumns": "id",
+      "onDelete": "RESTRICT (기본)"
+    },
+    {
+      "table": "tbl_data_job",
+      "name": "fk_data_job_result",
+      "columns": "result_file_id",
+      "target": "data_file",
+      "targetColumns": "id",
+      "onDelete": "RESTRICT (기본)"
+    },
+    {
+      "table": "tbl_import_mapping_profile",
+      "name": "fk_import_mapping_user",
+      "columns": "user_id",
+      "target": "users",
+      "targetColumns": "id",
+      "onDelete": "RESTRICT (기본)"
+    },
+    {
+      "table": "tbl_ext_cal_account",
+      "name": "fk_ext_cal_user",
+      "columns": "user_id",
+      "target": "users",
+      "targetColumns": "id",
+      "onDelete": "RESTRICT (기본)"
+    },
+    {
+      "table": "tbl_sync_run_log",
+      "name": "fk_sync_run_user",
+      "columns": "user_id",
+      "target": "users",
+      "targetColumns": "id",
+      "onDelete": "RESTRICT (기본)"
+    },
+    {
+      "table": "tbl_support_ticket",
+      "name": "fk_support_ticket_user",
+      "columns": "user_id",
+      "target": "users",
+      "targetColumns": "id",
+      "onDelete": "RESTRICT (기본)"
+    },
+    {
+      "table": "tbl_settings_audit_log",
+      "name": "fk_settings_audit_user",
+      "columns": "user_id",
+      "target": "users",
+      "targetColumns": "id",
+      "onDelete": "RESTRICT (기본)"
+    },
+    {
+      "table": "tbl_event_policy",
+      "name": "fk_event_policy_event",
+      "columns": "event_id",
+      "target": "events",
+      "targetColumns": "id",
+      "onDelete": "CASCADE"
+    },
+    {
+      "table": "tbl_event_share",
+      "name": "fk_event_share_event",
+      "columns": "event_id",
+      "target": "events",
+      "targetColumns": "id",
+      "onDelete": "CASCADE"
+    },
+    {
+      "table": "tbl_event_share",
+      "name": "fk_event_share_user",
+      "columns": "user_id",
+      "target": "users",
+      "targetColumns": "id",
+      "onDelete": "RESTRICT (기본)"
+    },
+    {
+      "table": "tbl_event_ex",
+      "name": "fk_event_ex_event",
+      "columns": "event_id",
+      "target": "events",
+      "targetColumns": "id",
+      "onDelete": "CASCADE"
+    },
+    {
+      "table": "tbl_event_ver",
+      "name": "fk_event_ver_event",
+      "columns": "event_id",
+      "target": "events",
+      "targetColumns": "id",
+      "onDelete": "CASCADE"
+    },
+    {
+      "table": "tbl_time_entry",
+      "name": "fk_time_entry_user",
+      "columns": "user_id",
+      "target": "users",
+      "targetColumns": "id",
+      "onDelete": "RESTRICT (기본)"
+    },
+    {
+      "table": "tbl_time_entry",
+      "name": "fk_time_entry_event",
+      "columns": "event_id",
+      "target": "events",
+      "targetColumns": "id",
+      "onDelete": "SET NULL"
+    },
+    {
+      "table": "tbl_task_member",
+      "name": "fk_task_member_task",
+      "columns": "task_id",
+      "target": "task",
+      "targetColumns": "id",
+      "onDelete": "CASCADE"
+    },
+    {
+      "table": "tbl_task_member",
+      "name": "fk_task_member_user",
+      "columns": "user_id",
+      "target": "users",
+      "targetColumns": "id",
+      "onDelete": "RESTRICT (기본)"
+    },
+    {
+      "table": "tbl_task_repeat_rule",
+      "name": "fk_task_repeat_task",
+      "columns": "task_id",
+      "target": "task",
+      "targetColumns": "id",
+      "onDelete": "CASCADE"
+    },
+    {
+      "table": "tbl_memo",
+      "name": "fk_memo_user",
+      "columns": "user_id",
+      "target": "users",
+      "targetColumns": "id",
+      "onDelete": "RESTRICT (기본)"
+    },
+    {
+      "table": "tbl_diary",
+      "name": "fk_diary_user",
+      "columns": "user_id",
+      "target": "users",
+      "targetColumns": "id",
+      "onDelete": "RESTRICT (기본)"
+    },
+    {
+      "table": "tbl_friend",
+      "name": "fk_friend_a",
+      "columns": "a_id",
+      "target": "users",
+      "targetColumns": "id",
+      "onDelete": "RESTRICT (기본)"
+    },
+    {
+      "table": "tbl_friend",
+      "name": "fk_friend_b",
+      "columns": "b_id",
+      "target": "users",
+      "targetColumns": "id",
+      "onDelete": "RESTRICT (기본)"
+    },
+    {
+      "table": "tbl_cal_group",
+      "name": "fk_cal_group_owner",
+      "columns": "owner_id",
+      "target": "users",
+      "targetColumns": "id",
+      "onDelete": "RESTRICT (기본)"
+    },
+    {
+      "table": "tbl_cal_group_mem",
+      "name": "fk_cal_group_mem_group",
+      "columns": "gid",
+      "target": "cal_group",
+      "targetColumns": "id",
+      "onDelete": "CASCADE"
+    },
+    {
+      "table": "tbl_cal_group_mem",
+      "name": "fk_cal_group_mem_user",
+      "columns": "user_id",
+      "target": "users",
+      "targetColumns": "id",
+      "onDelete": "RESTRICT (기본)"
+    },
+    {
+      "table": "tbl_sticker_item",
+      "name": "fk_sticker_item_pack",
+      "columns": "pack_id",
+      "target": "sticker_pack",
+      "targetColumns": "id",
+      "onDelete": "RESTRICT (기본)"
+    },
+    {
+      "table": "tbl_user_sticker_pack",
+      "name": "fk_user_sticker_user",
+      "columns": "user_id",
+      "target": "users",
+      "targetColumns": "id",
+      "onDelete": "RESTRICT (기본)"
+    },
+    {
+      "table": "tbl_user_sticker_pack",
+      "name": "fk_user_sticker_pack",
+      "columns": "pack_id",
+      "target": "sticker_pack",
+      "targetColumns": "id",
+      "onDelete": "RESTRICT (기본)"
+    }
+  ],
+  "entities": [
+    {
+      "file": "backend/src/main/java/kr/timebar/diary/auth/LoginThrottleEntity.java",
+      "table": "login_throttle"
+    },
+    {
+      "file": "backend/src/main/java/kr/timebar/diary/auth/RefreshTokenEntity.java",
+      "table": "refresh_token"
+    },
+    {
+      "file": "backend/src/main/java/kr/timebar/diary/auth/UserEntity.java",
+      "table": "users"
+    },
+    {
+      "file": "backend/src/main/java/kr/timebar/diary/event/EventEntity.java",
+      "table": "events"
+    },
+    {
+      "file": "backend/src/main/java/kr/timebar/diary/planner/PlannerItemEntity.java",
+      "table": "planner_item"
+    },
+    {
+      "file": "backend/src/main/java/kr/timebar/diary/routine/RoutineEntity.java",
+      "table": "routine"
+    },
+    {
+      "file": "backend/src/main/java/kr/timebar/diary/routine/RoutineLogEntity.java",
+      "table": "routine_log"
+    },
+    {
+      "file": "backend/src/main/java/kr/timebar/diary/task/TaskEntity.java",
+      "table": "task"
+    }
+  ]
+}

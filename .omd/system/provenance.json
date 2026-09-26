@@ -1,0 +1,325 @@
+{
+  "decisions": [
+    {
+      "evidence": [
+        "docs/product-spec-v2.md"
+      ],
+      "path": "/identity",
+      "source_class": "repository-fact"
+    },
+    {
+      "evidence": [
+        "docs/product-spec-v2.md",
+        ".omd/init-context.json"
+      ],
+      "path": "/experience/summary",
+      "source_class": "repository-fact"
+    },
+    {
+      "evidence": [
+        "docs/product-spec-v2.md"
+      ],
+      "path": "/experience/primary_tasks",
+      "source_class": "repository-fact"
+    },
+    {
+      "evidence": [
+        ".omd/init-context.json"
+      ],
+      "path": "/experience/design_direction",
+      "source_class": "prompt-fact"
+    },
+    {
+      "evidence": [
+        "docs/product-spec-v2.md"
+      ],
+      "path": "/experience/principles",
+      "source_class": "repository-fact"
+    },
+    {
+      "evidence": [
+        ".omd/init-context.json"
+      ],
+      "path": "/experience/avoid",
+      "source_class": "prompt-fact"
+    },
+    {
+      "evidence": [
+        ".claude/data/references/elevenlabs/DESIGN.md"
+      ],
+      "path": "/foundations/tokens/color.canvas",
+      "source_class": "verified-reference-inspiration"
+    },
+    {
+      "evidence": [
+        ".claude/data/references/elevenlabs/DESIGN.md"
+      ],
+      "path": "/foundations/tokens/color.surface",
+      "source_class": "verified-reference-inspiration"
+    },
+    {
+      "evidence": [
+        ".claude/data/references/elevenlabs/DESIGN.md"
+      ],
+      "path": "/foundations/tokens/color.foreground",
+      "source_class": "verified-reference-inspiration"
+    },
+    {
+      "evidence": [
+        ".claude/data/references/elevenlabs/DESIGN.md"
+      ],
+      "path": "/foundations/tokens/color.muted",
+      "source_class": "verified-reference-inspiration"
+    },
+    {
+      "evidence": [
+        ".claude/data/references/elevenlabs/DESIGN.md"
+      ],
+      "path": "/foundations/tokens/color.hairline",
+      "source_class": "verified-reference-inspiration"
+    },
+    {
+      "evidence": [
+        ".claude/data/references/elevenlabs/DESIGN.md"
+      ],
+      "path": "/foundations/tokens/color.on-primary",
+      "source_class": "verified-reference-inspiration"
+    },
+    {
+      "evidence": [
+        ".omd/init-context.json"
+      ],
+      "path": "/foundations/tokens/color.accent",
+      "source_class": "agent-proposed-greenfield-decision"
+    },
+    {
+      "evidence": [
+        ".omd/init-context.json"
+      ],
+      "path": "/foundations/tokens/color.on-accent",
+      "source_class": "agent-proposed-greenfield-decision"
+    },
+    {
+      "evidence": [
+        ".claude/data/references/elevenlabs/DESIGN.md"
+      ],
+      "path": "/foundations/tokens/space.xs",
+      "source_class": "verified-reference-inspiration"
+    },
+    {
+      "evidence": [
+        ".claude/data/references/elevenlabs/DESIGN.md"
+      ],
+      "path": "/foundations/tokens/space.sm",
+      "source_class": "verified-reference-inspiration"
+    },
+    {
+      "evidence": [
+        ".claude/data/references/elevenlabs/DESIGN.md"
+      ],
+      "path": "/foundations/tokens/space.md",
+      "source_class": "verified-reference-inspiration"
+    },
+    {
+      "evidence": [
+        ".claude/data/references/elevenlabs/DESIGN.md"
+      ],
+      "path": "/foundations/tokens/space.lg",
+      "source_class": "verified-reference-inspiration"
+    },
+    {
+      "evidence": [
+        ".claude/data/references/elevenlabs/DESIGN.md"
+      ],
+      "path": "/foundations/tokens/space.xl",
+      "source_class": "verified-reference-inspiration"
+    },
+    {
+      "evidence": [
+        ".claude/data/references/elevenlabs/DESIGN.md"
+      ],
+      "path": "/foundations/tokens/space.xxl",
+      "source_class": "verified-reference-inspiration"
+    },
+    {
+      "evidence": [
+        ".omd/init-context.json"
+      ],
+      "path": "/foundations/tokens/space.section",
+      "source_class": "agent-proposed-greenfield-decision"
+    },
+    {
+      "evidence": [
+        ".omd/init-context.json"
+      ],
+      "path": "/foundations/tokens/space.gutter",
+      "source_class": "agent-proposed-greenfield-decision"
+    },
+    {
+      "evidence": [
+        ".claude/data/references/elevenlabs/DESIGN.md"
+      ],
+      "path": "/foundations/tokens/radius.sm",
+      "source_class": "verified-reference-inspiration"
+    },
+    {
+      "evidence": [
+        ".claude/data/references/elevenlabs/DESIGN.md"
+      ],
+      "path": "/foundations/tokens/radius.md",
+      "source_class": "verified-reference-inspiration"
+    },
+    {
+      "evidence": [
+        ".claude/data/references/elevenlabs/DESIGN.md"
+      ],
+      "path": "/foundations/tokens/radius.lg",
+      "source_class": "verified-reference-inspiration"
+    },
+    {
+      "evidence": [
+        ".claude/data/references/elevenlabs/DESIGN.md"
+      ],
+      "path": "/foundations/tokens/radius.full",
+      "source_class": "verified-reference-inspiration"
+    },
+    {
+      "evidence": [
+        ".claude/data/references/elevenlabs/DESIGN.md"
+      ],
+      "path": "/foundations/tokens/shadow.card",
+      "source_class": "verified-reference-inspiration"
+    },
+    {
+      "evidence": [
+        ".claude/data/references/elevenlabs/DESIGN.md"
+      ],
+      "path": "/foundations/tokens/shadow.raised",
+      "source_class": "verified-reference-inspiration"
+    },
+    {
+      "evidence": [
+        ".omd/init-context.json"
+      ],
+      "path": "/foundations/rules",
+      "source_class": "prompt-fact"
+    },
+    {
+      "evidence": [
+        ".omd/init-context.json"
+      ],
+      "path": "/foundations/contrast_pairs",
+      "source_class": "agent-proposed-greenfield-decision"
+    },
+    {
+      "evidence": [
+        ".omd/init-context.json"
+      ],
+      "path": "/foundations/reduced_motion",
+      "source_class": "agent-proposed-greenfield-decision"
+    },
+    {
+      "evidence": [
+        ".omd/init-context.json",
+        ".claude/data/references/elevenlabs/DESIGN.md"
+      ],
+      "path": "/typography_assets/roles",
+      "source_class": "agent-proposed-greenfield-decision"
+    },
+    {
+      "evidence": [
+        ".omd/init-context.json"
+      ],
+      "path": "/typography_assets/assets",
+      "source_class": "agent-proposed-greenfield-decision"
+    },
+    {
+      "evidence": [
+        ".omd/init-context.json"
+      ],
+      "path": "/typography_assets/rules",
+      "source_class": "prompt-fact"
+    },
+    {
+      "evidence": [
+        ".omd/init-context.json",
+        ".claude/data/references/elevenlabs/DESIGN.md"
+      ],
+      "path": "/components_states/components",
+      "source_class": "agent-proposed-greenfield-decision"
+    },
+    {
+      "evidence": [
+        ".omd/init-context.json"
+      ],
+      "path": "/components_states/rules",
+      "source_class": "agent-proposed-greenfield-decision"
+    },
+    {
+      "evidence": [
+        ".omd/init-context.json"
+      ],
+      "path": "/layout_platforms/minimum_width_px",
+      "source_class": "agent-proposed-greenfield-decision"
+    },
+    {
+      "evidence": [
+        ".omd/init-context.json"
+      ],
+      "path": "/layout_platforms/reflow_zoom_percent",
+      "source_class": "agent-proposed-greenfield-decision"
+    },
+    {
+      "evidence": [
+        "docs/product-spec-v2.md"
+      ],
+      "path": "/layout_platforms/rules",
+      "source_class": "repository-fact"
+    },
+    {
+      "evidence": [
+        "docs/product-spec-v2.md"
+      ],
+      "path": "/layout_platforms/platforms",
+      "source_class": "repository-fact"
+    },
+    {
+      "evidence": [
+        "docs/product-spec-v2.md"
+      ],
+      "path": "/content_locales/voice",
+      "source_class": "repository-fact"
+    },
+    {
+      "evidence": [
+        "docs/product-spec-v2.md"
+      ],
+      "path": "/content_locales/terminology",
+      "source_class": "repository-fact"
+    },
+    {
+      "evidence": [
+        "docs/product-spec-v2.md"
+      ],
+      "path": "/content_locales/locales",
+      "source_class": "repository-fact"
+    },
+    {
+      "evidence": [
+        ".omd/init-context.json"
+      ],
+      "path": "/governance/priority",
+      "source_class": "agent-proposed-greenfield-decision"
+    },
+    {
+      "evidence": [
+        ".omd/init-context.json"
+      ],
+      "path": "/governance/change_policy",
+      "source_class": "agent-proposed-greenfield-decision"
+    }
+  ],
+  "design_md_sha256": "19cbc861097b84866bc780a908d9f1ea510cfcc090b7bd31aa7dd0e7fc69c9e6",
+  "graph_sha256": "b2b3133eea28a1c0ed730d2e5dee41221c2e1754338dbff30bdced13836a85a0",
+  "schema_version": "2.0.0"
+}

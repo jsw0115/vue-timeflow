@@ -1,0 +1,187 @@
+erDiagram
+  tbl_users {
+    CHAR_26_ id PK
+  }
+  tbl_refresh_token {
+    CHAR_26_ id PK
+    CHAR_26_ user_id
+  }
+  tbl_login_throttle {
+    CHAR_26_ id PK
+  }
+  tbl_events {
+    BIGINT id PK
+    CHAR_26_ user_id
+  }
+  tbl_task {
+    CHAR_26_ id PK
+    CHAR_26_ user_id
+  }
+  tbl_routine {
+    CHAR_26_ id PK
+    CHAR_26_ user_id
+  }
+  tbl_routine_log {
+    CHAR_26_ id PK
+    CHAR_26_ routine_id
+  }
+  tbl_planner_item {
+    BIGINT id PK
+  }
+  tbl_category {
+    CHAR_26_ id PK
+    CHAR_26_ user_id
+  }
+  tbl_user_pref {
+    CHAR_26_ user_id
+  }
+  tbl_dash_layout {
+    CHAR_26_ id PK
+    CHAR_26_ user_id
+  }
+  tbl_dash_portlet_pref {
+    CHAR_26_ id PK
+    CHAR_26_ user_id
+  }
+  tbl_notif_pref {
+    CHAR_26_ id PK
+    CHAR_26_ user_id
+  }
+  tbl_user_device {
+    CHAR_26_ id PK
+    CHAR_26_ user_id
+  }
+  tbl_data_file {
+    CHAR_26_ id PK
+    CHAR_26_ user_id
+  }
+  tbl_data_job {
+    CHAR_26_ id PK
+    CHAR_26_ user_id
+    CHAR_26_ result_file_id
+  }
+  tbl_import_mapping_profile {
+    CHAR_26_ id PK
+    CHAR_26_ user_id
+  }
+  tbl_ext_cal_account {
+    CHAR_26_ id PK
+    CHAR_26_ user_id
+  }
+  tbl_sync_run_log {
+    CHAR_26_ id PK
+    CHAR_26_ user_id
+  }
+  tbl_support_ticket {
+    CHAR_26_ id PK
+    CHAR_26_ user_id
+  }
+  tbl_settings_audit_log {
+    CHAR_26_ id PK
+    CHAR_26_ user_id
+  }
+  tbl_event_policy {
+    BIGINT event_id
+  }
+  tbl_event_share {
+    CHAR_26_ id PK
+    BIGINT event_id
+    CHAR_26_ user_id
+  }
+  tbl_event_ex {
+    CHAR_26_ id PK
+    BIGINT event_id
+  }
+  tbl_event_ver {
+    CHAR_26_ id PK
+    BIGINT event_id
+  }
+  tbl_time_entry {
+    CHAR_26_ id PK
+    CHAR_26_ user_id
+    BIGINT event_id
+  }
+  tbl_task_member {
+    BIGINT id PK
+    CHAR_26_ task_id
+    CHAR_26_ user_id
+  }
+  tbl_task_repeat_rule {
+    CHAR_26_ task_id
+  }
+  tbl_memo {
+    CHAR_26_ id PK
+    CHAR_26_ user_id
+  }
+  tbl_diary {
+    CHAR_26_ id PK
+    CHAR_26_ user_id
+  }
+  tbl_friend {
+    CHAR_26_ id PK
+    CHAR_26_ a_id
+    CHAR_26_ b_id
+  }
+  tbl_cal_group {
+    CHAR_26_ id PK
+    CHAR_26_ owner_id
+  }
+  tbl_cal_group_mem {
+    CHAR_26_ id PK
+    CHAR_26_ gid
+    CHAR_26_ user_id
+  }
+  tbl_theme_catalog {
+    VARCHAR_64_ id PK
+  }
+  tbl_sticker_pack {
+    CHAR_26_ id PK
+  }
+  tbl_sticker_item {
+    CHAR_26_ id PK
+    CHAR_26_ pack_id
+  }
+  tbl_user_sticker_pack {
+    CHAR_26_ id PK
+    CHAR_26_ user_id
+    CHAR_26_ pack_id
+  }
+  users ||..o{ tbl_refresh_token : "user_id (unresolved target)"
+  users ||..o{ tbl_events : "user_id (unresolved target)"
+  users ||..o{ tbl_task : "user_id (unresolved target)"
+  users ||..o{ tbl_routine : "user_id (unresolved target)"
+  routine ||..o{ tbl_routine_log : "routine_id (unresolved target)"
+  users ||..o{ tbl_category : "user_id (unresolved target)"
+  users ||..o{ tbl_user_pref : "user_id (unresolved target)"
+  users ||..o{ tbl_dash_layout : "user_id (unresolved target)"
+  users ||..o{ tbl_dash_portlet_pref : "user_id (unresolved target)"
+  users ||..o{ tbl_notif_pref : "user_id (unresolved target)"
+  users ||..o{ tbl_user_device : "user_id (unresolved target)"
+  users ||..o{ tbl_data_file : "user_id (unresolved target)"
+  users ||..o{ tbl_data_job : "user_id (unresolved target)"
+  data_file ||..o{ tbl_data_job : "result_file_id (unresolved target)"
+  users ||..o{ tbl_import_mapping_profile : "user_id (unresolved target)"
+  users ||..o{ tbl_ext_cal_account : "user_id (unresolved target)"
+  users ||..o{ tbl_sync_run_log : "user_id (unresolved target)"
+  users ||..o{ tbl_support_ticket : "user_id (unresolved target)"
+  users ||..o{ tbl_settings_audit_log : "user_id (unresolved target)"
+  events ||..o{ tbl_event_policy : "event_id (unresolved target)"
+  events ||..o{ tbl_event_share : "event_id (unresolved target)"
+  users ||..o{ tbl_event_share : "user_id (unresolved target)"
+  events ||..o{ tbl_event_ex : "event_id (unresolved target)"
+  events ||..o{ tbl_event_ver : "event_id (unresolved target)"
+  users ||..o{ tbl_time_entry : "user_id (unresolved target)"
+  events ||..o{ tbl_time_entry : "event_id (unresolved target)"
+  task ||..o{ tbl_task_member : "task_id (unresolved target)"
+  users ||..o{ tbl_task_member : "user_id (unresolved target)"
+  task ||..o{ tbl_task_repeat_rule : "task_id (unresolved target)"
+  users ||..o{ tbl_memo : "user_id (unresolved target)"
+  users ||..o{ tbl_diary : "user_id (unresolved target)"
+  users ||..o{ tbl_friend : "a_id (unresolved target)"
+  users ||..o{ tbl_friend : "b_id (unresolved target)"
+  users ||..o{ tbl_cal_group : "owner_id (unresolved target)"
+  cal_group ||..o{ tbl_cal_group_mem : "gid (unresolved target)"
+  users ||..o{ tbl_cal_group_mem : "user_id (unresolved target)"
+  sticker_pack ||..o{ tbl_sticker_item : "pack_id (unresolved target)"
+  users ||..o{ tbl_user_sticker_pack : "user_id (unresolved target)"
+  sticker_pack ||..o{ tbl_user_sticker_pack : "pack_id (unresolved target)"

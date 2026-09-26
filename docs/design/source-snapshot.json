@@ -1,0 +1,19 @@
+{
+  "date": "2026-09-26",
+  "targetOperations": 169,
+  "originalCatalogOperations": 114,
+  "files": [
+    {
+      "file": "backend/src/main/resources/db/migration/V1__initial_schema.sql",
+      "sha256": "6f70f353bb20a4e19085db5d05cfe88690fcd6723d0ebaf043c29a0bc0a21d74"
+    },
+    {
+      "file": "backend/src/main/java/kr/timebar/diary/security/SecurityConfig.java",
+      "sha256": "83a4c7d58525e5ead52c5b8a431c6b25990cf8d1777b1032ededb3dc2e5f47af"
+    },
+    {
+      "file": "docs/api/api-catalog.md",
+      "sha256": "be5f3bf60256ecfd858c0ff865ffd556533b4342e583ad55e7414fd3710fcf7c"
+    }
+  ]
+}

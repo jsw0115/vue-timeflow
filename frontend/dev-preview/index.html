@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Timeflow · PC / 모바일 미리보기</title>
+  <link rel="stylesheet" href="/dev-preview/style.css" />
+</head>
+<body>
+  <header>
+    <p class="eyebrow">TIMEFLOW / LOCAL PREVIEW</p>
+    <h1>같은 하루, 다른 화면.</h1>
+    <p>PC와 모바일 너비에서 같은 화면을 비교합니다. 실제 iOS·Android 기기 동작은 별도로 확인하세요.</p>
+  </header>
+  <form id="controls" aria-label="미리보기 설정">
+    <label>화면<select id="screen"></select></label>
+    <label>보기<select id="view"><option value="both">PC + 모바일</option><option value="pc">PC만</option><option value="mobile">모바일만</option></select></label>
+    <label>모바일 너비<select id="width"></select></label>
+    <button type="button" id="reload">두 화면 새로고침</button>
+    <a id="open-app" href="/" target="_blank" rel="noopener noreferrer">앱 별도 열기 ↗</a>
+  </form>
+  <p class="notice">현재 앱에는 샘플·브라우저 저장 데이터가 포함됩니다. 두 화면은 같은 브라우저 저장소를 공유하며, 변경 후 새로고침이 필요할 수 있습니다.</p>
+  <main id="previews">
+    <section id="pc-panel" aria-label="PC 미리보기">
+      <h2>PC <small>1440 × 900</small></h2>
+      <div class="viewport-scroll"><iframe id="pc-frame" title="Timeflow PC 화면" width="1440" height="900" src="about:blank"></iframe></div>
+    </section>
+    <section id="mobile-panel" aria-label="모바일 미리보기">
+      <h2>모바일 <small id="mobile-size">390 × 844</small></h2>
+      <div class="viewport-scroll"><iframe id="mobile-frame" title="Timeflow 모바일 화면" width="390" height="844" src="about:blank"></iframe></div>
+    </section>
+  </main>
+  <script type="module" src="/dev-preview/main.js"></script>
+</body>
+</html>

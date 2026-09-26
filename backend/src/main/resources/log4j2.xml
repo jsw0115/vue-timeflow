@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" monitorInterval="30">
+
+    <Properties>
+        <!-- 파일 경로 -->
+        <Property name="infoLogNm">./logs/test/api_info.log</Property>
+        <Property name="errorLogNm">./logs/test/api_error.log</Property>
+        <Property name="authLogNm">./logs/test/api_auth.log</Property>
+        <Property name="jsonInfoLogNm">./logs/test/api_json_info.log</Property>
+
+        <!-- 로그 패턴: %d{...} 는 날짜 포맷 패턴이어야 함 -->
+        <Property name="layoutPattern">%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight{%-5level} [%t] %c{1.} - %msg%n%throwable
+        </Property>
+
+        <!-- (선택) DB 설정: 비번은 환경변수로 받는 걸 권장 -->
+        <Property name="DB_URL">jdbc:mariadb://localhost:3307/timeflow</Property>
+        <Property name="DB_DRIVER">org.mariadb.jdbc.Driver</Property>
+        <Property name="DB_USER">timeflow</Property>
+        <Property name="DB_PASSWORD">${env:TIMEFLOW_DB_PASSWORD:-CHANGE_ME}</Property>
+    </Properties>
+
+    <Appenders>
+        <!-- 콘솔 -->
+        <Console name="console" target="SYSTEM_OUT">
+            <PatternLayout pattern="${layoutPattern}" charset="UTF-8"/>
+        </Console>
+
+        <!-- INFO/WARN/DEBUG (ERROR 제외) -->
+        <RollingFile name="infoFile"
+                     fileName="${infoLogNm}"
+                     filePattern="./logs/test/api_info-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="${layoutPattern}" charset="UTF-8"/>
+            <Filters>
+                <LevelRangeFilter minLevel="DEBUG" maxLevel="WARN" onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="50MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="30"/>
+        </RollingFile>
+
+        <!-- ERROR 이상 -->
+        <RollingFile name="errorFile"
+                     fileName="${errorLogNm}"
+                     filePattern="./logs/test/api_error-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="${layoutPattern}" charset="UTF-8"/>
+            <Filters>
+                <ThresholdFilter level="ERROR" onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="50MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="90"/>
+        </RollingFile>
+
+        <!-- AUTH 전용 -->
+        <RollingFile name="authFile"
+                     fileName="${authLogNm}"
+                     filePattern="./logs/test/api_auth-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="${layoutPattern}" charset="UTF-8"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="20MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="30"/>
+        </RollingFile>
+
+        <!-- JSON API info 전용 -->
+        <RollingFile name="jsonInfoFile"
+                     fileName="${jsonInfoLogNm}"
+                     filePattern="./logs/test/api_json_info-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="${layoutPattern}" charset="UTF-8"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="50MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="30"/>
+        </RollingFile>
+
+        <!-- (선택) DB에 ERROR 로그 저장: Log4j2 JDBC Appender -->
+        <JDBC
+                name="dbError"
+                tableName="tbllog"
+                ignoreExceptions="true"
+                reconnectIntervalMillis="5000">
+            <Filters>
+                <ThresholdFilter level="ERROR" onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
+
+            <!-- DriverManager ConnectionSource -->
+            <DriverManager
+                    connectionString="jdbc:mysql://localhost:3307/timeflow"
+                    driverClassName="com.mysql.cj.jdbc.Driver"
+                    username="timeflow"
+                    password="timeflow9661"/>
+
+            <!-- 테이블 컬럼 매핑 --><!--
+            <ColumnMappings>
+                <ColumnMapping name="log_date" isEventTimestamp="true"/>
+                <ColumnMapping name="logger" pattern="%logger"/>
+                <ColumnMapping name="log_level" pattern="%level"/>
+                <ColumnMapping name="log_message" pattern="%message"/>
+                <ColumnMapping name="error_path" pattern="%class"/>
+                <ColumnMapping name="error_method" pattern="%method"/>
+                <ColumnMapping name="exception" pattern="%ex{full}"/>
+            </ColumnMappings>-->
+            <Column name="log_date" isEventTimestamp="true"/>
+            <Column name="logger" pattern="%logger"/>
+            <Column name="log_level" pattern="%level"/>
+            <Column name="log_message" pattern="%message"/>
+            <Column name="error_path" pattern="%class"/>
+            <Column name="error_method" pattern="%method"/>
+            <Column name="exception" pattern="%ex{full}"/>
+        </JDBC>
+    </Appenders>
+
+    <Loggers>
+        <!-- Spring 로그 -->
+        <Logger name="org.springframework" level="INFO" additivity="false">
+            <AppenderRef ref="console"/>
+            <AppenderRef ref="infoFile"/>
+            <AppenderRef ref="errorFile"/>
+        </Logger>
+
+        <!-- 프로젝트 로그 -->
+        <Logger name="com.timepalette.daylogue" level="DEBUG" additivity="false">
+            <AppenderRef ref="console"/>
+            <AppenderRef ref="infoFile"/>
+            <AppenderRef ref="errorFile"/>
+            <AppenderRef ref="dbError"/>
+        </Logger>
+
+        <!-- AUTH 관련(원하면 패키지명을 실제 필터/시큐리티 로거로 맞춰서 사용) -->
+        <Logger name="com.timepalette.daylogue.common.filter" level="INFO" additivity="false">
+            <AppenderRef ref="console"/>
+            <AppenderRef ref="authFile"/>
+            <AppenderRef ref="errorFile"/>
+            <AppenderRef ref="dbError"/>
+        </Logger>
+
+        <!-- JSON API 로거(원하면 실제 패키지로 변경) -->
+        <Logger name="com.timepalette.daylogue.api.json" level="INFO" additivity="false">
+            <AppenderRef ref="jsonInfoFile"/>
+        </Logger>
+
+        <!-- Root -->
+        <Root level="INFO">
+            <AppenderRef ref="console"/>
+            <AppenderRef ref="infoFile"/>
+            <AppenderRef ref="errorFile"/>
+            <AppenderRef ref="dbError"/>
+        </Root>
+    </Loggers>
+
+</Configuration>

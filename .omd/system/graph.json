@@ -1,0 +1,554 @@
+{
+  "$schema": "https://oh-my-design.kr/schema/design-system-graph-v2.schema.json",
+  "components_states": {
+    "components": [
+      {
+        "anatomy": [
+          "label"
+        ],
+        "id": "button-primary",
+        "interaction": {
+          "kind": "interactive",
+          "state_applicability": {
+            "default": {
+              "applicability": "applicable"
+            },
+            "disabled": {
+              "applicability": "applicable"
+            },
+            "error": {
+              "applicability": "not-applicable",
+              "reason": "버튼 자체는 오류 상태를 갖지 않으며 오류는 입력 필드에서 표현한다"
+            },
+            "focus-visible": {
+              "applicability": "applicable"
+            },
+            "hover": {
+              "applicability": "applicable"
+            },
+            "loading": {
+              "applicability": "applicable"
+            },
+            "success": {
+              "applicability": "not-applicable",
+              "reason": "버튼 자체는 성공 상태를 갖지 않으며 성공은 토스트/배지로 표현한다"
+            }
+          }
+        },
+        "semantics": "화면당 가장 중요한 단일 행동에만 쓰는 검정 배경 pill 버튼",
+        "states": [
+          "default",
+          "hover",
+          "focus-visible",
+          "disabled",
+          "loading"
+        ],
+        "token_refs": [
+          "color.foreground",
+          "color.on-primary",
+          "radius.full",
+          "space.xl"
+        ],
+        "variants": [
+          "default"
+        ]
+      },
+      {
+        "anatomy": [
+          "label"
+        ],
+        "id": "button-secondary",
+        "interaction": {
+          "kind": "interactive",
+          "state_applicability": {
+            "default": {
+              "applicability": "applicable"
+            },
+            "disabled": {
+              "applicability": "applicable"
+            },
+            "error": {
+              "applicability": "not-applicable",
+              "reason": "버튼 자체는 오류 상태를 갖지 않는다"
+            },
+            "focus-visible": {
+              "applicability": "applicable"
+            },
+            "hover": {
+              "applicability": "applicable"
+            },
+            "loading": {
+              "applicability": "applicable"
+            },
+            "success": {
+              "applicability": "not-applicable",
+              "reason": "버튼 자체는 성공 상태를 갖지 않는다"
+            }
+          }
+        },
+        "semantics": "보조 행동을 위한 아웃라인/표면 버튼. color.accent는 쓰지 않는다",
+        "states": [
+          "default",
+          "hover",
+          "focus-visible",
+          "disabled",
+          "loading"
+        ],
+        "token_refs": [
+          "color.surface",
+          "color.foreground",
+          "color.hairline",
+          "radius.full"
+        ],
+        "variants": [
+          "default"
+        ]
+      },
+      {
+        "anatomy": [
+          "label",
+          "control",
+          "helper-text"
+        ],
+        "id": "input-field",
+        "interaction": {
+          "kind": "interactive",
+          "state_applicability": {
+            "default": {
+              "applicability": "applicable"
+            },
+            "disabled": {
+              "applicability": "applicable"
+            },
+            "error": {
+              "applicability": "applicable"
+            },
+            "focus-visible": {
+              "applicability": "applicable"
+            },
+            "hover": {
+              "applicability": "applicable"
+            },
+            "loading": {
+              "applicability": "not-applicable",
+              "reason": "텍스트 입력 자체는 별도의 로딩 상태를 갖지 않는다"
+            },
+            "success": {
+              "applicability": "applicable"
+            }
+          }
+        },
+        "semantics": "텍스트/선택 입력 공통 스타일. 포커스 시 color.accent 2px 아웃라인",
+        "states": [
+          "default",
+          "hover",
+          "focus-visible",
+          "disabled",
+          "error",
+          "success"
+        ],
+        "token_refs": [
+          "color.canvas",
+          "color.hairline",
+          "color.foreground",
+          "color.accent",
+          "radius.sm"
+        ],
+        "variants": [
+          "text",
+          "select",
+          "textarea"
+        ]
+      },
+      {
+        "anatomy": [
+          "icon",
+          "label"
+        ],
+        "id": "nav-item",
+        "interaction": {
+          "kind": "interactive",
+          "state_applicability": {
+            "default": {
+              "applicability": "applicable"
+            },
+            "disabled": {
+              "applicability": "not-applicable",
+              "reason": "내비게이션 항목은 비활성화하지 않는다"
+            },
+            "error": {
+              "applicability": "not-applicable",
+              "reason": "내비게이션 항목은 오류 상태를 갖지 않는다"
+            },
+            "focus-visible": {
+              "applicability": "applicable"
+            },
+            "hover": {
+              "applicability": "applicable"
+            },
+            "loading": {
+              "applicability": "not-applicable",
+              "reason": "내비게이션 항목은 로딩 상태를 갖지 않는다"
+            },
+            "success": {
+              "applicability": "not-applicable",
+              "reason": "내비게이션 항목은 성공 상태를 갖지 않는다"
+            }
+          }
+        },
+        "semantics": "LNB 내비게이션 항목. active 상태는 surface 배경 + foreground 텍스트로만 표현하고 accent는 쓰지 않는다",
+        "states": [
+          "default",
+          "hover",
+          "focus-visible"
+        ],
+        "token_refs": [
+          "color.foreground",
+          "color.muted",
+          "color.surface",
+          "radius.md"
+        ],
+        "variants": [
+          "default",
+          "active"
+        ]
+      },
+      {
+        "anatomy": [
+          "header(optional)",
+          "body",
+          "footer(optional)"
+        ],
+        "id": "surface-card",
+        "interaction": {
+          "kind": "non-interactive",
+          "reason": "그 자체로 클릭 대상이 아닌 정적 컨테이너이며, 내부의 개별 요소가 상호작용을 담당한다"
+        },
+        "semantics": "정보를 묶는 정적 표면 컨테이너. 동일 크기로 반복 배치하지 않고 콘텐츠 비중에 따라 폭을 달리한다",
+        "states": [
+          "default"
+        ],
+        "token_refs": [
+          "color.canvas",
+          "color.hairline",
+          "radius.lg",
+          "shadow.card"
+        ],
+        "variants": [
+          "default"
+        ]
+      }
+    ],
+    "rules": [
+      "모든 interactive 컴포넌트는 focus-visible 상태에서 color.accent 2px 아웃라인을 표시한다.",
+      "color.accent는 button-primary와 input-field의 포커스 표시 외에는 컴포넌트 배경색으로 쓰지 않는다."
+    ]
+  },
+  "content_locales": {
+    "locales": [
+      {
+        "locale": "ko",
+        "rules": [
+          "기본 로케일. 모든 UI 문자열의 1차 기준이다."
+        ],
+        "status": "supported"
+      }
+    ],
+    "terminology": {
+      "Actual": "실제 기록",
+      "Diary": "다이어리",
+      "Event": "일정",
+      "Plan": "계획",
+      "Routine": "루틴",
+      "Task": "할 일"
+    },
+    "voice": [
+      "담백하고 절제된 안내형 문장을 쓰고 과도한 이모지·느낌표는 쓰지 않는다.",
+      "핵심 동사를 문장 앞쪽에 두어 사용자가 취할 행동을 명확히 한다.",
+      "실패·미완료를 벌점화하는 표현을 쓰지 않는다(예: \"실패\" 대신 \"이월\"/\"다음에\")."
+    ]
+  },
+  "experience": {
+    "avoid": [
+      "정형화된 동일 크기 카드 격자의 기계적 반복",
+      "무난한 블루/퍼플 톤 그라데이션 배경",
+      "한 화면에서 여러 강조색을 동시에 쓰는 것",
+      "장식적 이모지, 과도한 그림자, 네온톤 색상"
+    ],
+    "design_direction": [
+      "절제된 모노톤 표면(canvas/surface/hairline) 위에 포인트 컬러 1개만 사용한다",
+      "제목과 본문의 굵기·크기 대비를 극대화한 에디토리얼 타이포그래피를 쓴다",
+      "넓은 여백과 명확한 시각적 위계를 우선한다",
+      "미세한 다단 그림자와 얇은 테두리로 절제된 고급 질감을 표현한다"
+    ],
+    "primary_tasks": [
+      "오늘의 일정·할 일·루틴을 한눈에 확인하고 실제 기록과 비교하기",
+      "새 일정/할 일/루틴/다이어리를 빠르게 작성하기",
+      "모드(J/P/B)와 글양식을 취향에 맞게 세부 설정하기",
+      "지난 기록과 통계를 돌아보기"
+    ],
+    "principles": [
+      "실제 기록은 항상 3탭 이내에 남길 수 있어야 한다",
+      "계획 미완료를 시각적으로 벌점화하지 않는다",
+      "시간 데이터는 항상 명료한 위계로 보여준다(오늘/이번 주/과거)"
+    ],
+    "summary": "Timebar Diary는 계획(Plan)과 실제 기록(Actual)을 같은 시간축에서 비교하는 개인 시간관리 서비스다. 이 디자인 시스템은 정형화된 카드 그리드와 상투적인 블루/퍼플 그라데이션을 피하고, 절제된 모노톤 표면 위에 단 하나의 포인트 컬러만 쓰는 에디토리얼한 절제미를 추구한다."
+  },
+  "foundations": {
+    "contrast_pairs": [
+      {
+        "background": "color.canvas",
+        "foreground": "color.foreground",
+        "minimum_ratio": 7
+      },
+      {
+        "background": "color.foreground",
+        "foreground": "color.on-primary",
+        "minimum_ratio": 7
+      },
+      {
+        "background": "color.canvas",
+        "foreground": "color.muted",
+        "minimum_ratio": 4.5
+      },
+      {
+        "background": "color.accent",
+        "foreground": "color.on-accent",
+        "minimum_ratio": 4.5
+      }
+    ],
+    "reduced_motion": true,
+    "rules": [
+      "배경은 canvas/surface 단색만 사용하고 그라데이션은 쓰지 않는다.",
+      "포인트 컬러(color.accent)는 한 화면에서 가장 중요한 단일 CTA·강조 요소 하나에만 사용한다.",
+      "그림자는 shadow.card 또는 shadow.raised 토큰만 사용하며, 임의의 진한 단일 그림자를 새로 만들지 않는다.",
+      "섹션 간 수직 여백은 최소 space.section(96px)을 기본으로 하고, 좁은 화면에서만 축소한다.",
+      "정형화된 동일 크기 카드 격자를 기본값으로 삼지 않는다 — 콘텐츠 비중에 따라 폭과 높이를 달리한다."
+    ],
+    "tokens": {
+      "color.accent": {
+        "$description": "Timebar Diary 전용 포인트 컬러(딥 파인 그린) — 절제된 모노톤 위에 단 하나만 쓰는 강조색. 기존 관행적인 블루/퍼플 SaaS 톤을 의도적으로 피하고, 루틴·성장의 이미지와 맞는 깊은 그린을 greenfield로 제안",
+        "$type": "color",
+        "$value": "#2f5d46"
+      },
+      "color.canvas": {
+        "$description": "ElevenLabs 공개 마케팅 표면에서 반복 관찰된 기본 캔버스 배경",
+        "$type": "color",
+        "$value": "#ffffff"
+      },
+      "color.foreground": {
+        "$description": "ElevenLabs 공개 표면에서 반복 관찰된 기본 전경/텍스트 색",
+        "$type": "color",
+        "$value": "#000000"
+      },
+      "color.hairline": {
+        "$description": "ElevenLabs 공개 라우트에서 반복 관찰된 computed border 색",
+        "$type": "color",
+        "$value": "#e5e5e5"
+      },
+      "color.muted": {
+        "$description": "ElevenLabs 공개 라우트에서 반복 관찰된 보조/설명 텍스트 색",
+        "$type": "color",
+        "$value": "#777169"
+      },
+      "color.on-accent": {
+        "$description": "포인트 컬러 위에 놓이는 텍스트 색",
+        "$type": "color",
+        "$value": "#ffffff"
+      },
+      "color.on-primary": {
+        "$description": "검정 프라이머리 액션 위에 놓이는 텍스트 색 (ElevenLabs 관찰값)",
+        "$type": "color",
+        "$value": "#ffffff"
+      },
+      "color.surface": {
+        "$description": "ElevenLabs 홈에서 관찰된 따뜻한 오프화이트 표면 — 캔버스보다 한 단계 낮은 구획 배경",
+        "$type": "color",
+        "$value": "#f5f3f1"
+      },
+      "radius.full": {
+        "$description": "ElevenLabs 공개 액션(pill) 코너 관찰값",
+        "$type": "dimension",
+        "$value": "9999px"
+      },
+      "radius.lg": {
+        "$description": "ElevenLabs 에디토리얼 카드 코너 관찰값",
+        "$type": "dimension",
+        "$value": "16px"
+      },
+      "radius.md": {
+        "$description": "ElevenLabs 공개 리스트박스/카드 코너 관찰값",
+        "$type": "dimension",
+        "$value": "12px"
+      },
+      "radius.sm": {
+        "$description": "ElevenLabs 공개 텍스트 컨트롤 코너 관찰값",
+        "$type": "dimension",
+        "$value": "4px"
+      },
+      "shadow.card": {
+        "$description": "ElevenLabs 에디토리얼 카드에서 관찰된 저알파 다단 그림자",
+        "$type": "shadow",
+        "$value": "0px 2px 4px rgba(0,0,0,0.04), 0px 0px 1.143px rgba(0,0,0,0.4)"
+      },
+      "shadow.raised": {
+        "$description": "ElevenLabs 화이트 공개 액션에서 관찰된 저알파 3단 그림자",
+        "$type": "shadow",
+        "$value": "0px 0px 1px rgba(0,0,0,0.4), 0px 1px 1px rgba(0,0,0,0.04), 0px 2px 4px rgba(0,0,0,0.04)"
+      },
+      "space.gutter": {
+        "$description": "페이지 좌우 기본 거터 — project greenfield 확장",
+        "$type": "dimension",
+        "$value": "48px"
+      },
+      "space.lg": {
+        "$description": "ElevenLabs 공개 컨트롤/컨테이너 간격",
+        "$type": "dimension",
+        "$value": "12px"
+      },
+      "space.md": {
+        "$description": "ElevenLabs 공개 컨트롤 간격",
+        "$type": "dimension",
+        "$value": "8px"
+      },
+      "space.section": {
+        "$description": "섹션과 섹션 사이의 큰 수직 여백 — ElevenLabs 증거 범위(4~20px) 밖의 페이지 레벨 여백으로, 과감한 화이트스페이스 요구를 충족하기 위한 project greenfield 확장",
+        "$type": "dimension",
+        "$value": "96px"
+      },
+      "space.sm": {
+        "$description": "ElevenLabs 공개 컨트롤 간격",
+        "$type": "dimension",
+        "$value": "6px"
+      },
+      "space.xl": {
+        "$description": "ElevenLabs 공개 컨테이너 간격",
+        "$type": "dimension",
+        "$value": "16px"
+      },
+      "space.xs": {
+        "$description": "ElevenLabs 공개 컨트롤에서 관찰된 최소 간격",
+        "$type": "dimension",
+        "$value": "4px"
+      },
+      "space.xxl": {
+        "$description": "ElevenLabs 공개 컨테이너 간격",
+        "$type": "dimension",
+        "$value": "20px"
+      }
+    }
+  },
+  "governance": {
+    "change_policy": [
+      "DESIGN.md 변경은 omd:init/omd:apply 워크플로를 통해서만 이루어지며 파일을 직접 수정하지 않는다.",
+      "새 토큰을 추가하기 전에 기존 토큰으로 표현 가능한지 먼저 검토한다."
+    ],
+    "priority": [
+      "접근성",
+      "일관성",
+      "심미성",
+      "성능"
+    ],
+    "unknown_policy": "absent-at-smallest-unresolved-boundary"
+  },
+  "identity": {
+    "kind": "project-system",
+    "name": "Timebar Diary",
+    "scope": "timebar-diary 웹/PWA 전체 UI — 공개 마케팅 표면과 인증된 프로덕트 화면 모두"
+  },
+  "layout_platforms": {
+    "minimum_width_px": 320,
+    "platforms": [
+      {
+        "id": "web",
+        "rules": [
+          "반응형 웹 우선, 데스크톱 사이드바 폭 244px 고정"
+        ]
+      }
+    ],
+    "reflow_zoom_percent": 200,
+    "rules": [
+      "데스크톱 콘텐츠 최대폭은 1180px로 제한하고, 그 이상에서는 좌우 여백을 확장한다.",
+      "LNB(사이드바)와 메인 콘텐츠 영역은 각각 독립적으로 스크롤한다.",
+      "760px 미만에서는 LNB를 오프캔버스로 전환하고 콘텐츠는 전체 폭을 사용한다."
+    ]
+  },
+  "projection": {
+    "locale": "en",
+    "path": "DESIGN.md",
+    "sha256": "19cbc861097b84866bc780a908d9f1ea510cfcc090b7bd31aa7dd0e7fc69c9e6"
+  },
+  "schema_version": "2.0.0",
+  "typography_assets": {
+    "assets": [
+      {
+        "id": "pretendard-variable",
+        "kind": "font",
+        "license_status": "verified",
+        "notes": "한글+라틴 가변 폰트, weight 45-920. 본문/제목/컨트롤 공통 사용",
+        "source": "Pretendard Variable (OFL-1.1), jsDelivr CDN 자체 호스팅",
+        "source_status": "licensed-sourced"
+      },
+      {
+        "id": "jetbrains-mono",
+        "kind": "font",
+        "license_status": "verified",
+        "notes": "숫자·시간 표기 전용 tabular figure. 타임바 앱의 정밀함을 시각적으로 강조",
+        "source": "JetBrains Mono (OFL-1.1), Google Fonts",
+        "source_status": "licensed-sourced"
+      }
+    ],
+    "roles": [
+      {
+        "family": "Pretendard Variable, -apple-system, BlinkMacSystemFont, sans-serif",
+        "id": "display",
+        "line_height": 1.15,
+        "size": "40-56px (반응형)",
+        "tracking": "-0.02em",
+        "usage": "페이지 타이틀, 히어로 헤드라인",
+        "weight": 300
+      },
+      {
+        "family": "Pretendard Variable, -apple-system, BlinkMacSystemFont, sans-serif",
+        "id": "heading",
+        "line_height": 1.3,
+        "size": "18-24px",
+        "tracking": "-0.01em",
+        "usage": "섹션 제목, 카드 타이틀",
+        "weight": 600
+      },
+      {
+        "family": "Pretendard Variable, -apple-system, BlinkMacSystemFont, sans-serif",
+        "id": "body",
+        "line_height": 1.6,
+        "size": "14-15px",
+        "tracking": "0em",
+        "usage": "본문, 리스트, 설명 텍스트",
+        "weight": 400
+      },
+      {
+        "family": "Pretendard Variable, -apple-system, BlinkMacSystemFont, sans-serif",
+        "id": "control",
+        "line_height": 1,
+        "size": "13px",
+        "tracking": "0em",
+        "usage": "버튼, 입력 라벨, UI 컨트롤 텍스트",
+        "weight": 500
+      },
+      {
+        "family": "JetBrains Mono, ui-monospace, monospace",
+        "id": "figure",
+        "line_height": 1,
+        "size": "28-40px",
+        "tracking": "-0.01em",
+        "usage": "통계 수치, D-Day 카운터, 타임스탬프 등 숫자 강조",
+        "weight": 500
+      }
+    ],
+    "rules": [
+      "display 역할은 300 굵기의 큰 글자, body 역할은 400 굵기의 작은 글자로 두어 굵기·크기 대비로 위계를 만든다 — 같은 크기에서 굵기만 바꿔 위계를 만들지 않는다.",
+      "숫자(통계, D-Day, 타임스탬프)는 항상 figure 역할(JetBrains Mono)로 표기해 표 형태 정렬과 이질적 텍스처를 동시에 얻는다.",
+      "자간은 display/heading에서만 음수(-0.01em~-0.02em)를 주고, body/control은 0em을 유지해 긴 문단 가독성을 지킨다."
+    ]
+  }
+}
