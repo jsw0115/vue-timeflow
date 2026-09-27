@@ -1,0 +1,23 @@
+# Isolated local environment; never enable this profile against an existing database.
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:13316/timeflow_chat_dev?connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true
+    username: timeflow_chat
+    password: ${CHAT_DEV_DB_PASSWORD:local-chat-only}
+  flyway:
+    locations: classpath:db/chat-local-core
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 16389
+app:
+  cors:
+    allowed-origins: http://localhost:5173,http://127.0.0.1:5173,http://127.0.0.1:15173
+  chat:
+    enabled: true
+  security:
+    jwt:
+      secret: ${JWT_SECRET:local-chat-development-only-not-for-production-2026}
+logging:
+  config: classpath:log4j2-chat-local.xml

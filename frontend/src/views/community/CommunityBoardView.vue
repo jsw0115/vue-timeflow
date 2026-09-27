@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import { localCollection } from '../../store/localCollection'
+import { communityPosts as posts } from '../../store/communityPosts'
 import SubPageHeader from '../../components/SubPageHeader.vue'
 import Modal from '../../components/Modal.vue'
 import TagMentionInput from '../../components/TagMentionInput.vue'
@@ -14,11 +14,6 @@ const COMMUNITY_TABS = [
   { label: '멤버', path: '/community/members' },
   { label: '채팅', path: '/community/chat' },
 ]
-
-const posts = localCollection('community-posts', [
-  { id: 1, name: '김지수', time: '방금 전', body: '오늘도 6km 완주! 타임바 플래너에 자동으로 기록됐어요.', auto: true, likes: 12, comments: 3, liked: false },
-  { id: 2, name: '이서연', time: '32분 전', body: '아침 스트레칭 15분 완료! 다들 화이팅이에요', auto: false, likes: 8, comments: 1, liked: false },
-])
 
 const showPost = ref(false)
 const draft = ref('')
@@ -34,9 +29,6 @@ function submitPost() {
     comments: 0,
     liked: false,
   })
-  // 태그·멘션 인덱스에도 등록해 태그 모아보기·멘션함에서 함께 보이게 한다
-  const firstLine = draft.value.trim().split(/\r?\n/)[0].slice(0, 24)
-  addPost({ kind: '게시글', title: firstLine, body: draft.value.trim(), link: '/community/board' })
   draft.value = ''
   showPost.value = false
 }
@@ -51,7 +43,7 @@ function toggleLike(p) {
     <template #actions><button class="primary" @click="showPost = true">+ 인증하기</button></template>
   </SubPageHeader>
 
-  <section class="card feed-post" v-for="p in posts" :key="p.id">
+  <section :id="`post-${p.id}`" class="card feed-post" v-for="p in posts" :key="p.id">
     <div class="event" style="border-bottom: none">
       <i>{{ p.name[0] }}</i>
       <span style="flex: 1"><b>{{ p.name }}</b><small>{{ p.time }}</small></span>

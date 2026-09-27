@@ -22738,6 +22738,33 @@
             "description": "URL 인코딩한 # 없는 태그"
           },
           {
+            "name": "resourceTypes",
+            "in": "query",
+            "required": false,
+            "description": "통합함 원본 종류. PLANNER,DDAY,EVENT,TASK,ROUTINE,CHALLENGE,POST,DIARY,COMMUNITY,MEMO,CHAT,WBS,WORK_RECORD. 생략하면 접근 가능한 전체 종류; 플래너 화면 필터는 PLANNER,EVENT,TASK,ROUTINE으로 확장한다.",
+            "schema": {
+              "type": "string",
+              "description": "통합함 원본 종류. PLANNER,DDAY,EVENT,TASK,ROUTINE,CHALLENGE,POST,DIARY,COMMUNITY,MEMO,CHAT,WBS,WORK_RECORD. 생략하면 접근 가능한 전체 종류; 플래너 화면 필터는 PLANNER,EVENT,TASK,ROUTINE으로 확장한다.",
+              "example": "DDAY,DIARY",
+              "pattern": "^(PLANNER|DDAY|EVENT|TASK|ROUTINE|CHALLENGE|POST|DIARY|COMMUNITY|MEMO|CHAT|WBS|WORK_RECORD)(,(PLANNER|DDAY|EVENT|TASK|ROUTINE|CHALLENGE|POST|DIARY|COMMUNITY|MEMO|CHAT|WBS|WORK_RECORD))*$"
+            },
+            "example": "DDAY,DIARY"
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "description": "앞뒤 공백 제거; LIKE 와일드카드 이스케이프; 최대100자",
+            "schema": {
+              "type": "string",
+              "description": "앞뒤 공백 제거; LIKE 와일드카드 이스케이프; 최대100자",
+              "example": "검토",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "example": "검토"
+          },
+          {
             "name": "cursor",
             "in": "query",
             "required": false,
@@ -22814,7 +22841,7 @@
                     "items": [
                       {
                         "id": "01J00000000000000000000001",
-                        "type": "EVENT",
+                        "type": "PLANNER",
                         "title": "설계 검토",
                         "excerpt": "오늘의 기록"
                       }
@@ -23037,6 +23064,33 @@
         "x-authorization": "USER + RESOURCE_ACL",
         "parameters": [
           {
+            "name": "resourceTypes",
+            "in": "query",
+            "required": false,
+            "description": "통합함 원본 종류. PLANNER,DDAY,EVENT,TASK,ROUTINE,CHALLENGE,POST,DIARY,COMMUNITY,MEMO,CHAT,WBS,WORK_RECORD. 생략하면 접근 가능한 전체 종류; 플래너 화면 필터는 PLANNER,EVENT,TASK,ROUTINE으로 확장한다.",
+            "schema": {
+              "type": "string",
+              "description": "통합함 원본 종류. PLANNER,DDAY,EVENT,TASK,ROUTINE,CHALLENGE,POST,DIARY,COMMUNITY,MEMO,CHAT,WBS,WORK_RECORD. 생략하면 접근 가능한 전체 종류; 플래너 화면 필터는 PLANNER,EVENT,TASK,ROUTINE으로 확장한다.",
+              "example": "DDAY,DIARY",
+              "pattern": "^(PLANNER|DDAY|EVENT|TASK|ROUTINE|CHALLENGE|POST|DIARY|COMMUNITY|MEMO|CHAT|WBS|WORK_RECORD)(,(PLANNER|DDAY|EVENT|TASK|ROUTINE|CHALLENGE|POST|DIARY|COMMUNITY|MEMO|CHAT|WBS|WORK_RECORD))*$"
+            },
+            "example": "DDAY,DIARY"
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "description": "앞뒤 공백 제거; LIKE 와일드카드 이스케이프; 최대100자",
+            "schema": {
+              "type": "string",
+              "description": "앞뒤 공백 제거; LIKE 와일드카드 이스케이프; 최대100자",
+              "example": "검토",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "example": "검토"
+          },
+          {
             "name": "unread",
             "in": "query",
             "required": false,
@@ -23126,7 +23180,7 @@
                       {
                         "id": "01J00000000000000000000001",
                         "fromUserId": "01J00000000000000000000001",
-                        "resourceType": "EVENT",
+                        "resourceType": "PLANNER",
                         "resourceId": "01J00000000000000000000001",
                         "excerpt": "확인 부탁드려요",
                         "read": false,
@@ -23411,7 +23465,7 @@
                   "data": {
                     "id": "01J00000000000000000000001",
                     "fromUserId": "01J00000000000000000000001",
-                    "resourceType": "EVENT",
+                    "resourceType": "PLANNER",
                     "resourceId": "01J00000000000000000000001",
                     "excerpt": "확인 부탁드려요",
                     "read": true,
@@ -53622,7 +53676,7 @@
                     "items": [
                       {
                         "id": "01J00000000000000000000001",
-                        "type": "EVENT",
+                        "type": "PLANNER",
                         "title": "설계 검토",
                         "excerpt": "오늘의 기록"
                       }
@@ -54252,7 +54306,7 @@
                   "success": true,
                   "data": {
                     "id": "01J00000000000000000000001",
-                    "type": "EVENT",
+                    "type": "PLANNER",
                     "title": "설계 검토",
                     "excerpt": "오늘의 기록"
                   },
@@ -64222,14 +64276,18 @@
           "resourceType": {
             "type": "string",
             "description": "원본 종류",
-            "example": "EVENT",
+            "example": "PLANNER",
             "enum": [
+              "PLANNER",
+              "DDAY",
               "EVENT",
               "TASK",
               "ROUTINE",
-              "DIARY",
-              "MEMO",
+              "CHALLENGE",
               "POST",
+              "DIARY",
+              "COMMUNITY",
+              "MEMO",
               "CHAT",
               "WBS",
               "WORK_RECORD"
@@ -68914,14 +68972,19 @@
           "type": {
             "type": "string",
             "description": "종류",
-            "example": "EVENT",
+            "example": "PLANNER",
             "enum": [
+              "PLANNER",
+              "DDAY",
               "EVENT",
               "TASK",
               "ROUTINE",
-              "DIARY",
-              "MEMO",
+              "CHALLENGE",
               "POST",
+              "DIARY",
+              "COMMUNITY",
+              "MEMO",
+              "CHAT",
               "WBS",
               "WORK_RECORD"
             ]

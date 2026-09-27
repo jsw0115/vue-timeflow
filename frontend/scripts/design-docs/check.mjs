@@ -1,8 +1,9 @@
 import {readFileSync,readdirSync,existsSync} from 'node:fs'
 import path from 'node:path'
 import {fileURLToPath} from 'node:url'
+import {generateCurrent} from './current.mjs'
 const root=path.resolve(process.argv[2]??fileURLToPath(new URL('../../../',import.meta.url)))
-const apiDir=path.join(root,'docs/9-API')
+const apiDir=path.join(root,'docs/api-info')
 const spec=JSON.parse(readFileSync(path.join(apiDir,'openapi.target.json'),'utf8'))
 const resolve=s=>s?.$ref?s.$ref.split('/').slice(1).reduce((v,k)=>v?.[k],spec):s
 const errors=[]
@@ -80,7 +81,9 @@ assert(new Set(ids).size===ids.length,'duplicate operationId')
 const old=[...readFileSync(path.join(root,'docs/api/api-catalog.md'),'utf8').matchAll(/^\| ([A-Z]+-\d+) \|/gm)].map(m=>m[1])
 old.forEach(id=>assert(ids.includes(id),'Missing original API '+id))
 const current=JSON.parse(readFileSync(path.join(apiDir,'current-operations.json'),'utf8'))
-assert(current.length===89,'Current controller inventory changed; review extraction')
+let sourceOperations
+generateCurrent(root,(file,text)=>{if(file.endsWith('current-operations.json'))sourceOperations=JSON.parse(text)})
+assert(JSON.stringify(current)===JSON.stringify(sourceOperations),'Current controller inventory differs from source; regenerate --current-only')
 assert(current.filter(o=>o.stub).length===52,'Stub count differs from source baseline')
 const schema=JSON.parse(readFileSync(path.join(root,'docs/design/current-schema.json'),'utf8'))
 assert(schema.tables.length===37,'DDL table count changed; review extraction')

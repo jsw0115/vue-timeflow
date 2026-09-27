@@ -51,7 +51,7 @@ const share = computed(() => (posts.value.length ? Math.round((myPosts.value.len
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 16px">내 글 모아보기</b>
+    <b style="font-size: 1rem">내 글 모아보기</b>
     <span class="form-note" style="margin: 0">{{ ME }}님이 쓴 글</span>
     <span></span>
     <button class="review" style="margin: 0" @click="router.push('/tags')">태그로 보기</button>

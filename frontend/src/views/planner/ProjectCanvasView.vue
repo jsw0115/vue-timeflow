@@ -133,7 +133,7 @@ function priorityLabel(id) {
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 16px">프로젝트 캔버스</b>
+    <b style="font-size: 1rem">프로젝트 캔버스</b>
     <HelpPopover
       title="프로젝트 캔버스 사용법"
       summary="작업을 카드로 만들어 상태별 컬럼에 놓고, 끌어다 옮기며 진행 상황을 관리하는 보드예요."

@@ -1,3 +1,4 @@
+```mermaid
 erDiagram
   tbl_users {
     CHAR_26_ id PK
@@ -185,3 +186,4 @@ erDiagram
   sticker_pack ||..o{ tbl_sticker_item : "pack_id (unresolved target)"
   users ||..o{ tbl_user_sticker_pack : "user_id (unresolved target)"
   sticker_pack ||..o{ tbl_user_sticker_pack : "pack_id (unresolved target)"
+```

@@ -1,5 +1,7 @@
 # 전체 목표 API 목록
 
+> 2026-09-27 현재 구현은 [104개 소스 API 목록](../api/current-api-inventory.md)을 따른다. 새 [채팅 15개](../chat/api/catalog.md) 및 [Redis 연동 목록](../chat/redis/api-catalog.md)은 `/api/chat` 기준으로 별도 관리한다. 아래 169개는 `/api/v1` 목표 계약이며 구현 API 수와 합산하지 않는다.
+
 기준 2026-09-26 · 전부 설계/미구현. 기존 114개 범위 보존, 추가 55개, 총 169개. 앞부분은 /api/v1.
 
 | ID | Method | Path | 기능 | 상세 문서 |

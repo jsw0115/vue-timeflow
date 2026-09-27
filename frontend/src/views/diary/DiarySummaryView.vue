@@ -66,7 +66,7 @@ const topMood = computed(() => (buckets.value.reduce((a, b) => a + b.mood, 0) / 
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 16px">기간 요약</b>
+    <b style="font-size: 1rem">기간 요약</b>
     <span></span>
     <div class="filter">
       <button v-for="p in PRESETS" :key="p.id" :class="{ selected: preset === p.id }" @click="applyPreset(p)">{{ p.label }}</button>
@@ -96,7 +96,7 @@ const topMood = computed(() => (buckets.value.reduce((a, b) => a + b.mood, 0) / 
     <div class="metrics" style="margin-bottom: 16px">
       <article><span>작성일</span><b class="figure">{{ written }}<small>일</small></b><small>전체 {{ dayCount }}일 중</small></article>
       <article><span>작성률</span><b class="figure">{{ Math.round((written / dayCount) * 100) }}<small>%</small></b></article>
-      <article><span>가장 많은 감정</span><b class="figure" style="font-size: 19px">{{ topMood }}</b></article>
+      <article><span>가장 많은 감정</span><b class="figure" style="font-size: 1.1875rem">{{ topMood }}</b></article>
       <article><span>하이라이트</span><b class="figure">{{ highlights }}<small>건</small></b></article>
     </div>
 

@@ -145,7 +145,7 @@ function importCsv(event) {
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 16px">머니로그</b>
+    <b style="font-size: 1rem">머니로그</b>
     <input type="month" v-model="month" style="margin-left: 0" />
     <span></span>
     <span class="currency-picker">₩ {{ currency }}</span>

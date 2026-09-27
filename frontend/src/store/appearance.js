@@ -12,9 +12,9 @@ export const DENSITIES = {
   roomy: { label: '넓게', desc: '여백을 넉넉하게 써요', scale: 1.18 },
 }
 export const FONT_SIZES = {
-  sm: { label: '작게', px: 13 },
+  sm: { label: '작게', px: 13.125 },
   md: { label: '기본', px: 14 },
-  lg: { label: '크게', px: 15.5 },
+  lg: { label: '크게', px: 15.75 },
 }
 
 function load() {
@@ -37,7 +37,7 @@ export const appearance = reactive(load() ?? { density: 'cozy', fontSize: 'md', 
 export function applyAppearance() {
   const root = typeof document !== 'undefined' ? document.documentElement : null
   if (!root?.dataset) return
-  // 밀도는 여백 토큰(--space-*)을, 글자 크기는 앱 확대율을 바꾼다. 두 값 모두 CSS에서 처리한다.
+  // 밀도는 여백 토큰을, 글자 크기는 rem 기준을 바꾼다. 화면 전체 zoom은 사용하지 않는다.
   root.dataset.density = appearance.density
   root.dataset.font = appearance.fontSize
   root.dataset.reduceMotion = appearance.reduceMotion ? 'on' : 'off'

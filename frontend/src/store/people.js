@@ -82,45 +82,7 @@ export function removeNotification(id) {
 }
 
 /* ---------------- 채팅 ---------------- */
-export const chatRooms = ref([
-  {
-    id: 1,
-    name: '이서연',
-    kind: 'dm',
-    unread: 2,
-    messages: [
-      { id: 1, from: '이서연', body: '오늘 스터디 몇 시에 시작해요?', at: '14:02', mine: false },
-      { id: 2, from: '이서연', body: '자료는 미리 올려둘게요!', at: '14:03', mine: false },
-    ],
-  },
-  {
-    id: 2,
-    name: '스터디 크루',
-    kind: 'group',
-    unread: 0,
-    messages: [
-      { id: 1, from: '박민준', body: '내일 회고 잊지 마세요', at: '11:20', mine: false },
-      { id: 2, from: '나', body: '넵! 준비할게요', at: '11:24', mine: true },
-    ],
-  },
-  { id: 3, name: '박민준', kind: 'dm', unread: 0, messages: [{ id: 1, from: '박민준', body: '러닝 같이 가요', at: '어제', mine: false }] },
-])
-export const unreadChats = computed(() => chatRooms.value.reduce((a, r) => a + r.unread, 0))
-export function openRoom(room) {
-  room.unread = 0
-}
-export function sendMessage(room, body) {
-  const text = body.trim()
-  if (!text) return false
-  room.messages.push({
-    id: Math.max(0, ...room.messages.map((m) => m.id)) + 1,
-    from: '나',
-    body: text,
-    at: new Date().toTimeString().slice(0, 5),
-    mine: true,
-  })
-  return true
-}
+export { unreadChats } from '../features/chat/model/chatStore'
 
 /** 우측 슬라이드 패널 — 'chat' | 'notif' | null */
 export const sidePanel = ref(null)

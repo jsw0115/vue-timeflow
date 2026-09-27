@@ -1,0 +1,292 @@
+{
+  "mysql_version": "8.4.11",
+  "ddl_sha256": "14e1ea4f8cfe5d26a8a2a9b977e2954675a83692866ec95af352112a9e89ba1f",
+  "metadata": {
+    "tables": 40,
+    "columns": 361,
+    "foreign_keys": 60,
+    "checks": 76
+  },
+  "tests": [
+    {
+      "scenario": "고아 사용자 참조 차단",
+      "expected_error": 1452,
+      "result": "PASS"
+    },
+    {
+      "scenario": "다른 사용자 카테고리 연결 차단",
+      "expected_error": 1452,
+      "result": "PASS"
+    },
+    {
+      "scenario": "다른 사용자 일정 연결 차단",
+      "expected_error": 1452,
+      "result": "PASS"
+    },
+    {
+      "scenario": "다른 사용자 시리즈 연결 차단",
+      "expected_error": 1452,
+      "result": "PASS"
+    },
+    {
+      "scenario": "다른 사용자 결과 파일 연결 차단",
+      "expected_error": 1452,
+      "result": "PASS"
+    },
+    {
+      "scenario": "다른 사용자 외부 계정 연결 차단",
+      "expected_error": 1452,
+      "result": "PASS"
+    },
+    {
+      "scenario": "다른 사용자 카테고리 부모 차단",
+      "expected_error": 1452,
+      "result": "PASS"
+    },
+    {
+      "scenario": "카테고리 자기 참조 차단",
+      "expected_error": 3819,
+      "result": "PASS"
+    },
+    {
+      "scenario": "개인 카테고리 소유자 필수",
+      "expected_error": 1048,
+      "result": "PASS"
+    },
+    {
+      "scenario": "일정 종료 역전 차단",
+      "expected_error": 3819,
+      "result": "PASS"
+    },
+    {
+      "scenario": "일정 시간 필수 쌍 차단",
+      "expected_error": 3819,
+      "result": "PASS"
+    },
+    {
+      "scenario": "종일 일정 UTC 혼재 차단",
+      "expected_error": 3819,
+      "result": "PASS"
+    },
+    {
+      "scenario": "종일 종료일 역전 차단",
+      "expected_error": 3819,
+      "result": "PASS"
+    },
+    {
+      "scenario": "여러 날 시간 일정 허용",
+      "expected_error": null,
+      "result": "PASS"
+    },
+    {
+      "scenario": "여러 날 종일 일정 허용",
+      "expected_error": null,
+      "result": "PASS"
+    },
+    {
+      "scenario": "잘못된 BOOLEAN 차단",
+      "expected_error": 3819,
+      "result": "PASS"
+    },
+    {
+      "scenario": "중복 기본 레이아웃 차단",
+      "expected_error": 1062,
+      "result": "PASS"
+    },
+    {
+      "scenario": "NULL 기본 화면 크기 차단",
+      "expected_error": 1048,
+      "result": "PASS"
+    },
+    {
+      "scenario": "잘못된 JSON 차단",
+      "expected_error": 3140,
+      "result": "PASS"
+    },
+    {
+      "scenario": "1:1 사용자 설정 중복 차단",
+      "expected_error": 1062,
+      "result": "PASS"
+    },
+    {
+      "scenario": "1:1 일정 정책 중복 차단",
+      "expected_error": 1062,
+      "result": "PASS"
+    },
+    {
+      "scenario": "1:1 반복 규칙 중복 차단",
+      "expected_error": 1062,
+      "result": "PASS"
+    },
+    {
+      "scenario": "회차 예외 중복 차단",
+      "expected_error": 1062,
+      "result": "PASS"
+    },
+    {
+      "scenario": "예외 시간 모드 NULL 우회 차단",
+      "expected_error": 3819,
+      "result": "PASS"
+    },
+    {
+      "scenario": "예외 종일 변경 허용",
+      "expected_error": null,
+      "result": "PASS"
+    },
+    {
+      "scenario": "일정 버전 중복 차단",
+      "expected_error": 1062,
+      "result": "PASS"
+    },
+    {
+      "scenario": "일정 공유 중복 차단",
+      "expected_error": 1062,
+      "result": "PASS"
+    },
+    {
+      "scenario": "공유받는 사용자 고아 참조 차단",
+      "expected_error": 1452,
+      "result": "PASS"
+    },
+    {
+      "scenario": "할 일 멤버 중복 차단",
+      "expected_error": 1062,
+      "result": "PASS"
+    },
+    {
+      "scenario": "그룹 멤버 중복 차단",
+      "expected_error": 1062,
+      "result": "PASS"
+    },
+    {
+      "scenario": "스티커 설치 중복 차단",
+      "expected_error": 1062,
+      "result": "PASS"
+    },
+    {
+      "scenario": "루틴 날짜 중복 차단",
+      "expected_error": 1062,
+      "result": "PASS"
+    },
+    {
+      "scenario": "다이어리 날짜 중복 차단",
+      "expected_error": 1062,
+      "result": "PASS"
+    },
+    {
+      "scenario": "친구 역방향 쌍 차단",
+      "expected_error": 3819,
+      "result": "PASS"
+    },
+    {
+      "scenario": "자기 자신 친구 차단",
+      "expected_error": 3819,
+      "result": "PASS"
+    },
+    {
+      "scenario": "친구 외부 요청자 차단",
+      "expected_error": 3819,
+      "result": "PASS"
+    },
+    {
+      "scenario": "요일 범위 차단",
+      "expected_error": 3819,
+      "result": "PASS"
+    },
+    {
+      "scenario": "루틴 요일 중복 차단",
+      "expected_error": 1062,
+      "result": "PASS"
+    },
+    {
+      "scenario": "할 일 요일 중복 차단",
+      "expected_error": 1062,
+      "result": "PASS"
+    },
+    {
+      "scenario": "반복 종료 날짜 필수",
+      "expected_error": 3819,
+      "result": "PASS"
+    },
+    {
+      "scenario": "반복 간격 양수 보장",
+      "expected_error": 3819,
+      "result": "PASS"
+    },
+    {
+      "scenario": "알 수 없는 할 일 상태 차단",
+      "expected_error": 3819,
+      "result": "PASS"
+    },
+    {
+      "scenario": "기기 미연결 토큰 허용",
+      "expected_error": null,
+      "result": "PASS"
+    },
+    {
+      "scenario": "동일 사용자 기기 토큰 허용",
+      "expected_error": null,
+      "result": "PASS"
+    },
+    {
+      "scenario": "다른 사용자 기기 토큰 차단",
+      "expected_error": 1452,
+      "result": "PASS"
+    },
+    {
+      "scenario": "음수 파일 크기 차단",
+      "expected_error": 3819,
+      "result": "PASS"
+    },
+    {
+      "scenario": "동기화 종료 역전 차단",
+      "expected_error": 3819,
+      "result": "PASS"
+    },
+    {
+      "scenario": "외부 공급자 다중 계정 허용",
+      "expected_error": null,
+      "result": "PASS"
+    },
+    {
+      "scenario": "동일 외부 계정 중복 차단",
+      "expected_error": 1062,
+      "result": "PASS"
+    },
+    {
+      "scenario": "참조 중인 사용자 삭제 차단",
+      "expected_error": 1451,
+      "result": "PASS"
+    },
+    {
+      "scenario": "참조 중인 일정 삭제 차단",
+      "expected_error": 1451,
+      "result": "PASS"
+    },
+    {
+      "scenario": "실제 기록 0분 구간 차단",
+      "expected_error": 3819,
+      "result": "PASS"
+    },
+    {
+      "scenario": "플래너 소유자 필수",
+      "expected_error": 1364,
+      "result": "PASS"
+    },
+    {
+      "scenario": "플래너 시간 한쪽 NULL 차단",
+      "expected_error": 3819,
+      "result": "PASS"
+    },
+    {
+      "scenario": "방해금지 자정 통과 허용",
+      "expected_error": null,
+      "result": "PASS"
+    },
+    {
+      "scenario": "방해금지 한쪽 NULL 차단",
+      "expected_error": 3819,
+      "result": "PASS"
+    }
+  ]
+}

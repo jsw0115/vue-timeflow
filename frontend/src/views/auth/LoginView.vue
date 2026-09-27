@@ -1,11 +1,13 @@
 <script setup>
 import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { login } from '../../features/auth/session'
 
 const router = useRouter()
-const email = ref('jisu@timebar.app')
+const route = useRoute()
+const email = ref('')
 const password = ref('')
-const keepSignedIn = ref(true)
+const busy = ref(false)
 const notice = ref('')
 
 const error = computed(() => {
@@ -13,9 +15,15 @@ const error = computed(() => {
   if (password.value.length < 8) return '비밀번호는 8자 이상이에요.'
   return ''
 })
-function signIn() {
-  if (error.value) return
-  router.push('/')
+async function signIn() {
+  if (error.value || busy.value) return
+  busy.value = true; notice.value = ''
+  try {
+    await login(email.value.trim(), password.value)
+    const target = typeof route.query.redirect === 'string' && /^\/(?!\/)/.test(route.query.redirect) ? route.query.redirect : '/chat'
+    await router.push(target)
+  } catch (err) { notice.value = err.message }
+  finally { busy.value = false }
 }
 function social(provider) {
   notice.value = provider + ' 로그인은 연동 설정을 마친 뒤 사용할 수 있어요.'
@@ -28,7 +36,7 @@ function social(provider) {
     <div class="auth-side">
       <div style="display: flex; align-items: center; gap: 9px"><b style="background: #ffffff26; border-radius: 8px; width: 30px; height: 30px; display: inline-grid; place-items: center">t</b>Timebar Diary</div>
       <div style="max-width: 400px">
-        <p style="font-size: 11px; font-weight: 700; letter-spacing: 1px; opacity: 0.75; margin-bottom: 12px">PLAN vs ACTUAL</p>
+        <p style="font-size: 0.8125rem; font-weight: 700; letter-spacing: 1px; opacity: 0.75; margin-bottom: 12px">PLAN vs ACTUAL</p>
         <h1>계획한 하루와<br />실제로 산 하루,<br />같은 타임라인 위에서.</h1>
         <p>타임바 다이어리는 당신의 계획과 실행 사이의 간격을 시각화해 더 나은 내일을 계획하도록 돕습니다.</p>
       </div>
@@ -41,12 +49,12 @@ function social(provider) {
         <label>이메일<input v-model="email" type="email" autocomplete="email" /></label>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px">
           <label style="margin: 0">비밀번호</label>
-          <router-link to="/auth/reset-password" style="font-size: 10.5px; color: var(--color-accent); font-weight: 700">비밀번호를 잊으셨나요?</router-link>
+          <router-link to="/auth/reset-password" style="font-size: 0.8125rem; color: var(--color-accent); font-weight: 700">비밀번호를 잊으셨나요?</router-link>
         </div>
         <input v-model="password" type="password" autocomplete="current-password" placeholder="8자 이상" style="margin-top: 6px" @keyup.enter="signIn" />
-        <label style="display: flex; align-items: center; gap: 8px; font-weight: 400; margin-top: 14px"><input type="checkbox" v-model="keepSignedIn" style="width: auto" />자동 로그인 유지</label>
+        <p class="form-note">이 탭을 사용하는 동안 로그인 상태를 유지해요.</p>
         <p v-if="error && password" class="form-note">{{ error }}</p>
-        <button class="primary" :disabled="Boolean(error)" @click="signIn">로그인</button>
+        <button class="primary" :disabled="Boolean(error) || busy" @click="signIn">{{ busy ? '로그인하는 중…' : '로그인' }}</button>
         <div style="display: flex; align-items: center; gap: 10px; margin: 20px 0"><span style="flex: 1; height: 1px; background: var(--color-hairline)"></span><small>또는</small><span style="flex: 1; height: 1px; background: var(--color-hairline)"></span></div>
         <div style="display: flex; gap: 9px">
           <button class="auth-social" @click="social('Google')">Google</button>

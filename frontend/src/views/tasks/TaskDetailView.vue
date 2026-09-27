@@ -54,7 +54,7 @@ function remove() {
         <h2 style="margin: 10px 0 4px">{{ task.title }}</h2>
         <p>{{ task.done ? '완료됨' : '진행중' }}</p>
       </div>
-      <label style="display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 600">
+      <label style="display: flex; align-items: center; gap: 8px; font-size: 0.8125rem; font-weight: 600">
         <input type="checkbox" :checked="task.done" @change="toggle(task)" />완료
       </label>
     </div>
@@ -75,7 +75,7 @@ function remove() {
         <div class="subrow" v-for="s in task.subtasks ?? []" :key="s.id" :class="{ done: s.done }">
           <input type="checkbox" :checked="s.done" @change="toggleSubtask(s)" />
           <span>{{ s.title }}</span>
-          <button class="icon" style="width: 22px; height: 22px; font-size: 10px" @click="removeSubtask(s)">✕</button>
+          <button class="icon" style="width: 22px; height: 22px; font-size: 0.75rem" @click="removeSubtask(s)">✕</button>
         </div>
         <div class="form-row" style="margin-top: 8px">
           <input v-model="newSubtask" placeholder="서브태스크 추가" @keydown.enter.prevent="addSubtask" />

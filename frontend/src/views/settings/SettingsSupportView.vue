@@ -9,7 +9,7 @@
     <div class="trow"><b>플랜을 변경하고 싶어요</b><span>›</span></div>
     <div class="trow"><b>계정을 삭제하면 어떻게 되나요?</b><span>›</span></div>
     <div class="section-label">문의</div>
-    <div class="trow"><b>1:1 문의하기</b><span style="color: var(--color-accent); font-weight: 700; font-size: 11px">문의하기</span></div>
+    <div class="trow"><b>1:1 문의하기</b><span style="color: var(--color-accent); font-weight: 700; font-size: 0.8125rem">문의하기</span></div>
     <router-link to="/legal" custom v-slot="{ navigate }"><div class="trow" @click="navigate" style="cursor: pointer"><b>이용약관 및 개인정보처리방침</b><span>›</span></div></router-link>
   </section>
 </template>

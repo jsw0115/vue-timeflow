@@ -49,7 +49,7 @@ function resume() {
     <section class="card plan-current" style="margin-bottom: 16px">
       <span class="pill">현재 플랜</span>
       <div class="head" style="margin-top: 10px; align-items: baseline">
-        <h2 style="font-size: 19px">{{ plan.name }}</h2>
+        <h2 style="font-size: 1.1875rem">{{ plan.name }}</h2>
         <b style="color: var(--color-accent)">{{ plan.price }}</b>
       </div>
       <p>

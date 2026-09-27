@@ -124,7 +124,7 @@ function addNode() {
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 16px">WBS · 작업 분해</b>
+    <b style="font-size: 1rem">WBS · 작업 분해</b>
     <HelpPopover
       title="WBS 사용법"
       summary="큰 일을 작은 작업으로 쪼개고, 공수와 진척이 위로 자동 합산되게 관리하는 화면이에요."

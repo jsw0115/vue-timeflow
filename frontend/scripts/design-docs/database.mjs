@@ -23,7 +23,7 @@ export function generateDatabase(root,output) {
   function scan(dir){for(const e of readdirSync(dir,{withFileTypes:true})){const file=path.join(dir,e.name);if(e.isDirectory())scan(file);else if(e.name.endsWith('Entity.java'))entityFiles.push(file)}}
   scan(path.join(root,'backend/src/main/java'))
   const entities=entityFiles.map(file=>({file:path.relative(root,file).replaceAll('\\','/'),table:readFileSync(file,'utf8').match(/@Table\(name\s*=\s*"([^"]+)"\)/)?.[1]})).filter(x=>x.table)
-  let doc=`# DB 물리 설계서 — 현재 DDL 스냅샷\n\n기준 2026-09-26 · V1__initial_schema.sql에 선언된 ${tables.length}개 테이블을 전부 정리했습니다. DB에 실제 존재하는 테이블을 조회한 결과가 아닙니다.\n\n**실행 금지 경고:** CREATE OR REPLACE TABLE은 기존 테이블을 대체할 수 있습니다. 현재 CREATE 이름은 tbl_ 접두어이지만 FK 대상과 JPA는 접두어가 없습니다. ${missing.length}개 FK 선언의 참조 대상이 이 파일의 CREATE 목록에 없습니다. 운영/개발 데이터에 실행하지 마세요.\n\n[불일치와 이관 절차](04-schema-gaps.md) · [목표 ERD](03-target-database.md) · [API](../9-API/README.md)\n\n## 공통 규칙\n\n- 현재 파일의 ENGINE=InnoDB, utf8mb4_unicode_ci 기준입니다.\n- id는 대체로 CHAR(26), events/planner_item/task_member는 BIGINT입니다. FK 타입 통일이 먼저입니다.\n- DATETIME(3)/(6)는 시간대 정보가 없는 컬럼입니다. _utc 컬럼은 애플리케이션이 UTC로 변환하며, c_at/u_at도 운영 저장 규칙을 통일해야 합니다.\n- VARCHAR 상태값에 SQL CHECK가 없으므로 Java enum과 서버 검증이 필요합니다. JSON처럼 쓰는 LONGTEXT도 JSON 유효성 제약이 자동 보장되지 않습니다.\n- PK/UNIQUE/INDEX와 FK는 아래에 DDL 원문으로 표시합니다. FK가 선언되어 있다는 사실과 정상 적용되었다는 사실은 다릅니다.\n\n## 테이블 목록\n\n| 테이블 | 용도 | 컬럼 수 | JPA 대응 |\n|---|---|---|---|\n`
+  let doc=`# DB 물리 설계서 — 현재 DDL 스냅샷\n\n기준 2026-09-26 · V1__initial_schema.sql에 선언된 ${tables.length}개 테이블을 전부 정리했습니다. DB에 실제 존재하는 테이블을 조회한 결과가 아닙니다.\n\n**실행 금지 경고:** CREATE OR REPLACE TABLE은 기존 테이블을 대체할 수 있습니다. 현재 CREATE 이름은 tbl_ 접두어이지만 FK 대상과 JPA는 접두어가 없습니다. ${missing.length}개 FK 선언의 참조 대상이 이 파일의 CREATE 목록에 없습니다. 운영/개발 데이터에 실행하지 마세요.\n\n[불일치와 이관 절차](04-schema-gaps.md) · [목표 ERD](03-target-database.md) · [API](../api-info/README.md)\n\n## 공통 규칙\n\n- 현재 파일의 ENGINE=InnoDB, utf8mb4_unicode_ci 기준입니다.\n- id는 대체로 CHAR(26), events/planner_item/task_member는 BIGINT입니다. FK 타입 통일이 먼저입니다.\n- DATETIME(3)/(6)는 시간대 정보가 없는 컬럼입니다. _utc 컬럼은 애플리케이션이 UTC로 변환하며, c_at/u_at도 운영 저장 규칙을 통일해야 합니다.\n- VARCHAR 상태값에 SQL CHECK가 없으므로 Java enum과 서버 검증이 필요합니다. JSON처럼 쓰는 LONGTEXT도 JSON 유효성 제약이 자동 보장되지 않습니다.\n- PK/UNIQUE/INDEX와 FK는 아래에 DDL 원문으로 표시합니다. FK가 선언되어 있다는 사실과 정상 적용되었다는 사실은 다릅니다.\n\n## 테이블 목록\n\n| 테이블 | 용도 | 컬럼 수 | JPA 대응 |\n|---|---|---|---|\n`
   for(const t of tables)doc+=`| [${t.name}](#${t.name}) | ${purposes[t.name.replace(/^tbl_/,'')]??'확장 테이블'} | ${t.columns.length} | ${entities.find(e=>'tbl_'+e.table===t.name)?.table??'Entity 없음'} |\n`
   for(const t of tables) {
     doc+=`\n<a id="${t.name}"></a>\n## ${t.name} — ${purposes[t.name.replace(/^tbl_/,'')]}\n\n| 컬럼 | SQL 자료형 | NULL | 기본값 | 키·속성 | 의미 |\n|---|---|---|---|---|---|\n`
@@ -41,6 +41,6 @@ export function generateDatabase(root,output) {
     erd+='  }\n'
   }
   for(const t of tables)for(const f of t.foreignKeys)erd+=`  ${f.target} ||..o{ ${t.name} : "${f.columns} (unresolved target)"\n`
-  output('docs/design/diagrams/current-ddl-relationships.mmd',erd)
+  output('docs/design/diagrams/current-ddl-relationships.md','```mermaid\n'+erd.trimEnd()+'\n```\n')
   output('docs/design/current-schema.json',JSON.stringify({tables,unresolvedForeignKeys:missing,entities},null,2))
 }

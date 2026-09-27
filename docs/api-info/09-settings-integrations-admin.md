@@ -1207,7 +1207,7 @@ HTTP **200**. 응답 헤더 및 구조는 아래와 같습니다.
 | data | SearchHitPage | 필수 | 하위 구조 참조  |
 | data.items | SearchHit[] | 필수 | 권한 범위의 목록 최대 100개 |
 | data.items[].id | string | 필수 | 불투명 리소스 ID; 숫자로 변환하지 않음 최소 1자; 최대 128자 |
-| data.items[].type | string | 필수 | 종류 허용: EVENT, TASK, ROUTINE, DIARY, MEMO, POST, WBS, WORK_RECORD |
+| data.items[].type | string | 필수 | 종류 허용: PLANNER, DDAY, EVENT, TASK, ROUTINE, CHALLENGE, POST, DIARY, COMMUNITY, MEMO, CHAT, WBS, WORK_RECORD |
 | data.items[].title | string | 필수 | 공백만 입력 불가; 앞뒤 공백 제거 최소 1자; 최대 200자 |
 | data.items[].excerpt | string | 필수 | 권한 내 발췌 최대 200자 |
 | data.nextCursor | string / null | 필수 | 다음 페이지 커서; 마지막 null; null 허용  |
@@ -1224,7 +1224,7 @@ HTTP **200**. 응답 헤더 및 구조는 아래와 같습니다.
     "items": [
       {
         "id": "01J00000000000000000000001",
-        "type": "EVENT",
+        "type": "PLANNER",
         "title": "설계 검토",
         "excerpt": "오늘의 기록"
       }
@@ -1397,7 +1397,7 @@ HTTP **200**. 응답 헤더 및 구조는 아래와 같습니다.
 | success | boolean | 필수 | 하위 구조 참조  |
 | data | SearchHit | 필수 | 하위 구조 참조  |
 | data.id | string | 필수 | 불투명 리소스 ID; 숫자로 변환하지 않음 최소 1자; 최대 128자 |
-| data.type | string | 필수 | 종류 허용: EVENT, TASK, ROUTINE, DIARY, MEMO, POST, WBS, WORK_RECORD |
+| data.type | string | 필수 | 종류 허용: PLANNER, DDAY, EVENT, TASK, ROUTINE, CHALLENGE, POST, DIARY, COMMUNITY, MEMO, CHAT, WBS, WORK_RECORD |
 | data.title | string | 필수 | 공백만 입력 불가; 앞뒤 공백 제거 최소 1자; 최대 200자 |
 | data.excerpt | string | 필수 | 권한 내 발췌 최대 200자 |
 | message | string,null | 필수 | 하위 구조 참조  |
@@ -1410,7 +1410,7 @@ HTTP **200**. 응답 헤더 및 구조는 아래와 같습니다.
   "success": true,
   "data": {
     "id": "01J00000000000000000000001",
-    "type": "EVENT",
+    "type": "PLANNER",
     "title": "설계 검토",
     "excerpt": "오늘의 기록"
   },

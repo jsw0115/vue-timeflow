@@ -45,7 +45,7 @@ function createDday() {
     <article v-for="d in filteredDdays" :key="d.id" class="dday-card" style="cursor: pointer" @click="router.push(`/dday/${d.id}`)">
       <div class="head">
         <span class="badge brand">{{ d.category }}</span>
-        <button class="icon" style="width: 26px; height: 26px; font-size: 13px" :title="d.pinned ? '고정 해제' : '고정하기'" aria-label="d.pinned ? '고정 해제' : '고정하기'" @click.stop="togglePin(d)">{{ d.pinned ? '★' : '☆' }}</button>
+        <button class="icon" style="width: 26px; height: 26px; font-size: 0.875rem" :title="d.pinned ? '고정 해제' : '고정하기'" aria-label="d.pinned ? '고정 해제' : '고정하기'" @click.stop="togglePin(d)">{{ d.pinned ? '★' : '☆' }}</button>
       </div>
       <h3>{{ d.title }}</h3>
       <p>{{ d.date }}</p>

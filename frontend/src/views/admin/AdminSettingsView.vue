@@ -76,12 +76,12 @@ const recentAudits = computed(() => auditLogs.value.slice(0, 3))
           <select v-model="draft.defaultMode"><option value="J">J형 · 계획형</option><option value="P">P형 · 즉흥형</option><option value="B">밸런스형</option></select>
         </label>
         <label>사용자당 그룹 개수 제한<input type="number" min="1" max="100" v-model.number="draft.maxGroupsPerUser" /></label>
-        <label class="task" style="border: 0">
-          <input type="checkbox" v-model="draft.signupOpen" />
+        <label class="task" style="border: 0;display: inline-flex;">
+          <input type="checkbox" style="flex-shrink: 0;" v-model="draft.signupOpen" />
           <span style="flex: 1"><b>신규 가입 허용</b><small>끄면 초대받은 사용자만 가입할 수 있어요</small></span>
         </label>
-        <label class="task" style="border: 0">
-          <input type="checkbox" v-model="draft.requireEmailVerify" />
+        <label class="task" style="border: 0;display: inline-flex;">
+          <input type="checkbox" style="flex-shrink: 0;" v-model="draft.requireEmailVerify" />
           <span style="flex: 1"><b>이메일 인증 필수</b><small>인증 전에는 커뮤니티 활동을 제한해요</small></span>
         </label>
       </template>
@@ -105,8 +105,8 @@ const recentAudits = computed(() => auditLogs.value.slice(0, 3))
         <label>비밀번호 최소 길이<input type="number" min="8" max="64" v-model.number="draft.passwordMinLength" /></label>
         <label>세션 유지 시간(시간)<input type="number" min="1" max="720" v-model.number="draft.sessionHours" /></label>
         <label>관리자 IP 허용 목록<input v-model="draft.ipAllowlist" placeholder="쉼표로 구분 · 비우면 제한 없음" /></label>
-        <label class="task" style="border: 0">
-          <input type="checkbox" v-model="draft.twoFactorForAdmins" />
+        <label class="task" style="border: 0;display: inline-flex;">
+          <input type="checkbox" style="flex-shrink: 0;" v-model="draft.twoFactorForAdmins" />
           <span style="flex: 1"><b>관리자 2단계 인증 필수</b><small>운영자 계정은 OTP 없이 로그인할 수 없어요</small></span>
         </label>
       </template>

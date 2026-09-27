@@ -1,0 +1,14 @@
+{
+  "date": "2026-09-27",
+  "passed": [
+    "anonymous conversation opens populated sample room without server requests",
+    "preview send and room tag filter are interactive",
+    "preview mention read and unread filters work",
+    "tag inbox starts with results and shares preview messages",
+    "all four inbox URLs render sample data on direct entry",
+    "new conversation sample participant lookup reuses existing DM",
+    "390px and 320px composer remain visible without horizontal overflow"
+  ],
+  "pageErrors": [],
+  "apiRequests": 0
+}

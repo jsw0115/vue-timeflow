@@ -44,7 +44,7 @@ function open(n) {
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 16px">알림</b>
+    <b style="font-size: 1rem">알림</b>
     <span class="form-note" style="margin: 0">안 읽음 {{ unreadNotifications }}건</span>
     <span></span>
     <button class="primary" :disabled="!unreadNotifications" @click="markAllRead">모두 읽음 처리</button>

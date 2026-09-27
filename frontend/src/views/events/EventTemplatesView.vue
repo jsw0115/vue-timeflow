@@ -75,7 +75,7 @@ function alarmLabel(min) {
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 16px">일정 템플릿</b>
+    <b style="font-size: 1rem">일정 템플릿</b>
     <span class="form-note" style="margin: 0">자주 만드는 일정을 저장해두세요</span>
     <span></span>
     <button class="primary" @click="openAdd">+ 템플릿 저장</button>

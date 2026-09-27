@@ -77,7 +77,7 @@ function fixAll() {
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 16px">공수 계산 · 8월</b>
+    <b style="font-size: 1rem">공수 계산 · 8월</b>
     <HelpPopover
       title="공수 계산 사용법"
       summary="투입 인원과 기간으로 필요한 공수를 산정하고, 실제 투입과 비교해 편차와 비용을 확인하는 화면이에요."
@@ -110,7 +110,7 @@ function fixAll() {
     <article><span>산정 공수</span><b class="figure">{{ totalPlanned }}<small>MD</small></b><small>{{ (totalPlanned / MD_PER_MM).toFixed(2) }} MM</small></article>
     <article><span>실제 공수</span><b class="figure">{{ totalActual }}<small>MD</small></b><small>{{ (totalActual / MD_PER_MM).toFixed(2) }} MM</small></article>
     <article><span>편차</span><b class="figure">{{ totalDiff >= 0 ? '+' : '' }}{{ totalDiff }}<small>MD</small></b><small>보정 요청 {{ pendingCount }}건</small></article>
-    <article><span>예상 비용</span><b class="figure" style="font-size: 19px">{{ won(totalCost) }}</b><small>실제 공수 × 일단가</small></article>
+    <article><span>예상 비용</span><b class="figure" style="font-size: 1.1875rem">{{ won(totalCost) }}</b><small>실제 공수 × 일단가</small></article>
   </div>
 
   <section class="card list">

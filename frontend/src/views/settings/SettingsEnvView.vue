@@ -65,7 +65,7 @@ function save() {
       </button>
     </div>
 
-    <label class="task" style="border: 0; margin-top: 14px">
+    <label class="task" style="border: 0; margin-top: 14px; display: inline-flex;">
       <input type="checkbox" v-model="appearance.reduceMotion" />
       <span style="flex: 1"><b>동작 줄이기</b><small>전환 효과와 애니메이션을 최소화해요</small></span>
     </label>

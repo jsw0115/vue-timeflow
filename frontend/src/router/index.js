@@ -5,8 +5,6 @@ import HomeView from '../views/home/HomeView.vue'
 import NotificationsView from '../views/home/NotificationsView.vue'
 import DdayView from '../views/home/DdayView.vue'
 import CalendarView from '../views/home/CalendarView.vue'
-import TagBoardView from '../views/tags/TagBoardView.vue'
-import MentionBoxView from '../views/tags/MentionBoxView.vue'
 import MyPostsView from '../views/tags/MyPostsView.vue'
 import DdayDetailView from '../views/home/DdayDetailView.vue'
 
@@ -58,7 +56,8 @@ import SharePreviewView from '../views/share/SharePreviewView.vue'
 import BlockListView from '../views/share/BlockListView.vue'
 import AddressBookView from '../views/address/AddressBookView.vue'
 import ProfileCardView from '../views/address/ProfileCardView.vue'
-import ChatListView from '../views/chat/ChatListView.vue'
+import ChatListView from '../features/chat/views/ChatWorkspace.vue'
+import ChatInbox from '../features/inbox/views/UnifiedInbox.vue'
 import ChatRoomView from '../views/chat/ChatRoomView.vue'
 import CommunityFeedView from '../views/community/CommunityFeedView.vue'
 import CommunityHomeView from '../views/community/CommunityHomeView.vue'
@@ -88,7 +87,7 @@ import AdminSettingsView from '../views/admin/AdminSettingsView.vue'
 
 // 인증/온보딩 · 시스템 (사이드바 없는 bare 레이아웃)
 import LoginView from '../views/auth/LoginView.vue'
-import SignupView from '../views/auth/SignupView.vue'
+import SignupView from '../features/auth/views/SignupView.vue'
 import PasswordResetView from '../views/auth/PasswordResetView.vue'
 import SocialLoginView from '../views/auth/SocialLoginView.vue'
 import OnboardingView from '../views/auth/OnboardingView.vue'
@@ -113,7 +112,7 @@ export const navGroups = [
       { path: '/notifications', name: '알림', icon: '◈', component: NotificationsView, title: '초대·승인·시스템 알림을 확인해요' },
       { path: '/calendar', name: '캘린더', icon: '▦', component: CalendarView, title: '일정·D-Day·기록을 한눈에' },
       { path: '/dday', name: 'D-Day', icon: '◆', component: DdayView, title: '기다리는 순간을 모아봐요' },
-      { path: '/mentions', name: '멘션함', icon: '@', component: MentionBoxView, title: '나를 언급한 글을 모아봐요' },
+      { path: '/mentions', name: '멘션함', icon: '@', component: ChatInbox, title: '나를 언급한 글을 모아봐요' },
     ],
   },
   {
@@ -141,7 +140,7 @@ export const navGroups = [
       { path: '/diary', name: '다이어리', icon: '✦', component: DiaryListView, title: '오늘을 기록해요' },
       { path: '/diary/summary', name: '기간 요약', icon: '▧', component: DiarySummaryView, title: '지난 기록을 요약해요' },
       { path: '/memos', name: '메모', icon: '▤', component: MemoInboxView, title: '생각을 놓치지 마세요 · 작성/변환은 모달로 열려요' },
-      { path: '/tags', name: '태그 모아보기', icon: '#', component: TagBoardView, title: '해시태그로 글을 모아봐요' },
+      { path: '/tags', name: '태그 모아보기', icon: '#', component: ChatInbox, title: '해시태그로 모든 글을 모아봐요' },
       { path: '/my-posts', name: '내 글', icon: '☰', component: MyPostsView, title: '내가 쓴 글을 모아봐요' },
       { path: '/money', name: '머니로그', icon: '₩', component: MoneyLogView, title: '수입과 지출을 기록해요' },
     ],
@@ -314,6 +313,8 @@ const routes = [
     component: JoinApprovalsView,
     meta: { label: '커뮤니티 승인함', title: '커뮤니티 가입 요청을 관리해요' },
   },
+  { path: '/chat/mentions', component: ChatInbox, meta: { label: 'Chat mentions' } },
+  { path: '/chat/tags', component: ChatInbox, meta: { label: 'Chat tags' } },
   {
     path: '/chat/room',
     name: '채팅방',

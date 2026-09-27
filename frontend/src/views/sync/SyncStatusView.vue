@@ -59,7 +59,7 @@ function undoResolve(c) {
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 16px">동기화</b>
+    <b style="font-size: 1rem">동기화</b>
     <span class="form-note" style="margin: 0">연결한 캘린더와 일정이 오가는 상태를 관리해요</span>
     <span></span>
   </div>

@@ -32,8 +32,10 @@ export function generateCurrent(root,output) {
   const sources=Object.fromEntries(files.map(p=>[path.basename(p,'.java'),readFileSync(p,'utf8')]))
   const records={},enums={}
   for(const [name,src] of Object.entries(sources)) {
-    const r=src.match(/public record (\w+)\s*\(/)
-    if(r){const [args]=parens(src,r.index+r[0].length-1);records[name]=splitTop(args).map(raw=>{const cleaned=stripAnnotations(raw),m=cleaned.match(/^(.+?)\s+(\w+)$/);if(!m)throw Error('Unparsed record '+name+': '+raw);return {name:m[2],type:m[1],required:/@NotBlank|@NotNull|@AssertTrue/.test(raw),constraints:[...raw.matchAll(/@(NotBlank|NotNull|Email|AssertTrue|Pattern|Size|Min|Max)\b/g)].map(m=>m[1]).join(', ')}})}
+    for(const r of src.matchAll(/public record (\w+)(?:<[^>]+>)?\s*\(/g)) {
+      const [args]=parens(src,r.index+r[0].length-1)
+      records[r[1]]=splitTop(args).map(raw=>{const cleaned=stripAnnotations(raw),m=cleaned.match(/^(.+?)\s+(\w+)$/);if(!m)throw Error('Unparsed record '+r[1]+': '+raw);return {name:m[2],type:m[1],required:/@NotBlank|@NotNull|@NotEmpty|@AssertTrue/.test(raw),constraints:[...raw.matchAll(/@(NotBlank|NotNull|NotEmpty|Email|AssertTrue|Pattern|Size|Min|Max)\b/g)].map(m=>m[1]).join(', ')}})
+    }
     for(const m of src.matchAll(/(?:public )?enum (\w+)\s*\{([^;{}]+)/g)) {const values=m[2].split(',').map(x=>x.trim()).filter(x=>/^[A-Z][A-Z_]*$/.test(x));if(values.length)enums[m[1]]=values}
   }
   function sample(type,name='',depth=0) {
@@ -70,21 +72,25 @@ export function generateCurrent(root,output) {
       const signature=segment.match(/public\s+(.+?)\s+(\w+)\s*\(/)
       if(!signature)throw Error('Unparsed controller method '+controller)
       const [args]=parens(segment,signature.index+signature[0].length-1)
-      const parameters=splitTop(args).map(raw=>{const match=stripAnnotations(raw).match(/^(.+?)\s+(\w+)$/);if(!match)throw Error('Unknown parameter '+raw);const location=raw.includes('@RequestBody')?'body':raw.includes('@RequestPart')?'multipart':raw.includes('@PathVariable')?'path':'query';return {name:match[2],type:match[1],location,required:location==='path'||!(/required\s*=\s*false|defaultValue\s*=/.test(raw)),default:raw.match(/defaultValue\s*=\s*"([^"]+)"/)?.[1]}})
+      const parameters=splitTop(args).map(raw=>{const match=stripAnnotations(raw).match(/^(.+?)\s+(\w+)$/);if(!match)throw Error('Unknown parameter '+raw);const location=raw.includes('@RequestBody')?'body':raw.includes('@RequestPart')?'multipart':raw.includes('@PathVariable')?'path':raw.includes('@RequestHeader')?'header':'query';return {name:match[2],type:match[1],location,required:location==='path'||!(/required\s*=\s*false|defaultValue\s*=/.test(raw)),default:raw.match(/defaultValue\s*=\s*"([^"]+)"/)?.[1]}})
       const route=basePath+(m[2]?.match(/"([^"]*)"/)?.[1]??'')
-      const status=segment.includes('HttpStatus.CREATED')?201:segment.includes('HttpStatus.NO_CONTENT')?204:200
+      const status=segment.includes('HttpStatus.CREATED')?201:segment.includes('HttpStatus.NO_CONTENT')||segment.includes('ResponseEntity.noContent()')?204:200
       const stub=segment.match(/ContractResponses.stub\("([^"]+)"\)/)?.[1]
-      const responseType=signature[1].match(/^ApiResponse<(.+)>$/)?.[1]??'void'
+      const responseType=signature[1].match(/^ApiResponse<(.+)>$/)?.[1]??(signature[1].includes('SseEmitter')?'SseEmitter':'void')
       operations.push({method:m[1].toUpperCase(),route,parameters,status,stub,responseType,controller,kind:stub?'계약 stub':controller==='PlannerController'?'공용 메모리 시연':'서비스 연결',public:['/api/auth/signup','/api/auth/login','/api/auth/refresh'].includes(route)})
     }
   }
-  let doc='# 현재 /api 소스 계약 상세\n\n기준 2026-09-26. Java 소스에서 생성한 정적 계약이며 DB 실행 결과가 아닙니다. 목표 /api/v1과 구분합니다.\n\n'+`총 ${operations.length}개: 서비스 연결 ${operations.filter(o=>o.kind==='서비스 연결').length}, stub ${operations.filter(o=>o.stub).length}, 공용 메모리 ${operations.filter(o=>o.kind==='공용 메모리 시연').length}.\n\n`+
+  let doc='# 현재 /api 소스 계약 상세\n\n기준 2026-09-27. Java 소스에서 생성한 정적 계약이며 DB 실행 결과가 아닙니다. 목표 /api/v1과 구분합니다.\n\n'+`총 ${operations.length}개: 서비스 연결 ${operations.filter(o=>o.kind==='서비스 연결').length}, stub ${operations.filter(o=>o.stub).length}, 공용 메모리 ${operations.filter(o=>o.kind==='공용 메모리 시연').length}.\n\n`+
   '## 공통 주의사항\n\n- 응답은 success/data/message 3필드입니다. 내부 ErrorCode는 JSON에 노출되지 않으므로 아래 코드명을 클라이언트가 받는다고 가정하지 마세요.\n- SecurityConfig는 공개 인증 경로 외 JWT를 요구하지만 관리자 역할 검사는 없습니다. stub 200은 저장 성공이 아닙니다.\n- JSON Content-Type: application/json, Accept: application/json. STT stub만 multipart/form-data; boundary는 HTTP 클라이언트가 지정합니다.\n- 현재 CORS 허용 헤더는 Authorization/Content-Type/X-Request-Id뿐입니다. 목표 If-Match/Idempotency-Key/CSRF/ETag 사용에는 서버 설정 변경이 필요합니다.\n- 존재하지 않는 리소스·서비스 조건은 소스를 함께 확인하세요. IllegalArgumentException/NoSuchElementException은 400, ApiException은 지정 상태, 기타 예외는 500이므로 모든 누락 파라미터가 항상400이라고 보장하지 않습니다.\n- 현재 SQL/JPA 이름 불일치로 실제 DB 부팅이 실패할 수 있습니다. [정합성 보고서](../design/04-schema-gaps.md) 참고.\n- 예시는 DTO 자료형으로 생성한 합성 데이터입니다. 서비스 기본값·실제 응답 값은 DB/시간에 따라 달라집니다. 기록 본문 Map 기반 stub에는 필수 필드 계약 자체가 아직 없습니다.\n\n## 공통 오류\n\n| 내부 코드 | HTTP | 원인 | 대응 |\n|---|---|---|---|\n'
   const errors=[...sources.ErrorCode.matchAll(/(\w+)\(HttpStatus\.(\w+),\s*"([^"]+)"\)/g)]
-  const statusMap={BAD_REQUEST:400,CONFLICT:409,UNAUTHORIZED:401,FORBIDDEN:403,NOT_FOUND:404,INTERNAL_SERVER_ERROR:500}
+  const statusMap={BAD_REQUEST:400,CONFLICT:409,UNAUTHORIZED:401,FORBIDDEN:403,NOT_FOUND:404,TOO_MANY_REQUESTS:429,INTERNAL_SERVER_ERROR:500}
   for(const [,name,status,message] of errors)doc+=`| ${name} | ${statusMap[status]} | ${message} | ${status==='UNAUTHORIZED'?'재발급/재로그인':status==='BAD_REQUEST'?'입력·enum·날짜 확인':status==='FORBIDDEN'?'계정 상태/잠금/권한 확인 후 대기':status==='CONFLICT'?'중복 여부·현재 상태 확인':'requestId 또는 요청 시각으로 서버 로그 확인'} |\n`
   doc+='\n```json\n{"success":false,"data":null,"message":"인증 토큰이 유효하지 않습니다."}\n```\n\n## 엔드포인트별 요청·응답\n'
   for(const o of operations) {
+    if(o.controller==='ChatController') {
+      doc+=`\n### ${o.method} ${o.route}\n\n- 상태: **서비스 연결 · CHAT_ENABLED=true 조건부 활성화**\n- 소스: ChatController.java\n- 인증: JWT + 활성 계정/방 참여 권한. 미리보기 데이터는 브라우저 전용이며 API 인증을 우회하지 않습니다.\n- 성공 HTTP: ${o.status}; ${o.responseType==='SseEmitter'?'text/event-stream (JSON envelope 없음)':o.status===204?'본문 없음':'ApiResponse<'+o.responseType+'>'}\n- 요청·응답·커서·오류: [채팅 API 상세 설계](../chat/api/design.md), [전체 15개 채팅 목록](../chat/api/catalog.md).\n`
+      continue
+    }
     const body=o.parameters.find(p=>p.location==='body'),multipart=o.parameters.find(p=>p.location==='multipart')
     doc+=`\n### ${o.method} ${o.route}\n\n- 상태: **${o.kind}**\n- 소스: ${o.controller}.java\n- 요청 URL: http://localhost:8080${o.route} (로컬 예시)\n- 헤더: ${o.public?'Authorization 없음':'Authorization: Bearer <access-token>'}, Accept: application/json${body?', Content-Type: application/json':multipart?', Content-Type: multipart/form-data; boundary=...':''}\n- 성공 HTTP: ${o.status}; ${o.status===204?'본문 없음':o.stub?'CONTRACT_READY이며 실 처리 없음':'ApiResponse<'+o.responseType+'>'}\n\n`
     doc+=o.parameters.length?'| 위치 | 파라미터 | Java 타입 | 필수 | 기본값 |\n|---|---|---|---|---|\n'+o.parameters.map(p=>`| ${p.location} | ${p.name} | ${cell(p.type)} | ${p.required?'예':'아니오'} | ${p.default??'없음'} |`).join('\n')+'\n':'요청 파라미터 없음.\n'
@@ -96,6 +102,6 @@ export function generateCurrent(root,output) {
   doc+='\n## DTO 필드 사전\n\n필수 표시는 Bean Validation annotation만 반영합니다. 응답 DTO의 선택 표시는 null 가능성 보장이 아니라 요청 검증 annotation이 없다는 의미입니다. Java primitive는 누락 시 기본값으로 역직렬화될 수 있으므로 required와 기본값을 혼동하지 마세요.\n'
   for(const [name,fields] of Object.entries(records))doc+=`\n### ${name}\n\n| 필드 | 자료형 | 검증 필수 | annotation |\n|---|---|---|---|\n`+fields.map(f=>`| ${f.name} | ${cell(f.type)} | ${f.required?'예':'미지정'} | ${f.constraints||'없음'} |`).join('\n')+'\n'
   doc+='\n## Enum 사전\n\n'+Object.entries(enums).map(([n,v])=>`- ${n}: ${v.join(', ')}`).join('\n')+'\n'
-  output('docs/9-API/current-contract.md',doc)
-  output('docs/9-API/current-operations.json',JSON.stringify(operations,null,2))
+  output('docs/api-info/current-contract.md',doc)
+  output('docs/api-info/current-operations.json',JSON.stringify(operations,null,2))
 }

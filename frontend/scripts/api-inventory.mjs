@@ -30,6 +30,7 @@ const output = '# 현재 API 목록 — 소스 자동 대조\n\n' +
   ', 계약 stub ' + rows.filter(r => r.status === '계약 stub').length +
   ', 공용 메모리 시연 ' + rows.filter(r => r.status === '공용 메모리 시연').length + '.\n\n' +
   '서비스 연결은 코드의 Service 호출을 뜻하며 DB 통합 검증 완료를 의미하지 않습니다. 계약 stub은 실제 저장을 하지 않습니다.\n' +
+  'ChatController의 15개 경로는 CHAT_ENABLED=true일 때 등록됩니다. [채팅 계약](../chat/api/catalog.md) · [Redis 목록](../chat/redis/api-catalog.md). SSE는 JSON envelope 대신 text/event-stream을 반환합니다.\n' +
   '현재 관리자 API도 JWT만 검사합니다. 관리자 권한 검사 구현 전 공개 배포 금지.\n\n' +
   '| Method | 전체 경로 | 현재 상태 | 현재 인증 | 컨트롤러 |\n|---|---|---|---|---|\n' +
   rows.map(r => '| ' + r.method + ' | ' + r.route + ' | ' + r.status + ' | ' + r.auth + ' | ' + r.controller + ' |').join('\n') + '\n'

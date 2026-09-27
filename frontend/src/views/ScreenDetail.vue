@@ -51,7 +51,7 @@ const related = computed(() =>
     <div class="screen-head">
       <div>
         <p class="eyebrow">{{ screen.id }} · {{ domainLabel(screen.domain) }}</p>
-        <h1 style="font-size:22px">{{ screen.name }}</h1>
+        <h1 style="font-size:1.375rem">{{ screen.name }}</h1>
         <p>{{ screen.role }}</p>
       </div>
       <div class="sc-tags">

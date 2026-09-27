@@ -145,7 +145,7 @@ function removeRoutine(r) {
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 16px">루틴</b>
+    <b style="font-size: 1rem">루틴</b>
     <HelpPopover
       title="루틴 사용법"
       summary="반복 주기와 목표를 정해두면, 오늘 해야 할 루틴만 골라 보여주고 연속 기록을 이어줘요."
@@ -175,8 +175,8 @@ function removeRoutine(r) {
 
   <section class="card" style="margin-bottom: 16px">
     <div style="display: flex; align-items: baseline; gap: 4px; margin-bottom: 10px">
-      <b class="figure" style="font-size: 25px; letter-spacing: -1px">{{ doneCount }}<small>/{{ todayList.length }}</small></b>
-      <span style="font-size: 12px; color: var(--color-muted)">오늘 완료 · {{ progress }}%</span>
+      <b class="figure" style="font-size: 1.5625rem; letter-spacing: -1px">{{ doneCount }}<small>/{{ todayList.length }}</small></b>
+      <span style="font-size: 0.875rem; color: var(--color-muted)">오늘 완료 · {{ progress }}%</span>
     </div>
     <div class="progress green"><em :style="{ width: progress + '%' }"></em></div>
   </section>

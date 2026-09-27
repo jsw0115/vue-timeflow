@@ -1,11 +1,16 @@
 <script setup>
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { tasks, blocks, toggle } from '../../store/appState'
 import { modeState, modeContent } from '../../store/modeProfiles'
-import { dayLabel, shift, goToday } from '../../store/plannerDate'
+import { dayLabel, cursor, shift, goToday } from '../../store/plannerDate'
+import { plannerReviews, savePlannerReview } from '../../store/plannerReviews'
+import { localDate } from '../../utils/postValidation.mjs'
+import TagMentionInput from '../../components/TagMentionInput.vue'
 
 const router = useRouter()
+const route = useRoute()
+watch(() => route.query.date, value => { if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(+new Date(value + 'T12:00:00'))) cursor.value = new Date(value + 'T12:00:00') }, { immediate: true })
 const view = ref('모두')
 const content = computed(() => modeContent(modeState.activeMode).planner)
 function order(key) {
@@ -32,13 +37,13 @@ function clock(sec) {
 onBeforeUnmount(() => timer && clearInterval(timer))
 
 /* 회고 — 저장하면 날짜별로 보관된다 */
-const reviews = ref({})
+const reviewDate = computed(() => localDate(cursor.value))
 const reviewText = ref('')
 const savedNote = ref('')
-watch(dayLabel, (label) => (reviewText.value = reviews.value[label] ?? ''), { immediate: true })
+watch(reviewDate, date => { reviewText.value = plannerReviews.value.find(item => item.id === date)?.body || '' }, { immediate: true })
 function saveReview() {
   if (!reviewText.value.trim()) return
-  reviews.value[dayLabel.value] = reviewText.value.trim()
+  savePlannerReview(reviewDate.value, reviewText.value)
   savedNote.value = '회고를 저장했어요.'
   setTimeout(() => (savedNote.value = ''), 2500)
 }
@@ -82,7 +87,7 @@ function saveReview() {
       <div class="review">
         <span class="pill">DAILY REVIEW</span>
         <h3>오늘을 짧게 돌아볼까요?</h3>
-        <textarea v-model="reviewText" :placeholder="content.reviewPrompt"></textarea>
+        <TagMentionInput v-model="reviewText" :placeholder="content.reviewPrompt" />
         <button :disabled="!reviewText.trim()" @click="saveReview">회고 저장</button>
         <span v-if="savedNote" class="badge ok" style="margin-left: 8px">{{ savedNote }}</span>
       </div>

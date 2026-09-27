@@ -48,7 +48,7 @@ watch(() => route.query.new, (v) => { if (v) openModal() }, { immediate: true })
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 16px">할 일</b>
+    <b style="font-size: 1rem">할 일</b>
     <span></span>
     <button class="primary" @click="openModal">+ 새 할 일</button>
   </div>

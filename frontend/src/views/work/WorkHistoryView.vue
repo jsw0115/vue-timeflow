@@ -117,7 +117,7 @@ function download(kind) {
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 16px">업무 히스토리</b>
+    <b style="font-size: 1rem">업무 히스토리</b>
     <HelpPopover
       title="업무 히스토리 · 인수인계"
       summary="업무 유형별 누적 시간을 모아두고, 자리를 옮기거나 휴가를 갈 때 인수인계 문서로 바로 뽑아 쓰는 화면이에요."

@@ -55,7 +55,7 @@ function inviteToGroup(g) {
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 16px">주소록</b>
+    <b style="font-size: 1rem">주소록</b>
     <span></span>
     <button class="primary" @click="showPicker = true">참석자 선택</button>
   </div>

@@ -10,7 +10,7 @@
 | [04 현행 스키마 차이·위험](04-schema-gaps.md) | DDL과 JPA 불일치, FK 대상 오류, 데이터 보존형 변경 절차 |
 | [05 외부 인터페이스 정의](05-external-interfaces.md) | OAuth·메일·푸시·캘린더·스토리지·AI·CI/CD 요청/응답 및 실패 처리 |
 | [06 검증 기록](06-validation.md) | 정적 분석·계약 검사 결과, 미검증 항목과 배포 전 체크리스트 |
-| [9-API 상세 명세](../9-API/README.md) | 169개 목표 API의 요청·응답·파라미터·오류 및 89개 현행 계약 |
+| [API 상세 명세](../api-info/README.md) | 169개 목표 API의 요청·응답·파라미터·오류 및 104개 현행 계약 |
 
 ## 중요한 구분
 
@@ -26,7 +26,7 @@
 
 ## 추적 자료
 
-- [현행 DDL 관계도 원본](diagrams/current-ddl-relationships.mmd): FK에서 참조하는 이름 그대로이며 정상 생성됐다는 뜻이 아닙니다.
+- [현행 DDL 관계도 원본](diagrams/current-ddl-relationships.md): FK에서 참조하는 이름 그대로이며 정상 생성됐다는 뜻이 아닙니다.
 - [테이블 분석 JSON](current-schema.json).
 - [근거 소스 SHA-256 스냅샷](source-snapshot.json).
-- 생성기: `frontend/scripts/design-docs/`. API 및 DB 계약 변경 후 재생성·검사하는 방법은 [API 문서 안내](../9-API/README.md#기계-판독-및-검증)를 참고하세요.
+- 생성기: `frontend/scripts/design-docs/`. API 및 DB 계약 변경 후 재생성·검사하는 방법은 [API 문서 안내](../api-info/README.md#기계-판독-및-검증)를 참고하세요.

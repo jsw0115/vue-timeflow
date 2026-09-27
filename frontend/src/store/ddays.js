@@ -1,6 +1,6 @@
-import { ref } from 'vue'
+import { localCollection } from './localCollection'
 
-export const ddays = ref([
+export const ddays = localCollection('ddays', [
   { id: 1, title: '엄마 생신', category: '가족', date: '8월 31일 · 저녁 식사', dday: 'D-7', pinned: true, notifyDays: [7, 1] },
   { id: 2, title: '분기 보고서 제출', category: '업무', date: '9월 5일 · 마감', dday: 'D-12', pinned: true, notifyDays: [3, 1, 0] },
   { id: 3, title: '건강검진 예약일', category: '건강', date: '9월 12일 · 오전 10시', dday: 'D-19', pinned: false, notifyDays: [1] },
@@ -51,11 +51,12 @@ export function toggleNotifyDay(item, days) {
   else item.notifyDays.push(days)
 }
 
-export function addDday({ title, category, date, notifyDays }) {
+export function addDday({ title, category, date, notifyDays, body = '' }) {
   const id = Math.max(0, ...ddays.value.map((d) => d.id)) + 1
   ddays.value.push({
     id,
     title,
+    body,
     category,
     date: date ? new Date(date).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' }) : '날짜 미정',
     dday: dDayLabel(date),
@@ -65,10 +66,11 @@ export function addDday({ title, category, date, notifyDays }) {
   return id
 }
 
-export function updateDday(id, { title, category, date }) {
+export function updateDday(id, { title, category, date, body }) {
   const item = findDday(id)
   if (!item) return
   item.title = title
+  if (body !== undefined) item.body = body
   item.category = category
   if (date) {
     item.date = new Date(date).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })

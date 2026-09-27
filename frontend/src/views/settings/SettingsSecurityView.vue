@@ -80,15 +80,15 @@ function save() {
     <button class="review" style="margin-top: 10px" :disabled="devices.length <= 1" @click="logoutAll">다른 기기 모두 로그아웃</button>
 
     <div class="section-label" style="margin-top: 22px">보안 옵션</div>
-    <label class="task" style="border: 0">
+    <label class="task" style="border: 0; display: inline-flex;">
       <input type="checkbox" v-model="options.twoFactor" />
       <span style="flex: 1"><b>2단계 인증</b><small>로그인할 때 인증번호를 한 번 더 확인해요</small></span>
     </label>
-    <label class="task" style="border: 0">
+    <label class="task" style="border: 0; display: inline-flex;">
       <input type="checkbox" v-model="options.loginAlert" />
       <span style="flex: 1"><b>새 기기 로그인 알림</b><small>처음 보는 기기에서 로그인하면 알려드려요</small></span>
     </label>
-    <label class="task" style="border: 0">
+    <label class="task" style="border: 0; display: inline-flex;">
       <input type="checkbox" v-model="options.autoLogout" />
       <span style="flex: 1"><b>30분 미사용 시 자동 로그아웃</b><small>공용 기기에서 쓸 때 권장해요</small></span>
     </label>

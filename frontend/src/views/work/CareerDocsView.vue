@@ -156,7 +156,7 @@ function onVisibilityChange(v) {
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 16px">경력 · 이력 · 포트폴리오</b>
+    <b style="font-size: 1rem">경력 · 이력 · 포트폴리오</b>
     <HelpPopover
       title="경력 · 이력 · 포트폴리오 사용법"
       summary="프로젝트 기록을 경력기술서·이력서·포트폴리오로 정리하고, 필요할 때 PDF나 Word로 내보내는 화면이에요. 모든 내용은 기본이 나만 보기입니다."
