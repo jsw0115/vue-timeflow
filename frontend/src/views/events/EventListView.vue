@@ -146,7 +146,7 @@ function removeActive() {
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 16px">일정</b>
+    <b style="font-size: 1rem">일정</b>
     <span></span>
     <button class="primary" @click="openModal">+ 새 일정</button>
   </div>

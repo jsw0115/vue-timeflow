@@ -41,7 +41,7 @@ public class AuthService {
         return email == null ? null : email.trim().toLowerCase();
     }
 
-    @Transactional("authTransactionManager")
+    @Transactional
     public SignupResponse signup(SignupRequest request) {
         String email = normalizeEmail(request.email());
         if (userRepository.existsByEmail(email)) {
@@ -53,7 +53,7 @@ public class AuthService {
         return new SignupResponse(user.getEmail(), user.getNickname(), user.getRole().name());
     }
 
-    @Transactional("authTransactionManager")
+    @Transactional(noRollbackFor = ApiException.class)
     public LoginResponse login(LoginRequest request) {
         String email = normalizeEmail(request.email());
 
@@ -83,13 +83,13 @@ public class AuthService {
         return new LoginResponse(user.getId(), user.getEmail(), user.getNickname(), user.getRole().name(), accessToken, refreshToken);
     }
 
-    @Transactional("authTransactionManager")
+    @Transactional
     public void logout(String refreshToken) {
         if (refreshToken == null || refreshToken.isBlank()) return;
         refreshTokenRepository.revokeByTokenHash(TokenHashSupporter.sha256Hex(refreshToken), LocalDateTime.now());
     }
 
-    @Transactional("authTransactionManager")
+    @Transactional
     public TokenPairResponse refresh(String refreshToken) {
         Claims claims = jwtTokenProvider.parse(refreshToken);
         if (!"refresh".equals(claims.get("typ", String.class))) {
@@ -115,7 +115,7 @@ public class AuthService {
         return new TokenPairResponse(newAccessToken, newRefreshToken);
     }
 
-    @Transactional(value = "authTransactionManager", readOnly = true)
+    @Transactional(readOnly = true)
     public MeResponse me(String userId) {
         UserEntity user = userRepository.findById(userId).orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND));
         return new MeResponse(user.getId(), user.getEmail(), user.getNickname(), user.getRole().name());

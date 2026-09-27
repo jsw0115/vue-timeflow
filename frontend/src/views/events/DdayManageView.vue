@@ -67,7 +67,7 @@ function remove(d) {
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 16px">D-Day 관리</b>
+    <b style="font-size: 1rem">D-Day 관리</b>
     <span class="form-note" style="margin: 0">D-Day 화면과 같은 목록이에요</span>
     <span></span>
     <button class="primary" @click="openModal">+ 새 D-Day</button>

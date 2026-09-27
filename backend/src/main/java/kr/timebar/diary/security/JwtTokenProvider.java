@@ -48,6 +48,7 @@ public class JwtTokenProvider {
     public String createRefreshToken(String userId) {
         Instant now = Instant.now();
         return Jwts.builder()
+                .setId(java.util.UUID.randomUUID().toString())
                 .setSubject(userId)
                 .setIssuer(properties.getIssuer())
                 .claim("typ", "refresh")

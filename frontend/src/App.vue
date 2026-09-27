@@ -13,12 +13,14 @@ import GlobalSearchModal from './components/GlobalSearchModal.vue'
 import ProfileModal from './components/ProfileModal.vue'
 import SidePanel from './components/SidePanel.vue'
 import { togglePanel, unreadChats, unreadNotifications } from './store/people'
-import { unreadMentions } from './store/tagging'
+import { hasUnreadMentions } from './features/chat/model/chatStore'
+import { unreadMentions as unreadPostMentions } from './store/tagging'
 
 const route = useRoute()
 const router = useRouter()
 const mobileNav = ref(false)
 const isBare = computed(() => route.meta?.bare === true)
+const isChat = computed(() => route.path === '/chat' || route.path.startsWith('/chat/') || ['/mentions', '/tags'].includes(route.path))
 const pageTitle = computed(() => {
   if (route.name === '화면 상세') return route.params.id ? `${route.params.id} 화면 미리보기` : '화면 상세'
   return route.meta?.title ?? ''
@@ -140,8 +142,9 @@ const todayLabel = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'full' }).forma
       <div class="account"><i>J</i><span><b>Jisoo Kim</b><small>jisoo@timebar.kr</small></span></div>
     </aside>
     <div v-if="mobileNav" class="scrim" @click="mobileNav = false"></div>
-    <main>
-      <header>
+    <main :class="{ 'chat-shell': isChat }">
+      <div v-if="isChat" class="chat-mobile-menu"><button aria-label="전체 메뉴 열기" @click="mobileNav = true">☰</button><span>timebar · 대화</span></div>
+      <header v-else>
         <button class="hamburger" @click="mobileNav = true">☰</button>
         <div><p class="eyebrow">{{ route.name === '홈' ? todayLabel : 'TIMEBAR WORKSPACE' }}</p><h1>{{ pageTitle }}</h1></div>
         <div class="actions">
@@ -154,7 +157,7 @@ const todayLabel = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'full' }).forma
           </button>
           <router-link to="/mentions" custom v-slot="{ navigate }">
             <button class="icon icon-badge" title="멘션함" @click="navigate">
-              @<em v-if="unreadMentions">{{ unreadMentions }}</em>
+              @<em v-if="hasUnreadMentions || unreadPostMentions" aria-label="안 읽은 멘션 있음">N</em>
             </button>
           </router-link>
           <button class="primary" title="새 글 작성" @click="openComposer">＋ 새 글 작성</button>

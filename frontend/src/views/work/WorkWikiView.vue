@@ -79,7 +79,7 @@ function pickTag(tag) {
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 16px">업무 위키</b>
+    <b style="font-size: 1rem">업무 위키</b>
     <HelpPopover
       title="업무 위키 사용법"
       summary="반복해서 찾는 업무 지식을 문서로 쌓아두는 공간이에요. 공간(폴더)과 해시태그로 정리하고 검색해서 찾습니다."

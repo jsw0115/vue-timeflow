@@ -1101,6 +1101,8 @@ HTTP **200**. 응답 헤더 및 구조는 아래와 같습니다.
 | 위치 | 이름 | 타입 | 필수 | 기본값·검증 |
 |---|---|---|---|---|
 | path | tag | string | 예 | URL 인코딩한 # 없는 태그; 최소 1자; 최대 40자 |
+| query | resourceTypes | string | 아니오 | 통합함 원본 종류. PLANNER,DDAY,EVENT,TASK,ROUTINE,CHALLENGE,POST,DIARY,COMMUNITY,MEMO,CHAT,WBS,WORK_RECORD. 생략하면 접근 가능한 전체 종류; 플래너 화면 필터는 PLANNER,EVENT,TASK,ROUTINE으로 확장한다.; 정규식 ^(PLANNER&#124;DDAY&#124;EVENT&#124;TASK&#124;ROUTINE&#124;CHALLENGE&#124;POST&#124;DIARY&#124;COMMUNITY&#124;MEMO&#124;CHAT&#124;WBS&#124;WORK_RECORD)(,(PLANNER&#124;DDAY&#124;EVENT&#124;TASK&#124;ROUTINE&#124;CHALLENGE&#124;POST&#124;DIARY&#124;COMMUNITY&#124;MEMO&#124;CHAT&#124;WBS&#124;WORK_RECORD))*$ |
+| query | q | string | 아니오 | 앞뒤 공백 제거; LIKE 와일드카드 이스케이프; 최대100자; 최소 1자; 최대 100자 |
 | query | cursor | string | 아니오 | 사용자·필터 해시에 묶인 불투명 커서; 첫 요청은 생략; 최대 2048자 |
 | query | limit | integer | 아니오 | 페이지 크기; 최소 1; 최대 100; 기본 30 |
 
@@ -1129,7 +1131,7 @@ HTTP **200**. 응답 헤더 및 구조는 아래와 같습니다.
 | data | SearchHitPage | 필수 | 하위 구조 참조  |
 | data.items | SearchHit[] | 필수 | 권한 범위의 목록 최대 100개 |
 | data.items[].id | string | 필수 | 불투명 리소스 ID; 숫자로 변환하지 않음 최소 1자; 최대 128자 |
-| data.items[].type | string | 필수 | 종류 허용: EVENT, TASK, ROUTINE, DIARY, MEMO, POST, WBS, WORK_RECORD |
+| data.items[].type | string | 필수 | 종류 허용: PLANNER, DDAY, EVENT, TASK, ROUTINE, CHALLENGE, POST, DIARY, COMMUNITY, MEMO, CHAT, WBS, WORK_RECORD |
 | data.items[].title | string | 필수 | 공백만 입력 불가; 앞뒤 공백 제거 최소 1자; 최대 200자 |
 | data.items[].excerpt | string | 필수 | 권한 내 발췌 최대 200자 |
 | data.nextCursor | string / null | 필수 | 다음 페이지 커서; 마지막 null; null 허용  |
@@ -1146,7 +1148,7 @@ HTTP **200**. 응답 헤더 및 구조는 아래와 같습니다.
     "items": [
       {
         "id": "01J00000000000000000000001",
-        "type": "EVENT",
+        "type": "PLANNER",
         "title": "설계 검토",
         "excerpt": "오늘의 기록"
       }
@@ -1194,6 +1196,8 @@ HTTP **200**. 응답 헤더 및 구조는 아래와 같습니다.
 
 | 위치 | 이름 | 타입 | 필수 | 기본값·검증 |
 |---|---|---|---|---|
+| query | resourceTypes | string | 아니오 | 통합함 원본 종류. PLANNER,DDAY,EVENT,TASK,ROUTINE,CHALLENGE,POST,DIARY,COMMUNITY,MEMO,CHAT,WBS,WORK_RECORD. 생략하면 접근 가능한 전체 종류; 플래너 화면 필터는 PLANNER,EVENT,TASK,ROUTINE으로 확장한다.; 정규식 ^(PLANNER&#124;DDAY&#124;EVENT&#124;TASK&#124;ROUTINE&#124;CHALLENGE&#124;POST&#124;DIARY&#124;COMMUNITY&#124;MEMO&#124;CHAT&#124;WBS&#124;WORK_RECORD)(,(PLANNER&#124;DDAY&#124;EVENT&#124;TASK&#124;ROUTINE&#124;CHALLENGE&#124;POST&#124;DIARY&#124;COMMUNITY&#124;MEMO&#124;CHAT&#124;WBS&#124;WORK_RECORD))*$ |
+| query | q | string | 아니오 | 앞뒤 공백 제거; LIKE 와일드카드 이스케이프; 최대100자; 최소 1자; 최대 100자 |
 | query | unread | boolean | 아니오 | 읽지 않은 항목만 true;  |
 | query | cursor | string | 아니오 | 사용자·필터 해시에 묶인 불투명 커서; 첫 요청은 생략; 최대 2048자 |
 | query | limit | integer | 아니오 | 페이지 크기; 최소 1; 최대 100; 기본 30 |
@@ -1224,7 +1228,7 @@ HTTP **200**. 응답 헤더 및 구조는 아래와 같습니다.
 | data.items | Mention[] | 필수 | 권한 범위의 목록 최대 100개 |
 | data.items[].id | string | 필수 | 불투명 리소스 ID; 숫자로 변환하지 않음 최소 1자; 최대 128자 |
 | data.items[].fromUserId | string | 필수 | 불투명 리소스 ID; 숫자로 변환하지 않음 최소 1자; 최대 128자 |
-| data.items[].resourceType | string | 필수 | 원본 종류 허용: EVENT, TASK, ROUTINE, DIARY, MEMO, POST, CHAT, WBS, WORK_RECORD |
+| data.items[].resourceType | string | 필수 | 원본 종류 허용: PLANNER, DDAY, EVENT, TASK, ROUTINE, CHALLENGE, POST, DIARY, COMMUNITY, MEMO, CHAT, WBS, WORK_RECORD |
 | data.items[].resourceId | string | 필수 | 불투명 리소스 ID; 숫자로 변환하지 않음 최소 1자; 최대 128자 |
 | data.items[].excerpt | string | 필수 | 권한 확인 후 일부 텍스트 최대 120자 |
 | data.items[].read | boolean | 필수 | 읽음  |
@@ -1244,7 +1248,7 @@ HTTP **200**. 응답 헤더 및 구조는 아래와 같습니다.
       {
         "id": "01J00000000000000000000001",
         "fromUserId": "01J00000000000000000000001",
-        "resourceType": "EVENT",
+        "resourceType": "PLANNER",
         "resourceId": "01J00000000000000000000001",
         "excerpt": "확인 부탁드려요",
         "read": false,
@@ -1335,7 +1339,7 @@ HTTP **200**. 응답 헤더 및 구조는 아래와 같습니다.
 | data | Mention | 필수 | 하위 구조 참조  |
 | data.id | string | 필수 | 불투명 리소스 ID; 숫자로 변환하지 않음 최소 1자; 최대 128자 |
 | data.fromUserId | string | 필수 | 불투명 리소스 ID; 숫자로 변환하지 않음 최소 1자; 최대 128자 |
-| data.resourceType | string | 필수 | 원본 종류 허용: EVENT, TASK, ROUTINE, DIARY, MEMO, POST, CHAT, WBS, WORK_RECORD |
+| data.resourceType | string | 필수 | 원본 종류 허용: PLANNER, DDAY, EVENT, TASK, ROUTINE, CHALLENGE, POST, DIARY, COMMUNITY, MEMO, CHAT, WBS, WORK_RECORD |
 | data.resourceId | string | 필수 | 불투명 리소스 ID; 숫자로 변환하지 않음 최소 1자; 최대 128자 |
 | data.excerpt | string | 필수 | 권한 확인 후 일부 텍스트 최대 120자 |
 | data.read | boolean | 필수 | 읽음  |
@@ -1351,7 +1355,7 @@ HTTP **200**. 응답 헤더 및 구조는 아래와 같습니다.
   "data": {
     "id": "01J00000000000000000000001",
     "fromUserId": "01J00000000000000000000001",
-    "resourceType": "EVENT",
+    "resourceType": "PLANNER",
     "resourceId": "01J00000000000000000000001",
     "excerpt": "확인 부탁드려요",
     "read": true,

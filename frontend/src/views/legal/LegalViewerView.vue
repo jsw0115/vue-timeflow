@@ -20,7 +20,7 @@ function close() {
           <span style="cursor: pointer" @click="router.back()">←</span>
           <div>
             <p class="eyebrow" style="margin: 0">약관/정책 뷰어</p>
-            <h1 style="font-size: 17px; margin-top: 4px">{{ tab }}</h1>
+            <h1 style="font-size: 1.0625rem; margin-top: 4px">{{ tab }}</h1>
           </div>
           <small style="margin-left: auto; color: var(--color-muted)">v2.3 · 2026.06.01 시행</small>
         </div>

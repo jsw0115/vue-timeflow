@@ -1,0 +1,13 @@
+{
+  "date": "2026-09-27",
+  "passed": [
+    "real UI login and persisted room rendering",
+    "member picker, tagged message and acknowledgement",
+    "room tag filter uses server results",
+    "mention inbox read state and unread filter",
+    "tag inbox exposes persisted authorized messages",
+    "390px layout and IME composition guard",
+    "mobile back navigation to conversation list"
+  ],
+  "pageErrors": []
+}

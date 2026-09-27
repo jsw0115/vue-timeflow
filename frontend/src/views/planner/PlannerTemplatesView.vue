@@ -101,7 +101,7 @@ function applyToday(t) {
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 16px">템플릿 관리</b>
+    <b style="font-size: 1rem">템플릿 관리</b>
     <span class="form-note" style="margin: 0">템플릿 {{ templates.length }}개</span>
     <span></span>
     <button class="primary" @click="openAdd">+ 템플릿 추가</button>

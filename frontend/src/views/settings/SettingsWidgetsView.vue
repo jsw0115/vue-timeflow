@@ -18,7 +18,7 @@ const filtered = computed(() =>
       <span class="grip">⠿</span>
       <i>▦</i>
       <span style="flex: 1"><b>{{ WIDGET_CATALOG[w.id].title }}</b><br /><small>{{ WIDGET_CATALOG[w.id].desc }} · {{ sizeLabel[w.size] }}</small></span>
-      <button class="icon" style="width: 30px; height: 30px; font-size: 12px" title="크기 변경" aria-label="크기 변경" @click="cycleSize(w.id)">⤢</button>
+      <button class="icon" style="width: 30px; height: 30px; font-size: 0.875rem" title="크기 변경" aria-label="크기 변경" @click="cycleSize(w.id)">⤢</button>
       <button type="button" role="switch" class="toggle" :aria-checked="w.visible" :class="{ on: w.visible }" @click="toggleVisible(w.id)"><em></em></button>
     </div>
     <button class="review" style="margin-top: 16px" @click="resetLayout">레이아웃 초기화</button>

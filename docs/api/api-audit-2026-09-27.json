@@ -1,0 +1,15 @@
+{
+  "date": "2026-09-27",
+  "sourceOperations": 104,
+  "serviceConnected": 47,
+  "stub": 52,
+  "inMemory": 5,
+  "chat": 15,
+  "redisHttp": 8,
+  "target": 169,
+  "originalTargetsPreserved": 114,
+  "missing": [],
+  "duplicates": [],
+  "checkedLinks": 325,
+  "runtimeOperations": 104
+}

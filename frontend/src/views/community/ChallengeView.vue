@@ -63,7 +63,7 @@ function createChallenge() {
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 16px">진행중인 챌린지</b>
+    <b style="font-size: 1rem">진행중인 챌린지</b>
     <span></span>
     <button class="primary" @click="openCreate">+ 챌린지 만들기</button>
   </div>

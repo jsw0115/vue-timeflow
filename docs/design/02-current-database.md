@@ -4,7 +4,7 @@
 
 **실행 금지 경고:** CREATE OR REPLACE TABLE은 기존 테이블을 대체할 수 있습니다. 현재 CREATE 이름은 tbl_ 접두어이지만 FK 대상과 JPA는 접두어가 없습니다. 39개 FK 선언의 참조 대상이 이 파일의 CREATE 목록에 없습니다. 운영/개발 데이터에 실행하지 마세요.
 
-[불일치와 이관 절차](04-schema-gaps.md) · [목표 ERD](03-target-database.md) · [API](../9-API/README.md)
+[불일치와 이관 절차](04-schema-gaps.md) · [목표 ERD](03-target-database.md) · [API](../api-info/README.md)
 
 ## 공통 규칙
 

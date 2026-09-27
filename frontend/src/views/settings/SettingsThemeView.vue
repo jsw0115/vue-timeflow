@@ -41,7 +41,7 @@ const stickerPacks = [
       </button>
     </div>
 
-    <label class="task" style="border: 0; margin-top: 12px">
+    <label class="task" style="border: 0; margin-top: 12px; display: inline-flex;">
       <input type="checkbox" v-model="themeState.followSystem" />
       <span style="flex: 1"><b>시스템 설정 따르기</b><small>OS가 다크 모드면 자동으로 다크 테마를 써요</small></span>
     </label>

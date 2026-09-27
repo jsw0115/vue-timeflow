@@ -1,5 +1,7 @@
 # 채팅·친구·그룹·공유 API 상세 설계
 
+> 2026-09-27: 실제 구현한 `/api/chat` 기능은 [채팅 전용 문서](../chat/README.md)를 따른다. 이 문서의 `/api/v1` 초대·차단·공유 목표 계약은 아직 구현되지 않았으며 현재 채팅 계약과 다르다.
+
 2026-09-26 · 목표 /api/v1 · **서버 미구현** · 24개
 
 [전체 목록](catalog.md) · [공통 규칙](00-conventions.md) · [오류 사전](errors.md) · [OpenAPI JSON](openapi.target.json)

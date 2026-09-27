@@ -2,16 +2,16 @@
 .workspace-switcher { position: relative; margin-bottom: 20px; flex: none; }
 .workspace-switcher .workspace { width: 100%; margin-bottom: 0; }
 .workspace-options { padding: 8px; border: 1px solid var(--color-hairline); border-radius: var(--radius-md); margin-top: 8px; background: var(--color-canvas); }
-.workspace-options p { font-size: 11px; margin: 4px 4px 8px; }
+.workspace-options p { font-size: 0.8125rem; margin: 4px 4px 8px; }
 .workspace-options button { display: flex; justify-content: space-between; gap: 8px; width: 100%; padding: 10px 8px; border-radius: var(--radius-sm); text-align: left; }
 .workspace-options button[aria-pressed="true"] { background: var(--color-surface); color: var(--color-accent); }
-.workspace-options span { font-size: 11px; }
+.workspace-options span { font-size: 0.8125rem; }
 .form-row { flex-wrap: wrap; }
 .form-row > label { flex: 1 1 160px; min-width: 0; }
 .form-fieldset { margin: 16px 0 0; padding: 0; border: 0; min-width: 0; }
-.form-fieldset legend { font-size: 13px; font-weight: 600; }
+.form-fieldset legend { font-size: 0.875rem; font-weight: 600; }
 .modal-card .form-fieldset .form-row label { margin-top: 0; }
-.modal-card :is(input, select, textarea) { min-width: 0; max-width: 100%; font-size: 14px; color: var(--color-foreground); }
+.modal-card :is(input, select, textarea) { min-width: 0; max-width: 100%; font-size: 0.875rem; color: var(--color-foreground); }
 .modal-card input:is([type="checkbox"], [type="radio"]) { appearance: auto; display: inline-block; width: 18px; height: 18px; padding: 0; margin: 0; flex: 0 0 18px; accent-color: var(--color-accent); }
 .modal-card :is(.check-field, .task, .picker-row) { display: flex; flex-direction: row; align-items: center; gap: 12px; }
 .check-field { padding: 14px; border: 1px solid var(--color-hairline); border-radius: var(--radius-md); }
@@ -38,30 +38,30 @@
 .message-modal .bubble { overflow-wrap: anywhere; white-space: pre-wrap; }
 .hero { gap: 24px; align-items: center; }
 .hero > div { min-width: 0; }
-.hero input { width: 100%; max-width: 400px; font-size: 14px; padding: 12px; }
+.hero input { width: 100%; max-width: 400px; font-size: 0.875rem; padding: 12px; }
 .home-summary { padding: 20px; border: 1px solid var(--color-hairline); border-radius: var(--radius-md); background: var(--color-canvas); }
-.home-summary b { font-family: ui-monospace, monospace; font-size: 24px; color: var(--color-foreground); }
+.home-summary b { font-family: ui-monospace, monospace; font-size: 1.5rem; color: var(--color-foreground); }
 .home-summary p { margin: 8px 0; }
 .home-summary p span { padding: 0 8px; }
 .quick-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-.hero .quick-actions button { margin: 0; padding: 8px 12px; border: 1px solid var(--color-hairline); border-radius: var(--radius-sm); font-size: 12px; }
+.hero .quick-actions button { margin: 0; padding: 8px 12px; border: 1px solid var(--color-hairline); border-radius: var(--radius-sm); font-size: 0.875rem; }
 .widget-toolbar { flex-wrap: wrap; }
 .widget-toolbar-copy { flex: 1; min-width: 180px; }
-.widget-toolbar-copy p { margin: 4px 0 0; font-size: 12px; }
+.widget-toolbar-copy p { margin: 4px 0 0; font-size: 0.875rem; }
 .widget-grid { grid-auto-rows: minmax(180px, auto); align-items: stretch; }
 .widget { overflow: visible; min-height: 180px; overflow-wrap: anywhere; }
 .widget .head { gap: 12px; flex-wrap: wrap; }
 .widget .head button { flex-shrink: 0; }
 .widget.routine label { flex-wrap: wrap; }
 .widget.routine label span { flex: 1; min-width: 100px; }
-.widget.metric-widget p { font-size: 12px; }
+.widget.metric-widget p { font-size: 0.875rem; }
 .widget-editbar { flex-wrap: wrap; }
-.widget-editbar .review { padding: 6px; font-size: 11px; margin: 0; }
-.sample-label { align-self: flex-start; margin-bottom: 10px; font-size: 10px; color: var(--color-muted); }
+.widget-editbar .review { padding: 6px; font-size: 0.8125rem; margin: 0; }
+.sample-label { align-self: flex-start; margin-bottom: 10px; font-size: 0.75rem; color: var(--color-muted); }
 .empty-state { padding: 24px 0; line-height: 1.8; }
 .work-records { margin-top: 24px; }
 .work-records .head { gap: 16px; flex-wrap: wrap; }
-.work-records .head .primary { padding: 10px 16px; color: var(--color-on-primary); font-size: 12px; margin: 0; }
+.work-records .head .primary { padding: 10px 16px; color: var(--color-on-primary); font-size: 0.875rem; margin: 0; }
 .work-record { display: flex; align-items: start; justify-content: space-between; gap: 16px; padding: 20px 0; border-top: 1px solid var(--color-hairline); }
 .work-record > div { min-width: 0; overflow-wrap: anywhere; }
 .work-record h3 { margin-top: 8px; }
@@ -91,7 +91,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   .actions .chat-trigger { display: inline-block; flex: none; }
   .actions { gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
   header { gap: 8px; flex-wrap: wrap; }
-  header h1 { font-size: 22px; }
+  header h1 { font-size: 1.375rem; }
   header .actions .primary { padding: 10px 12px; }
   .modal-card { padding: 18px; }
   .policy-row, .memo-grid { grid-template-columns: minmax(0,1fr); }

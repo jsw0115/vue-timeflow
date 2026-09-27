@@ -71,7 +71,7 @@ const summary = computed(() => {
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 16px">갓생 리포트</b>
+    <b style="font-size: 1rem">갓생 리포트</b>
     <HelpPopover
       title="갓생 점수 계산법"
       summary="루틴·할 일·집중 시간을 가중 합산해 100점 만점으로 계산해요. 미완료를 벌점으로 깎지 않고, 해낸 만큼만 더합니다."

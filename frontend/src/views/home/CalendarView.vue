@@ -108,7 +108,7 @@ function labelOf(kind) {
 <template>
   <div class="page-tools">
     <button class="review" style="margin: 0" aria-label="이전 달" @click="shiftMonth(-1)">‹</button>
-    <b style="font-size: 16px">{{ monthLabel }}</b>
+    <b style="font-size: 1rem">{{ monthLabel }}</b>
     <button class="review" style="margin: 0" aria-label="다음 달" @click="shiftMonth(1)">›</button>
     <button class="review" style="margin: 0" @click="goToday">오늘</button>
     <span class="form-note" style="margin: 0">이 달 항목 {{ monthCount }}개</span>

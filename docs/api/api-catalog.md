@@ -3,6 +3,8 @@
 기준일: 2026-09-25. 대상: Vue 웹 / Capacitor Android·iOS / Electron PC, Spring Boot, MariaDB.
 이 문서는 **구현할 API의 범위와 우선순위**다. 실제 매핑 현황은 [현재 API 목록](current-api-inventory.md), 계약은 [API 설계서](api-design.md), 기존 DTO는 [현재 API 명세](api-specification.md)를 따른다.
 
+2026-09-27 구현 추가: [채팅 HTTP 15개 전체 목록](../chat/api/catalog.md), [Redis 연동 API 8개와 내부 명령](../chat/redis/api-catalog.md), [누락 대조 결과](api-audit-2026-09-27.md). 기존 114개 목표 목록과 확장 169개 `/api/v1` 목표안은 보존하며, 실제 `/api/chat`의 추가 경로는 별도 구현 목록으로 관리한다.
+
 ## 상태와 버전
 
 - 현재 `/api`: 소스 자동 목록에서 서비스 연결 / 계약 stub / 공용 메모리 시연으로 구분. 서비스 연결도 운영 검증 완료를 뜻하지 않는다.

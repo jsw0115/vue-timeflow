@@ -50,7 +50,7 @@ function onRemove(m) {
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 16px">멘션함</b>
+    <b style="font-size: 1rem">멘션함</b>
     <span class="form-note" style="margin: 0">나를 언급한 글 {{ mentions.length }}건 · 안 읽음 {{ unreadMentions }}건</span>
     <span></span>
     <button class="primary" :disabled="!unreadMentions" @click="markAllMentionsRead">모두 읽음 처리</button>

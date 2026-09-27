@@ -112,8 +112,8 @@ function onDrop(id) {
           <span style="flex: 1">{{ WIDGET_CATALOG[w.id]?.title }}</span>
           <button class="review" :disabled="visibleWidgets[0]?.id === w.id" :aria-label="WIDGET_CATALOG[w.id]?.title + ' 앞으로 이동'" @click="shiftWidget(w.id, -1)">앞으로</button>
           <button class="review" :disabled="visibleWidgets.at(-1)?.id === w.id" :aria-label="WIDGET_CATALOG[w.id]?.title + ' 뒤로 이동'" @click="shiftWidget(w.id, 1)">뒤로</button>
-          <button class="icon" style="width: 26px; height: 26px; font-size: 12px" title="크기 변경" aria-label="크기 변경" @click="cycleSize(w.id)">⤢</button>
-          <button class="icon" style="width: 26px; height: 26px; font-size: 12px" title="숨기기" aria-label="숨기기" @click="toggleVisible(w.id)">✕</button>
+          <button class="icon" style="width: 26px; height: 26px; font-size: 0.875rem" title="크기 변경" aria-label="크기 변경" @click="cycleSize(w.id)">⤢</button>
+          <button class="icon" style="width: 26px; height: 26px; font-size: 0.875rem" title="숨기기" aria-label="숨기기" @click="toggleVisible(w.id)">✕</button>
         </div>
 
         <span v-if="['focusTime', 'dday', 'categoryDonut', 'weekdayBar', 'planVsActual'].includes(w.id)" class="sample-label">시연용 예시 데이터</span>

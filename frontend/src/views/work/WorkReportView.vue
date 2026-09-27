@@ -120,10 +120,10 @@ async function copyDraft() {
   </div>
 
   <div class="metrics">
-    <article><span>총 업무 시간</span><b class="figure" style="font-size: 19px">{{ hm(active.totalMin) }}</b></article>
-    <article><span>계획 대비 실행</span><b class="figure" style="font-size: 19px">{{ active.planRate }}%</b></article>
-    <article><span>완료 업무</span><b class="figure" style="font-size: 19px">{{ active.doneCount }}건</b></article>
-    <article><span>회의 시간 비중</span><b class="figure" style="font-size: 19px">{{ meetingShare }}%</b></article>
+    <article><span>총 업무 시간</span><b class="figure" style="font-size: 1.1875rem">{{ hm(active.totalMin) }}</b></article>
+    <article><span>계획 대비 실행</span><b class="figure" style="font-size: 1.1875rem">{{ active.planRate }}%</b></article>
+    <article><span>완료 업무</span><b class="figure" style="font-size: 1.1875rem">{{ active.doneCount }}건</b></article>
+    <article><span>회의 시간 비중</span><b class="figure" style="font-size: 1.1875rem">{{ meetingShare }}%</b></article>
   </div>
 
   <section class="card" style="margin-top: 16px">

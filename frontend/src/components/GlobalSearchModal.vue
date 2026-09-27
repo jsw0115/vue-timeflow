@@ -70,7 +70,7 @@ function go(entry) {
       <div class="search-modal-input">
         <span>⌕</span>
         <input v-model="query" autofocus placeholder="메뉴·설정·일정·할 일·메모·게시글·첨부파일까지 한 번에 검색" @keydown.esc="$emit('close')" />
-        <button class="icon" style="width: 30px; height: 30px; font-size: 13px" @click="$emit('close')">×</button>
+        <button class="icon" style="width: 30px; height: 30px; font-size: 0.875rem" @click="$emit('close')">×</button>
       </div>
 
       <div class="filter" style="margin: 14px 0; flex-wrap: wrap; display: flex">

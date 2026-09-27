@@ -79,6 +79,465 @@
   },
   {
     "method": "GET",
+    "route": "/api/chat/people",
+    "parameters": [
+      {
+        "name": "email",
+        "type": "String",
+        "location": "query",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "Person",
+    "controller": "ChatController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/chat/rooms",
+    "parameters": [
+      {
+        "name": "before",
+        "type": "String",
+        "location": "query",
+        "required": false
+      },
+      {
+        "name": "limit",
+        "type": "int",
+        "location": "query",
+        "required": false,
+        "default": "50"
+      }
+    ],
+    "status": 200,
+    "responseType": "Page<Room>",
+    "controller": "ChatController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/chat/rooms",
+    "parameters": [
+      {
+        "name": "body",
+        "type": "CreateRoom",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "Room",
+    "controller": "ChatController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/chat/rooms/{id}",
+    "parameters": [
+      {
+        "name": "id",
+        "type": "String",
+        "location": "path",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "Room",
+    "controller": "ChatController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/chat/rooms/{id}/messages",
+    "parameters": [
+      {
+        "name": "id",
+        "type": "String",
+        "location": "path",
+        "required": true
+      },
+      {
+        "name": "before",
+        "type": "Long",
+        "location": "query",
+        "required": false
+      },
+      {
+        "name": "after",
+        "type": "Long",
+        "location": "query",
+        "required": false
+      },
+      {
+        "name": "tag",
+        "type": "String",
+        "location": "query",
+        "required": false
+      },
+      {
+        "name": "limit",
+        "type": "int",
+        "location": "query",
+        "required": false,
+        "default": "50"
+      }
+    ],
+    "status": 200,
+    "responseType": "Page<Message>",
+    "controller": "ChatController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/chat/rooms/{id}/messages",
+    "parameters": [
+      {
+        "name": "id",
+        "type": "String",
+        "location": "path",
+        "required": true
+      },
+      {
+        "name": "body",
+        "type": "SendMessage",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "Message",
+    "controller": "ChatController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "PUT",
+    "route": "/api/chat/rooms/{id}/read",
+    "parameters": [
+      {
+        "name": "id",
+        "type": "String",
+        "location": "path",
+        "required": true
+      },
+      {
+        "name": "body",
+        "type": "Read",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "ReadState",
+    "controller": "ChatController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "PUT",
+    "route": "/api/chat/rooms/{id}/owner",
+    "parameters": [
+      {
+        "name": "id",
+        "type": "String",
+        "location": "path",
+        "required": true
+      },
+      {
+        "name": "body",
+        "type": "Owner",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "Void",
+    "controller": "ChatController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "DELETE",
+    "route": "/api/chat/rooms/{id}/members/me",
+    "parameters": [
+      {
+        "name": "id",
+        "type": "String",
+        "location": "path",
+        "required": true
+      }
+    ],
+    "status": 204,
+    "responseType": "void",
+    "controller": "ChatController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/chat/rooms/{id}/typing",
+    "parameters": [
+      {
+        "name": "id",
+        "type": "String",
+        "location": "path",
+        "required": true
+      }
+    ],
+    "status": 204,
+    "responseType": "void",
+    "controller": "ChatController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/chat/events",
+    "parameters": [
+      {
+        "name": "authorization",
+        "type": "String",
+        "location": "header",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "SseEmitter",
+    "controller": "ChatController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/chat/mentions",
+    "parameters": [
+      {
+        "name": "before",
+        "type": "String",
+        "location": "query",
+        "required": false
+      },
+      {
+        "name": "unread",
+        "type": "boolean",
+        "location": "query",
+        "required": false,
+        "default": "false"
+      },
+      {
+        "name": "limit",
+        "type": "int",
+        "location": "query",
+        "required": false,
+        "default": "50"
+      }
+    ],
+    "status": 200,
+    "responseType": "Page<InboxItem>",
+    "controller": "ChatController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "PUT",
+    "route": "/api/chat/mentions/{messageId}/read",
+    "parameters": [
+      {
+        "name": "messageId",
+        "type": "String",
+        "location": "path",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "Void",
+    "controller": "ChatController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/chat/tags",
+    "parameters": [
+      {
+        "name": "after",
+        "type": "String",
+        "location": "query",
+        "required": false
+      },
+      {
+        "name": "limit",
+        "type": "int",
+        "location": "query",
+        "required": false,
+        "default": "50"
+      }
+    ],
+    "status": 200,
+    "responseType": "Page<TagCount>",
+    "controller": "ChatController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/chat/tagged-messages",
+    "parameters": [
+      {
+        "name": "tag",
+        "type": "String",
+        "location": "query",
+        "required": true
+      },
+      {
+        "name": "before",
+        "type": "String",
+        "location": "query",
+        "required": false
+      },
+      {
+        "name": "limit",
+        "type": "int",
+        "location": "query",
+        "required": false,
+        "default": "50"
+      }
+    ],
+    "status": 200,
+    "responseType": "Page<InboxItem>",
+    "controller": "ChatController",
+    "kind": "서비스 연결",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/admin/users",
+    "parameters": [
+      {
+        "name": "q",
+        "type": "String",
+        "location": "query",
+        "required": false
+      },
+      {
+        "name": "role",
+        "type": "String",
+        "location": "query",
+        "required": false
+      },
+      {
+        "name": "status",
+        "type": "String",
+        "location": "query",
+        "required": false
+      },
+      {
+        "name": "page",
+        "type": "Integer",
+        "location": "query",
+        "required": false
+      },
+      {
+        "name": "size",
+        "type": "Integer",
+        "location": "query",
+        "required": false
+      }
+    ],
+    "status": 200,
+    "stub": "GET /users",
+    "responseType": "?",
+    "controller": "AdminController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/admin/users/{id}",
+    "parameters": [
+      {
+        "name": "id",
+        "type": "String",
+        "location": "path",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "GET /users/{id}",
+    "responseType": "?",
+    "controller": "AdminController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/admin/users",
+    "parameters": [
+      {
+        "name": "body",
+        "type": "Map<String,Object>",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "POST /users",
+    "responseType": "?",
+    "controller": "AdminController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "PUT",
+    "route": "/api/admin/users/{id}",
+    "parameters": [
+      {
+        "name": "id",
+        "type": "String",
+        "location": "path",
+        "required": true
+      },
+      {
+        "name": "body",
+        "type": "Map<String,Object>",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "PUT /users/{id}",
+    "responseType": "?",
+    "controller": "AdminController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "DELETE",
+    "route": "/api/admin/users/{id}",
+    "parameters": [
+      {
+        "name": "id",
+        "type": "String",
+        "location": "path",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "DELETE /users/{id}",
+    "responseType": "?",
+    "controller": "AdminController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "GET",
     "route": "/api/diary/calendar",
     "parameters": [
       {
@@ -475,6 +934,108 @@
   },
   {
     "method": "GET",
+    "route": "/api/reports/time-blocks",
+    "parameters": [
+      {
+        "name": "date",
+        "type": "String",
+        "location": "query",
+        "required": true
+      },
+      {
+        "name": "categoryName",
+        "type": "String",
+        "location": "query",
+        "required": false
+      }
+    ],
+    "status": 200,
+    "stub": "GET /time-blocks",
+    "responseType": "?",
+    "controller": "ReportController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/reports/draft",
+    "parameters": [
+      {
+        "name": "body",
+        "type": "Map<String,Object>",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "POST /draft",
+    "responseType": "?",
+    "controller": "ReportController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/reports/{reportKey}",
+    "parameters": [
+      {
+        "name": "reportKey",
+        "type": "String",
+        "location": "path",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "GET /{reportKey}",
+    "responseType": "?",
+    "controller": "ReportController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/reports/{reportKey}",
+    "parameters": [
+      {
+        "name": "reportKey",
+        "type": "String",
+        "location": "path",
+        "required": true
+      },
+      {
+        "name": "body",
+        "type": "Map<String,Object>",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "POST /{reportKey}",
+    "responseType": "?",
+    "controller": "ReportController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/reports/{reportKey}/sub-reports",
+    "parameters": [
+      {
+        "name": "reportKey",
+        "type": "String",
+        "location": "path",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "stub": "GET /{reportKey}/sub-reports",
+    "responseType": "?",
+    "controller": "ReportController",
+    "kind": "계약 stub",
+    "public": false
+  },
+  {
+    "method": "GET",
     "route": "/api/settings",
     "parameters": [],
     "status": 200,
@@ -623,9 +1184,9 @@
     "route": "/api/share/friends",
     "parameters": [],
     "status": 200,
-    "stub": "GET /share/friends",
+    "stub": "GET /friends",
     "responseType": "?",
-    "controller": "ShareAdminReportController",
+    "controller": "ShareController",
     "kind": "계약 stub",
     "public": false
   },
@@ -641,9 +1202,9 @@
       }
     ],
     "status": 200,
-    "stub": "POST /share/friends/invite",
+    "stub": "POST /friends/invite",
     "responseType": "?",
-    "controller": "ShareAdminReportController",
+    "controller": "ShareController",
     "kind": "계약 stub",
     "public": false
   },
@@ -659,9 +1220,9 @@
       }
     ],
     "status": 200,
-    "stub": "POST /share/friends/{id}/accept",
+    "stub": "POST /friends/{id}/accept",
     "responseType": "?",
-    "controller": "ShareAdminReportController",
+    "controller": "ShareController",
     "kind": "계약 stub",
     "public": false
   },
@@ -677,9 +1238,9 @@
       }
     ],
     "status": 200,
-    "stub": "POST /share/friends/{id}/reject",
+    "stub": "POST /friends/{id}/reject",
     "responseType": "?",
-    "controller": "ShareAdminReportController",
+    "controller": "ShareController",
     "kind": "계약 stub",
     "public": false
   },
@@ -695,9 +1256,9 @@
       }
     ],
     "status": 200,
-    "stub": "DELETE /share/friends/{id}",
+    "stub": "DELETE /friends/{id}",
     "responseType": "?",
-    "controller": "ShareAdminReportController",
+    "controller": "ShareController",
     "kind": "계약 stub",
     "public": false
   },
@@ -706,9 +1267,9 @@
     "route": "/api/share/groups",
     "parameters": [],
     "status": 200,
-    "stub": "GET /share/groups",
+    "stub": "GET /groups",
     "responseType": "?",
-    "controller": "ShareAdminReportController",
+    "controller": "ShareController",
     "kind": "계약 stub",
     "public": false
   },
@@ -724,9 +1285,9 @@
       }
     ],
     "status": 200,
-    "stub": "POST /share/groups",
+    "stub": "POST /groups",
     "responseType": "?",
-    "controller": "ShareAdminReportController",
+    "controller": "ShareController",
     "kind": "계약 stub",
     "public": false
   },
@@ -742,9 +1303,9 @@
       }
     ],
     "status": 200,
-    "stub": "GET /share/groups/{id}",
+    "stub": "GET /groups/{id}",
     "responseType": "?",
-    "controller": "ShareAdminReportController",
+    "controller": "ShareController",
     "kind": "계약 stub",
     "public": false
   },
@@ -766,9 +1327,9 @@
       }
     ],
     "status": 200,
-    "stub": "PUT /share/groups/{id}",
+    "stub": "PUT /groups/{id}",
     "responseType": "?",
-    "controller": "ShareAdminReportController",
+    "controller": "ShareController",
     "kind": "계약 stub",
     "public": false
   },
@@ -784,9 +1345,9 @@
       }
     ],
     "status": 200,
-    "stub": "DELETE /share/groups/{id}",
+    "stub": "DELETE /groups/{id}",
     "responseType": "?",
-    "controller": "ShareAdminReportController",
+    "controller": "ShareController",
     "kind": "계약 stub",
     "public": false
   },
@@ -802,9 +1363,9 @@
       }
     ],
     "status": 200,
-    "stub": "GET /share/groups/{id}/members",
+    "stub": "GET /groups/{id}/members",
     "responseType": "?",
-    "controller": "ShareAdminReportController",
+    "controller": "ShareController",
     "kind": "계약 stub",
     "public": false
   },
@@ -826,9 +1387,9 @@
       }
     ],
     "status": 200,
-    "stub": "POST /share/groups/{id}/members",
+    "stub": "POST /groups/{id}/members",
     "responseType": "?",
-    "controller": "ShareAdminReportController",
+    "controller": "ShareController",
     "kind": "계약 stub",
     "public": false
   },
@@ -850,231 +1411,9 @@
       }
     ],
     "status": 200,
-    "stub": "DELETE /share/groups/{id}/members/{memberId}",
+    "stub": "DELETE /groups/{id}/members/{memberId}",
     "responseType": "?",
-    "controller": "ShareAdminReportController",
-    "kind": "계약 stub",
-    "public": false
-  },
-  {
-    "method": "GET",
-    "route": "/api/admin/users",
-    "parameters": [
-      {
-        "name": "q",
-        "type": "String",
-        "location": "query",
-        "required": false
-      },
-      {
-        "name": "role",
-        "type": "String",
-        "location": "query",
-        "required": false
-      },
-      {
-        "name": "status",
-        "type": "String",
-        "location": "query",
-        "required": false
-      },
-      {
-        "name": "page",
-        "type": "Integer",
-        "location": "query",
-        "required": false
-      },
-      {
-        "name": "size",
-        "type": "Integer",
-        "location": "query",
-        "required": false
-      }
-    ],
-    "status": 200,
-    "stub": "GET /admin/users",
-    "responseType": "?",
-    "controller": "ShareAdminReportController",
-    "kind": "계약 stub",
-    "public": false
-  },
-  {
-    "method": "GET",
-    "route": "/api/admin/users/{id}",
-    "parameters": [
-      {
-        "name": "id",
-        "type": "String",
-        "location": "path",
-        "required": true
-      }
-    ],
-    "status": 200,
-    "stub": "GET /admin/users/{id}",
-    "responseType": "?",
-    "controller": "ShareAdminReportController",
-    "kind": "계약 stub",
-    "public": false
-  },
-  {
-    "method": "POST",
-    "route": "/api/admin/users",
-    "parameters": [
-      {
-        "name": "body",
-        "type": "Map<String,Object>",
-        "location": "body",
-        "required": true
-      }
-    ],
-    "status": 200,
-    "stub": "POST /admin/users",
-    "responseType": "?",
-    "controller": "ShareAdminReportController",
-    "kind": "계약 stub",
-    "public": false
-  },
-  {
-    "method": "PUT",
-    "route": "/api/admin/users/{id}",
-    "parameters": [
-      {
-        "name": "id",
-        "type": "String",
-        "location": "path",
-        "required": true
-      },
-      {
-        "name": "body",
-        "type": "Map<String,Object>",
-        "location": "body",
-        "required": true
-      }
-    ],
-    "status": 200,
-    "stub": "PUT /admin/users/{id}",
-    "responseType": "?",
-    "controller": "ShareAdminReportController",
-    "kind": "계약 stub",
-    "public": false
-  },
-  {
-    "method": "DELETE",
-    "route": "/api/admin/users/{id}",
-    "parameters": [
-      {
-        "name": "id",
-        "type": "String",
-        "location": "path",
-        "required": true
-      }
-    ],
-    "status": 200,
-    "stub": "DELETE /admin/users/{id}",
-    "responseType": "?",
-    "controller": "ShareAdminReportController",
-    "kind": "계약 stub",
-    "public": false
-  },
-  {
-    "method": "GET",
-    "route": "/api/reports/time-blocks",
-    "parameters": [
-      {
-        "name": "date",
-        "type": "String",
-        "location": "query",
-        "required": true
-      },
-      {
-        "name": "categoryName",
-        "type": "String",
-        "location": "query",
-        "required": false
-      }
-    ],
-    "status": 200,
-    "stub": "GET /reports/time-blocks",
-    "responseType": "?",
-    "controller": "ShareAdminReportController",
-    "kind": "계약 stub",
-    "public": false
-  },
-  {
-    "method": "POST",
-    "route": "/api/reports/draft",
-    "parameters": [
-      {
-        "name": "body",
-        "type": "Map<String,Object>",
-        "location": "body",
-        "required": true
-      }
-    ],
-    "status": 200,
-    "stub": "POST /reports/draft",
-    "responseType": "?",
-    "controller": "ShareAdminReportController",
-    "kind": "계약 stub",
-    "public": false
-  },
-  {
-    "method": "GET",
-    "route": "/api/reports/{reportKey}",
-    "parameters": [
-      {
-        "name": "reportKey",
-        "type": "String",
-        "location": "path",
-        "required": true
-      }
-    ],
-    "status": 200,
-    "stub": "GET /reports/{reportKey}",
-    "responseType": "?",
-    "controller": "ShareAdminReportController",
-    "kind": "계약 stub",
-    "public": false
-  },
-  {
-    "method": "POST",
-    "route": "/api/reports/{reportKey}",
-    "parameters": [
-      {
-        "name": "reportKey",
-        "type": "String",
-        "location": "path",
-        "required": true
-      },
-      {
-        "name": "body",
-        "type": "Map<String,Object>",
-        "location": "body",
-        "required": true
-      }
-    ],
-    "status": 200,
-    "stub": "POST /reports/{reportKey}",
-    "responseType": "?",
-    "controller": "ShareAdminReportController",
-    "kind": "계약 stub",
-    "public": false
-  },
-  {
-    "method": "GET",
-    "route": "/api/reports/{reportKey}/sub-reports",
-    "parameters": [
-      {
-        "name": "reportKey",
-        "type": "String",
-        "location": "path",
-        "required": true
-      }
-    ],
-    "status": 200,
-    "stub": "GET /reports/{reportKey}/sub-reports",
-    "responseType": "?",
-    "controller": "ShareAdminReportController",
+    "controller": "ShareController",
     "kind": "계약 stub",
     "public": false
   },

@@ -88,10 +88,10 @@ function unfriend(f) {
     <label>이름으로 검색<input v-model="query" placeholder="친구 이름 입력" autofocus /></label>
     <p v-if="query.trim() && searchResults.length === 0" style="margin-top: 10px">일치하는 사용자를 찾지 못했어요.</p>
     <div class="modal-search-result" v-for="n in searchResults" :key="n">
-      <i style="display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--color-foreground); color: var(--color-on-primary); font-style: normal; font-size: 11px; font-weight: 600">{{ n[0] }}</i>
-      <span style="flex: 1; font-size: 12px; font-weight: 600">{{ n }}</span>
-      <button v-if="requested.includes(n)" disabled style="font-size: 11px; color: var(--color-muted)">요청됨</button>
-      <button v-else class="primary" style="width: auto; margin: 0; padding: 7px 12px; font-size: 11px" @click="sendRequest(n)">친구 요청</button>
+      <i style="display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--color-foreground); color: var(--color-on-primary); font-style: normal; font-size: 0.8125rem; font-weight: 600">{{ n[0] }}</i>
+      <span style="flex: 1; font-size: 0.875rem; font-weight: 600">{{ n }}</span>
+      <button v-if="requested.includes(n)" disabled style="font-size: 0.8125rem; color: var(--color-muted)">요청됨</button>
+      <button v-else class="primary" style="width: auto; margin: 0; padding: 7px 12px; font-size: 0.8125rem" @click="sendRequest(n)">친구 요청</button>
     </div>
   </Modal>
 </template>

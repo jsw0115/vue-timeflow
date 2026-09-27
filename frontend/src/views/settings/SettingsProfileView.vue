@@ -57,7 +57,7 @@ function deleteAccount() {
     </div>
 
     <div style="display: flex; align-items: center; gap: 14px; margin: 16px 0">
-      <span class="profile-avatar" style="width: 56px; height: 56px; font-size: 18px">{{ saved.nickname[0] }}</span>
+      <span class="profile-avatar" style="width: 56px; height: 56px; font-size: 1.125rem">{{ saved.nickname[0] }}</span>
       <button class="review" style="margin: 0" @click="flash('사진 변경은 준비 중이에요.')">사진 변경</button>
     </div>
 

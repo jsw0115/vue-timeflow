@@ -83,7 +83,7 @@ S('DiaryWrite',{title:title(),mood:en('기분',['GREAT','GOOD','SOSO','BAD','TER
 S('MemoWrite',{title:title(),body:body(),status:en('인박스 상태',['INBOX','ARCHIVED']),...rich},[]);schemas.MemoWrite.anyOf=[{required:['title']},{required:['body'],properties:{body:{minLength:1}}}]
 patch('MemoPatch','MemoWrite');delete schemas.MemoPatch.anyOf;entity('Memo','MemoWrite')
 S('Tag',{name:str('태그명','업무',{minLength:1,maxLength:40}),count:num('권한 범위 글 수',3)})
-S('Mention',{id:id(),fromUserId:id(),resourceType:en('원본 종류',['EVENT','TASK','ROUTINE','DIARY','MEMO','POST','CHAT','WBS','WORK_RECORD']),resourceId:id(),excerpt:str('권한 확인 후 일부 텍스트','확인 부탁드려요',{maxLength:120}),read:bool('읽음'),createdAt:instant('생성 UTC')})
+S('Mention',{id:id(),fromUserId:id(),resourceType:en('원본 종류',['PLANNER','DDAY','EVENT','TASK','ROUTINE','CHALLENGE','POST','DIARY','COMMUNITY','MEMO','CHAT','WBS','WORK_RECORD']),resourceId:id(),excerpt:str('권한 확인 후 일부 텍스트','확인 부탁드려요',{maxLength:120}),read:bool('읽음'),createdAt:instant('생성 UTC')})
 S('ContactCandidate',{id:id(),nickname:str('사용자 표시명','이서연'),avatarUrl:nullable(str('프록시/허용된 아바타 URL','https://assets.example.test/avatar.png',{format:'uri'}))})
 S('DdayWrite',{title:title(),targetDate:date('기준 날짜'),repeatYearly:bool('매년 반복'),timezone:timezone()},['title','targetDate']);patch('DdayPatch','DdayWrite');entity('Dday','DdayWrite',{daysRemaining:{type:'integer',description:'사용자 날짜와 기준 날짜 차이',example:7}})
 S('WbsWrite',{title:title(),parentId:nullable(id('부모 작업; 같은 소유자, 순환 금지')),ownerLabel:str('담당자 표시명; 접근권한 부여와 무관','김지수',{maxLength:80}),effortMd:{type:'number',description:'말단 작업 공수',example:2.5,minimum:0,maximum:100000,multipleOf:0.5},progress:num('말단 진척 %',30,0,100),startDate:nullable(date('시작 날짜')),endDate:nullable(date('종료 날짜; 시작 이후/같은 날')),body:body(),...rich},['title']);patch('WbsPatch','WbsWrite');entity('Wbs','WbsWrite',{rollupMd:{type:'number',description:'하위 공수 합',example:2.5},rollupProgress:num('공수 가중 진척',30,0,100)})
@@ -143,7 +143,7 @@ S('MutationBatch',{deviceId:id(),mutations:arr('각 항목 독립 트랜잭션; 
 S('MutationResult',{clientMutationId:schemas.Mutation.properties.clientMutationId,status:en('항목 결과',['APPLIED','CONFLICT','REJECTED']),id:id(),version:num('현재 버전',2,1),errorCode:nullable(str('실패 원인','VERSION_CONFLICT'))})
 S('MutationResults',{results:arr('요청 순서와 동일한 개별 결과',ref('MutationResult'),50)})
 S('ChangePage',{items:arr('revision 순서의 변경',ref('Change'),100),nextCursor:str('변경 없음에도 다음 동기화에 사용할 커서','opaque-sync-cursor'),hasNext:bool('남은 변경 여부')})
-S('SearchHit',{id:id(),type:en('종류',['EVENT','TASK','ROUTINE','DIARY','MEMO','POST','WBS','WORK_RECORD']),title:title(),excerpt:str('권한 내 발췌','오늘의 기록',{maxLength:200})})
+S('SearchHit',{id:id(),type:en('종류',['PLANNER','DDAY','EVENT','TASK','ROUTINE','CHALLENGE','POST','DIARY','COMMUNITY','MEMO','CHAT','WBS','WORK_RECORD']),title:title(),excerpt:str('권한 내 발췌','오늘의 기록',{maxLength:200})})
 schemas.Rate.example={done:2,eligible:3,rate:66.67}
 schemas.WorkWrite.example={type:'ANNUAL_LEAVE',title:'연차 사용',ownerLabel:'김지수',startAt:'2026-09-26T00:00:00Z',endAt:'2026-09-26T09:00:00Z',timezone:'Asia/Seoul',status:'PLANNED',leaveDays:1,body:'개인 일정 #휴가',tags:['휴가'],mentionUserIds:[]}
 schemas.WorkPatch.example={title:'연차 사용 일정 변경',body:'변경 사유 #휴가'}

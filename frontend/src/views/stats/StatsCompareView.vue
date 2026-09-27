@@ -111,7 +111,7 @@ function hm(min) {
     <div class="filter">
       <button v-for="r in RANGES" :key="r.key" :class="{ selected: range === r.key }" @click="range = r.key">{{ r.label }}</button>
     </div>
-    <label style="display: flex; align-items: center; gap: 8px; margin: 0; font-size: 12px">
+    <label style="display: flex; align-items: center; gap: 8px; margin: 0; font-size: 0.875rem">
       목표 달성률
       <input type="range" min="60" max="120" step="5" v-model.number="target" style="width: 140px" />
       <b class="figure">{{ target }}%</b>

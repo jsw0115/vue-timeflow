@@ -8,7 +8,8 @@
 2. [전체 API 목록](catalog.md): 169개 목표 API, 도메인별 상세 링크.
 3. 필요한 영역의 상세 명세: 아래 9개 파일.
 4. [공통 오류 및 해결 방법](errors.md).
-5. [현재 소스 계약](current-contract.md): 실제 컨트롤러 89개, DTO, 오류 처리 및 구현 한계.
+5. [현재 소스 계약](current-contract.md): 실제 컨트롤러 104개(채팅 15개 포함), DTO, 오류 처리 및 구현 한계.
+6. [채팅 구현 목록](../chat/api/catalog.md) · [Redis 연동 목록](../chat/redis/api-catalog.md): `/api/chat` 구현과 `/api/v1` 목표안을 구분합니다.
 
 | 영역 | 상세 설계 |
 | --- | --- |
@@ -36,6 +37,8 @@
 ```powershell
 node frontend/scripts/design-docs/build.mjs .
 node frontend/scripts/design-docs/build.mjs . --check
+node frontend/scripts/design-docs/build.mjs . --current-only
+node frontend/scripts/design-docs/build.mjs . --current-only --check
 node frontend/scripts/design-docs/check.mjs .
 ```
 

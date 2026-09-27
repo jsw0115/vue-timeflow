@@ -61,7 +61,7 @@ const relatedTags = computed(() => {
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 16px">태그 모아보기</b>
+    <b style="font-size: 1rem">태그 모아보기</b>
     <span class="form-note" style="margin: 0">태그 {{ tagCounts.length }}종 · 글 {{ posts.length }}개</span>
     <span></span>
     <button v-if="activeTag" class="review" style="margin: 0" @click="router.push('/tags')">태그 해제</button>
@@ -75,7 +75,7 @@ const relatedTags = computed(() => {
         :key="t.tag"
         class="tag-chip"
         :class="{ selected: activeTag === t.tag }"
-        :style="{ fontSize: 11 + Math.min(t.count, 5) * 1.2 + 'px' }"
+        :style="{ fontSize: (14 + Math.min(t.count, 5)) / 16 + 'rem' }"
         @click="selectTag(t.tag)"
       >
         #{{ t.tag }}<em>{{ t.count }}</em>

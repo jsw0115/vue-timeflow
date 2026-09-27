@@ -2,7 +2,7 @@
 
 2026-09-26 · **설계안, 실행 가능한 migration 아님**. 기존 SQL의 tbl_ 이름과 JPA 이름을 먼저 정합화해야 합니다. 아래 이름은 JPA에 맞춘 비접두어 논리명 제안이며 기존 DB에 바로 CREATE/RENAME하지 않습니다.
 
-[현재 DDL 전체 속성 사전](02-current-database.md) · [정합성 이슈](04-schema-gaps.md) · [목표 API](../9-API/catalog.md)
+[현재 DDL 전체 속성 사전](02-current-database.md) · [정합성 이슈](04-schema-gaps.md) · [목표 API](../api-info/catalog.md)
 
 ## 설계 원칙
 

@@ -1,0 +1,33 @@
+name: timeflow-chat
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: timeflow_chat_dev
+      MYSQL_USER: timeflow_chat
+      MYSQL_PASSWORD: ${CHAT_DEV_DB_PASSWORD:-local-chat-only}
+      MYSQL_ROOT_PASSWORD: ${CHAT_DEV_ROOT_PASSWORD:-local-root-only}
+    ports:
+      - "127.0.0.1:13316:3306"
+    volumes:
+      - chat_mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+  redis:
+    image: redis:7.4-alpine
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "128mb", "--maxmemory-policy", "noeviction"]
+    ports:
+      - "127.0.0.1:16389:6379"
+    volumes:
+      - chat_redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+volumes:
+  chat_mysql:
+  chat_redis:

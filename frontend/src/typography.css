@@ -1,0 +1,85 @@
+/* Shared type hierarchy. Loaded after component baseline/interaction styles.
+   rem keeps browser preferences and the in-app size setting in sync, including dialogs. */
+:root { font-size: 100%; }
+:root[data-font='sm'] { font-size: 93.75%; }
+:root[data-font='lg'] { font-size: 112.5%; }
+body { font-size: .875rem; line-height: 1.6; }
+button, input, textarea, select { line-height: 1.5; letter-spacing: 0; }
+p { font-size: .875rem; }
+small { font-size: .75rem; line-height: 1.5; }
+h2 { font-size: 1.5rem; line-height: 1.3; }
+h3 { font-size: 1.125rem; line-height: 1.4; }
+main > header { gap: 16px; }
+main > header > div { min-width: 0; }
+main > header h1 {
+  font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 2.5rem; font-weight: 300; line-height: 1.2;
+  word-break: keep-all; overflow-wrap: anywhere;
+}
+.eyebrow { font-size: .75rem; line-height: 1.5; letter-spacing: .04em; }
+.hero h2 { font-size: 1.75rem; line-height: 1.35; word-break: keep-all; }
+.hero p, .diary-list p, .post-row p, .wiki-body, .mention-body, .bubble { font-size: .9375rem; line-height: 1.7; }
+.head p, .widget-toolbar-copy p, .setting-head p, .form-note { line-height: 1.6; }
+.head h3, .modal-head h3 { overflow-wrap: anywhere; }
+.primary, .secondary, .review { font-size: .875rem; line-height: 1.5; }
+.primary { min-height: 40px; }
+.toolbar, .page-tools, .subpage-title, .modal-head { gap: 12px; }
+.toolbar, .page-tools { flex-wrap: wrap; }
+.modal-head h3 { flex: 1; min-width: 0; font-size: 1.125rem; line-height: 1.4; }
+.modal-head .icon { flex: none; }
+.filter button, .tabs button, .domain-tabs button { line-height: 1.5; min-height: 32px; }
+.form-row label, .modal-card label, .setting-content label { line-height: 1.5; }
+.modal-card input, .modal-card select, .modal-card textarea { font-size: .875rem; }
+.event span, .account span, .workspace span { min-width: 0; }
+.event b { line-height: 1.5; overflow-wrap: anywhere; }
+.event time { white-space: nowrap; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+.metrics b, .widget.metric-widget > b { font-size: 2rem; line-height: 1.2; }
+.metrics small, .widget.metric-widget small { font-size: .8125rem; }
+.badge, .tag, .pill, .phase-badge { line-height: 1.4; }
+.icon-badge em { min-width: 18px; height: auto; min-height: 18px; line-height: 1.3; }
+
+/* LNB: isolate labels from the legacy `nav span { font-size:16px }` icon rule. */
+.sidebar { height: 100dvh; padding-top: 24px; }
+.sidebar .brand { padding-bottom: 24px; line-height: 1.3; }
+.sidebar nav button, .sidebar .nav-link {
+  height: auto; min-height: 40px; padding: 9px 10px;
+  font-size: .875rem; line-height: 1.5; gap: 10px;
+}
+.sidebar .nav-text {
+  width: auto; font-size: inherit; line-height: inherit; font-weight: inherit;
+  white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere;
+}
+.sidebar .nav-icon { width: 18px; font-size: 1rem; line-height: 1; flex: none; }
+.sidebar nav .nav-section {
+  min-height: 36px; padding: 14px 10px 6px; font-size: .75rem;
+  font-weight: 600; line-height: 1.4; letter-spacing: .02em;
+}
+.sidebar .workspace b, .sidebar .account b { font-size: .875rem; line-height: 1.5; }
+.sidebar .workspace small, .sidebar .account small { font-size: .75rem; line-height: 1.5; overflow-wrap: anywhere; }
+.sidebar .workspace i, .sidebar .account i { width: 32px; height: 32px; flex: none; }
+.sidebar .workspace-options button { font-size: .875rem; line-height: 1.5; flex-wrap: wrap; }
+.sidebar .workspace-options p, .sidebar .workspace-options span { font-size: .75rem; }
+.sidebar .account { align-items: center; }
+.app, main { height: 100dvh; }
+
+@media (max-width: 760px) {
+  main > header h1 { font-size: 1.75rem; line-height: 1.3; }
+  .hero h2 { font-size: 1.5rem; }
+  .hero p { font-size: .875rem; }
+  .sidebar { max-width: calc(100vw - 40px); }
+  .sidebar .workspace-switcher { margin-bottom: 12px; }
+  .sidebar .brand { padding-bottom: 16px; }
+  /* The complete header action row wraps below the title on narrow screens. */
+  main > header .actions { flex: 1 1 100%; }
+  .metrics b, .widget.metric-widget > b { font-size: 1.75rem; }
+  .subpage-title { flex-wrap: wrap; }
+  /* Keep editable controls comfortably readable at every text-size preference. */
+  :root :is(input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']), select, textarea) {
+    font-size: max(1rem, 16px);
+  }
+}
+@media (max-height: 600px) {
+  /* Short landscape screens: retain independent navigation scrolling. */
+  .sidebar { overflow-y: auto; }
+  .sidebar nav { flex: 1 0 160px; }
+}

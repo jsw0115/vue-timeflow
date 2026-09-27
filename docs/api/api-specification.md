@@ -3,6 +3,8 @@
 2026-09-25. 이 문서는 기존 /api의 실제 소스 계약이며 목표 /api/v1과 다르다.
 전체 메서드·경로는 [자동 생성 목록](current-api-inventory.md), 신규 범위는 [API 목록서](api-catalog.md)를 참고한다.
 
+2026-09-27 추가: 현행 컨트롤러는 104개이며 채팅 15개가 추가되었다. [채팅 API 목록·상세 계약](../chat/api/catalog.md)을 함께 따른다. 채팅 생성은 200, 그룹 나가기·입력 중은 204, SSE는 text/event-stream이며 아래 기존 일반 규칙의 예외다.
+
 ## 공통
 
 응답 ApiResponse<T>: {success:boolean,data:T,message:string|null}. 오류도 같은 3필드이며 목표 설계의 error/meta는 아직 없다.

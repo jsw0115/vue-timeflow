@@ -60,7 +60,7 @@ const maxValue = computed(() => Math.max(1, ...ranked.value.map((r) => r.value))
     <div class="filter">
       <button v-for="m in METRICS" :key="m.id" :class="{ selected: metric === m.id }" @click="metric = m.id">{{ m.label }}</button>
     </div>
-    <select v-model="scope" style="border: 1px solid var(--color-hairline); border-radius: var(--radius-sm); padding: 8px 10px; font-size: 11px; background: var(--color-canvas)">
+    <select v-model="scope" style="border: 1px solid var(--color-hairline); border-radius: var(--radius-sm); padding: 8px 10px; font-size: 0.8125rem; background: var(--color-canvas)">
       <option v-for="s in SCOPES" :key="s">{{ s }}</option>
     </select>
   </div>
@@ -68,7 +68,7 @@ const maxValue = computed(() => Math.max(1, ...ranked.value.map((r) => r.value))
   <div class="podium">
     <div style="text-align: center" v-for="p in podium" :key="p.name">
       <div class="podium-avatar" :class="{ top: p.rank === 1 }">{{ p.rank === 1 ? '★' : p.name[0] }}</div>
-      <b style="font-size: 12px; display: block">{{ p.name }}</b>
+      <b style="font-size: 0.875rem; display: block">{{ p.name }}</b>
       <small class="figure" style="color: var(--color-muted)">{{ p.value }}{{ unit }}</small>
       <div class="bar" :style="{ height: 24 + (p.value / maxValue) * 44 + 'px', width: p.rank === 1 ? '64px' : '52px' }"></div>
     </div>
@@ -87,7 +87,7 @@ const maxValue = computed(() => Math.max(1, ...ranked.value.map((r) => r.value))
   <section class="card" style="margin-top: 16px" v-if="myRow">
     <div class="head">
       <div><h3 style="margin: 0">내 순위</h3><p style="margin: 4px 0 0">{{ scope }} · {{ period }} · {{ METRICS.find((m) => m.id === metric).label }}</p></div>
-      <b class="figure" style="font-size: 22px">{{ myRow.rank }}위 · {{ myRow.value }}{{ unit }}</b>
+      <b class="figure" style="font-size: 1.375rem">{{ myRow.rank }}위 · {{ myRow.value }}{{ unit }}</b>
     </div>
     <p v-if="myRow.excluded" class="form-note" style="margin-top: 10px">
       업무 카테고리 기록 {{ myRow.excluded }}건은 랭킹 집계에서 제외됐어요. 업무 기록은 다른 사용자에게 공개되지 않습니다.

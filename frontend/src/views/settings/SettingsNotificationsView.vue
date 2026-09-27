@@ -115,7 +115,7 @@ function save() {
         </div>
       </template>
 
-      <label class="task" style="border: 0">
+      <label class="task" style="border: 0; display: inline-flex;">
         <input type="checkbox" v-model="kakao.consent" />
         <span style="flex: 1"><b>알림톡 수신에 동의합니다</b><small>정보성 알림만 보내며, 광고·마케팅 메시지는 보내지 않아요</small></span>
       </label>
@@ -135,7 +135,7 @@ function save() {
     </div>
     <div class="trow" v-for="c in categories" :key="c.title"><b>{{ c.title }}</b><button type="button" role="switch" class="toggle" :aria-checked="c.on" :class="{ on: c.on }" @click="c.on = !c.on"><em></em></button></div>
     <div class="section-label">방해 금지</div>
-    <label class="task" style="border: 0">
+    <label class="task" style="border: 0; display: inline-flex;">
       <input type="checkbox" v-model="dnd.on" />
       <span style="flex: 1"><b>방해 금지 시간 사용</b><small>이 시간에는 알림을 보내지 않아요</small></span>
     </label>

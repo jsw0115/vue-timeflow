@@ -126,10 +126,10 @@ function linkPlannerItem(title) {
       </div>
       <label>내용 · 태그 · 멘션<TagMentionInput v-model="body" :rows="10" placeholder="오늘 하루는 어땠나요? #회고 @이름" /></label>
 
-      <label style="display: block; font-size: 11px; font-weight: 600; margin-top: 15px">태그</label>
+      <label style="display: block; font-size: 0.8125rem; font-weight: 600; margin-top: 15px">태그</label>
       <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px">
         <span class="tag" v-for="t in tags" :key="t">#{{ t }} <a style="cursor: pointer; font-weight: 700" @click="removeTag(t)">×</a></span>
-        <input v-model="tagInput" @keydown.enter.prevent="addTag" placeholder="태그 입력 후 Enter" style="border: 1px solid var(--color-hairline); border-radius: var(--radius-sm); padding: 4px 8px; font-size: 10.5px; width: 140px; background: var(--color-canvas)" />
+        <input v-model="tagInput" @keydown.enter.prevent="addTag" placeholder="태그 입력 후 Enter" style="border: 1px solid var(--color-hairline); border-radius: var(--radius-sm); padding: 4px 8px; width: 140px; background: var(--color-canvas)" />
       </div>
     </section>
     <aside class="calendar card">

@@ -1,8 +1,8 @@
 # 현재 /api 소스 계약 상세
 
-기준 2026-09-26. Java 소스에서 생성한 정적 계약이며 DB 실행 결과가 아닙니다. 목표 /api/v1과 구분합니다.
+기준 2026-09-27. Java 소스에서 생성한 정적 계약이며 DB 실행 결과가 아닙니다. 목표 /api/v1과 구분합니다.
 
-총 89개: 서비스 연결 32, stub 52, 공용 메모리 5.
+총 104개: 서비스 연결 47, stub 52, 공용 메모리 5.
 
 ## 공통 주의사항
 
@@ -28,6 +28,7 @@
 | FORBIDDEN | 403 | 접근 권한이 없습니다. | 계정 상태/잠금/권한 확인 후 대기 |
 | NOT_FOUND | 404 | 요청한 리소스를 찾을 수 없습니다. | requestId 또는 요청 시각으로 서버 로그 확인 |
 | CONFLICT | 409 | 요청이 현재 상태와 충돌합니다. | 중복 여부·현재 상태 확인 |
+| RATE_LIMITED | 429 | 요청이 많습니다. 잠시 후 다시 시도해주세요. | requestId 또는 요청 시각으로 서버 로그 확인 |
 | INTERNAL_ERROR | 500 | 서버 오류가 발생했습니다. | requestId 또는 요청 시각으로 서버 로그 확인 |
 
 ```json
@@ -205,6 +206,278 @@
     "role": "example"
   },
   "message": null
+}
+```
+
+오류 처리: JWT 누락/무효 401 → 로그인 확인. 본문 검증 위반 400 → DTO 필수값 확인; 서비스 충돌 시409 → 현재 상태 재조회; 미처리 예외500 → 로그 확인. 개별 에러코드 필드는 아직 없으며 공통 오류 표를 참고합니다.
+
+### GET /api/chat/people
+
+- 상태: **서비스 연결 · CHAT_ENABLED=true 조건부 활성화**
+- 소스: ChatController.java
+- 인증: JWT + 활성 계정/방 참여 권한. 미리보기 데이터는 브라우저 전용이며 API 인증을 우회하지 않습니다.
+- 성공 HTTP: 200; ApiResponse<Person>
+- 요청·응답·커서·오류: [채팅 API 상세 설계](../chat/api/design.md), [전체 15개 채팅 목록](../chat/api/catalog.md).
+
+### GET /api/chat/rooms
+
+- 상태: **서비스 연결 · CHAT_ENABLED=true 조건부 활성화**
+- 소스: ChatController.java
+- 인증: JWT + 활성 계정/방 참여 권한. 미리보기 데이터는 브라우저 전용이며 API 인증을 우회하지 않습니다.
+- 성공 HTTP: 200; ApiResponse<Page<Room>>
+- 요청·응답·커서·오류: [채팅 API 상세 설계](../chat/api/design.md), [전체 15개 채팅 목록](../chat/api/catalog.md).
+
+### POST /api/chat/rooms
+
+- 상태: **서비스 연결 · CHAT_ENABLED=true 조건부 활성화**
+- 소스: ChatController.java
+- 인증: JWT + 활성 계정/방 참여 권한. 미리보기 데이터는 브라우저 전용이며 API 인증을 우회하지 않습니다.
+- 성공 HTTP: 200; ApiResponse<Room>
+- 요청·응답·커서·오류: [채팅 API 상세 설계](../chat/api/design.md), [전체 15개 채팅 목록](../chat/api/catalog.md).
+
+### GET /api/chat/rooms/{id}
+
+- 상태: **서비스 연결 · CHAT_ENABLED=true 조건부 활성화**
+- 소스: ChatController.java
+- 인증: JWT + 활성 계정/방 참여 권한. 미리보기 데이터는 브라우저 전용이며 API 인증을 우회하지 않습니다.
+- 성공 HTTP: 200; ApiResponse<Room>
+- 요청·응답·커서·오류: [채팅 API 상세 설계](../chat/api/design.md), [전체 15개 채팅 목록](../chat/api/catalog.md).
+
+### GET /api/chat/rooms/{id}/messages
+
+- 상태: **서비스 연결 · CHAT_ENABLED=true 조건부 활성화**
+- 소스: ChatController.java
+- 인증: JWT + 활성 계정/방 참여 권한. 미리보기 데이터는 브라우저 전용이며 API 인증을 우회하지 않습니다.
+- 성공 HTTP: 200; ApiResponse<Page<Message>>
+- 요청·응답·커서·오류: [채팅 API 상세 설계](../chat/api/design.md), [전체 15개 채팅 목록](../chat/api/catalog.md).
+
+### POST /api/chat/rooms/{id}/messages
+
+- 상태: **서비스 연결 · CHAT_ENABLED=true 조건부 활성화**
+- 소스: ChatController.java
+- 인증: JWT + 활성 계정/방 참여 권한. 미리보기 데이터는 브라우저 전용이며 API 인증을 우회하지 않습니다.
+- 성공 HTTP: 200; ApiResponse<Message>
+- 요청·응답·커서·오류: [채팅 API 상세 설계](../chat/api/design.md), [전체 15개 채팅 목록](../chat/api/catalog.md).
+
+### PUT /api/chat/rooms/{id}/read
+
+- 상태: **서비스 연결 · CHAT_ENABLED=true 조건부 활성화**
+- 소스: ChatController.java
+- 인증: JWT + 활성 계정/방 참여 권한. 미리보기 데이터는 브라우저 전용이며 API 인증을 우회하지 않습니다.
+- 성공 HTTP: 200; ApiResponse<ReadState>
+- 요청·응답·커서·오류: [채팅 API 상세 설계](../chat/api/design.md), [전체 15개 채팅 목록](../chat/api/catalog.md).
+
+### PUT /api/chat/rooms/{id}/owner
+
+- 상태: **서비스 연결 · CHAT_ENABLED=true 조건부 활성화**
+- 소스: ChatController.java
+- 인증: JWT + 활성 계정/방 참여 권한. 미리보기 데이터는 브라우저 전용이며 API 인증을 우회하지 않습니다.
+- 성공 HTTP: 200; ApiResponse<Void>
+- 요청·응답·커서·오류: [채팅 API 상세 설계](../chat/api/design.md), [전체 15개 채팅 목록](../chat/api/catalog.md).
+
+### DELETE /api/chat/rooms/{id}/members/me
+
+- 상태: **서비스 연결 · CHAT_ENABLED=true 조건부 활성화**
+- 소스: ChatController.java
+- 인증: JWT + 활성 계정/방 참여 권한. 미리보기 데이터는 브라우저 전용이며 API 인증을 우회하지 않습니다.
+- 성공 HTTP: 204; 본문 없음
+- 요청·응답·커서·오류: [채팅 API 상세 설계](../chat/api/design.md), [전체 15개 채팅 목록](../chat/api/catalog.md).
+
+### POST /api/chat/rooms/{id}/typing
+
+- 상태: **서비스 연결 · CHAT_ENABLED=true 조건부 활성화**
+- 소스: ChatController.java
+- 인증: JWT + 활성 계정/방 참여 권한. 미리보기 데이터는 브라우저 전용이며 API 인증을 우회하지 않습니다.
+- 성공 HTTP: 204; 본문 없음
+- 요청·응답·커서·오류: [채팅 API 상세 설계](../chat/api/design.md), [전체 15개 채팅 목록](../chat/api/catalog.md).
+
+### GET /api/chat/events
+
+- 상태: **서비스 연결 · CHAT_ENABLED=true 조건부 활성화**
+- 소스: ChatController.java
+- 인증: JWT + 활성 계정/방 참여 권한. 미리보기 데이터는 브라우저 전용이며 API 인증을 우회하지 않습니다.
+- 성공 HTTP: 200; text/event-stream (JSON envelope 없음)
+- 요청·응답·커서·오류: [채팅 API 상세 설계](../chat/api/design.md), [전체 15개 채팅 목록](../chat/api/catalog.md).
+
+### GET /api/chat/mentions
+
+- 상태: **서비스 연결 · CHAT_ENABLED=true 조건부 활성화**
+- 소스: ChatController.java
+- 인증: JWT + 활성 계정/방 참여 권한. 미리보기 데이터는 브라우저 전용이며 API 인증을 우회하지 않습니다.
+- 성공 HTTP: 200; ApiResponse<Page<InboxItem>>
+- 요청·응답·커서·오류: [채팅 API 상세 설계](../chat/api/design.md), [전체 15개 채팅 목록](../chat/api/catalog.md).
+
+### PUT /api/chat/mentions/{messageId}/read
+
+- 상태: **서비스 연결 · CHAT_ENABLED=true 조건부 활성화**
+- 소스: ChatController.java
+- 인증: JWT + 활성 계정/방 참여 권한. 미리보기 데이터는 브라우저 전용이며 API 인증을 우회하지 않습니다.
+- 성공 HTTP: 200; ApiResponse<Void>
+- 요청·응답·커서·오류: [채팅 API 상세 설계](../chat/api/design.md), [전체 15개 채팅 목록](../chat/api/catalog.md).
+
+### GET /api/chat/tags
+
+- 상태: **서비스 연결 · CHAT_ENABLED=true 조건부 활성화**
+- 소스: ChatController.java
+- 인증: JWT + 활성 계정/방 참여 권한. 미리보기 데이터는 브라우저 전용이며 API 인증을 우회하지 않습니다.
+- 성공 HTTP: 200; ApiResponse<Page<TagCount>>
+- 요청·응답·커서·오류: [채팅 API 상세 설계](../chat/api/design.md), [전체 15개 채팅 목록](../chat/api/catalog.md).
+
+### GET /api/chat/tagged-messages
+
+- 상태: **서비스 연결 · CHAT_ENABLED=true 조건부 활성화**
+- 소스: ChatController.java
+- 인증: JWT + 활성 계정/방 참여 권한. 미리보기 데이터는 브라우저 전용이며 API 인증을 우회하지 않습니다.
+- 성공 HTTP: 200; ApiResponse<Page<InboxItem>>
+- 요청·응답·커서·오류: [채팅 API 상세 설계](../chat/api/design.md), [전체 15개 채팅 목록](../chat/api/catalog.md).
+
+### GET /api/admin/users
+
+- 상태: **계약 stub**
+- 소스: AdminController.java
+- 요청 URL: http://localhost:8080/api/admin/users (로컬 예시)
+- 헤더: Authorization: Bearer <access-token>, Accept: application/json
+- 성공 HTTP: 200; CONTRACT_READY이며 실 처리 없음
+
+| 위치 | 파라미터 | Java 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| query | q | String | 아니오 | 없음 |
+| query | role | String | 아니오 | 없음 |
+| query | status | String | 아니오 | 없음 |
+| query | page | Integer | 아니오 | 없음 |
+| query | size | Integer | 아니오 | 없음 |
+
+성공 응답 예시:
+
+```json
+{
+  "success": true,
+  "data": {
+    "endpoint": "GET /users",
+    "status": "CONTRACT_READY"
+  },
+  "message": "컨트롤러 계약만 준비되었습니다."
+}
+```
+
+오류 처리: JWT 누락/무효 401 → 로그인 확인. 본문 검증 위반 400 → DTO 필수값 확인; 서비스 충돌 시409 → 현재 상태 재조회; 미처리 예외500 → 로그 확인. 개별 에러코드 필드는 아직 없으며 공통 오류 표를 참고합니다.
+
+### GET /api/admin/users/{id}
+
+- 상태: **계약 stub**
+- 소스: AdminController.java
+- 요청 URL: http://localhost:8080/api/admin/users/{id} (로컬 예시)
+- 헤더: Authorization: Bearer <access-token>, Accept: application/json
+- 성공 HTTP: 200; CONTRACT_READY이며 실 처리 없음
+
+| 위치 | 파라미터 | Java 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | id | String | 예 | 없음 |
+
+성공 응답 예시:
+
+```json
+{
+  "success": true,
+  "data": {
+    "endpoint": "GET /users/{id}",
+    "status": "CONTRACT_READY"
+  },
+  "message": "컨트롤러 계약만 준비되었습니다."
+}
+```
+
+오류 처리: JWT 누락/무효 401 → 로그인 확인. 본문 검증 위반 400 → DTO 필수값 확인; 서비스 충돌 시409 → 현재 상태 재조회; 미처리 예외500 → 로그 확인. 개별 에러코드 필드는 아직 없으며 공통 오류 표를 참고합니다.
+
+### POST /api/admin/users
+
+- 상태: **계약 stub**
+- 소스: AdminController.java
+- 요청 URL: http://localhost:8080/api/admin/users (로컬 예시)
+- 헤더: Authorization: Bearer <access-token>, Accept: application/json, Content-Type: application/json
+- 성공 HTTP: 200; CONTRACT_READY이며 실 처리 없음
+
+| 위치 | 파라미터 | Java 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| body | body | Map<String,Object> | 예 | 없음 |
+
+요청 본문 예시 (stub: 임의 JSON, 필드 미정의):
+
+```json
+{}
+```
+
+성공 응답 예시:
+
+```json
+{
+  "success": true,
+  "data": {
+    "endpoint": "POST /users",
+    "status": "CONTRACT_READY"
+  },
+  "message": "컨트롤러 계약만 준비되었습니다."
+}
+```
+
+오류 처리: JWT 누락/무효 401 → 로그인 확인. 본문 검증 위반 400 → DTO 필수값 확인; 서비스 충돌 시409 → 현재 상태 재조회; 미처리 예외500 → 로그 확인. 개별 에러코드 필드는 아직 없으며 공통 오류 표를 참고합니다.
+
+### PUT /api/admin/users/{id}
+
+- 상태: **계약 stub**
+- 소스: AdminController.java
+- 요청 URL: http://localhost:8080/api/admin/users/{id} (로컬 예시)
+- 헤더: Authorization: Bearer <access-token>, Accept: application/json, Content-Type: application/json
+- 성공 HTTP: 200; CONTRACT_READY이며 실 처리 없음
+
+| 위치 | 파라미터 | Java 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | id | String | 예 | 없음 |
+| body | body | Map<String,Object> | 예 | 없음 |
+
+요청 본문 예시 (stub: 임의 JSON, 필드 미정의):
+
+```json
+{}
+```
+
+성공 응답 예시:
+
+```json
+{
+  "success": true,
+  "data": {
+    "endpoint": "PUT /users/{id}",
+    "status": "CONTRACT_READY"
+  },
+  "message": "컨트롤러 계약만 준비되었습니다."
+}
+```
+
+오류 처리: JWT 누락/무효 401 → 로그인 확인. 본문 검증 위반 400 → DTO 필수값 확인; 서비스 충돌 시409 → 현재 상태 재조회; 미처리 예외500 → 로그 확인. 개별 에러코드 필드는 아직 없으며 공통 오류 표를 참고합니다.
+
+### DELETE /api/admin/users/{id}
+
+- 상태: **계약 stub**
+- 소스: AdminController.java
+- 요청 URL: http://localhost:8080/api/admin/users/{id} (로컬 예시)
+- 헤더: Authorization: Bearer <access-token>, Accept: application/json
+- 성공 HTTP: 200; CONTRACT_READY이며 실 처리 없음
+
+| 위치 | 파라미터 | Java 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | id | String | 예 | 없음 |
+
+성공 응답 예시:
+
+```json
+{
+  "success": true,
+  "data": {
+    "endpoint": "DELETE /users/{id}",
+    "status": "CONTRACT_READY"
+  },
+  "message": "컨트롤러 계약만 준비되었습니다."
 }
 ```
 
@@ -710,6 +983,155 @@ file: 바이너리 파일. 현재 stub은 STT 변환을 수행하지 않습니�
 
 오류 처리: JWT 누락/무효 401 → 로그인 확인. 본문 검증 위반 400 → DTO 필수값 확인; 서비스 충돌 시409 → 현재 상태 재조회; 미처리 예외500 → 로그 확인. 개별 에러코드 필드는 아직 없으며 공통 오류 표를 참고합니다.
 
+### GET /api/reports/time-blocks
+
+- 상태: **계약 stub**
+- 소스: ReportController.java
+- 요청 URL: http://localhost:8080/api/reports/time-blocks (로컬 예시)
+- 헤더: Authorization: Bearer <access-token>, Accept: application/json
+- 성공 HTTP: 200; CONTRACT_READY이며 실 처리 없음
+
+| 위치 | 파라미터 | Java 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| query | date | String | 예 | 없음 |
+| query | categoryName | String | 아니오 | 없음 |
+
+성공 응답 예시:
+
+```json
+{
+  "success": true,
+  "data": {
+    "endpoint": "GET /time-blocks",
+    "status": "CONTRACT_READY"
+  },
+  "message": "컨트롤러 계약만 준비되었습니다."
+}
+```
+
+오류 처리: JWT 누락/무효 401 → 로그인 확인. 본문 검증 위반 400 → DTO 필수값 확인; 서비스 충돌 시409 → 현재 상태 재조회; 미처리 예외500 → 로그 확인. 개별 에러코드 필드는 아직 없으며 공통 오류 표를 참고합니다.
+
+### POST /api/reports/draft
+
+- 상태: **계약 stub**
+- 소스: ReportController.java
+- 요청 URL: http://localhost:8080/api/reports/draft (로컬 예시)
+- 헤더: Authorization: Bearer <access-token>, Accept: application/json, Content-Type: application/json
+- 성공 HTTP: 200; CONTRACT_READY이며 실 처리 없음
+
+| 위치 | 파라미터 | Java 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| body | body | Map<String,Object> | 예 | 없음 |
+
+요청 본문 예시 (stub: 임의 JSON, 필드 미정의):
+
+```json
+{}
+```
+
+성공 응답 예시:
+
+```json
+{
+  "success": true,
+  "data": {
+    "endpoint": "POST /draft",
+    "status": "CONTRACT_READY"
+  },
+  "message": "컨트롤러 계약만 준비되었습니다."
+}
+```
+
+오류 처리: JWT 누락/무효 401 → 로그인 확인. 본문 검증 위반 400 → DTO 필수값 확인; 서비스 충돌 시409 → 현재 상태 재조회; 미처리 예외500 → 로그 확인. 개별 에러코드 필드는 아직 없으며 공통 오류 표를 참고합니다.
+
+### GET /api/reports/{reportKey}
+
+- 상태: **계약 stub**
+- 소스: ReportController.java
+- 요청 URL: http://localhost:8080/api/reports/{reportKey} (로컬 예시)
+- 헤더: Authorization: Bearer <access-token>, Accept: application/json
+- 성공 HTTP: 200; CONTRACT_READY이며 실 처리 없음
+
+| 위치 | 파라미터 | Java 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | reportKey | String | 예 | 없음 |
+
+성공 응답 예시:
+
+```json
+{
+  "success": true,
+  "data": {
+    "endpoint": "GET /{reportKey}",
+    "status": "CONTRACT_READY"
+  },
+  "message": "컨트롤러 계약만 준비되었습니다."
+}
+```
+
+오류 처리: JWT 누락/무효 401 → 로그인 확인. 본문 검증 위반 400 → DTO 필수값 확인; 서비스 충돌 시409 → 현재 상태 재조회; 미처리 예외500 → 로그 확인. 개별 에러코드 필드는 아직 없으며 공통 오류 표를 참고합니다.
+
+### POST /api/reports/{reportKey}
+
+- 상태: **계약 stub**
+- 소스: ReportController.java
+- 요청 URL: http://localhost:8080/api/reports/{reportKey} (로컬 예시)
+- 헤더: Authorization: Bearer <access-token>, Accept: application/json, Content-Type: application/json
+- 성공 HTTP: 200; CONTRACT_READY이며 실 처리 없음
+
+| 위치 | 파라미터 | Java 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | reportKey | String | 예 | 없음 |
+| body | body | Map<String,Object> | 예 | 없음 |
+
+요청 본문 예시 (stub: 임의 JSON, 필드 미정의):
+
+```json
+{}
+```
+
+성공 응답 예시:
+
+```json
+{
+  "success": true,
+  "data": {
+    "endpoint": "POST /{reportKey}",
+    "status": "CONTRACT_READY"
+  },
+  "message": "컨트롤러 계약만 준비되었습니다."
+}
+```
+
+오류 처리: JWT 누락/무효 401 → 로그인 확인. 본문 검증 위반 400 → DTO 필수값 확인; 서비스 충돌 시409 → 현재 상태 재조회; 미처리 예외500 → 로그 확인. 개별 에러코드 필드는 아직 없으며 공통 오류 표를 참고합니다.
+
+### GET /api/reports/{reportKey}/sub-reports
+
+- 상태: **계약 stub**
+- 소스: ReportController.java
+- 요청 URL: http://localhost:8080/api/reports/{reportKey}/sub-reports (로컬 예시)
+- 헤더: Authorization: Bearer <access-token>, Accept: application/json
+- 성공 HTTP: 200; CONTRACT_READY이며 실 처리 없음
+
+| 위치 | 파라미터 | Java 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | reportKey | String | 예 | 없음 |
+
+성공 응답 예시:
+
+```json
+{
+  "success": true,
+  "data": {
+    "endpoint": "GET /{reportKey}/sub-reports",
+    "status": "CONTRACT_READY"
+  },
+  "message": "컨트롤러 계약만 준비되었습니다."
+}
+```
+
+오류 처리: JWT 누락/무효 401 → 로그인 확인. 본문 검증 위반 400 → DTO 필수값 확인; 서비스 충돌 시409 → 현재 상태 재조회; 미처리 예외500 → 로그 확인. 개별 에러코드 필드는 아직 없으며 공통 오류 표를 참고합니다.
+
 ### GET /api/settings
 
 - 상태: **계약 stub**
@@ -1003,7 +1425,7 @@ file: 바이너리 파일. 현재 stub은 STT 변환을 수행하지 않습니�
 ### GET /api/share/friends
 
 - 상태: **계약 stub**
-- 소스: ShareAdminReportController.java
+- 소스: ShareController.java
 - 요청 URL: http://localhost:8080/api/share/friends (로컬 예시)
 - 헤더: Authorization: Bearer <access-token>, Accept: application/json
 - 성공 HTTP: 200; CONTRACT_READY이며 실 처리 없음
@@ -1016,7 +1438,7 @@ file: 바이너리 파일. 현재 stub은 STT 변환을 수행하지 않습니�
 {
   "success": true,
   "data": {
-    "endpoint": "GET /share/friends",
+    "endpoint": "GET /friends",
     "status": "CONTRACT_READY"
   },
   "message": "컨트롤러 계약만 준비되었습니다."
@@ -1028,7 +1450,7 @@ file: 바이너리 파일. 현재 stub은 STT 변환을 수행하지 않습니�
 ### POST /api/share/friends/invite
 
 - 상태: **계약 stub**
-- 소스: ShareAdminReportController.java
+- 소스: ShareController.java
 - 요청 URL: http://localhost:8080/api/share/friends/invite (로컬 예시)
 - 헤더: Authorization: Bearer <access-token>, Accept: application/json, Content-Type: application/json
 - 성공 HTTP: 200; CONTRACT_READY이며 실 처리 없음
@@ -1049,7 +1471,7 @@ file: 바이너리 파일. 현재 stub은 STT 변환을 수행하지 않습니�
 {
   "success": true,
   "data": {
-    "endpoint": "POST /share/friends/invite",
+    "endpoint": "POST /friends/invite",
     "status": "CONTRACT_READY"
   },
   "message": "컨트롤러 계약만 준비되었습니다."
@@ -1061,7 +1483,7 @@ file: 바이너리 파일. 현재 stub은 STT 변환을 수행하지 않습니�
 ### POST /api/share/friends/{id}/accept
 
 - 상태: **계약 stub**
-- 소스: ShareAdminReportController.java
+- 소스: ShareController.java
 - 요청 URL: http://localhost:8080/api/share/friends/{id}/accept (로컬 예시)
 - 헤더: Authorization: Bearer <access-token>, Accept: application/json
 - 성공 HTTP: 200; CONTRACT_READY이며 실 처리 없음
@@ -1076,7 +1498,7 @@ file: 바이너리 파일. 현재 stub은 STT 변환을 수행하지 않습니�
 {
   "success": true,
   "data": {
-    "endpoint": "POST /share/friends/{id}/accept",
+    "endpoint": "POST /friends/{id}/accept",
     "status": "CONTRACT_READY"
   },
   "message": "컨트롤러 계약만 준비되었습니다."
@@ -1088,7 +1510,7 @@ file: 바이너리 파일. 현재 stub은 STT 변환을 수행하지 않습니�
 ### POST /api/share/friends/{id}/reject
 
 - 상태: **계약 stub**
-- 소스: ShareAdminReportController.java
+- 소스: ShareController.java
 - 요청 URL: http://localhost:8080/api/share/friends/{id}/reject (로컬 예시)
 - 헤더: Authorization: Bearer <access-token>, Accept: application/json
 - 성공 HTTP: 200; CONTRACT_READY이며 실 처리 없음
@@ -1103,7 +1525,7 @@ file: 바이너리 파일. 현재 stub은 STT 변환을 수행하지 않습니�
 {
   "success": true,
   "data": {
-    "endpoint": "POST /share/friends/{id}/reject",
+    "endpoint": "POST /friends/{id}/reject",
     "status": "CONTRACT_READY"
   },
   "message": "컨트롤러 계약만 준비되었습니다."
@@ -1115,7 +1537,7 @@ file: 바이너리 파일. 현재 stub은 STT 변환을 수행하지 않습니�
 ### DELETE /api/share/friends/{id}
 
 - 상태: **계약 stub**
-- 소스: ShareAdminReportController.java
+- 소스: ShareController.java
 - 요청 URL: http://localhost:8080/api/share/friends/{id} (로컬 예시)
 - 헤더: Authorization: Bearer <access-token>, Accept: application/json
 - 성공 HTTP: 200; CONTRACT_READY이며 실 처리 없음
@@ -1130,7 +1552,7 @@ file: 바이너리 파일. 현재 stub은 STT 변환을 수행하지 않습니�
 {
   "success": true,
   "data": {
-    "endpoint": "DELETE /share/friends/{id}",
+    "endpoint": "DELETE /friends/{id}",
     "status": "CONTRACT_READY"
   },
   "message": "컨트롤러 계약만 준비되었습니다."
@@ -1142,7 +1564,7 @@ file: 바이너리 파일. 현재 stub은 STT 변환을 수행하지 않습니�
 ### GET /api/share/groups
 
 - 상태: **계약 stub**
-- 소스: ShareAdminReportController.java
+- 소스: ShareController.java
 - 요청 URL: http://localhost:8080/api/share/groups (로컬 예시)
 - 헤더: Authorization: Bearer <access-token>, Accept: application/json
 - 성공 HTTP: 200; CONTRACT_READY이며 실 처리 없음
@@ -1155,7 +1577,7 @@ file: 바이너리 파일. 현재 stub은 STT 변환을 수행하지 않습니�
 {
   "success": true,
   "data": {
-    "endpoint": "GET /share/groups",
+    "endpoint": "GET /groups",
     "status": "CONTRACT_READY"
   },
   "message": "컨트롤러 계약만 준비되었습니다."
@@ -1167,7 +1589,7 @@ file: 바이너리 파일. 현재 stub은 STT 변환을 수행하지 않습니�
 ### POST /api/share/groups
 
 - 상태: **계약 stub**
-- 소스: ShareAdminReportController.java
+- 소스: ShareController.java
 - 요청 URL: http://localhost:8080/api/share/groups (로컬 예시)
 - 헤더: Authorization: Bearer <access-token>, Accept: application/json, Content-Type: application/json
 - 성공 HTTP: 200; CONTRACT_READY이며 실 처리 없음
@@ -1188,7 +1610,7 @@ file: 바이너리 파일. 현재 stub은 STT 변환을 수행하지 않습니�
 {
   "success": true,
   "data": {
-    "endpoint": "POST /share/groups",
+    "endpoint": "POST /groups",
     "status": "CONTRACT_READY"
   },
   "message": "컨트롤러 계약만 준비되었습니다."
@@ -1200,7 +1622,7 @@ file: 바이너리 파일. 현재 stub은 STT 변환을 수행하지 않습니�
 ### GET /api/share/groups/{id}
 
 - 상태: **계약 stub**
-- 소스: ShareAdminReportController.java
+- 소스: ShareController.java
 - 요청 URL: http://localhost:8080/api/share/groups/{id} (로컬 예시)
 - 헤더: Authorization: Bearer <access-token>, Accept: application/json
 - 성공 HTTP: 200; CONTRACT_READY이며 실 처리 없음
@@ -1215,7 +1637,7 @@ file: 바이너리 파일. 현재 stub은 STT 변환을 수행하지 않습니�
 {
   "success": true,
   "data": {
-    "endpoint": "GET /share/groups/{id}",
+    "endpoint": "GET /groups/{id}",
     "status": "CONTRACT_READY"
   },
   "message": "컨트롤러 계약만 준비되었습니다."
@@ -1227,7 +1649,7 @@ file: 바이너리 파일. 현재 stub은 STT 변환을 수행하지 않습니�
 ### PUT /api/share/groups/{id}
 
 - 상태: **계약 stub**
-- 소스: ShareAdminReportController.java
+- 소스: ShareController.java
 - 요청 URL: http://localhost:8080/api/share/groups/{id} (로컬 예시)
 - 헤더: Authorization: Bearer <access-token>, Accept: application/json, Content-Type: application/json
 - 성공 HTTP: 200; CONTRACT_READY이며 실 처리 없음
@@ -1249,7 +1671,7 @@ file: 바이너리 파일. 현재 stub은 STT 변환을 수행하지 않습니�
 {
   "success": true,
   "data": {
-    "endpoint": "PUT /share/groups/{id}",
+    "endpoint": "PUT /groups/{id}",
     "status": "CONTRACT_READY"
   },
   "message": "컨트롤러 계약만 준비되었습니다."
@@ -1261,7 +1683,7 @@ file: 바이너리 파일. 현재 stub은 STT 변환을 수행하지 않습니�
 ### DELETE /api/share/groups/{id}
 
 - 상태: **계약 stub**
-- 소스: ShareAdminReportController.java
+- 소스: ShareController.java
 - 요청 URL: http://localhost:8080/api/share/groups/{id} (로컬 예시)
 - 헤더: Authorization: Bearer <access-token>, Accept: application/json
 - 성공 HTTP: 200; CONTRACT_READY이며 실 처리 없음
@@ -1276,7 +1698,7 @@ file: 바이너리 파일. 현재 stub은 STT 변환을 수행하지 않습니�
 {
   "success": true,
   "data": {
-    "endpoint": "DELETE /share/groups/{id}",
+    "endpoint": "DELETE /groups/{id}",
     "status": "CONTRACT_READY"
   },
   "message": "컨트롤러 계약만 준비되었습니다."
@@ -1288,7 +1710,7 @@ file: 바이너리 파일. 현재 stub은 STT 변환을 수행하지 않습니�
 ### GET /api/share/groups/{id}/members
 
 - 상태: **계약 stub**
-- 소스: ShareAdminReportController.java
+- 소스: ShareController.java
 - 요청 URL: http://localhost:8080/api/share/groups/{id}/members (로컬 예시)
 - 헤더: Authorization: Bearer <access-token>, Accept: application/json
 - 성공 HTTP: 200; CONTRACT_READY이며 실 처리 없음
@@ -1303,7 +1725,7 @@ file: 바이너리 파일. 현재 stub은 STT 변환을 수행하지 않습니�
 {
   "success": true,
   "data": {
-    "endpoint": "GET /share/groups/{id}/members",
+    "endpoint": "GET /groups/{id}/members",
     "status": "CONTRACT_READY"
   },
   "message": "컨트롤러 계약만 준비되었습니다."
@@ -1315,7 +1737,7 @@ file: 바이너리 파일. 현재 stub은 STT 변환을 수행하지 않습니�
 ### POST /api/share/groups/{id}/members
 
 - 상태: **계약 stub**
-- 소스: ShareAdminReportController.java
+- 소스: ShareController.java
 - 요청 URL: http://localhost:8080/api/share/groups/{id}/members (로컬 예시)
 - 헤더: Authorization: Bearer <access-token>, Accept: application/json, Content-Type: application/json
 - 성공 HTTP: 200; CONTRACT_READY이며 실 처리 없음
@@ -1337,7 +1759,7 @@ file: 바이너리 파일. 현재 stub은 STT 변환을 수행하지 않습니�
 {
   "success": true,
   "data": {
-    "endpoint": "POST /share/groups/{id}/members",
+    "endpoint": "POST /groups/{id}/members",
     "status": "CONTRACT_READY"
   },
   "message": "컨트롤러 계약만 준비되었습니다."
@@ -1349,7 +1771,7 @@ file: 바이너리 파일. 현재 stub은 STT 변환을 수행하지 않습니�
 ### DELETE /api/share/groups/{id}/members/{memberId}
 
 - 상태: **계약 stub**
-- 소스: ShareAdminReportController.java
+- 소스: ShareController.java
 - 요청 URL: http://localhost:8080/api/share/groups/{id}/members/{memberId} (로컬 예시)
 - 헤더: Authorization: Bearer <access-token>, Accept: application/json
 - 성공 HTTP: 200; CONTRACT_READY이며 실 처리 없음
@@ -1365,308 +1787,7 @@ file: 바이너리 파일. 현재 stub은 STT 변환을 수행하지 않습니�
 {
   "success": true,
   "data": {
-    "endpoint": "DELETE /share/groups/{id}/members/{memberId}",
-    "status": "CONTRACT_READY"
-  },
-  "message": "컨트롤러 계약만 준비되었습니다."
-}
-```
-
-오류 처리: JWT 누락/무효 401 → 로그인 확인. 본문 검증 위반 400 → DTO 필수값 확인; 서비스 충돌 시409 → 현재 상태 재조회; 미처리 예외500 → 로그 확인. 개별 에러코드 필드는 아직 없으며 공통 오류 표를 참고합니다.
-
-### GET /api/admin/users
-
-- 상태: **계약 stub**
-- 소스: ShareAdminReportController.java
-- 요청 URL: http://localhost:8080/api/admin/users (로컬 예시)
-- 헤더: Authorization: Bearer <access-token>, Accept: application/json
-- 성공 HTTP: 200; CONTRACT_READY이며 실 처리 없음
-
-| 위치 | 파라미터 | Java 타입 | 필수 | 기본값 |
-|---|---|---|---|---|
-| query | q | String | 아니오 | 없음 |
-| query | role | String | 아니오 | 없음 |
-| query | status | String | 아니오 | 없음 |
-| query | page | Integer | 아니오 | 없음 |
-| query | size | Integer | 아니오 | 없음 |
-
-성공 응답 예시:
-
-```json
-{
-  "success": true,
-  "data": {
-    "endpoint": "GET /admin/users",
-    "status": "CONTRACT_READY"
-  },
-  "message": "컨트롤러 계약만 준비되었습니다."
-}
-```
-
-오류 처리: JWT 누락/무효 401 → 로그인 확인. 본문 검증 위반 400 → DTO 필수값 확인; 서비스 충돌 시409 → 현재 상태 재조회; 미처리 예외500 → 로그 확인. 개별 에러코드 필드는 아직 없으며 공통 오류 표를 참고합니다.
-
-### GET /api/admin/users/{id}
-
-- 상태: **계약 stub**
-- 소스: ShareAdminReportController.java
-- 요청 URL: http://localhost:8080/api/admin/users/{id} (로컬 예시)
-- 헤더: Authorization: Bearer <access-token>, Accept: application/json
-- 성공 HTTP: 200; CONTRACT_READY이며 실 처리 없음
-
-| 위치 | 파라미터 | Java 타입 | 필수 | 기본값 |
-|---|---|---|---|---|
-| path | id | String | 예 | 없음 |
-
-성공 응답 예시:
-
-```json
-{
-  "success": true,
-  "data": {
-    "endpoint": "GET /admin/users/{id}",
-    "status": "CONTRACT_READY"
-  },
-  "message": "컨트롤러 계약만 준비되었습니다."
-}
-```
-
-오류 처리: JWT 누락/무효 401 → 로그인 확인. 본문 검증 위반 400 → DTO 필수값 확인; 서비스 충돌 시409 → 현재 상태 재조회; 미처리 예외500 → 로그 확인. 개별 에러코드 필드는 아직 없으며 공통 오류 표를 참고합니다.
-
-### POST /api/admin/users
-
-- 상태: **계약 stub**
-- 소스: ShareAdminReportController.java
-- 요청 URL: http://localhost:8080/api/admin/users (로컬 예시)
-- 헤더: Authorization: Bearer <access-token>, Accept: application/json, Content-Type: application/json
-- 성공 HTTP: 200; CONTRACT_READY이며 실 처리 없음
-
-| 위치 | 파라미터 | Java 타입 | 필수 | 기본값 |
-|---|---|---|---|---|
-| body | body | Map<String,Object> | 예 | 없음 |
-
-요청 본문 예시 (stub: 임의 JSON, 필드 미정의):
-
-```json
-{}
-```
-
-성공 응답 예시:
-
-```json
-{
-  "success": true,
-  "data": {
-    "endpoint": "POST /admin/users",
-    "status": "CONTRACT_READY"
-  },
-  "message": "컨트롤러 계약만 준비되었습니다."
-}
-```
-
-오류 처리: JWT 누락/무효 401 → 로그인 확인. 본문 검증 위반 400 → DTO 필수값 확인; 서비스 충돌 시409 → 현재 상태 재조회; 미처리 예외500 → 로그 확인. 개별 에러코드 필드는 아직 없으며 공통 오류 표를 참고합니다.
-
-### PUT /api/admin/users/{id}
-
-- 상태: **계약 stub**
-- 소스: ShareAdminReportController.java
-- 요청 URL: http://localhost:8080/api/admin/users/{id} (로컬 예시)
-- 헤더: Authorization: Bearer <access-token>, Accept: application/json, Content-Type: application/json
-- 성공 HTTP: 200; CONTRACT_READY이며 실 처리 없음
-
-| 위치 | 파라미터 | Java 타입 | 필수 | 기본값 |
-|---|---|---|---|---|
-| path | id | String | 예 | 없음 |
-| body | body | Map<String,Object> | 예 | 없음 |
-
-요청 본문 예시 (stub: 임의 JSON, 필드 미정의):
-
-```json
-{}
-```
-
-성공 응답 예시:
-
-```json
-{
-  "success": true,
-  "data": {
-    "endpoint": "PUT /admin/users/{id}",
-    "status": "CONTRACT_READY"
-  },
-  "message": "컨트롤러 계약만 준비되었습니다."
-}
-```
-
-오류 처리: JWT 누락/무효 401 → 로그인 확인. 본문 검증 위반 400 → DTO 필수값 확인; 서비스 충돌 시409 → 현재 상태 재조회; 미처리 예외500 → 로그 확인. 개별 에러코드 필드는 아직 없으며 공통 오류 표를 참고합니다.
-
-### DELETE /api/admin/users/{id}
-
-- 상태: **계약 stub**
-- 소스: ShareAdminReportController.java
-- 요청 URL: http://localhost:8080/api/admin/users/{id} (로컬 예시)
-- 헤더: Authorization: Bearer <access-token>, Accept: application/json
-- 성공 HTTP: 200; CONTRACT_READY이며 실 처리 없음
-
-| 위치 | 파라미터 | Java 타입 | 필수 | 기본값 |
-|---|---|---|---|---|
-| path | id | String | 예 | 없음 |
-
-성공 응답 예시:
-
-```json
-{
-  "success": true,
-  "data": {
-    "endpoint": "DELETE /admin/users/{id}",
-    "status": "CONTRACT_READY"
-  },
-  "message": "컨트롤러 계약만 준비되었습니다."
-}
-```
-
-오류 처리: JWT 누락/무효 401 → 로그인 확인. 본문 검증 위반 400 → DTO 필수값 확인; 서비스 충돌 시409 → 현재 상태 재조회; 미처리 예외500 → 로그 확인. 개별 에러코드 필드는 아직 없으며 공통 오류 표를 참고합니다.
-
-### GET /api/reports/time-blocks
-
-- 상태: **계약 stub**
-- 소스: ShareAdminReportController.java
-- 요청 URL: http://localhost:8080/api/reports/time-blocks (로컬 예시)
-- 헤더: Authorization: Bearer <access-token>, Accept: application/json
-- 성공 HTTP: 200; CONTRACT_READY이며 실 처리 없음
-
-| 위치 | 파라미터 | Java 타입 | 필수 | 기본값 |
-|---|---|---|---|---|
-| query | date | String | 예 | 없음 |
-| query | categoryName | String | 아니오 | 없음 |
-
-성공 응답 예시:
-
-```json
-{
-  "success": true,
-  "data": {
-    "endpoint": "GET /reports/time-blocks",
-    "status": "CONTRACT_READY"
-  },
-  "message": "컨트롤러 계약만 준비되었습니다."
-}
-```
-
-오류 처리: JWT 누락/무효 401 → 로그인 확인. 본문 검증 위반 400 → DTO 필수값 확인; 서비스 충돌 시409 → 현재 상태 재조회; 미처리 예외500 → 로그 확인. 개별 에러코드 필드는 아직 없으며 공통 오류 표를 참고합니다.
-
-### POST /api/reports/draft
-
-- 상태: **계약 stub**
-- 소스: ShareAdminReportController.java
-- 요청 URL: http://localhost:8080/api/reports/draft (로컬 예시)
-- 헤더: Authorization: Bearer <access-token>, Accept: application/json, Content-Type: application/json
-- 성공 HTTP: 200; CONTRACT_READY이며 실 처리 없음
-
-| 위치 | 파라미터 | Java 타입 | 필수 | 기본값 |
-|---|---|---|---|---|
-| body | body | Map<String,Object> | 예 | 없음 |
-
-요청 본문 예시 (stub: 임의 JSON, 필드 미정의):
-
-```json
-{}
-```
-
-성공 응답 예시:
-
-```json
-{
-  "success": true,
-  "data": {
-    "endpoint": "POST /reports/draft",
-    "status": "CONTRACT_READY"
-  },
-  "message": "컨트롤러 계약만 준비되었습니다."
-}
-```
-
-오류 처리: JWT 누락/무효 401 → 로그인 확인. 본문 검증 위반 400 → DTO 필수값 확인; 서비스 충돌 시409 → 현재 상태 재조회; 미처리 예외500 → 로그 확인. 개별 에러코드 필드는 아직 없으며 공통 오류 표를 참고합니다.
-
-### GET /api/reports/{reportKey}
-
-- 상태: **계약 stub**
-- 소스: ShareAdminReportController.java
-- 요청 URL: http://localhost:8080/api/reports/{reportKey} (로컬 예시)
-- 헤더: Authorization: Bearer <access-token>, Accept: application/json
-- 성공 HTTP: 200; CONTRACT_READY이며 실 처리 없음
-
-| 위치 | 파라미터 | Java 타입 | 필수 | 기본값 |
-|---|---|---|---|---|
-| path | reportKey | String | 예 | 없음 |
-
-성공 응답 예시:
-
-```json
-{
-  "success": true,
-  "data": {
-    "endpoint": "GET /reports/{reportKey}",
-    "status": "CONTRACT_READY"
-  },
-  "message": "컨트롤러 계약만 준비되었습니다."
-}
-```
-
-오류 처리: JWT 누락/무효 401 → 로그인 확인. 본문 검증 위반 400 → DTO 필수값 확인; 서비스 충돌 시409 → 현재 상태 재조회; 미처리 예외500 → 로그 확인. 개별 에러코드 필드는 아직 없으며 공통 오류 표를 참고합니다.
-
-### POST /api/reports/{reportKey}
-
-- 상태: **계약 stub**
-- 소스: ShareAdminReportController.java
-- 요청 URL: http://localhost:8080/api/reports/{reportKey} (로컬 예시)
-- 헤더: Authorization: Bearer <access-token>, Accept: application/json, Content-Type: application/json
-- 성공 HTTP: 200; CONTRACT_READY이며 실 처리 없음
-
-| 위치 | 파라미터 | Java 타입 | 필수 | 기본값 |
-|---|---|---|---|---|
-| path | reportKey | String | 예 | 없음 |
-| body | body | Map<String,Object> | 예 | 없음 |
-
-요청 본문 예시 (stub: 임의 JSON, 필드 미정의):
-
-```json
-{}
-```
-
-성공 응답 예시:
-
-```json
-{
-  "success": true,
-  "data": {
-    "endpoint": "POST /reports/{reportKey}",
-    "status": "CONTRACT_READY"
-  },
-  "message": "컨트롤러 계약만 준비되었습니다."
-}
-```
-
-오류 처리: JWT 누락/무효 401 → 로그인 확인. 본문 검증 위반 400 → DTO 필수값 확인; 서비스 충돌 시409 → 현재 상태 재조회; 미처리 예외500 → 로그 확인. 개별 에러코드 필드는 아직 없으며 공통 오류 표를 참고합니다.
-
-### GET /api/reports/{reportKey}/sub-reports
-
-- 상태: **계약 stub**
-- 소스: ShareAdminReportController.java
-- 요청 URL: http://localhost:8080/api/reports/{reportKey}/sub-reports (로컬 예시)
-- 헤더: Authorization: Bearer <access-token>, Accept: application/json
-- 성공 HTTP: 200; CONTRACT_READY이며 실 처리 없음
-
-| 위치 | 파라미터 | Java 타입 | 필수 | 기본값 |
-|---|---|---|---|---|
-| path | reportKey | String | 예 | 없음 |
-
-성공 응답 예시:
-
-```json
-{
-  "success": true,
-  "data": {
-    "endpoint": "GET /reports/{reportKey}/sub-reports",
+    "endpoint": "DELETE /groups/{id}/members/{memberId}",
     "status": "CONTRACT_READY"
   },
   "message": "컨트롤러 계약만 준비되었습니다."
@@ -3214,6 +3335,124 @@ file: 바이너리 파일. 현재 stub은 STT 변환을 수행하지 않습니�
 |---|---|---|---|
 | accessToken | String | 미지정 | 없음 |
 | refreshToken | String | 미지정 | 없음 |
+
+### CreateRoom
+
+| 필드 | 자료형 | 검증 필수 | annotation |
+|---|---|---|---|
+| kind | String | 예 | NotBlank |
+| name | String | 미지정 | Size |
+| memberIds | List<String> | 예 | NotEmpty, Size, NotNull, Pattern |
+
+### SendMessage
+
+| 필드 | 자료형 | 검증 필수 | annotation |
+|---|---|---|---|
+| clientMessageId | String | 예 | NotBlank |
+| body | String | 예 | NotBlank, Size |
+| mentionUserIds | List<String> | 예 | Size, NotBlank |
+
+### Read
+
+| 필드 | 자료형 | 검증 필수 | annotation |
+|---|---|---|---|
+| sequence | Long | 예 | NotNull, Min |
+
+### Owner
+
+| 필드 | 자료형 | 검증 필수 | annotation |
+|---|---|---|---|
+| userId | String | 예 | NotBlank |
+
+### Person
+
+| 필드 | 자료형 | 검증 필수 | annotation |
+|---|---|---|---|
+| id | String | 미지정 | 없음 |
+| nickname | String | 미지정 | 없음 |
+
+### Member
+
+| 필드 | 자료형 | 검증 필수 | annotation |
+|---|---|---|---|
+| userId | String | 미지정 | 없음 |
+| nickname | String | 미지정 | 없음 |
+| lastReadSequence | String | 미지정 | 없음 |
+
+### Message
+
+| 필드 | 자료형 | 검증 필수 | annotation |
+|---|---|---|---|
+| id | String | 미지정 | 없음 |
+| roomId | String | 미지정 | 없음 |
+| sequence | String | 미지정 | 없음 |
+| senderId | String | 미지정 | 없음 |
+| senderName | String | 미지정 | 없음 |
+| clientMessageId | String | 미지정 | 없음 |
+| body | String | 미지정 | 없음 |
+| createdAt | Instant | 미지정 | 없음 |
+| tags | List<String> | 미지정 | 없음 |
+| mentionUserIds | List<String> | 미지정 | 없음 |
+
+### Room
+
+| 필드 | 자료형 | 검증 필수 | annotation |
+|---|---|---|---|
+| id | String | 미지정 | 없음 |
+| kind | String | 미지정 | 없음 |
+| name | String | 미지정 | 없음 |
+| ownerId | String | 미지정 | 없음 |
+| lastSequence | String | 미지정 | 없음 |
+| unreadCount | long | 미지정 | 없음 |
+| lastMessage | Message | 미지정 | 없음 |
+| members | List<Member> | 미지정 | 없음 |
+| updatedAt | Instant | 미지정 | 없음 |
+
+### Page
+
+| 필드 | 자료형 | 검증 필수 | annotation |
+|---|---|---|---|
+| items | List<T> | 미지정 | 없음 |
+| nextCursor | String | 미지정 | 없음 |
+| hasNext | boolean | 미지정 | 없음 |
+
+### ReadState
+
+| 필드 | 자료형 | 검증 필수 | annotation |
+|---|---|---|---|
+| roomId | String | 미지정 | 없음 |
+| lastReadSequence | String | 미지정 | 없음 |
+
+### Signal
+
+| 필드 | 자료형 | 검증 필수 | annotation |
+|---|---|---|---|
+| roomId | String | 미지정 | 없음 |
+| type | String | 미지정 | 없음 |
+| userId | String | 미지정 | 없음 |
+
+### InboxItem
+
+| 필드 | 자료형 | 검증 필수 | annotation |
+|---|---|---|---|
+| message | Message | 미지정 | 없음 |
+| roomName | String | 미지정 | 없음 |
+| read | boolean | 미지정 | 없음 |
+
+### TagCount
+
+| 필드 | 자료형 | 검증 필수 | annotation |
+|---|---|---|---|
+| name | String | 미지정 | 없음 |
+| messageCount | long | 미지정 | 없음 |
+
+### ApiResponse
+
+| 필드 | 자료형 | 검증 필수 | annotation |
+|---|---|---|---|
+| success | boolean | 미지정 | 없음 |
+| data | T | 미지정 | 없음 |
+| message | String | 미지정 | 없음 |
 
 ### EventRequest
 

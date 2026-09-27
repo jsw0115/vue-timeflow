@@ -58,15 +58,15 @@ function onToggleFeature(f) {
       </div>
       <p class="form-note">{{ AI_SCOPES.find((s) => s.id === aiSettings.scope).desc }}</p>
 
-      <label class="task" style="border: 0">
+      <label class="task" style="border: 0; display: inline-flex;">
         <input type="checkbox" :checked="aiSettings.allowSensitive" @change="setAllowSensitive($event.target.checked)" />
         <span style="flex: 1"><b>업무·경력 기록 포함 허용</b><small>업무 카테고리와 경력기술서 내용을 AI 입력에 포함해요 (기본 꺼짐)</small></span>
       </label>
-      <label class="task" style="border: 0">
+      <label class="task" style="border: 0; display: inline-flex;">
         <input type="checkbox" v-model="aiSettings.redactNames" />
         <span style="flex: 1"><b>사람 이름 가리기</b><small>보내기 전에 이름을 익명 기호로 바꿔요</small></span>
       </label>
-      <label class="task" style="border: 0">
+      <label class="task" style="border: 0; display: inline-flex;">
         <input type="checkbox" v-model="aiSettings.keepHistory" />
         <span style="flex: 1"><b>요청·응답 기록 보관</b><small>무엇을 보냈는지 나중에 확인할 수 있어요</small></span>
       </label>
@@ -100,7 +100,7 @@ function onToggleFeature(f) {
                 :max="a.param.max"
                 :value="automationParam(a.id)"
                 @input="setAutomationParam(a.id, Number($event.target.value))"
-                style="width: 56px; padding: 5px 7px; font-size: 11px"
+                style="width: 56px; padding: 5px 7px; font-size: 0.8125rem"
               />
               <small style="color: var(--color-muted)">{{ a.param.unit }} 이상</small>
             </div>

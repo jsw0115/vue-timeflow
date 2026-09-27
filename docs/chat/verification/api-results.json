@@ -1,0 +1,23 @@
+{
+  "date": "2026-09-27",
+  "scenarioCount": 16,
+  "passed": [
+    "signup and login return real sessions",
+    "unauthenticated API is rejected",
+    "reciprocal DM creation reuses one room",
+    "non-member cannot read room history",
+    "Redis delivers an SSE notification across two backend nodes",
+    "retry is idempotent; changed body or mentions conflict",
+    "unread, mention inbox and tag permissions use persisted membership",
+    "Korean tags, global tag inbox and room tag filter return the same message",
+    "mention read state is per recipient and authorized",
+    "read cursor is monotonic and cannot exceed persisted history",
+    "invalid mentions, blank bodies and malformed cursors are rejected",
+    "concurrent sends receive unique contiguous room sequence numbers",
+    "older-page and reconnect cursors have no overlap or missing messages",
+    "owner transfer, leave and inbox permission revocation work together",
+    "same-second token rotation returns distinct refresh tokens",
+    "Redis outage does not lose acknowledged messages; REST catches up"
+  ],
+  "environment": "MySQL 8.4 + Redis 7.4 + two Spring Boot nodes; isolated chat-local profile"
+}

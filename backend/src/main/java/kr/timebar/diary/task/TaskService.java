@@ -17,19 +17,19 @@ public class TaskService {
         this.taskRepository = taskRepository;
     }
 
-    @Transactional(value = "taskTransactionManager", readOnly = true)
+    @Transactional(readOnly = true)
     public List<TaskResponse> list(String userId) {
         return taskRepository.findByUserIdAndDeletedAtIsNullOrderByDueAscCreatedAtAsc(userId).stream()
                 .map(TaskResponse::from)
                 .toList();
     }
 
-    @Transactional(value = "taskTransactionManager", readOnly = true)
+    @Transactional(readOnly = true)
     public TaskResponse detail(String userId, String taskId) {
         return TaskResponse.from(findOwned(userId, taskId));
     }
 
-    @Transactional("taskTransactionManager")
+    @Transactional
     public TaskResponse create(String userId, TaskRequest request) {
         TaskEntity entity = new TaskEntity(userId, request.title(), request.note(), request.priority(),
                 request.energyLevel(), request.durationMin() == null ? 30 : request.durationMin(), request.due(),
@@ -37,7 +37,7 @@ public class TaskService {
         return TaskResponse.from(taskRepository.save(entity));
     }
 
-    @Transactional("taskTransactionManager")
+    @Transactional
     public TaskResponse update(String userId, String taskId, TaskRequest request) {
         TaskEntity entity = findOwned(userId, taskId);
         entity.applyUpdate(request.title(), request.note(), request.priority(), request.energyLevel(),
@@ -46,19 +46,19 @@ public class TaskService {
         return TaskResponse.from(entity);
     }
 
-    @Transactional("taskTransactionManager")
+    @Transactional
     public void delete(String userId, String taskId) {
         findOwned(userId, taskId).softDelete();
     }
 
-    @Transactional("taskTransactionManager")
+    @Transactional
     public TaskResponse toggleStatus(String userId, String taskId) {
         TaskEntity entity = findOwned(userId, taskId);
         entity.toggleStatus();
         return TaskResponse.from(entity);
     }
 
-    @Transactional("taskTransactionManager")
+    @Transactional
     public TaskResponse duplicate(String userId, String taskId) {
         TaskEntity original = findOwned(userId, taskId);
         TaskEntity copy = new TaskEntity(userId, original.getTitle() + " (복제)", original.getNote(), original.getPriority(),

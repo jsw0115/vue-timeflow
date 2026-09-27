@@ -95,7 +95,7 @@ function convertToTasks() {
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 16px">메모</b>
+    <b style="font-size: 1rem">메모</b>
     <span></span>
     <button class="primary" @click="openEditor">+ 메모 작성</button>
   </div>

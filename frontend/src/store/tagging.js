@@ -1,4 +1,4 @@
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { localCollection } from './localCollection'
 import { localDate } from '../utils/postValidation.mjs'
 import { contacts, isBlocked } from './contacts'
@@ -10,18 +10,18 @@ import { contacts, isBlocked } from './contacts'
  */
 
 /** #태그 — 한글/영문/숫자/밑줄, 2자 이상 */
-const TAG_RE = /#([\w가-힣][\w가-힣]*)/g
+const TAG_RE = /(?:^|\s)#([\p{L}\p{N}_-]{1,32})(?![\p{L}\p{N}_-])/gu
 /** @멘션 — 주소록에 있는 이름과 대조한다 */
 const MENTION_RE = /@([\w가-힣]{2,10})/g
 
 export function parseTags(text) {
-  const found = [...String(text ?? '').matchAll(TAG_RE)].map((m) => m[1])
+  const found = [...String(text ?? '').normalize('NFKC').matchAll(TAG_RE)].map((m) => m[1].toLowerCase())
   return [...new Set(found)]
 }
 
 /** 실제 존재하는(차단되지 않은) 사용자만 멘션으로 인정한다 */
 export function parseMentions(text) {
-  const names = contacts.value.filter((c) => !isBlocked(c.id)).map((c) => c.name)
+  const names = [ME, ...contacts.value.filter((c) => !isBlocked(c.id)).map((c) => c.name)]
   const found = [...String(text ?? '').matchAll(MENTION_RE)]
     .map((m) => m[1])
     .filter((n) => names.includes(n))
@@ -31,7 +31,7 @@ export function parseMentions(text) {
 /** 본문을 일반 텍스트 / 태그 / 멘션 조각으로 쪼갠다(하이라이트 렌더용) */
 export function tokenize(text) {
   const src = String(text ?? '')
-  const valid = contacts.value.filter((c) => !isBlocked(c.id)).map((c) => c.name)
+  const valid = [ME, ...contacts.value.filter((c) => !isBlocked(c.id)).map((c) => c.name)]
   const out = []
   let last = 0
   const re = /#([\w가-힣]+)|@([\w가-힣]{2,10})/g
@@ -61,19 +61,18 @@ export const posts = localCollection('post-index', [
   { id: 6, kind: '메모', title: '회고 메모', body: '이번 주는 계획 대비 실행률이 낮았다 #회고', author: ME, at: '2026-08-18', link: '/memos' },
 ])
 
-export function addPost({ kind, title, body, author = ME, link = '/' }) {
+export function addPost({ kind, title, body, author = ME, link = '/', at = localDate() }) {
   const post = {
-    id: Math.max(0, ...posts.value.map((p) => p.id)) + 1,
+    id: Math.max(0, ...posts.value.map((p) => Number(p.id) || 0)) + 1,
     kind,
     title: String(title ?? '').trim(),
     body: String(body ?? '').trim(),
     author,
-    at: localDate(),
+    at,
     link,
   }
   posts.value.unshift(post)
-  // 나를 멘션한 글이면 멘션함에 쌓는다
-  if (author !== ME && parseMentions(post.body).includes(ME)) pushMention(post)
+  // 멘션함은 원본 인덱스에서 파생하므로 수정·삭제도 즉시 반영된다.
   return post
 }
 
@@ -90,33 +89,28 @@ export function postsByTag(tag) {
 export const myPosts = computed(() => posts.value.filter((p) => p.author === ME))
 
 /* ---------------- 멘션함 ---------------- */
-export const mentions = ref([
-  { id: 1, postId: 2, from: '이서연', kind: '게시글', excerpt: '@김지수 내일 스터디 자료 공유 부탁해요 #스터디', at: '2026-09-06 14:02', read: false, link: '/community/board' },
-  { id: 2, postId: 5, from: '최지우', kind: '게시글', excerpt: '@김지수 추천 감사해요 #독서', at: '2026-09-04 09:30', read: false, link: '/community/board' },
-  { id: 3, postId: 3, from: '박민준', kind: '메모', excerpt: '@김지수 색상 토큰 정리 확인했어요 #디자인', at: '2026-09-03 18:11', read: true, link: '/memos' },
-])
+const mentionStates = localCollection('mention-states', [])
+export const mentions = computed(() => posts.value
+  .filter(post => post.author !== ME && parseMentions(post.title + ' ' + post.body).includes(ME))
+  .map(post => ({ id: post.sourceKey || String(post.id), postId: post.id, from: post.author, kind: post.kind, title: post.title, excerpt: post.body, at: post.at, link: post.link, read: !!mentionStates.value.find(state => state.id === (post.sourceKey || String(post.id)))?.read }))
+  .filter(item => !mentionStates.value.find(state => state.id === item.id)?.hidden))
 export const unreadMentions = computed(() => mentions.value.filter((m) => !m.read).length)
 
 export function pushMention(post) {
-  mentions.value.unshift({
-    id: Math.max(0, ...mentions.value.map((m) => m.id)) + 1,
-    postId: post.id,
-    from: post.author,
-    kind: post.kind,
-    excerpt: post.body.slice(0, 60),
-    at: new Date().toISOString().slice(0, 16).replace('T', ' '),
-    read: false,
-    link: post.link,
-  })
+  if (!posts.value.some(item => item.id === post.id)) posts.value.unshift(post)
 }
 export function markMentionRead(m) {
-  m.read = true
+  let state = mentionStates.value.find(item => item.id === String(m.id))
+  if (!state) { state = { id: String(m.id), read: true }; mentionStates.value.push(state) }
+  else state.read = true
 }
 export function markAllMentionsRead() {
-  mentions.value.forEach((m) => (m.read = true))
+  mentions.value.forEach(markMentionRead)
 }
 export function removeMention(id) {
-  mentions.value = mentions.value.filter((m) => m.id !== id)
+  const state = mentionStates.value.find(item => item.id === String(id))
+  if (state) state.hidden = true
+  else mentionStates.value.push({ id: String(id), hidden: true })
 }
 
 /** 입력 중 @ 뒤 글자로 후보를 좁힌다(자동완성용) */
@@ -133,7 +127,8 @@ export function syncPostCollection(source, items, kind, link) {
   posts.value = posts.value.filter(p => !p.sourceKey?.startsWith(source + ':') || ids.has(p.sourceKey))
   for (const item of items) {
     const sourceKey = source + ':' + item.id
-    const payload = { kind, title: item.title ?? '', body: [item.body ?? item.desc ?? '', item.handover ?? '', ...(item.tags ?? []).map(tag => '#' + tag)].filter(Boolean).join('\n'), link: typeof link === 'function' ? link(item) : link }
+    const payload = { kind, title: item.title ?? item.body?.split('\n')[0]?.slice(0, 60) ?? '', body: [item.body ?? item.desc ?? item.description ?? '', item.handover ?? '', ...(item.tags ?? []).map(tag => '#' + String(tag).replace(/^#/, ''))].filter(Boolean).join('\n'), author: item.author ?? item.name ?? ME, link: typeof link === 'function' ? link(item) : link }
+    if (item.createdAt || item.at) payload.at = item.createdAt || item.at
     const found = posts.value.find(p => p.sourceKey === sourceKey)
     if (found) Object.assign(found, payload)
     else Object.assign(addPost(payload), { sourceKey })

@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import Modal from './Modal.vue'
-import { profileModal, profileOf, closeProfile, blockFromProfile, openRoom, chatRooms, togglePanel } from '../store/people'
+import { profileModal, profileOf, closeProfile, blockFromProfile } from '../store/people'
 import { modeMeta } from '../store/modeProfiles'
 
 /** 어느 화면에서든 이름 옆 ⓘ를 누르면 뜨는 공통 프로필 모달 */
@@ -15,15 +15,10 @@ function onBlock() {
   if (!blockFromProfile(p.value.name)) window.alert('주소록에 없는 사용자는 차단할 수 없어요.')
 }
 function onChat() {
-  const room = chatRooms.value.find((r) => r.name === p.value.name)
   closeProfile()
-  if (room) {
-    openRoom(room)
-    togglePanel('chat')
-  } else {
-    router.push('/chat')
-  }
+  router.push('/chat')
 }
+
 </script>
 
 <template>
@@ -39,8 +34,8 @@ function onChat() {
 
     <div class="metrics" style="grid-template-columns: repeat(3, 1fr); margin: 16px 0">
       <article><span>연속 기록</span><b class="figure">{{ p.streak }}<small>일</small></b></article>
-      <article><span>사용 모드</span><b class="figure" style="font-size: 17px">{{ p.mode }}</b><small>{{ modeMeta(p.mode).name }}</small></article>
-      <article><span>가입</span><b class="figure" style="font-size: 17px">{{ p.joined }}</b></article>
+      <article><span>사용 모드</span><b class="figure" style="font-size: 1.0625rem">{{ p.mode }}</b><small>{{ modeMeta(p.mode).name }}</small></article>
+      <article><span>가입</span><b class="figure" style="font-size: 1.0625rem">{{ p.joined }}</b></article>
     </div>
 
     <div class="profile-rows">

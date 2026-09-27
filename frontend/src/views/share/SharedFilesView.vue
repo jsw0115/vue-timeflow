@@ -103,7 +103,7 @@ function kindIcon(kind) {
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 16px">공유 첨부</b>
+    <b style="font-size: 1rem">공유 첨부</b>
     <HelpPopover
       title="공유 첨부 사용법"
       summary="일정·커뮤니티·채팅에 올라온 파일을 한곳에서 확인하고, 파일마다 내려받을 수 있는 기간을 정하는 화면이에요."
@@ -129,7 +129,7 @@ function kindIcon(kind) {
     <article><span>전체 파일</span><b class="figure">{{ attachments.length }}<small>개</small></b></article>
     <article><span>이미지</span><b class="figure">{{ images.length }}<small>개</small></b></article>
     <article><span>만료 임박</span><b class="figure">{{ expiringSoon.length }}<small>개</small></b><small>7일 이내</small></article>
-    <article><span>총 용량</span><b class="figure" style="font-size: 18px">{{ formatSize(totalSizeKb) }}</b></article>
+    <article><span>총 용량</span><b class="figure" style="font-size: 1.125rem">{{ formatSize(totalSizeKb) }}</b></article>
   </div>
 
   <div class="tabs" style="width: fit-content; margin-bottom: 14px">

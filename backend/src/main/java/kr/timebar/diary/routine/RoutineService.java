@@ -24,18 +24,18 @@ public class RoutineService {
         this.routineLogRepository = routineLogRepository;
     }
 
-    @Transactional(value = "routineTransactionManager", readOnly = true)
+    @Transactional(readOnly = true)
     public List<RoutineResponse> list(String userId) {
         return routineRepository.findByUserIdAndDeletedAtIsNullOrderByAtTimeAsc(userId).stream().map(RoutineResponse::from).toList();
     }
 
-    @Transactional("routineTransactionManager")
+    @Transactional
     public RoutineResponse quickCreate(String userId, RoutineQuickCreateRequest request) {
         RoutineEntity entity = new RoutineEntity(userId, request.name(), request.atTime(), null, null, null, null, null, null, false, null);
         return RoutineResponse.from(routineRepository.save(entity));
     }
 
-    @Transactional("routineTransactionManager")
+    @Transactional
     public RoutineResponse create(String userId, RoutineRequest request) {
         RoutineEntity entity = new RoutineEntity(userId, request.name(), request.atTime(), request.days(), request.icon(),
                 request.categoryId(), request.categoryName(), request.categoryColor(), request.categoryIcon(),
@@ -43,7 +43,7 @@ public class RoutineService {
         return RoutineResponse.from(routineRepository.save(entity));
     }
 
-    @Transactional("routineTransactionManager")
+    @Transactional
     public RoutineResponse update(String userId, String routineId, RoutineRequest request) {
         RoutineEntity entity = findOwned(userId, routineId);
         entity.applyUpdate(request.name(), request.atTime(), request.days(), request.icon(), request.categoryId(),
@@ -52,12 +52,12 @@ public class RoutineService {
         return RoutineResponse.from(entity);
     }
 
-    @Transactional("routineTransactionManager")
+    @Transactional
     public void delete(String userId, String routineId) {
         findOwned(userId, routineId).softDelete();
     }
 
-    @Transactional(value = "routineTransactionManager", readOnly = true)
+    @Transactional(readOnly = true)
     public RoutineHistoryGridResponse history(String userId, String routineId, int days) {
         findOwned(userId, routineId);
         LocalDate to = LocalDate.now();
@@ -71,7 +71,7 @@ public class RoutineService {
         return new RoutineHistoryGridResponse(routineId, entries, (int) doneCount, days, rate);
     }
 
-    @Transactional("routineTransactionManager")
+    @Transactional
     public RoutineLogEntryResponse toggleHistory(String userId, String routineId, LocalDate date, ToggleRoutineLogRequest request) {
         findOwned(userId, routineId);
         RoutineLogEntity entity = routineLogRepository.findByRoutineIdAndDate(routineId, date)
@@ -84,7 +84,7 @@ public class RoutineService {
         return RoutineLogEntryResponse.from(entity);
     }
 
-    @Transactional("routineTransactionManager")
+    @Transactional
     public void deleteHistory(String userId, String routineId, LocalDate date) {
         findOwned(userId, routineId);
         routineLogRepository.deleteByRoutineIdAndDate(routineId, date);

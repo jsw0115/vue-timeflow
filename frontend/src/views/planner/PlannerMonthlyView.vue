@@ -42,7 +42,7 @@ const router = useRouter()
       <section class="card">
         <h3>이번 달 요약</h3>
         <div style="display: flex; align-items: baseline; gap: 4px; margin: 10px 0">
-          <b style="font-size: 25px; letter-spacing: -1px">76<small>%</small></b><span style="color: var(--color-muted); font-size: 12px">평균 실행률</span>
+          <b style="font-size: 1.5625rem; letter-spacing: -1px">76<small>%</small></b><span style="color: var(--color-muted); font-size: 0.875rem">평균 실행률</span>
         </div>
         <div class="progress"><em style="width: 76%"></em></div>
         <div class="event"><span style="color: var(--color-muted)">최고 달성일</span><b style="margin-left: auto">8/12 (92%)</b></div>

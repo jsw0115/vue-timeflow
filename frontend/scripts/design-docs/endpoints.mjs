@@ -12,6 +12,7 @@ export const params = {
   timezone:timezone(),date:date('지역 날짜; 생략하면 사용자 기준 오늘'),
   types:str('쉼표 구분 ENUM, 중복 불가; 기본 EVENT,TASK,ROUTINE','EVENT,TASK',{pattern:'^(EVENT|TASK|ROUTINE)(,(EVENT|TASK|ROUTINE))*$'}),
   searchTypes:str('쉼표 구분: EVENT,TASK,ROUTINE,DIARY,MEMO,POST,WBS,WORK_RECORD','TASK,MEMO'),
+  resourceTypes:str('통합함 원본 종류. PLANNER,DDAY,EVENT,TASK,ROUTINE,CHALLENGE,POST,DIARY,COMMUNITY,MEMO,CHAT,WBS,WORK_RECORD. 생략하면 접근 가능한 전체 종류; 플래너 화면 필터는 PLANNER,EVENT,TASK,ROUTINE으로 확장한다.','DDAY,DIARY',{pattern:'^(PLANNER|DDAY|EVENT|TASK|ROUTINE|CHALLENGE|POST|DIARY|COMMUNITY|MEMO|CHAT|WBS|WORK_RECORD)(,(PLANNER|DDAY|EVENT|TASK|ROUTINE|CHALLENGE|POST|DIARY|COMMUNITY|MEMO|CHAT|WBS|WORK_RECORD))*$'}),
   statuses:str('쉼표 구분: PENDING,IN_PROGRESS,DONE,SKIPPED,CANCELED','PENDING,DONE'),
   categoryIds:str('쉼표 구분 소유/공유 가능한 카테고리 ID 최대20개','01J00000000000000000000001'),categoryId:id('본인에게 접근 가능한 카테고리'),
   q:str('앞뒤 공백 제거; LIKE 와일드카드 이스케이프; 최대100자','검토',{minLength:1,maxLength:100}),
@@ -113,8 +114,8 @@ MEMO-03|GET|/memos/{id}|메모 상세|-|Memo
 MEMO-04|PATCH|/memos/{id}|메모 수정|MemoPatch|Memo||version
 MEMO-05|DELETE|/memos/{id}|메모 삭제|-|-||version
 TAG-01|GET|/tags|내 태그 및 사용 횟수|-|@Tag|q,cursor,limit
-TAG-02|GET|/tags/{tag}/posts|태그에 해당하는 권한 내 글|-|@SearchHit|cursor,limit
-MENTION-01|GET|/mentions|나를 언급한 글 알림|-|@Mention|unread,cursor,limit
+TAG-02|GET|/tags/{tag}/posts|태그에 해당하는 권한 내 글|-|@SearchHit|resourceTypes,q,cursor,limit
+MENTION-01|GET|/mentions|나를 언급한 글 알림|-|@Mention|resourceTypes,q,unread,cursor,limit
 MENTION-02|PUT|/mentions/{id}/read|멘션 읽음 지정|ReadWrite|Mention
 MENTION-03|GET|/mention-candidates|주소록 기반 멘션 후보|-|@ContactCandidate|q!,cursor,limit
 AI-01|POST|/memos/{id}/task-suggestions|메모에서 할 일 후보 생성|SuggestionWrite|Job||accepted

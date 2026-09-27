@@ -2,19 +2,20 @@
 import { computed, ref, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { findDday, togglePin, updateDday, removeDday } from '../../store/ddays'
+import TagMentionInput from '../../components/TagMentionInput.vue'
 
 const route = useRoute()
 const router = useRouter()
 const item = computed(() => findDday(route.params.id))
 
-const draft = ref({ title: '', category: '개인', date: '' })
+const draft = ref({ title: '', category: '개인', date: '', body: '' })
 watchEffect(() => {
-  if (item.value) draft.value = { title: item.value.title, category: item.value.category, date: '' }
+  if (item.value) draft.value = { title: item.value.title, category: item.value.category, date: '', body: item.value.body || '' }
 })
 
 function save() {
   if (!item.value || !draft.value.title.trim()) return
-  updateDday(item.value.id, { title: draft.value.title.trim(), category: draft.value.category, date: draft.value.date })
+  updateDday(item.value.id, { title: draft.value.title.trim(), category: draft.value.category, date: draft.value.date, body: draft.value.body })
 }
 function remove() {
   if (!item.value) return
@@ -39,6 +40,7 @@ function remove() {
     <div style="margin-top: 10px; padding-top: 20px; border-top: 1px solid var(--color-hairline)">
       <label>제목<input v-model="draft.title" /></label>
       <label>날짜 변경<input v-model="draft.date" type="date" /></label>
+      <label>내용 · 태그 · 멘션<TagMentionInput v-model="draft.body" /></label>
       <label>카테고리<select v-model="draft.category"><option>개인</option><option>업무</option><option>가족</option><option>건강</option><option>공부</option></select></label>
       <button class="primary" style="width: 100%; margin-top: 16px" @click="save">저장하기</button>
       <button style="width: 100%; margin-top: 8px; color: #b23b3b; font-weight: 700; padding: 10px" @click="remove">삭제하기</button>
