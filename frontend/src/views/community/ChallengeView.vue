@@ -7,7 +7,6 @@ import RichText from '../../components/RichText.vue'
 import { syncPostCollection } from '../../store/tagging'
 import Modal from '../../components/Modal.vue'
 
-
 const ongoing = computed(() => challenges.value.filter((c) => c.doneDays < c.days))
 function startDays(c) {
   return c.startDate ? Math.max(0, Math.round((new Date(c.startDate + 'T00:00:00') - new Date(localDate() + 'T00:00:00')) / 86400000)) : c.startsIn
@@ -107,6 +106,10 @@ function createChallenge() {
     </div>
     <p class="form-note">만들면 바로 참여 상태가 되고, 매일 “오늘 인증하기”로 진행률이 올라가요.</p>
     <p class="form-note" role="status">{{ createError }}</p>
-    <button class="primary" :disabled="!!createError" @click="createChallenge">챌린지 만들기</button>
+
+    <template #footer>
+      <button type="button" class="modal-secondary" @click="showCreate = false">취소</button>
+      <button class="primary" :disabled="!!createError" @click="createChallenge">챌린지 만들기</button>
+    </template>
   </Modal>
 </template>

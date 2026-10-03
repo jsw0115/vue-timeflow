@@ -40,7 +40,12 @@ async function create() {
       <p v-if="isChatPreview" class="chat-note">샘플 참여자: seoyeon@example.test · minjun@example.test. 미리보기에서 나눈 대화는 새로고침하면 초기화돼요.</p>
       <p v-else class="chat-note">정확한 가입 이메일로 찾을 수 있어요. 선택한 사용자가 바로 대화에 참여합니다.</p>
       <p v-if="error" role="alert">{{ error }}</p>
-      <button class="chat-primary" :disabled="busy || !people.length || (kind === 'GROUP' && !name.trim())" @click="create">{{ busy ? '확인하는 중…' : '대화 시작하기' }}</button>
+
     </div>
+
+    <template #footer>
+      <button type="button" class="modal-secondary" @click="emit('close')">취소</button>
+      <button class="chat-primary" :disabled="busy || !people.length || (kind === 'GROUP' && !name.trim())" @click="create">{{ busy ? '확인하는 중…' : '대화 시작하기' }}</button>
+    </template>
   </Modal>
 </template>

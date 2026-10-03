@@ -304,6 +304,9 @@ function onVisibilityChange(v) {
       {{ isFeatureOn('career-doc') && !workPrivacy.excludeFromAi ? 'AI 다듬기가 켜져 있어요.' : '규칙 기반으로 만들었어요. AI 다듬기는 꺼져 있습니다.' }}
     </p>
     <textarea class="report-draft" :value="generated" readonly rows="12"></textarea>
-    <button class="primary" @click="generating = null">닫기</button>
+
+    <template #footer>
+      <button class="primary" @click="generating = null">닫기</button>
+    </template>
   </Modal>
 </template>

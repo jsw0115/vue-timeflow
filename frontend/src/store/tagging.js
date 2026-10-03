@@ -63,7 +63,7 @@ export const posts = localCollection('post-index', [
 
 export function addPost({ kind, title, body, author = ME, link = '/', at = localDate() }) {
   const post = {
-    id: Math.max(0, ...posts.value.map((p) => Number(p.id) || 0)) + 1,
+    id: posts.value.reduce((max, post) => Math.max(max, Number(post.id) || 0), 0) + 1,
     kind,
     title: String(title ?? '').trim(),
     body: String(body ?? '').trim(),
@@ -123,14 +123,17 @@ export function mentionCandidates(keyword) {
 
 // 동일 원본을 수정하면 인덱스를 갱신하고, 원본 삭제 시 검색 결과도 제거합니다.
 export function syncPostCollection(source, items, kind, link) {
-  const ids = new Set(items.map(item => source + ':' + item.id))
-  posts.value = posts.value.filter(p => !p.sourceKey?.startsWith(source + ':') || ids.has(p.sourceKey))
-  for (const item of items) {
-    const sourceKey = source + ':' + item.id
-    const payload = { kind, title: item.title ?? item.body?.split('\n')[0]?.slice(0, 60) ?? '', body: [item.body ?? item.desc ?? item.description ?? '', item.handover ?? '', ...(item.tags ?? []).map(tag => '#' + String(tag).replace(/^#/, ''))].filter(Boolean).join('\n'), author: item.author ?? item.name ?? ME, link: typeof link === 'function' ? link(item) : link }
+  const prefix = source + ':'
+  const existing = new Map(posts.value.map(post => [post.sourceKey, post]))
+  let nextId = posts.value.reduce((max, post) => Math.max(max, Number(post.id) || 0), 0) + 1
+  const synchronized = items.map(item => {
+    const sourceKey = prefix + item.id, found = existing.get(sourceKey)
+    const payload = { kind, title: item.title ?? item.body?.split('\n')[0]?.slice(0, 60) ?? '', body: [item.body ?? item.desc ?? item.description ?? '', item.handover ?? '', ...(item.subtasks ?? []).map(entry => entry.title), ...(item.tags ?? []).map(tag => '#' + String(tag).replace(/^#/, ''))].filter(Boolean).join('\n'), author: item.author ?? item.name ?? ME, link: typeof link === 'function' ? link(item) : link }
     if (item.createdAt || item.at) payload.at = item.createdAt || item.at
-    const found = posts.value.find(p => p.sourceKey === sourceKey)
-    if (found) Object.assign(found, payload)
-    else Object.assign(addPost(payload), { sourceKey })
-  }
+    if (found && Object.entries(payload).every(([key, value]) => found[key] === value)) return found
+    return { id: found?.id ?? nextId++, at: found?.at ?? (item.date || localDate()), ...found, ...payload, sourceKey }
+  })
+  const previous = posts.value.filter(post => post.sourceKey?.startsWith(prefix))
+  if (previous.length === synchronized.length && synchronized.every(post => existing.get(post.sourceKey) === post)) return
+  posts.value = [...posts.value.filter(post => !post.sourceKey?.startsWith(prefix)), ...synchronized]
 }

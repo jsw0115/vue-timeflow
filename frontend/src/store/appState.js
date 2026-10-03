@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import { localCollection } from './localCollection'
 import { localDate } from '../utils/postValidation.mjs'
+import { occurrenceDates } from '../utils/recurrence.mjs'
 
 export const composer = ref(false)
 
@@ -25,6 +26,7 @@ export const routines = localCollection('routines', [
 /** 오늘 요일에 해당하는 루틴인지 */
 export function isRoutineToday(routine, weekday = new Date().getDay()) {
   if (routine.paused) return false
+  if (routine.recurrence && routine.startDate && arguments.length < 2) return occurrenceDates(routine.startDate, routine.recurrence, localDate(), localDate()).length > 0
   if (!routine.days || !routine.days.length) return true
   return routine.days.includes(weekday)
 }
@@ -35,6 +37,8 @@ export function routineRate(routine) {
   return Math.round((h.filter(Boolean).length / h.length) * 100)
 }
 export function dayLabel(routine) {
+  const rule = routine.recurrence
+  if (rule && (rule.frequency !== 'weekly' || rule.interval !== 1)) return `${rule.interval}${({ daily: '일', weekly: '주', monthly: '개월', yearly: '년' })[rule.frequency] ?? ''}마다`
   const d = routine.days ?? []
   if (!d.length || d.length === 7) return '매일'
   if (d.length === 5 && [1, 2, 3, 4, 5].every((x) => d.includes(x))) return '평일'
@@ -58,9 +62,11 @@ export const events = localCollection('events', [
 ])
 export const composerKind = ref('일정')
 export const composerSeed = ref('')
-export function openPostComposer(kind = '일정', title = '') {
+export const composerContext = ref({})
+export function openPostComposer(kind = '일정', title = '', context = {}) {
   composerKind.value = kind
   composerSeed.value = title
+  composerContext.value = context
   composer.value = true
 }
 

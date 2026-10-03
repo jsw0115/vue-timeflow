@@ -2,9 +2,12 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
-  routines, ROUTINE_DAYS, isRoutineToday, routineRate, dayLabel, toggleRoutine,
+  routines, openPostComposer, ROUTINE_DAYS, isRoutineToday, routineRate, dayLabel, toggleRoutine,
 } from '../../store/appState'
 import { isAutomationOn, automationParam } from '../../store/automations'
+import RepeatSettings from '../../components/RepeatSettings.vue'
+import { makeRecurrence } from '../../utils/recurrence.mjs'
+import { localDate } from '../../utils/postValidation.mjs'
 import TagMentionInput from '../../components/TagMentionInput.vue'
 import { routineError } from '../../utils/postValidation.mjs'
 import Modal from '../../components/Modal.vue'
@@ -65,19 +68,16 @@ const DAY_PRESETS = [
 ]
 const draft = ref(emptyDraft())
 function emptyDraft() {
-  return { title: '', time: '19:00', duration: 30, reminderMinutes: 10, body: '', category: '건강', days: [0, 1, 2, 3, 4, 5, 6], goalCount: 1, goalUnit: '회', notify: true }
+  return { startDate: localDate(), recurrence: makeRecurrence({ frequency: 'weekly', weekdays: [0,1,2,3,4,5,6] }), title: '', time: '19:00', duration: 30, reminderMinutes: 10, body: '', category: '건강', days: [0, 1, 2, 3, 4, 5, 6], goalCount: 1, goalUnit: '회', notify: true }
 }
 function on(key) {
   return isFieldOn(modeState.activeMode, 'routine', key)
 }
-function openModal() {
-  editingId.value = null
-  draft.value = emptyDraft()
-  showModal.value = true
-}
+function openModal() { openPostComposer('루틴') }
 function openEdit(r) {
   editingId.value = r.id
   draft.value = {
+    startDate: r.startDate ?? localDate(), recurrence: makeRecurrence(r.recurrence ?? { frequency: 'weekly', weekdays: r.days?.length ? r.days : [0,1,2,3,4,5,6] }),
     title: r.title,
     time: r.time,
     duration: r.duration ?? 30,
@@ -108,6 +108,7 @@ const canSave = computed(() => !validationError.value)
 function saveRoutine() {
   if (!canSave.value) return
   const payload = {
+    startDate: draft.value.startDate, recurrence: makeRecurrence(draft.value.recurrence),
     title: draft.value.title.trim(),
     time: draft.value.time,
     duration: draft.value.duration,
@@ -216,7 +217,7 @@ function removeRoutine(r) {
     <p v-if="!visible.length" class="form-note" style="margin: 12px 0 0">조건에 맞는 루틴이 없어요.</p>
   </section>
 
-  <Modal v-if="showModal" :title="editingId ? '루틴 수정' : '새 루틴 만들기'" wide @close="showModal = false">
+  <Modal v-if="showModal" :title="editingId ? '루틴 수정' : '새 루틴 만들기'" :edit-resource="editingId ? 'routine:' + editingId : ''" wide @close="showModal = false">
     <p class="form-note" style="margin: 0 0 4px">{{ modeMeta(modeState.activeMode).name }} 글양식이 적용돼요</p>
     <label>루틴 이름<input v-model="draft.title" placeholder="예: 저녁 러닝 30분" autofocus /></label>
     <div class="form-row">
@@ -227,19 +228,8 @@ function removeRoutine(r) {
       </label>
     </div>
 
-    <div class="section-label">반복 요일</div>
-    <div class="filter" style="width: fit-content; margin: 6px 0">
-      <button v-for="p in DAY_PRESETS" :key="p.label" type="button" @click="applyPreset(p)">{{ p.label }}</button>
-    </div>
-    <div class="day-picker">
-      <button
-        v-for="(d, i) in ROUTINE_DAYS"
-        :key="d"
-        type="button"
-        :class="{ selected: draft.days.includes(i) }"
-        @click="toggleDay(i)"
-      >{{ d }}</button>
-    </div>
+    <label>반복 시작일<input v-model="draft.startDate" type="date" /></label>
+    <RepeatSettings :model-value="draft.recurrence" required :start-date="draft.startDate" @update:model-value="value => { draft.recurrence = value; draft.days = value.frequency === 'weekly' ? [...value.weekdays] : [0,1,2,3,4,5,6] }" />
 
     <div class="form-row" style="margin-top: 14px">
       <label style="flex: 1">목표 수량<input type="number" min="1" v-model.number="draft.goalCount" /></label>
@@ -254,6 +244,10 @@ function removeRoutine(r) {
     <label v-if="draft.notify">시작 전 알림 (분)<select v-model.number="draft.reminderMinutes"><option :value="0">시작 시간</option><option :value="5">5분 전</option><option :value="10">10분 전</option><option :value="30">30분 전</option></select></label>
     <label>내용 · 태그 · 멘션<TagMentionInput v-model="draft.body" /></label>
     <p v-if="!canSave" class="form-note">{{ validationError }}</p>
-    <button class="primary" :disabled="!canSave" @click="saveRoutine">{{ editingId ? '변경 저장' : '루틴 만들기' }}</button>
+
+    <template #footer>
+      <button type="button" class="modal-secondary" @click="showModal = false">취소</button>
+      <button class="primary" :disabled="!canSave" @click="saveRoutine">{{ editingId ? '변경 저장' : '루틴 만들기' }}</button>
+    </template>
   </Modal>
 </template>

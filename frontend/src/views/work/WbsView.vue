@@ -188,7 +188,7 @@ function addNode() {
 
   <WorkRecords :projects="nodes" />
 
-  <Modal v-if="adding" :title="editingId ? '작업 수정' : adding.id ? adding.title + ' 하위 작업 추가' : '최상위 작업 추가'" @close="adding = null">
+  <Modal v-if="adding" :title="editingId ? '작업 수정' : adding.id ? adding.title + ' 하위 작업 추가' : '최상위 작업 추가'" :edit-resource="editingId ? 'wbs:' + editingId : ''" @close="adding = null">
     <label>작업 이름<input v-model="draft.title" placeholder="예: API 연동" autofocus /></label>
     <div class="form-row">
       <label style="flex: 1">담당<input v-model="draft.owner" placeholder="이름" /></label>
@@ -198,6 +198,10 @@ function addNode() {
     <div class="form-row"><label>시작 날짜<input type="date" v-model="draft.startDate" /></label><label>종료 날짜<input type="date" v-model="draft.endDate" /></label></div>
     <label>상세 내용 · 태그 · 멘션<TagMentionInput v-model="draft.body" /></label>
     <p class="form-note" role="status">{{ draftError || '상위 작업의 공수·진척은 하위 작업에서 자동 집계됩니다.' }}</p>
-    <button class="primary" :disabled="!!draftError" @click="addNode">{{ editingId ? '변경 저장' : '추가하기' }}</button>
+
+    <template #footer>
+      <button type="button" class="modal-secondary" @click="adding = null">취소</button>
+      <button class="primary" :disabled="!!draftError" @click="addNode">{{ editingId ? '변경 저장' : '추가하기' }}</button>
+    </template>
   </Modal>
 </template>

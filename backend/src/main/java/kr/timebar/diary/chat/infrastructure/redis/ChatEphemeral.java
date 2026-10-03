@@ -16,6 +16,7 @@ import java.util.List;
 @ConditionalOnProperty(name="app.chat.enabled",havingValue="true")
 public class ChatEphemeral {
     private static final DefaultRedisScript<Long> LIMIT = new DefaultRedisScript<>("local n=redis.call('INCR',KEYS[1]); if n==1 then redis.call('EXPIRE',KEYS[1],ARGV[1]); end; return n",Long.class);
+    private static final DefaultRedisScript<Long> PRESENCE = new DefaultRedisScript<>("redis.call('ZREMRANGEBYSCORE',KEYS[1],'-inf',ARGV[1]); if ARGV[3]=='1' then redis.call('ZADD',KEYS[1],ARGV[2],ARGV[4]); redis.call('EXPIRE',KEYS[1],45); elseif ARGV[3]=='0' then redis.call('ZREM',KEYS[1],ARGV[4]); end; return redis.call('ZCARD',KEYS[1])",Long.class);
     private final StringRedisTemplate redis;
     private final ObjectMapper mapper;
     public ChatEphemeral(StringRedisTemplate redis,ObjectMapper mapper) {this.redis=redis;this.mapper=mapper;}
@@ -34,5 +35,13 @@ public class ChatEphemeral {
             if(Boolean.TRUE.equals(redis.opsForValue().setIfAbsent("timeflow:chat:typing:"+room+":"+user,"1",Duration.ofSeconds(2))))
                 redis.convertAndSend(ChatConfiguration.CHANNEL,mapper.writeValueAsString(new Signal(room,"TYPING",user)));
         } catch(Exception ignored) { /* Typing is transient, never a reason to reject a saved message. */ }
+    }
+    public void presence(String user,String client,boolean active) {
+        long now=System.currentTimeMillis();
+        redis.execute(PRESENCE,List.of("timeflow:chat:presence:"+user),Long.toString(now),Long.toString(now+35000),active?"1":"0",client);
+    }
+    public boolean isActive(String user) {
+        Long count=redis.execute(PRESENCE,List.of("timeflow:chat:presence:"+user),Long.toString(System.currentTimeMillis()),"0","read","");
+        return count!=null && count>0;
     }
 }

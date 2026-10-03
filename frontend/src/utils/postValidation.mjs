@@ -25,7 +25,7 @@ export function routineError(d) {
   if (!integerBetween(d.duration, 1, 1440)) return '진행 시간은 1~1,440분으로 입력해주세요.'
   if (!integerBetween(d.goalCount, 1, 9999) || !d.goalUnit.trim()) return '목표 수량과 단위를 확인해주세요.'
   if (d.notify && !integerBetween(d.reminderMinutes, 0, 1440)) return '알림 시간을 확인해주세요.'
-  return ''
+  return recurrenceError(d.recurrence, d.startDate)
 }
 
 export function workRecordError(d) {
@@ -39,3 +39,4 @@ export function workRecordError(d) {
   if (d.type === '이직' && (!d.toCompany.trim() || !d.role.trim())) return '이직할 회사와 직무를 입력해주세요.'
   return ''
 }
+import { recurrenceError } from './recurrence.mjs'

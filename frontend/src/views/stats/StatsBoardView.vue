@@ -204,9 +204,12 @@ const focusPath = FOCUS_TREND.map((v, i) => (i * 100) / (FOCUS_TREND.length - 1)
         <button class="review" style="margin: 0" :disabled="i === statsState.portlets.length - 1" @click="moveStatsPortlet(p.id, 1)">↓</button>
       </div>
     </div>
-    <div class="form-row">
+
+    <template #footer>
+      <div class="form-row">
       <button class="review" style="margin: 0" @click="resetStatsPortlets">모드 기본값으로 되돌리기</button>
       <button class="primary" style="flex: 1" @click="showConfig = false">완료</button>
-    </div>
+          </div>
+    </template>
   </Modal>
 </template>

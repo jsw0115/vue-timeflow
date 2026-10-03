@@ -4,7 +4,7 @@ import { chatApi } from '../api/chatApi'
 import { chatUserId, isChatPreview } from './chatIdentity'
 import { createSseParser, mergeMessages } from '../domain/messages'
 
-export const chat = reactive({ rooms: [], roomCursor: null, selectedId: null, messages: {}, synced: {}, older: {}, pending: {}, drafts: {}, typing: {}, loading: false, historyLoading: false, error: '', connection: 'idle' })
+export const chat = reactive({ rooms: [], roomCursor: null, selectedId: null, messages: {}, synced: {}, older: {}, pending: {}, drafts: {}, typing: {}, presence: {}, searchHit: null, loading: false, historyLoading: false, error: '', connection: 'idle' })
 export const activeRoom = computed(() => chat.rooms.find(room => room.id === chat.selectedId))
 export const unreadChats = computed(() => chat.rooms.reduce((total, room) => total + room.unreadCount, 0))
 export const hasUnreadMentions = ref(false)
@@ -16,6 +16,24 @@ export async function refreshMentionBadge() {
 }
 let running = false, stream, poll, reconnect, generation = 0, synchronizing = false, again = false
 let owner = chatUserId.value
+let messengerActive = false, presenceTimer, clientId, presenceChain = Promise.resolve()
+export function setMessengerActive(value) { messengerActive = value; if (running) void refreshPresence() }
+export function refreshPresence() {
+  const user = chatUserId.value
+  if (!user || isChatPreview.value) return Promise.resolve()
+  clientId ||= crypto.randomUUID()
+  const active = messengerActive && !document.hidden
+  presenceChain = presenceChain.catch(() => {}).then(async () => {
+    if (user !== chatUserId.value) return
+    await chatApi.presence(clientId, active)
+    const ids = [...new Set(chat.rooms.flatMap(room => room.members.map(member => member.userId)))].slice(0, 100)
+    if (!ids.length) return
+    const statuses = await chatApi.peoplePresence(ids)
+    if (user !== chatUserId.value) return
+    for (const status of statuses) chat.presence[status.userId] = { ...status, validUntil: Date.now() + 30000 }
+  }).catch(() => {})
+  return presenceChain
+}
 function upsert(room) {
   const index = chat.rooms.findIndex(item => item.id === room.id)
   if (index >= 0) chat.rooms[index] = room
@@ -129,7 +147,7 @@ async function listen(epoch) {
     const parse = createSseParser((event, data) => {
       if (event === 'connected') void reconcile()
       if (event !== 'changed') return
-      if (data.type === 'TYPING') { if (data.userId !== chatUserId.value) chat.typing[data.roomId] = Date.now() + 3500 }
+      if (data.type === 'TYPING') { if (data.userId !== chatUserId.value) { chat.typing[data.roomId] ||= {}; chat.typing[data.roomId][data.userId] = Date.now() + 3500 } }
       else void reconcile()
     })
     const reader = response.body.getReader(), decoder = new TextDecoder()
@@ -158,13 +176,17 @@ export async function startChat() {
   if (isChatPreview.value) chat.connection = 'preview'
   else void listen(epoch)
   poll = setInterval(() => { if (!document.hidden) void reconcile() }, 15000)
+  presenceTimer = setInterval(refreshPresence, 10000)
+  document.addEventListener('visibilitychange', refreshPresence)
+  void refreshPresence()
 }
-export function stopChat() { running = false; generation++; stream?.abort(); clearInterval(poll); clearTimeout(reconnect); chat.connection = 'idle' }
+export function stopChat() { messengerActive = false; void refreshPresence(); running = false; generation++; stream?.abort(); clearInterval(poll); clearInterval(presenceTimer); clearTimeout(reconnect); document.removeEventListener('visibilitychange', refreshPresence); chat.connection = 'idle' }
 watch(() => chatUserId.value, value => {
   if (value === owner) return
   const restart = running
+  const wasActive = messengerActive
   stopChat(); owner = value
   hasUnreadMentions.value = false
-  Object.assign(chat, { rooms: [], roomCursor: null, selectedId: null, messages: {}, synced: {}, older: {}, pending: {}, drafts: {}, typing: {}, error: '' })
-  if (restart && value) void startChat()
+  Object.assign(chat, { rooms: [], roomCursor: null, selectedId: null, messages: {}, synced: {}, older: {}, pending: {}, drafts: {}, typing: {}, presence: {}, searchHit: null, error: '' })
+  if (restart && value) { messengerActive = wasActive; void startChat() }
 })

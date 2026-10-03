@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { tasks, toggle, openPostComposer } from '../../store/appState'
 import Modal from '../../components/Modal.vue'
 import ListFilterBar from '../../components/ListFilterBar.vue'
+import { contactById } from '../../store/contacts'
 import { modeState, modeMeta, isFieldOn } from '../../store/modeProfiles'
 
 const route = useRoute()
@@ -73,13 +74,15 @@ watch(() => route.query.new, (v) => { if (v) openModal() }, { immediate: true })
     </section>
     <aside class="card detail" v-if="activeTask">
       <h3>{{ activeTask.title }}</h3>
-      <p>오늘 마감 · {{ activeTask.category }}</p>
-      <label>연결된 일정</label>
-      <p>09:00 팀 회의와 연동됨</p>
-      <label>복습 알림</label>
-      <p>완료 3일 후 자동 복습 카드 생성</p>
+      <p>{{ activeTask.date || '마감일 없음' }} · {{ activeTask.category }}</p>
+      <label>체크리스트 {{ (activeTask.subtasks ?? []).filter(item => item.done).length }}/{{ activeTask.subtasks?.length ?? 0 }}</label>
+      <ul class="task-checklist-preview"><li v-for="item in activeTask.subtasks ?? []" :key="item.id"><label><input v-model="item.done" type="checkbox" /><span :class="{ done: item.done }">{{ item.title }}</span></label><small>{{ item.assigneeId === 'self' ? '나' : contactById(Number(item.assigneeId))?.name ?? '담당자 없음' }}</small></li></ul>
+      <p v-if="!activeTask.subtasks?.length" class="form-note">상세 보기에서 체크리스트와 담당자를 추가하세요.</p>
       <button class="primary" @click="router.push(`/tasks/${activeTask.id}`)">상세 보기</button>
     </aside>
   </div>
 
 </template>
+<style>
+.task-checklist-preview { padding: 0; list-style: none; }.task-checklist-preview li { display: flex; flex-direction: column; gap: 4px; padding: 8px 0; }.task-checklist-preview label { display: flex; align-items: center; gap: 8px; margin: 0; }.task-checklist-preview small { color: var(--color-muted); margin-left: 24px; font-size: .75rem; }
+</style>

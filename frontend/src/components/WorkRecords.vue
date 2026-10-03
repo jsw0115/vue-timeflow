@@ -1,15 +1,16 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { useId as modalUseId } from 'vue'
+const modalFormId1 = modalUseId()
+
+import { computed, ref } from 'vue'
 import Modal from './Modal.vue'
 import EventDateFields from './EventDateFields.vue'
 import TagMentionInput from './TagMentionInput.vue'
 import RichText from './RichText.vue'
-import { localCollection } from '../store/localCollection'
+import { workRecords as records } from '../store/workRecords'
+import { openPostComposer } from '../store/appState'
 import { localDate, workRecordError } from '../utils/postValidation.mjs'
-import { syncPostCollection } from '../store/tagging'
-defineProps({ projects: { type: Array, default: () => [] } })
-const records = localCollection('work-records')
-watch(records, rows => syncPostCollection('work-record', rows, '업무 기록', '/work/wbs'), { deep: true, immediate: true })
+const props = defineProps({ projects: { type: Array, default: () => [] } })
 const types = ['연차', '반차', '외근', '출장', '이직', '기타']
 const filter = ref('전체')
 const visible = computed(() => records.value.filter(r => filter.value === '전체' || r.type === filter.value))
@@ -19,6 +20,7 @@ const fresh = () => ({ type: '연차', title: '', owner: '김지수', projectId:
 const draft = ref(fresh())
 const error = computed(() => workRecordError(draft.value))
 function open(record) {
+  if (!record) { openPostComposer('업무 기록', '', { projects: props.projects.map(project => ({ id: project.id, title: project.title })) }); return }
   editing.value = record?.id ?? null
   draft.value = record ? { ...fresh(), ...record } : fresh()
   show.value = true
@@ -61,8 +63,8 @@ function remove(record) {
     </article>
     <p v-if="!visible.length" class="empty-state">등록된 기록이 없어요. 연차부터 이직 준비까지 한곳에 정리하세요.</p>
   </section>
-  <Modal v-if="show" :title="editing ? '업무 기록 수정' : '업무 기록 작성'" wide @close="show = false">
-    <form @submit.prevent="save">
+  <Modal v-if="show" :title="editing ? '업무 기록 수정' : '업무 기록 작성'" :edit-resource="editing ? 'work-record:' + editing : ''" wide @close="show = false">
+    <form @submit.prevent="save" :id="modalFormId1">
       <div class="form-row"><label>유형<select v-model="draft.type" @change="setHalf"><option v-for="type in types" :key="type">{{ type }}</option></select></label>
         <label>상태<select v-model="draft.status"><option>예정</option><option>신청</option><option>승인</option><option>진행중</option><option>완료</option><option>취소</option></select></label></div>
       <label>제목<input v-model="draft.title" required maxlength="200" placeholder="예: 하반기 연차 / 고객사 방문" /></label>
@@ -81,7 +83,12 @@ function remove(record) {
       <label>사유 · 상세 내용 · 태그 · 멘션<TagMentionInput v-model="draft.body" /></label>
       <p class="form-note">로컬 개인 기록입니다. 승인 상태는 메모용이며 실제 결재나 연차 차감은 수행하지 않습니다. 민감한 인사정보는 입력하지 마세요.</p>
       <p v-if="error" class="form-note" role="status">{{ error }}</p>
-      <button class="primary" type="submit" :disabled="!!error">저장하기</button>
+
     </form>
+
+    <template #footer>
+      <button type="button" class="modal-secondary" @click="show = false">취소</button>
+      <button :form="modalFormId1" class="primary" type="submit" :disabled="!!error">저장하기</button>
+    </template>
   </Modal>
 </template>

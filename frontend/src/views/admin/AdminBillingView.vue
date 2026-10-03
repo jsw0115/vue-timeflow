@@ -74,6 +74,10 @@ function stateClass(s) {
   <Modal v-if="rejecting" title="환불 거절" @close="rejecting = null">
     <p class="form-note" style="margin-top: 0">{{ rejecting.name }}님의 환불 요청을 거절해요. 사유는 사용자에게 전달됩니다.</p>
     <label>거절 사유<textarea v-model="reason" placeholder="예: 이용 기간이 이미 경과했어요" autofocus></textarea></label>
-    <button class="primary" @click="confirmReject">거절 처리</button>
+
+    <template #footer>
+      <button type="button" class="modal-secondary" @click="rejecting = null">취소</button>
+      <button class="primary" @click="confirmReject">거절 처리</button>
+    </template>
   </Modal>
 </template>

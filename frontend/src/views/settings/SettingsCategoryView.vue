@@ -85,6 +85,10 @@ const subCount = computed(() => cats.value.reduce((a, c) => a + c.subs.length, 0
       ></button>
     </div>
     <label>하위 카테고리<input v-model="draft.subText" placeholder="쉼표로 구분 · 예: 회의, 개발, 문서화" /></label>
-    <button class="primary" @click="save">{{ editing === 'new' ? '추가하기' : '저장하기' }}</button>
+
+    <template #footer>
+      <button type="button" class="modal-secondary" @click="editing = null">취소</button>
+      <button class="primary" @click="save">{{ editing === 'new' ? '추가하기' : '저장하기' }}</button>
+    </template>
   </Modal>
 </template>

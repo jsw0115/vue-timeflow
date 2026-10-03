@@ -1,12 +1,12 @@
 <script setup>
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { tasks, blocks, toggle } from '../../store/appState'
+import { tasks, events, blocks, toggle, openPostComposer } from '../../store/appState'
+import { eventOccurrences } from '../../utils/recurrence.mjs'
 import { modeState, modeContent } from '../../store/modeProfiles'
 import { dayLabel, cursor, shift, goToday } from '../../store/plannerDate'
-import { plannerReviews, savePlannerReview } from '../../store/plannerReviews'
+import { plannerReviews } from '../../store/plannerReviews'
 import { localDate } from '../../utils/postValidation.mjs'
-import TagMentionInput from '../../components/TagMentionInput.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -38,15 +38,14 @@ onBeforeUnmount(() => timer && clearInterval(timer))
 
 /* 회고 — 저장하면 날짜별로 보관된다 */
 const reviewDate = computed(() => localDate(cursor.value))
-const reviewText = ref('')
-const savedNote = ref('')
-watch(reviewDate, date => { reviewText.value = plannerReviews.value.find(item => item.id === date)?.body || '' }, { immediate: true })
-function saveReview() {
-  if (!reviewText.value.trim()) return
-  savePlannerReview(reviewDate.value, reviewText.value)
-  savedNote.value = '회고를 저장했어요.'
-  setTimeout(() => (savedNote.value = ''), 2500)
+const dayEvents = computed(() => eventOccurrences(events.value, reviewDate.value, reviewDate.value))
+function planStyle(event) {
+  const minutes = time => Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5))
+  const start = event.startDate < reviewDate.value ? 480 : Math.max(480, minutes(event.startTime)), end = event.endDate > reviewDate.value ? 1380 : Math.min(1380, minutes(event.endTime))
+  return { top: Math.max(0, (start - 480) / 900 * 100) + '%', height: Math.max(2, (end - start) / 900 * 100) + '%', background: event.color }
 }
+const reviewText = ref('')
+watch(() => [reviewDate.value, plannerReviews.value.find(item => item.id === reviewDate.value)?.body], ([date]) => { reviewText.value = plannerReviews.value.find(item => item.id === date)?.body || '' }, { immediate: true })
 </script>
 
 <template>
@@ -56,10 +55,6 @@ function saveReview() {
     <button aria-label="다음 날" @click="shift('day', 1)">›</button>
     <button class="review" style="margin: 0; padding: 5px 10px" @click="goToday">오늘</button>
     <span></span>
-    <button class="selected">일간</button>
-    <button @click="router.push('/planner/weekly')">주간</button>
-    <button @click="router.push('/planner/monthly')">월간</button>
-    <button @click="router.push('/planner/yearly')">연간</button>
   </div>
   <div class="planner">
     <section class="card" :style="{ order: order('timeline') }">
@@ -70,7 +65,7 @@ function saveReview() {
       <div class="timeline">
         <div class="hours"><small v-for="h in ['08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22']" :key="h">{{ h }}:00</small></div>
         <div class="grid">
-          <div v-if="view !== 'Actual'" class="plan">계획 · 디자인 싱크 미팅</div>
+          <div v-for="event in dayEvents" v-show="view !== 'Actual'" :key="event.occurrenceKey" class="plan" :style="planStyle(event)">계획 · {{ event.title }}</div>
           <div v-for="block in blocks" :key="block.title" v-show="view !== 'Plan'" :class="['block', block.color]" :style="{ top: block.top + '%', height: block.height + '%' }"><b>{{ block.title }}</b><small>Actual</small></div>
         </div>
       </div>
@@ -87,9 +82,8 @@ function saveReview() {
       <div class="review">
         <span class="pill">DAILY REVIEW</span>
         <h3>오늘을 짧게 돌아볼까요?</h3>
-        <TagMentionInput v-model="reviewText" :placeholder="content.reviewPrompt" />
-        <button :disabled="!reviewText.trim()" @click="saveReview">회고 저장</button>
-        <span v-if="savedNote" class="badge ok" style="margin-left: 8px">{{ savedNote }}</span>
+        <p>{{ reviewText || content.reviewPrompt }}</p>
+        <button @click="openPostComposer('회고', '', { date: reviewDate, body: reviewText })">{{ reviewText ? '회고 수정' : '회고 작성' }}</button>
       </div>
     </section>
   </div>

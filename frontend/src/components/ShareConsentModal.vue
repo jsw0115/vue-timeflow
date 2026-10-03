@@ -40,6 +40,10 @@ async function proceed() {
     <label class="task" style="border: 0"><input type="checkbox" v-model="agreeRecord" /><span style="flex: 1"><b>세션 녹화에 동의합니다</b><small>녹화본은 내 기기에만 저장되고, 원할 때 파일로 내려받을 수 있어요 (선택)</small></span></label>
 
     <p v-if="mediaState.error" style="color: #b23b3b; font-weight: 600; margin-top: 8px">{{ mediaState.error }}</p>
-    <button class="primary" :disabled="!agreeShare" @click="proceed">동의하고 공유 시작</button>
+
+    <template #footer>
+      <button type="button" class="modal-secondary" @click="$emit('close')">취소</button>
+      <button class="primary" :disabled="!agreeShare" @click="proceed">동의하고 공유 시작</button>
+    </template>
   </Modal>
 </template>

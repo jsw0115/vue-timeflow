@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { plannerLanding } from '../store/plannerPreferences'
 
 // 메인
 import HomeView from '../views/home/HomeView.vue'
@@ -118,10 +119,7 @@ export const navGroups = [
   {
     label: '플래너',
     items: [
-      { path: '/planner', name: '일간 플래너', icon: '▦', component: PlannerDailyView, title: '계획과 실제를 나란히' },
-      { path: '/planner/weekly', name: '주간 플래너', icon: '▤', component: PlannerWeeklyView, title: '한 주의 흐름을 한눈에' },
-      { path: '/planner/monthly', name: '월간 플래너', icon: '▥', component: PlannerMonthlyView, title: '한 달의 리듬을 돌아봐요' },
-      { path: '/planner/yearly', name: '연간 개요', icon: '◑', component: PlannerYearlyView, title: '올해의 발자취를 모아봐요' },
+      { path: '/planner', name: '플래너', icon: '▦', component: PlannerDailyView, title: '계획과 실제를 나란히' },
       { path: '/planner/templates', name: '템플릿 관리', icon: '▧', component: PlannerTemplatesView, title: '자주 쓰는 하루를 저장해요' },
       { path: '/planner/canvas', name: '프로젝트 캔버스', icon: '▨', component: ProjectCanvasView, title: '프로젝트를 보드로 관리해요' },
       { path: '/focus', name: '집중 모드', icon: '◉', component: FocusView, title: '지금 이 순간에 몰입해요' },
@@ -232,10 +230,15 @@ const bareRoutes = [
 export const navItems = navGroups.flatMap((g) => g.items)
 
 const routes = [
+  ...[
+    ['/planner/daily', PlannerDailyView], ['/planner/weekly', PlannerWeeklyView],
+    ['/planner/monthly', PlannerMonthlyView], ['/planner/yearly', PlannerYearlyView],
+  ].map(([path, component]) => ({ path, component, meta: { title: '계획과 실제를 나란히' } })),
   ...navItems.map((item) => ({
     path: item.path,
     name: item.name,
     component: item.component,
+    ...(item.path === '/planner' ? { redirect: to => ({ path: plannerLanding(), query: to.query }) } : {}),
     meta: { label: item.name, title: item.title },
   })),
   ...adminItems.map((item) => ({

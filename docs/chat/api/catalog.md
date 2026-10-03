@@ -1,6 +1,6 @@
 # 채팅 API 목록서
 
-2026-09-27 · 기본 경로 `/api/chat` · **아래 15개 엔드포인트 구현됨** · Bearer access JWT 필수
+2026-10-03 · 기본 경로 `/api/chat` · **아래 18개 엔드포인트 구현됨** · Bearer access JWT 필수
 
 | ID | 메서드 | 경로 | 목적 | 정상 응답 | Redis |
 |---|---|---|---|---|---|
@@ -19,7 +19,14 @@
 | CHAT-13 | PUT | /mentions/{messageId}/read | 해당 멘션 읽음 | 200 null | — |
 | CHAT-14 | GET | /tags | 현재 접근 가능한 태그와 건수 | 200 Page(TagCount) | — |
 | CHAT-15 | GET | /tagged-messages?tag= | 참여 방 전체의 태그 메시지 | 200 Page(InboxItem) | — |
+| CHAT-16 | GET | /search?q=&roomId=&before=&limit= | 현재 참여 대화의 전체 메시지 검색, 선택적 방 범위 | 200 SearchPage(InboxItem) | 검색 제한 |
+| CHAT-17 | PUT | /presence | 클라이언트별 메신저 활성 상태 갱신 | 204 | TTL·ZSET |
+| CHAT-18 | GET | /presence?userIds= | 함께 대화하는 사용자들의 메신저 활성 상태 | 200 List(Presence) | TTL·ZSET |
 
-목록은 15개 경로/메서드 조합이다. CHAT-05의 태그 필터도 같은 엔드포인트로 제공하며 별도 HTTP API로 세지 않는다.
+목록은 18개 경로/메서드 조합이다. CHAT-05의 태그 필터도 같은 엔드포인트로 제공하며 별도 HTTP API로 세지 않는다.
+
+CHAT-16의 `q`는 1~100자이며 NFKC·소문자로 정규화한다. `limit`은 1~100, `before`는 이전 결과의 메시지 ULID, `roomId`는 선택적 참여 방 ID다. 응답은 `items`, `nextCursor`, `hasNext`, `indexing`을 포함한다. `indexing=true`이면 기존 메시지의 초기 색인을 만드는 중이다. gram 색인으로 후보를 좁힌 뒤 정확한 부분 문자열을 검사한다. 탈퇴한 방과 멤버 외의 메시지는 반환하지 않는다.
+
+CHAT-17 요청은 `{ clientId: UUID, active: boolean }`이다. 화면에서 메신저를 열고 앱이 보일 때만 활성으로 갱신하며, 클라이언트별 상태가 35초 후 만료된다. 다른 탭에서 활성화한 클라이언트가 있으면 사용자 전체 상태는 계속 활성이다. CHAT-18의 `userIds`는 쉼표로 구분한 최대 100개의 ID다. 현재 함께 참여하는 방의 사용자만 `{ userId, nickname, active }`로 반환한다. Redis 조회 실패 시 프런트엔드는 상태를 알 수 없다고 표시한다.
 
 정확한 요청·응답은 [설계서](design.md), Redis 명령/채널 단위 API는 [Redis API 목록서](../redis/api-catalog.md)에 분리했다. 서버 실행 시 `/v3/api-docs`에서도 실제 컨트롤러 계약을 조회할 수 있다.

@@ -60,7 +60,7 @@ watch(kind, () => { if (!isMentions.value && tags.value.length && !tags.value.so
 <template>
   <div class="chat-workspace unified-inbox">
     <header class="chat-page-head"><div><p class="chat-eyebrow">{{ isMentions ? 'MENTIONS' : 'COLLECTIONS' }}</p><h1>{{ isMentions ? '나를 부른 이야기' : '주제로 모은 글' }}</h1><p>채팅부터 플래너, 일정, 다이어리까지 한곳에서 확인해요.</p></div><button @click="refresh">새로고침</button></header>
-    <nav class="chat-nav" aria-label="글 모아보기"><router-link to="/chat">대화</router-link><router-link to="/mentions" :aria-current="isMentions ? 'page' : undefined">멘션함</router-link><router-link to="/tags" :aria-current="!isMentions ? 'page' : undefined">태그함</router-link></nav>
+    <nav class="chat-nav" aria-label="글 모아보기"><router-link to="/mentions" :aria-current="isMentions ? 'page' : undefined">멘션함</router-link><router-link to="/tags" :aria-current="!isMentions ? 'page' : undefined">태그함</router-link></nav>
     <p v-if="error" class="chat-banner" role="alert">{{ error }}</p>
     <div class="inbox-filters">
       <label>글 종류<select v-model="kind" aria-label="글 종류"><option v-for="value in contentKinds" :key="value">{{ value }}</option></select></label>

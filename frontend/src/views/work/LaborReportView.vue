@@ -155,6 +155,10 @@ function fixAll() {
       <label style="flex: 1">실제 MD<input type="number" min="0" step="0.5" v-model.number="draft.actualMd" /></label>
     </div>
     <p class="form-note">산정 공수 {{ Math.round(draft.people * draft.days * (draft.ratio / 100) * 10) / 10 }} MD · 예상 비용 {{ won(Math.round(draft.people * draft.days * (draft.ratio / 100) * draft.rate)) }}</p>
-    <button class="primary" @click="addRow">추가하기</button>
+
+    <template #footer>
+      <button type="button" class="modal-secondary" @click="showAdd = false">취소</button>
+      <button class="primary" @click="addRow">추가하기</button>
+    </template>
   </Modal>
 </template>

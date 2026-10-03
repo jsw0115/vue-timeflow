@@ -103,7 +103,11 @@ function inviteToGroup(g) {
       </label>
     </div>
     <p class="form-note">선택한 사람: {{ picked.map((i) => contactById(i)?.name).filter(Boolean).join(', ') || '없음' }}</p>
-    <button class="primary" @click="confirmPick">{{ picked.length }}명 선택 완료</button>
+
+    <template #footer>
+      <button type="button" class="modal-secondary" @click="showPicker = false">취소</button>
+      <button class="primary" @click="confirmPick">{{ picked.length }}명 선택 완료</button>
+    </template>
   </Modal>
 
   <Modal v-if="inviteFor" :title="`${inviteFor.name} 그룹 초대`" @close="inviteFor = null">
@@ -114,6 +118,9 @@ function inviteToGroup(g) {
       <span><b>{{ g.title }}</b><small>멤버 {{ g.memberIds.length }}명</small></span>
     </label>
     <p v-if="isBlocked(inviteFor.id)" class="form-note">차단된 사용자는 그룹에 초대할 수 없어요.</p>
-    <button class="primary" @click="inviteFor = null">완료</button>
+
+    <template #footer>
+      <button class="primary" @click="inviteFor = null">완료</button>
+    </template>
   </Modal>
 </template>

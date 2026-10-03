@@ -1,4 +1,7 @@
 <script setup>
+import { useId as modalUseId } from 'vue'
+const modalFormId1 = modalUseId()
+
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import Modal from './Modal.vue'
@@ -30,7 +33,6 @@ const draft = ref({
   joinPolicy: 'approval',
 })
 
-
 const error = computed(() => {
   if (!draft.value.title.trim()) return '커뮤니티 이름을 입력해주세요.'
   if (draft.value.title.trim().length < 2) return '이름은 2자 이상이어야 해요.'
@@ -50,7 +52,7 @@ function create() {
 
 <template>
   <Modal title="커뮤니티 만들기" wide @close="emit('close')">
-    <form @submit.prevent="create">
+    <form @submit.prevent="create" :id="modalFormId1">
         <label>커뮤니티 이름<input v-model="draft.title" placeholder="예: 주말 러닝 크루" autofocus /></label>
         <label>카테고리<select v-model="draft.category"><option v-for="c in CATEGORIES" :key="c">{{ c }}</option></select></label>
         <label>소개 · 태그 · 멘션<TagMentionInput v-model="draft.intro" placeholder="함께할 활동을 소개해주세요. #태그 @이름" /></label>
@@ -86,7 +88,12 @@ function create() {
         </div>
 
         <p v-if="error" class="form-note">{{ error }}</p>
-        <button type="submit" class="primary" :disabled="Boolean(error)">커뮤니티 만들기</button>
+
     </form>
+
+    <template #footer>
+      <button type="button" class="modal-secondary" @click="emit('close')">취소</button>
+      <button :form="modalFormId1" type="submit" class="primary" :disabled="Boolean(error)">커뮤니티 만들기</button>
+    </template>
   </Modal>
 </template>

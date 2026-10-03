@@ -1,14 +1,15 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { events } from '../../store/appState'
+import { events, openPostComposer } from '../../store/appState'
 import { localDate, rangeError } from '../../utils/postValidation.mjs'
 import EventDateFields from '../../components/EventDateFields.vue'
+import RepeatSettings from '../../components/RepeatSettings.vue'
+import { makeRecurrence, recurrenceError } from '../../utils/recurrence.mjs'
 import TagMentionInput from '../../components/TagMentionInput.vue'
 import RichText from '../../components/RichText.vue'
 import Modal from '../../components/Modal.vue'
 import ListFilterBar from '../../components/ListFilterBar.vue'
-import { modeState, modeMeta, isFieldOn } from '../../store/modeProfiles'
 import { contacts, isBlocked, contactById } from '../../store/contacts'
 import { openProfile } from '../../store/people'
 import PersonTag from '../../components/PersonTag.vue'
@@ -87,42 +88,15 @@ function attendeeNames(ids) {
 const activeId = ref(1)
 const active = computed(() => events.value.find((e) => e.id === activeId.value))
 
-const showModal = ref(false)
-const draft = ref({ title: '', startDate: localDate(), startTime: '09:00', endDate: localDate(), endTime: '10:00', body: '', category: '업무', color: COLOR_PRESETS[3].base, attendeeIds: [] })
-function on(key) {
-  return isFieldOn(modeState.activeMode, 'event', key)
-}
-function openModal() {
-  draft.value = { title: '', startDate: localDate(), startTime: '09:00', endDate: localDate(), endTime: '10:00', body: '', category: '업무', color: COLOR_PRESETS[3].base, attendeeIds: [] }
-  attendeeKeyword.value = ''
-  showModal.value = true
-}
+function openModal() { openPostComposer('일정') }
 // 기존 query.new 링크는 상세 일정 작성 모달로 연결합니다.
 watch(() => route.query.new, (v) => { if (v) openModal() }, { immediate: true })
-const eventError = d => !d.title.trim() ? '제목을 입력해주세요.' : rangeError(d.startDate, d.startTime, d.endDate, d.endTime)
-function createEvent() {
-  if (eventError(draft.value)) return
-  const id = Math.max(0, ...events.value.map((e) => e.id)) + 1
-  events.value.push({
-    id,
-    title: draft.value.title.trim(),
-    ...draft.value,
-    date: draft.value.startDate + ' ' + draft.value.startTime,
-    time: draft.value.startTime, tag: draft.value.category,
-    category: draft.value.category,
-    state: '예정',
-    color: draft.value.color,
-    attendeeIds: [...draft.value.attendeeIds],
-  })
-  activeId.value = id
-  showModal.value = false
-}
-
+const eventError = d => !d.title.trim() ? '제목을 입력해주세요.' : rangeError(d.startDate, d.startTime, d.endDate, d.endTime) || recurrenceError(d.recurrence, d.startDate)
 const showDetailModal = ref(false)
 const detailDraft = ref({ title: '', category: '', color: '', attendeeIds: [] })
 function openDetail() {
   if (!active.value) return
-  detailDraft.value = { ...active.value, body: active.value.body ?? '', attendeeIds: [...(active.value.attendeeIds ?? [])] }
+  detailDraft.value = { ...active.value, body: active.value.body ?? '', attendeeIds: [...(active.value.attendeeIds ?? [])], recurrence: makeRecurrence(active.value.recurrence) }
   attendeeKeyword.value = ''
   showDetailModal.value = true
 }
@@ -185,42 +159,11 @@ function removeActive() {
     </aside>
   </div>
 
-  <Modal v-if="showModal" title="새 일정 만들기" @close="showModal = false">
-    <p class="form-note" style="margin: 0 0 4px">{{ modeMeta(modeState.activeMode).name }} 글양식이 적용돼요</p>
-    <label>제목<input v-model="draft.title" placeholder="일정 제목" /></label>
-    <EventDateFields :draft="draft" />
-    <label>내용 · 태그 · 멘션<TagMentionInput v-model="draft.body" /></label>
-    <label v-if="on('category')">카테고리<select v-model="draft.category"><option>업무</option><option>공부</option><option>건강</option><option>휴식</option><option>개인</option></select></label>
-    <label>색상</label>
-    <div style="display: flex; gap: 8px; margin-top: 6px">
-      <button
-        v-for="c in COLOR_PRESETS"
-        :key="c.base"
-        type="button"
-        :title="c.name"
-        :style="{ width: '28px', height: '28px', borderRadius: '50%', background: gradientFor(c.base), border: draft.color === c.base ? '2px solid var(--color-foreground)' : '2px solid transparent', cursor: 'pointer' }"
-        @click="draft.color = c.base"
-      ></button>
-    </div>
-
-    <div class="section-label">참석자 ({{ draft.attendeeIds.length }}명)</div>
-    <input v-model="attendeeKeyword" placeholder="주소록에서 이름 검색" />
-    <div class="picker-list invite-list" style="margin-top: 10px; max-height: 180px">
-      <label class="picker-row" v-for="c in attendeeCandidates" :key="c.id">
-        <input type="checkbox" :checked="draft.attendeeIds.includes(c.id)" @change="toggleAttendee(draft.attendeeIds, c.id)" />
-        <i>{{ c.name[0] }}</i>
-        <span style="flex: 1"><b>{{ c.name }}</b><small>{{ c.relation }} · {{ c.email }}</small></span>
-      </label>
-      <p v-if="!attendeeCandidates.length" class="form-note" style="margin: 8px 0 0">검색 결과가 없어요.</p>
-    </div>
-    <p class="form-note">차단한 사용자는 참석자로 추가할 수 없어요.</p>
-    <p class="form-note" role="status">{{ eventError(draft) }}</p>
-    <button class="primary" :disabled="!!eventError(draft)" @click="createEvent">일정 만들기</button>
-  </Modal>
-
-  <Modal v-if="showDetailModal" title="일정 상세" @close="showDetailModal = false">
+<Modal v-if="showDetailModal" title="일정 상세" :edit-resource="'event:' + activeId" @close="showDetailModal = false">
     <label>제목<input v-model="detailDraft.title" /></label>
     <EventDateFields :draft="detailDraft" />
+    <RepeatSettings v-model="detailDraft.recurrence" :start-date="detailDraft.startDate" />
+    <p class="form-note">반복 일정을 수정하면 전체 반복에 적용돼요.</p>
     <label>내용 · 태그 · 멘션<TagMentionInput v-model="detailDraft.body" /></label>
     <label>카테고리<select v-model="detailDraft.category"><option>업무</option><option>공부</option><option>건강</option><option>휴식</option><option>개인</option></select></label>
     <label>색상</label>
@@ -246,7 +189,11 @@ function removeActive() {
       </label>
     </div>
     <p class="form-note" role="status">{{ eventError(detailDraft) }}</p>
-    <button class="primary" :disabled="!!eventError(detailDraft)" @click="saveDetail">저장하기</button>
-    <button style="width: 100%; margin-top: 8px; color: #b23b3b; font-weight: 700; padding: 10px" @click="removeActive">삭제하기</button>
+
+    <template #footer>
+      <button type="button" class="modal-secondary" @click="showDetailModal = false">취소</button>
+      <button class="primary" :disabled="!!eventError(detailDraft)" @click="saveDetail">저장하기</button>
+      <button style="width: 100%; margin-top: 8px; color: #b23b3b; font-weight: 700; padding: 10px" @click="removeActive">삭제하기</button>
+    </template>
   </Modal>
 </template>

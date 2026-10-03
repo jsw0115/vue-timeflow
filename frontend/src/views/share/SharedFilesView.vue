@@ -197,10 +197,14 @@ function kindIcon(kind) {
       <div><span>다운로드</span><b class="figure">{{ preview.downloads }}회</b></div>
       <div><span>기간</span><b :class="{ 'sla-over': isExpired(preview) }">{{ expiryLabel(preview) }}</b></div>
     </div>
-    <div class="form-row">
+
+    <template #footer>
+      <button type="button" class="modal-secondary" @click="preview = null">취소</button>
+      <div class="form-row">
       <button class="primary" style="flex: 1" :disabled="isExpired(preview)" @click="onDownload(preview)">내려받기</button>
       <button class="review" style="margin: 0" @click="openRetention(preview)">기간 설정</button>
-    </div>
+          </div>
+    </template>
   </Modal>
 
   <!-- 개별 기간 설정 -->
@@ -211,7 +215,11 @@ function kindIcon(kind) {
     </div>
     <label>직접 입력(일)<input type="number" min="0" max="365" v-model.number="draftDays" /></label>
     <p class="form-note">{{ draftDays ? '오늘부터 ' + draftDays + '일 뒤까지 내려받을 수 있어요.' : '기간 제한 없이 계속 내려받을 수 있어요.' }}</p>
-    <button class="primary" @click="applyRetention">적용하기</button>
+
+    <template #footer>
+      <button type="button" class="modal-secondary" @click="editing = null">취소</button>
+      <button class="primary" @click="applyRetention">적용하기</button>
+    </template>
   </Modal>
 
   <!-- 일괄 기간 설정 -->
@@ -221,6 +229,10 @@ function kindIcon(kind) {
       <button v-for="p in RETENTION_PRESETS" :key="p.days" type="button" :class="{ selected: bulkDays === p.days }" @click="bulkDays = p.days">{{ p.label }}</button>
     </div>
     <p class="form-note">현재 기본값: {{ defaultRetentionDays ? defaultRetentionDays + '일' : '무기한' }}</p>
-    <button class="primary" @click="applyBulk">{{ attachments.length }}개 파일에 적용</button>
+
+    <template #footer>
+      <button type="button" class="modal-secondary" @click="showBulk = false">취소</button>
+      <button class="primary" @click="applyBulk">{{ attachments.length }}개 파일에 적용</button>
+    </template>
   </Modal>
 </template>

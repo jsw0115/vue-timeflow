@@ -87,7 +87,11 @@ function resume() {
     </div>
     <p v-if="methodError" class="form-note">{{ methodError }}</p>
     <p class="form-note">카드 전체 번호는 저장하지 않아요.</p>
-    <button class="primary" :disabled="Boolean(methodError)" @click="saveMethod">변경하기</button>
+
+    <template #footer>
+      <button type="button" class="modal-secondary" @click="showMethod = false">취소</button>
+      <button class="primary" :disabled="Boolean(methodError)" @click="saveMethod">변경하기</button>
+    </template>
   </Modal>
 
   <Modal v-if="showCancel" title="구독 해지" @close="showCancel = false">
@@ -99,7 +103,10 @@ function resume() {
     <div class="filter" style="width: fit-content; flex-wrap: wrap; margin-top: 6px">
       <button v-for="r in REASONS" :key="r" type="button" :class="{ selected: cancelReason === r }" @click="cancelReason = r">{{ r }}</button>
     </div>
-    <button class="primary" @click="confirmCancel">해지하기</button>
-    <button class="review" style="width: 100%; margin-top: 8px" @click="showCancel = false">계속 이용하기</button>
+
+    <template #footer>
+      <button class="primary" @click="confirmCancel">해지하기</button>
+      <button class="review" style="width: 100%; margin-top: 8px" @click="showCancel = false">계속 이용하기</button>
+    </template>
   </Modal>
 </template>

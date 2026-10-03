@@ -81,6 +81,10 @@ function open(g) {
       </label>
     </div>
     <p class="form-note">멤버는 나중에 그룹 상세에서도 추가·제외할 수 있어요. 차단한 사용자는 선택할 수 없습니다.</p>
-    <button class="primary" @click="createGroup">그룹 만들기</button>
+
+    <template #footer>
+      <button type="button" class="modal-secondary" @click="showModal = false">취소</button>
+      <button class="primary" @click="createGroup">그룹 만들기</button>
+    </template>
   </Modal>
 </template>

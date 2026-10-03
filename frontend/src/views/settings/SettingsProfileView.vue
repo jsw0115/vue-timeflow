@@ -80,6 +80,10 @@ function deleteAccount() {
     <label>새 비밀번호<input type="password" v-model="pw.next" autocomplete="new-password" placeholder="8자 이상" /></label>
     <label>새 비밀번호 확인<input type="password" v-model="pw.confirm" autocomplete="new-password" @keyup.enter="changePassword" /></label>
     <p v-if="pwError" class="form-note">{{ pwError }}</p>
-    <button class="primary" :disabled="Boolean(pwError)" @click="changePassword">변경하기</button>
+
+    <template #footer>
+      <button type="button" class="modal-secondary" @click="showPassword = false">취소</button>
+      <button class="primary" :disabled="Boolean(pwError)" @click="changePassword">변경하기</button>
+    </template>
   </Modal>
 </template>

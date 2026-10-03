@@ -52,9 +52,12 @@ function onChat() {
 
     <p class="form-note">업무·경력 기록은 프로필에 표시되지 않아요. 본인만 볼 수 있습니다.</p>
 
-    <div class="form-row">
+    <template #footer>
+      <button type="button" class="modal-secondary" @click="closeProfile">취소</button>
+      <div class="form-row">
       <button class="primary" style="flex: 1" @click="onChat">메시지 보내기</button>
       <button class="review" style="margin: 0" @click="onBlock">{{ p.blocked ? '차단 해제' : '차단' }}</button>
-    </div>
+          </div>
+    </template>
   </Modal>
 </template>

@@ -108,7 +108,7 @@ function applyToday(t) {
   </div>
 
   <p v-if="applied" class="badge ok" style="display: inline-block; margin-bottom: 12px">
-    {{ applied }} <a href="#" style="margin-left: 6px" @click.prevent="router.push('/planner')">플래너에서 보기</a>
+    {{ applied }} <a href="#" style="margin-left: 6px" @click.prevent="router.push('/planner/daily')">플래너에서 보기</a>
   </p>
 
   <div class="manage">
@@ -154,6 +154,9 @@ function applyToday(t) {
       </div>
     </div>
 
-    <button class="primary" :disabled="!canSave" @click="save">{{ editing === 'new' ? '템플릿 저장' : '변경 저장' }}</button>
+    <template #footer>
+      <button type="button" class="modal-secondary" @click="editing = null">취소</button>
+      <button class="primary" :disabled="!canSave" @click="save">{{ editing === 'new' ? '템플릿 저장' : '변경 저장' }}</button>
+    </template>
   </Modal>
 </template>

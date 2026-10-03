@@ -5,6 +5,7 @@ import { diaries } from '../../store/writing'
 import { localDate } from '../../utils/postValidation.mjs'
 import { events } from '../../store/appState'
 import TagMentionInput from '../../components/TagMentionInput.vue'
+import EditPresence from '../../components/EditPresence.vue'
 
 const written = [1, 4, 6, 8, 9, 10, 12, 13, 14, 16, 17, 18, 20, 21, 24]
 
@@ -102,6 +103,7 @@ function linkPlannerItem(title) {
   </div>
   <div class="diary">
     <section class="card editor">
+      <EditPresence v-if="entryId" :resource="'diary:' + entryId" />
       <div class="head">
         <span class="pill warm">맑음 ☀ · 서울</span>
         <button :class="{ 'chip-on': highlighted }" @click="toggleHighlight">{{ highlighted ? '★ 하이라이트' : '☆ 하이라이트로 저장' }}</button>

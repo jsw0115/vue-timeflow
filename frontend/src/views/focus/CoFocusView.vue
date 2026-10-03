@@ -110,6 +110,10 @@ onBeforeUnmount(() => stopShare())
   <ShareConsentModal v-if="showConsent" @close="showConsent = false" @started="onStarted" />
   <Modal v-if="showCreate" title="집중 방 만들기" @close="showCreate = false">
     <label>방 이름<input v-model="newRoomTitle" placeholder="예: 새벽 코딩방" autofocus /></label>
-    <button class="primary" @click="createRoom">방 만들기</button>
+
+    <template #footer>
+      <button type="button" class="modal-secondary" @click="showCreate = false">취소</button>
+      <button class="primary" @click="createRoom">방 만들기</button>
+    </template>
   </Modal>
 </template>

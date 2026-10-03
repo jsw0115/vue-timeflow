@@ -13,8 +13,10 @@ public final class ChatModels {
     public record Room(String id, String kind, String name, String ownerId, String lastSequence,
                        long unreadCount, Message lastMessage, List<Member> members, Instant updatedAt) {}
     public record Page<T>(List<T> items, String nextCursor, boolean hasNext) {}
+    public record SearchPage<T>(List<T> items, String nextCursor, boolean hasNext, boolean indexing) {}
     public record ReadState(String roomId, String lastReadSequence) {}
     public record Signal(String roomId, String type, String userId) {}
+    public record Presence(String userId, String nickname, boolean active) {}
     public record InboxItem(Message message, String roomName, boolean read) {}
     public record TagCount(String name, long messageCount) {}
 }

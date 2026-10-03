@@ -2,6 +2,7 @@ package kr.timebar.diary.chat.application;
 
 import kr.timebar.diary.chat.domain.ChatModels.*;
 import kr.timebar.diary.chat.domain.ChatTags;
+import kr.timebar.diary.chat.domain.ChatSearch;
 import kr.timebar.diary.chat.infrastructure.jdbc.ChatRepository;
 import kr.timebar.diary.common.ApiException;
 import kr.timebar.diary.common.ErrorCode;
@@ -18,6 +19,17 @@ public class ChatService {
     private final ChatIdentity identity;
     public ChatService(ChatRepository repo, ChatIdentity identity) { this.repo=repo; this.identity=identity; }
     public void active(String user) { identity.requireActive(user); }
+    @Transactional(readOnly=true) public Page<InboxItem> search(String user,String query,String room,String before,int size) {
+        active(user);
+        if(query==null||query.isBlank()||query.length()>100 || before!=null && !before.matches("[0-9A-HJKMNP-TV-Z]{26}")) throw new ApiException(ErrorCode.VALIDATION_FAILED);
+        if(room!=null) repo.requireMember(room,user);
+        return repo.search(user,ChatSearch.normalize(query.strip()),room,before,limit(size));
+    }
+    @Transactional(readOnly=true) public List<Person> visiblePeople(String user,List<String> ids) {
+        active(user);
+        if(ids.size()>100) throw new ApiException(ErrorCode.VALIDATION_FAILED);
+        return repo.visiblePeople(user,ids);
+    }
     public Person lookup(String user, String email) {
         active(user);
         return identity.findByEmail(email).filter(p -> !p.id().equals(user)).orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND,"대화할 사용자를 찾지 못했습니다."));

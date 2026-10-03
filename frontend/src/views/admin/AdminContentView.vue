@@ -63,6 +63,10 @@ function onRemove(c) {
     <label>내용<textarea v-model="draft.body" placeholder="노출할 문구나 이름을 입력하세요" autofocus></textarea></label>
     <label>노출 위치<input v-model="draft.where" placeholder="예: 홈 대시보드" @keyup.enter="submit" /></label>
     <p class="form-note">추가하면 ‘숨김’ 상태로 등록돼요. 검수 후 노출로 바꿔주세요.</p>
-    <button class="primary" @click="submit">추가하기</button>
+
+    <template #footer>
+      <button type="button" class="modal-secondary" @click="showAdd = false">취소</button>
+      <button class="primary" @click="submit">추가하기</button>
+    </template>
   </Modal>
 </template>

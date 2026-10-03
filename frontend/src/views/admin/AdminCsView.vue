@@ -83,6 +83,10 @@ function daysOpen(t) {
     <label>답변 내용<textarea v-model="draft" placeholder="답변을 입력하세요" autofocus rows="6"></textarea></label>
     <p v-if="notice" class="badge warn" style="display: inline-block">{{ notice }}</p>
     <p class="form-note">답변을 보내면 상태가 ‘답변 완료’로 바뀌고 감사 로그에 기록돼요.</p>
-    <button class="primary" @click="submit">답변 보내기</button>
+
+    <template #footer>
+      <button type="button" class="modal-secondary" @click="replying = null">취소</button>
+      <button class="primary" @click="submit">답변 보내기</button>
+    </template>
   </Modal>
 </template>

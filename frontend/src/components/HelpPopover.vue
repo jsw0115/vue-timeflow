@@ -55,6 +55,8 @@ const open = ref(false)
       </div>
     </template>
 
-    <button class="primary" @click="open = false">닫기</button>
+    <template #footer>
+      <button class="primary" @click="open = false">닫기</button>
+    </template>
   </Modal>
 </template>

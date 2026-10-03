@@ -72,6 +72,9 @@ export function createDemoChatApi(now = new Date()) {
       return { roomId: id, lastReadSequence: reads[`${id}:${me}`] }
     },
     typing: () => null,
+    presence: () => null,
+    peoplePresence: () => [], // Sample people never claim to be online.
+    search: (query = {}) => inbox(messages.filter(item => (!query.roomId || item.roomId === query.roomId) && item.body.normalize('NFKC').toLowerCase().includes((query.q || '').trim().normalize('NFKC').toLowerCase())), query),
     leave: id => { const room = findRoom(id); if (room.kind === 'DM' || room.ownerId === me) fail('그룹의 방장을 넘긴 뒤 나갈 수 있어요.'); room.left = true },
     transfer: (id, userId) => { const room = findRoom(id); if (room.ownerId !== me || !room.ids.includes(userId)) fail('참여자를 확인해주세요.'); room.ownerId = userId },
     mentions: (query = {}) => inbox(messages.filter(item => item.mentionUserIds.includes(me) && (!query.unread || !mentionReads.has(item.id))), query),

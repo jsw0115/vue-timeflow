@@ -270,10 +270,14 @@ function priorityLabel(id) {
     </div>
 
     <p v-if="!canSave" class="form-note">제목을 입력하면 저장할 수 있어요.</p>
-    <div class="form-row">
+
+    <template #footer>
+      <button type="button" class="modal-secondary" @click="editing = null">취소</button>
+      <div class="form-row">
       <button class="primary" style="flex: 1" :disabled="!canSave" @click="save">{{ editing === 'new' ? '카드 추가하기' : '변경 저장' }}</button>
       <button v-if="editing !== 'new'" class="review" style="margin: 0" @click="onRemove">삭제</button>
-    </div>
+          </div>
+    </template>
   </Modal>
 
   <!-- 컬럼 관리 -->
@@ -289,9 +293,12 @@ function priorityLabel(id) {
       <input v-model="newColumn" placeholder="새 컬럼 이름" style="flex: 1" @keyup.enter="createColumn" />
       <button class="review" style="margin: 0" @click="createColumn">컬럼 추가</button>
     </div>
-    <div class="form-row">
+
+    <template #footer>
+      <div class="form-row">
       <button class="review" style="margin: 0" @click="onReset">보드 초기화</button>
       <button class="primary" style="flex: 1" @click="showColumns = false">완료</button>
-    </div>
+          </div>
+    </template>
   </Modal>
 </template>

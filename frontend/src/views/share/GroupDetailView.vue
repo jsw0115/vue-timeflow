@@ -85,8 +85,11 @@ function removeGroup() {
         </label>
       </div>
       <p class="form-note">차단 목록에 있는 사용자는 초대할 수 없어요. 차단을 해제하면 후보에 다시 나타납니다.</p>
+
+    <template #footer>
       <button class="primary" @click="showPicker = false">{{ memberList.length }}명 선택 완료</button>
-    </Modal>
+    </template>
+  </Modal>
   </template>
 
   <section v-else class="card">

@@ -1,5 +1,9 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import { moneyEntries as entries } from '../../store/money'
+import { localDate } from '../../utils/postValidation.mjs'
+import { openPostComposer } from '../../store/appState'
 import Modal from '../../components/Modal.vue'
 import ListFilterBar from '../../components/ListFilterBar.vue'
 
@@ -10,16 +14,9 @@ import ListFilterBar from '../../components/ListFilterBar.vue'
  */
 const CATEGORIES = ['식비', '여가', '건강', '교통', '주거', '수입', '기타']
 const currency = ref('KRW')
-const month = ref('2026-08')
-
-const entries = ref([
-  { id: 1, title: '월급', date: '2026-08-25', amount: 3200000, type: 'in', category: '수입' },
-  { id: 2, title: '점심 식대', date: '2026-08-24', amount: -12000, type: 'out', category: '식비' },
-  { id: 3, title: '헬스장 등록', date: '2026-08-20', amount: -89000, type: 'out', category: '건강' },
-  { id: 4, title: '도서 구매', date: '2026-08-18', amount: -34500, type: 'out', category: '여가' },
-  { id: 5, title: '지하철 정기권', date: '2026-08-15', amount: -62000, type: 'out', category: '교통' },
-  { id: 6, title: '월세', date: '2026-08-05', amount: -650000, type: 'out', category: '주거' },
-])
+const route = useRoute()
+const month = ref(localDate().slice(0, 7))
+watch(() => route.query.month, value => { if (typeof value === 'string' && /^\d{4}-(0[1-9]|1[0-2])$/.test(value)) month.value = value }, { immediate: true })
 
 const query = ref('')
 const filters = ref({ type: '전체' })
@@ -59,25 +56,7 @@ const byCategory = computed(() => {
     .sort((a, b) => b.amount - a.amount)
 })
 
-const showAdd = ref(false)
-const draft = ref({ title: '', amount: 0, type: 'out', category: '식비', date: '2026-08-26' })
-function openAdd() {
-  draft.value = { title: '', amount: 0, type: 'out', category: '식비', date: new Date().toISOString().slice(0, 10) }
-  showAdd.value = true
-}
-function addEntry() {
-  if (!draft.value.title.trim() || !draft.value.amount) return
-  const signed = draft.value.type === 'out' ? -Math.abs(draft.value.amount) : Math.abs(draft.value.amount)
-  entries.value.unshift({
-    id: Math.max(0, ...entries.value.map((e) => e.id)) + 1,
-    title: draft.value.title.trim(),
-    date: draft.value.date,
-    amount: signed,
-    type: draft.value.type,
-    category: draft.value.type === 'in' ? '수입' : draft.value.category,
-  })
-  showAdd.value = false
-}
+function openAdd() { openPostComposer('머니로그') }
 function removeEntry(e) {
   if (!window.confirm('‘' + e.title + '’ 내역을 삭제할까요?')) return
   entries.value = entries.value.filter((x) => x.id !== e.id)
@@ -194,26 +173,7 @@ function importCsv(event) {
     </section>
   </div>
 
-  <Modal v-if="showAdd" title="내역 추가" @close="showAdd = false">
-    <label>내용<input v-model="draft.title" placeholder="예: 점심 식대" autofocus @keyup.enter="addEntry" /></label>
-    <div class="form-row">
-      <label style="flex: 1">유형
-        <select v-model="draft.type"><option value="out">지출</option><option value="in">수입</option></select>
-      </label>
-      <label style="flex: 1">금액<input type="number" min="0" step="1000" v-model.number="draft.amount" /></label>
-    </div>
-    <div class="form-row">
-      <label style="flex: 1">분류
-        <select v-model="draft.category" :disabled="draft.type === 'in'">
-          <option v-for="c in CATEGORIES" :key="c">{{ c }}</option>
-        </select>
-      </label>
-      <label style="flex: 1">날짜<input type="date" v-model="draft.date" /></label>
-    </div>
-    <button class="primary" @click="addEntry">추가하기</button>
-  </Modal>
-
-  <Modal v-if="showIntegration" title="외부 연동 검토" wide @close="showIntegration = false">
+<Modal v-if="showIntegration" title="외부 연동 검토" wide @close="showIntegration = false">
     <p class="form-note" style="margin-top: 0">
       은행·카드 자동 연동을 실제로 붙일 수 있는지 검토한 결과예요. 지금 바로 쓸 수 있는 방법은 CSV 가져오기입니다.
     </p>
@@ -234,6 +194,9 @@ function importCsv(event) {
       <input type="file" accept=".csv,text/csv" @change="importCsv" style="margin-top: 10px" />
       <p v-if="importNotice" class="badge ok" style="display: inline-block; margin-top: 8px">{{ importNotice }}</p>
     </div>
-    <button class="primary" @click="showIntegration = false">닫기</button>
+
+    <template #footer>
+      <button class="primary" @click="showIntegration = false">닫기</button>
+    </template>
   </Modal>
 </template>

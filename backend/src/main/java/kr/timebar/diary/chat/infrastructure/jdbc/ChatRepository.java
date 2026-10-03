@@ -1,6 +1,7 @@
 package kr.timebar.diary.chat.infrastructure.jdbc;
 
 import kr.timebar.diary.chat.domain.ChatModels.*;
+import kr.timebar.diary.chat.domain.ChatSearch;
 import kr.timebar.diary.common.ApiException;
 import kr.timebar.diary.common.ErrorCode;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -76,6 +77,7 @@ public class ChatRepository {
         return new Message(message.id(),message.roomId(),message.sequence(),message.senderId(),message.senderName(),message.clientMessageId(),message.body(),message.createdAt(),tags,mentions);
     }
     public void annotate(Message message,List<String> tags,Collection<String> mentions) {
+        indexMessage(message.id(), message.body());
         for(String tag:tags) {
             jdbc.update("INSERT INTO chat_tag(name) VALUES (?) ON DUPLICATE KEY UPDATE name=?",tag,tag);
             jdbc.update("INSERT INTO chat_message_tag(message_id,tag_id) SELECT ?,id FROM chat_tag WHERE name=?",message.id(),tag);
@@ -100,5 +102,34 @@ public class ChatRepository {
     }
     public void signal(String room, String type) {
         jdbc.update("INSERT INTO chat_outbox(room_id,event_type) VALUES (?,?)",room,type);
+    }
+    public void indexMessage(String id, String body) {
+        // Idempotent across application instances; all writes share the caller's transaction.
+        jdbc.update("INSERT IGNORE INTO chat_search_document(message_id,normalized_body) VALUES (?,?)",id,ChatSearch.normalize(body));
+        var grams = ChatSearch.grams(body);
+        jdbc.batchUpdate("INSERT IGNORE INTO chat_search_gram(gram,message_id) VALUES (?,?)", grams, 500, (ps, gram) -> { ps.setString(1, gram); ps.setString(2, id); });
+    }
+    public Page<InboxItem> search(String user,String query,String roomId,String before,int limit) {
+        var grams = ChatSearch.queryGrams(query);
+        var args = new java.util.ArrayList<Object>(); args.add(grams.get(0)); args.add(user);
+        var sql = new StringBuilder(MESSAGES + "JOIN chat_search_gram g ON g.message_id=m.id AND g.gram=? JOIN chat_search_document d ON d.message_id=m.id JOIN chat_member cm ON cm.room_id=m.room_id AND cm.user_id=? AND cm.left_at IS NULL ");
+        sql.append("WHERE LOCATE(?,d.normalized_body)>0 "); args.add(query);
+        if(roomId!=null) { sql.append("AND m.room_id=? "); args.add(roomId); }
+        if(before!=null) { sql.append("AND m.id<? "); args.add(before); }
+        for(int i=1;i<grams.size();i++) { sql.append("AND EXISTS(SELECT 1 FROM chat_search_gram probe WHERE probe.gram=? AND probe.message_id=m.id) "); args.add(grams.get(i)); }
+        sql.append("ORDER BY m.id DESC LIMIT ?"); args.add(limit+1);
+        var rows=jdbc.query(sql.toString(),MESSAGE,args.toArray());
+        boolean more=rows.size()>limit;
+        var page=rows.subList(0,Math.min(limit,rows.size()));
+        // Resolve each room once per result page, rather than computing unread counts per hit.
+        var names = new java.util.HashMap<String,String>();
+        var results = page.stream().map(message -> new InboxItem(decorate(message),names.computeIfAbsent(message.roomId(),id -> jdbc.queryForObject("SELECT COALESCE(name,'개인 대화') FROM chat_room WHERE id=?",String.class,id)),false)).toList();
+        return new Page<>(results,more?page.get(page.size()-1).id():null,more);
+    }
+    public List<Person> visiblePeople(String viewer,List<String> ids) {
+        if(ids.isEmpty()) return List.of();
+        String placeholders=String.join(",",java.util.Collections.nCopies(ids.size(),"?"));
+        var args=new java.util.ArrayList<Object>(); args.add(viewer); args.addAll(ids);
+        return jdbc.query("SELECT DISTINCT p.user_id,u.nickname FROM chat_member self JOIN chat_member p ON p.room_id=self.room_id AND p.left_at IS NULL JOIN chat_user u ON u.user_id=p.user_id WHERE self.user_id=? AND self.left_at IS NULL AND p.user_id IN ("+placeholders+")",(rs,i)->new Person(rs.getString(1),rs.getString(2)),args.toArray());
     }
 }

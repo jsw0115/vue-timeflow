@@ -1,9 +1,9 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import Modal from '../../components/Modal.vue'
+import { openPostComposer } from '../../store/appState'
 import ListFilterBar from '../../components/ListFilterBar.vue'
-import { ddays, isPast, togglePin, addDday, removeDday, NOTIFY_OPTIONS, notifyLabel } from '../../store/ddays'
+import { ddays, isPast, togglePin, removeDday, notifyLabel } from '../../store/ddays'
 
 /**
  * D-Day 관리 — 목록 화면(/dday)과 같은 ddays 스토어를 쓴다.
@@ -42,23 +42,7 @@ const visible = computed(() => {
   })
 })
 
-const showModal = ref(false)
-const draft = ref({ title: '', category: '개인', date: '', notifyDays: [1] })
-function openModal() {
-  draft.value = { title: '', category: '개인', date: '', notifyDays: [1] }
-  showModal.value = true
-}
-function toggleNotify(days) {
-  const list = draft.value.notifyDays
-  const i = list.indexOf(days)
-  if (i >= 0) list.splice(i, 1)
-  else list.push(days)
-}
-function create() {
-  if (!draft.value.title.trim()) return
-  addDday({ ...draft.value, title: draft.value.title.trim(), notifyDays: [...draft.value.notifyDays] })
-  showModal.value = false
-}
+function openModal() { openPostComposer('D-Day') }
 function remove(d) {
   if (!window.confirm('‘' + d.title + '’ D-Day를 삭제할까요?')) return
   removeDday(d.id)
@@ -102,14 +86,4 @@ function remove(d) {
     <p v-if="!visible.length" class="form-note" style="margin: 12px 0 0">조건에 맞는 D-Day가 없어요.</p>
   </section>
 
-  <Modal v-if="showModal" title="D-Day 추가" @close="showModal = false">
-    <label>제목<input v-model="draft.title" placeholder="예: 여행 출발일" autofocus /></label>
-    <label>날짜<input v-model="draft.date" type="date" /></label>
-    <label>카테고리<select v-model="draft.category"><option>개인</option><option>업무</option><option>가족</option><option>건강</option><option>공부</option></select></label>
-    <div class="section-label">알림 시점</div>
-    <div class="filter" style="width: fit-content; flex-wrap: wrap; margin-top: 6px">
-      <button v-for="o in NOTIFY_OPTIONS" :key="o.days" type="button" :class="{ selected: draft.notifyDays.includes(o.days) }" @click="toggleNotify(o.days)">{{ o.label }}</button>
-    </div>
-    <button class="primary" @click="create">D-Day 추가하기</button>
-  </Modal>
 </template>

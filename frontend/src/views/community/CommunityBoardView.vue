@@ -1,11 +1,8 @@
 <script setup>
-import { ref } from 'vue'
 import { communityPosts as posts } from '../../store/communityPosts'
 import SubPageHeader from '../../components/SubPageHeader.vue'
-import Modal from '../../components/Modal.vue'
-import TagMentionInput from '../../components/TagMentionInput.vue'
+import { openPostComposer } from '../../store/appState'
 import RichText from '../../components/RichText.vue'
-import { addPost, parseTags } from '../../store/tagging'
 
 const COMMUNITY_TABS = [
   { label: '커뮤니티 홈', path: '/community/home' },
@@ -15,23 +12,6 @@ const COMMUNITY_TABS = [
   { label: '채팅', path: '/community/chat' },
 ]
 
-const showPost = ref(false)
-const draft = ref('')
-function submitPost() {
-  if (!draft.value.trim()) return
-  posts.value.unshift({
-    id: Math.max(0, ...posts.value.map((p) => p.id)) + 1,
-    name: '김지수',
-    time: '방금',
-    body: draft.value.trim(),
-    auto: false,
-    likes: 0,
-    comments: 0,
-    liked: false,
-  })
-  draft.value = ''
-  showPost.value = false
-}
 function toggleLike(p) {
   p.liked = !p.liked
   p.likes += p.liked ? 1 : -1
@@ -40,7 +20,7 @@ function toggleLike(p) {
 
 <template>
   <SubPageHeader title="인증 게시판" parent="운동 갓생방 커뮤니티" fallback="/community" :tabs="COMMUNITY_TABS">
-    <template #actions><button class="primary" @click="showPost = true">+ 인증하기</button></template>
+    <template #actions><button class="primary" @click="openPostComposer('커뮤니티 글')">+ 인증하기</button></template>
   </SubPageHeader>
 
   <section :id="`post-${p.id}`" class="card feed-post" v-for="p in posts" :key="p.id">
@@ -56,10 +36,4 @@ function toggleLike(p) {
     </div>
   </section>
 
-  <Modal v-if="showPost" title="인증하기" @close="showPost = false">
-    <label>오늘의 인증</label>
-    <TagMentionInput v-model="draft" placeholder="무엇을 해냈는지 짧게 적어주세요. #태그 와 @이름 을 쓸 수 있어요" />
-    <p class="form-note">플래너에 기록된 활동이 있으면 자동 인증 배지가 함께 달려요.</p>
-    <button class="primary" @click="submitPost">인증 올리기</button>
-  </Modal>
 </template>

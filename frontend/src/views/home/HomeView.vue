@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { tasks, routines, events, openPostComposer, toggle, toggleRoutine, isRoutineToday } from '../../store/appState'
 import { localDate } from '../../utils/postValidation.mjs'
+import { eventOccurrences } from '../../utils/recurrence.mjs'
 import { modeState, modeContent } from '../../store/modeProfiles'
 import { dashboardState, WIDGET_CATALOG, cycleSize, toggleVisible, moveWidget, resetLayout } from '../../store/dashboard'
 
@@ -43,7 +44,7 @@ const todayRoutines = computed(() => routines.value.filter((r) => isRoutineToday
 const doneRate = computed(() => tasks.value.length ? Math.round(tasks.value.filter(x => x.done).length / tasks.value.length * 100) : 0)
 const routineDone = computed(() => todayRoutines.value.filter(r => r.done).length)
 const routinePercent = computed(() => todayRoutines.value.length ? Math.round(routineDone.value / todayRoutines.value.length * 100) : 0)
-const todayEvents = computed(() => events.value.filter(e => e.startDate <= localDate() && e.endDate >= localDate()).sort((a, b) => a.startTime.localeCompare(b.startTime)))
+const todayEvents = computed(() => eventOccurrences(events.value, localDate(), localDate()).sort((a, b) => a.startTime.localeCompare(b.startTime)))
 const pendingTasks = computed(() => tasks.value.filter(t => !t.done).length)
 function shiftWidget(id, direction) {
   const index = visibleWidgets.value.findIndex(w => w.id === id)

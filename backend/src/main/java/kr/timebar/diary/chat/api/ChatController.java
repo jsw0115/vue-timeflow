@@ -6,6 +6,7 @@ import kr.timebar.diary.chat.application.ChatService;
 import kr.timebar.diary.chat.domain.ChatModels.*;
 import kr.timebar.diary.chat.infrastructure.redis.ChatEphemeral;
 import kr.timebar.diary.chat.infrastructure.redis.ChatEventHub;
+import kr.timebar.diary.chat.infrastructure.jdbc.ChatSearchBackfill;
 import kr.timebar.diary.common.ApiResponse;
 import kr.timebar.diary.security.CurrentUser;
 import kr.timebar.diary.security.JwtTokenProvider;
@@ -28,17 +29,20 @@ public class ChatController {
     public record SendMessage(@NotBlank String clientMessageId,@NotBlank @Size(max=4000) String body,@Size(max=19) List<@NotBlank String> mentionUserIds) {}
     public record Read(@NotNull @Min(0) Long sequence) {}
     public record Owner(@NotBlank String userId) {}
+    public record ActiveClient(@NotBlank @Pattern(regexp="[0-9a-fA-F-]{36}") String clientId,boolean active) {}
     
     private final ChatService service;
     private final ChatEphemeral redis;
     private final ChatEventHub hub;
     private final JwtTokenProvider tokens;
+    private final ChatSearchBackfill searchIndex;
     
-    public ChatController(ChatService service,ChatEphemeral redis,ChatEventHub hub,JwtTokenProvider tokens) {
+    public ChatController(ChatService service,ChatEphemeral redis,ChatEventHub hub,JwtTokenProvider tokens,ChatSearchBackfill searchIndex) {
         this.service=service;
         this.redis=redis;
         this.hub=hub;
         this.tokens=tokens;
+        this.searchIndex=searchIndex;
     }
     
     /**
@@ -90,9 +94,27 @@ public class ChatController {
      * @param id
      * @return
       */
-    @GetMapping("/rooms/{id}") 
+    @GetMapping("/rooms/{id}")
     public ApiResponse<Room> room(@PathVariable String id) {
         return ApiResponse.ok(service.room(CurrentUser.id(),id));
+    }
+    @GetMapping("/search")
+    public ApiResponse<SearchPage<InboxItem>> search(@RequestParam String q,@RequestParam(required=false) String roomId,@RequestParam(required=false) String before,@RequestParam(defaultValue="50") int limit) {
+        String user=CurrentUser.id(); redis.limit(user,"search",120,60);
+        var result=service.search(user,q,roomId,before,limit);
+        return ApiResponse.ok(new SearchPage<>(result.items(),result.nextCursor(),result.hasNext(),searchIndex.isIndexing()));
+    }
+    @PutMapping("/presence")
+    public ResponseEntity<Void> presence(@Valid @RequestBody ActiveClient body) {
+        String user=CurrentUser.id(); service.active(user); redis.limit(user,"presence",30,60);
+        redis.presence(user,body.clientId(),body.active());
+        return ResponseEntity.noContent().build();
+    }
+    @GetMapping("/presence")
+    public ApiResponse<List<Presence>> presence(@RequestParam List<String> userIds) {
+        String user=CurrentUser.id(); redis.limit(user,"presence-read",60,60);
+        var people=service.visiblePeople(user,userIds);
+        return ApiResponse.ok(people.stream().map(person->new Presence(person.id(),person.nickname(),redis.isActive(person.id()))).toList());
     }
 
     /**

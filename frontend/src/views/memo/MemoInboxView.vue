@@ -3,12 +3,10 @@ import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { isAutomationOn } from '../../store/automations'
 import Modal from '../../components/Modal.vue'
-import TagMentionInput from '../../components/TagMentionInput.vue'
 import RichText from '../../components/RichText.vue'
-import { addPost } from '../../store/tagging'
 import ListFilterBar from '../../components/ListFilterBar.vue'
 import { memos } from '../../store/writing'
-import { tasks } from '../../store/appState'
+import { tasks, openPostComposer } from '../../store/appState'
 
 const route = useRoute()
 const router = useRouter()
@@ -37,31 +35,7 @@ const visibleMemos = computed(() => {
 })
 
 /* ---------- 메모 작성 모달 ---------- */
-const showEditor = ref(false)
-const editorMode = ref('텍스트')
-const draftTitle = ref('')
-const draftBody = ref('')
-// 제목은 필수, 내용은 선택
-const canCreateMemo = computed(() => draftTitle.value.trim().length > 0)
-function openEditor() {
-  draftTitle.value = ''
-  draftBody.value = ''
-  editorMode.value = '텍스트'
-  showEditor.value = true
-}
-function createMemo() {
-  if (!canCreateMemo.value) return
-  const id = Math.max(0, ...memos.value.map((m) => m.id)) + 1
-  memos.value.unshift({
-    id,
-    title: draftTitle.value.trim(),
-    body: draftBody.value.trim(),
-    time: '방금',
-    color: '',
-    actionable: true,
-  })
-  showEditor.value = false
-}
+function openEditor() { openPostComposer('메모') }
 watch(() => route.query.new, (v) => { if (v) openEditor() }, { immediate: true })
 
 /* ---------- 할 일 변환 모달 ---------- */
@@ -125,24 +99,7 @@ function convertToTasks() {
     <p v-if="visibleMemos.length === 0">조건에 맞는 메모가 없어요.</p>
   </div>
 
-  <Modal v-if="showEditor" title="메모 작성" @close="showEditor = false">
-    <div class="tabs" style="width: fit-content; margin-bottom: 12px">
-      <button type="button" :class="{ selected: editorMode === '텍스트' }" @click="editorMode = '텍스트'">텍스트</button>
-      <button type="button" :class="{ selected: editorMode === '음성' }" @click="editorMode = '음성'">음성</button>
-    </div>
-    <template v-if="editorMode === '텍스트'">
-      <label>제목 <small style="color: var(--color-muted)">(필수)</small>
-        <input v-model="draftTitle" placeholder="예: 디자인 리뷰 아이디어" autofocus @keydown.ctrl.enter="createMemo" />
-      </label>
-      <label>내용 <small style="color: var(--color-muted)">(선택)</small></label>
-      <TagMentionInput v-model="draftBody" placeholder="자세한 내용을 적어보세요. #태그 와 @이름 을 쓸 수 있어요" />
-    </template>
-    <p v-else class="form-note" style="margin: 0">음성 입력은 마이크 권한이 필요해요. 지금은 텍스트 탭에서 먼저 작성해주세요.</p>
-    <p v-if="editorMode === '텍스트' && !canCreateMemo" class="form-note">제목을 입력하면 저장할 수 있어요.</p>
-    <button class="primary" :disabled="editorMode === '텍스트' && !canCreateMemo" @click="createMemo">메모 저장</button>
-  </Modal>
-
-  <Modal v-if="showConvert" title="할 일로 변환" wide @close="showConvert = false">
+<Modal v-if="showConvert" title="할 일로 변환" wide @close="showConvert = false">
     <p class="form-note" style="margin: 0 0 10px">메모에서 실행 가능한 문장을 뽑았어요. 필요한 항목만 골라 할 일로 옮기세요.</p>
     <section class="card" style="box-shadow: none; margin-bottom: 12px">
       <span class="pill">원본 메모</span>
@@ -153,8 +110,12 @@ function convertToTasks() {
       <span style="flex: 1"><b>{{ c.title }}</b></span>
     </label>
     <p v-if="candidates.length === 0">변환할 만한 문장을 찾지 못했어요.</p>
-    <button class="primary" :disabled="!candidates.some((c) => c.checked)" @click="convertToTasks">
+
+    <template #footer>
+      <button type="button" class="modal-secondary" @click="showConvert = false">취소</button>
+      <button class="primary" :disabled="!candidates.some((c) => c.checked)" @click="convertToTasks">
       선택한 {{ candidates.filter((c) => c.checked).length }}건 할 일로 변환
-    </button>
+          </button>
+    </template>
   </Modal>
 </template>

@@ -187,9 +187,13 @@ function download(kind) {
 
     <p v-if="notice" class="badge warn" style="display: inline-block">{{ notice }}</p>
     <p class="form-note">PDF는 인쇄 창에서 ‘PDF로 저장’을 선택하면 돼요. Word는 .doc 파일로 바로 내려받아요.</p>
-    <div class="form-row">
+
+    <template #footer>
+      <button type="button" class="modal-secondary" @click="showCreate = false">취소</button>
+      <div class="form-row">
       <button class="primary" style="flex: 1" :disabled="!canCreate" @click="download('pdf')">PDF로 내보내기</button>
       <button class="review" style="margin: 0; flex: 1" :disabled="!canCreate" @click="download('word')">Word로 내보내기</button>
-    </div>
+          </div>
+    </template>
   </Modal>
 </template>

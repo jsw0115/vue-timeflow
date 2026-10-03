@@ -12,7 +12,9 @@ import { modeState, modeMeta } from './store/modeProfiles'
 import GlobalSearchModal from './components/GlobalSearchModal.vue'
 import ProfileModal from './components/ProfileModal.vue'
 import SidePanel from './components/SidePanel.vue'
-import { togglePanel, unreadChats, unreadNotifications } from './store/people'
+import FloatingChat from './features/chat/components/FloatingChat.vue'
+import PlannerViewSettings from './components/PlannerViewSettings.vue'
+import { togglePanel, unreadNotifications } from './store/people'
 import { hasUnreadMentions } from './features/chat/model/chatStore'
 import { unreadMentions as unreadPostMentions } from './store/tagging'
 
@@ -26,6 +28,7 @@ const pageTitle = computed(() => {
   return route.meta?.title ?? ''
 })
 function isNavActive(item) {
+  if (item.path === '/planner') return ['/planner', '/planner/daily', '/planner/weekly', '/planner/monthly', '/planner/yearly'].includes(route.path)
   return route.path === item.path
 }
 
@@ -50,6 +53,12 @@ function isGroupCollapsed(label) {
   return collapsedGroups.has(label)
 }
 function toggleGroup(label) {
+  if (label === '플래너') {
+    collapsedGroups.delete(label)
+    persistCollapsedGroups()
+    void router.push('/planner')
+    return
+  }
   if (collapsedGroups.has(label)) collapsedGroups.delete(label)
   else collapsedGroups.add(label)
   persistCollapsedGroups()
@@ -91,7 +100,7 @@ function openAdmin(path) {
 const workspaceOpen = ref(false)
 function changeMode(mode) { modeState.activeMode = mode; workspaceOpen.value = false }
 function openComposer() {
-  const kind = route.path.startsWith('/tasks') ? '할 일' : route.path.startsWith('/diary') ? '다이어리' : route.path.startsWith('/memos') ? '메모' : '일정'
+  const kind = route.path.startsWith('/tasks') ? '할 일' : route.path.startsWith('/diary') ? '다이어리' : route.path.startsWith('/memos') ? '메모' : route.path.startsWith('/routines') ? '루틴' : route.path.startsWith('/money') ? '머니로그' : route.path.startsWith('/dday') || route.path === '/events/dday' ? 'D-Day' : route.path === '/community/board' ? '커뮤니티 글' : route.path === '/work/wiki' ? '업무 위키' : route.path === '/work/wbs' ? '업무 기록' : '일정'
   openPostComposer(kind)
 }
 watch(() => route.path, () => { mobileNav.value = false; workspaceOpen.value = false })
@@ -115,7 +124,7 @@ const todayLabel = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'full' }).forma
             {{ group.label }}<i class="chev">›</i>
           </button>
           <template v-if="!isGroupCollapsed(group.label)">
-            <template v-for="item in group.items" :key="item.path">
+            <template v-for="item in group.items.filter(item => !['/chat', '/planner'].includes(item.path))" :key="item.path">
               <router-link :to="item.path" custom v-slot="{ navigate }">
                 <button :class="{ active: isNavActive(item) }" @click="item.path === '/community/new' ? (communityComposer = true) : navigate(); mobileNav = false">
                   <span class="nav-icon">{{ item.icon }}</span><span class="nav-text">{{ item.name }}</span>
@@ -149,9 +158,6 @@ const todayLabel = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'full' }).forma
         <div><p class="eyebrow">{{ route.name === '홈' ? todayLabel : 'TIMEBAR WORKSPACE' }}</p><h1>{{ pageTitle }}</h1></div>
         <div class="actions">
           <button class="icon" title="통합 검색" @click="goSearch">⌕</button>
-          <button class="icon icon-badge chat-trigger" title="채팅 열기" aria-label="채팅 열기" @click="togglePanel('chat')">
-            ✉<em v-if="unreadChats">{{ unreadChats }}</em>
-          </button>
           <button class="icon icon-badge" title="알림" @click="togglePanel('notif')">
             ◔<em v-if="unreadNotifications">{{ unreadNotifications }}</em>
           </button>
@@ -164,7 +170,9 @@ const todayLabel = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'full' }).forma
         </div>
       </header>
       <p v-if="storageWarning" class="callout" role="alert">{{ storageWarning }}</p>
-      <router-view />
+      <PlannerViewSettings v-if="['/planner/daily', '/planner/weekly', '/planner/monthly', '/planner/yearly'].includes(route.path)" />
+      <p v-if="route.path === '/chat'" class="callout">채팅은 이동 가능한 대화 버튼에서 열 수 있어요.</p>
+      <router-view v-else />
     </main>
     <GlobalSearchModal v-if="showSearch" @close="showSearch = false" />
     <SidePanel />
@@ -172,4 +180,5 @@ const todayLabel = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'full' }).forma
     <PostComposer v-if="composer" />
     <CommunityCreateModal v-if="communityComposer" @close="communityComposer = false" />
   </div>
+  <FloatingChat />
 </template>

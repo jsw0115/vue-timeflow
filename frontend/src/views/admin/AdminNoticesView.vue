@@ -106,6 +106,10 @@ function remove(n) {
     </div>
     <p v-if="error" class="form-note">{{ error }}</p>
     <p class="form-note">등록하면 '종료됨' 상태로 저장돼요. 검수 후 노출로 바꿔주세요.</p>
-    <button class="primary" :disabled="Boolean(error)" @click="save">{{ editing === 'new' ? '등록하기' : '변경 저장' }}</button>
+
+    <template #footer>
+      <button type="button" class="modal-secondary" @click="editing = null">취소</button>
+      <button class="primary" :disabled="Boolean(error)" @click="save">{{ editing === 'new' ? '등록하기' : '변경 저장' }}</button>
+    </template>
   </Modal>
 </template>

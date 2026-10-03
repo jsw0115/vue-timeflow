@@ -13,10 +13,6 @@ const router = useRouter()
     <button aria-label="다음 달" @click="shift('month', 1)">›</button>
     <button class="review" style="margin: 0; padding: 5px 10px" @click="goToday">이번 달</button>
     <span></span>
-    <button @click="router.push('/planner')">일간</button>
-    <button @click="router.push('/planner/weekly')">주간</button>
-    <button class="selected">월간</button>
-    <button @click="router.push('/planner/yearly')">연간</button>
   </div>
   <div class="planner">
     <section class="card">

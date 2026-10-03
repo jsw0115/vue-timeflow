@@ -125,6 +125,10 @@ function alarmLabel(min) {
       <button v-for="c in COLORS" :key="c" type="button" class="cat-swatch tpl-dot" :class="[c, { picked: draft.color === c }]" @click="draft.color = c"></button>
     </div>
     <p v-if="!canSave" class="form-note">이름을 입력하고 소요 시간을 1분 이상으로 설정해주세요.</p>
-    <button class="primary" :disabled="!canSave" @click="save">{{ editing === 'new' ? '저장하기' : '변경 저장' }}</button>
+
+    <template #footer>
+      <button type="button" class="modal-secondary" @click="editing = null">취소</button>
+      <button class="primary" :disabled="!canSave" @click="save">{{ editing === 'new' ? '저장하기' : '변경 저장' }}</button>
+    </template>
   </Modal>
 </template>

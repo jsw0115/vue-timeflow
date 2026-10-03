@@ -1,6 +1,8 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { localDate } from '../../utils/postValidation.mjs'
+import { eventOccurrences } from '../../utils/recurrence.mjs'
 import { events, tasks } from '../../store/appState'
 import { ddays, isPast } from '../../store/ddays'
 import { posts, ME } from '../../store/tagging'
@@ -11,7 +13,7 @@ import { posts, ME } from '../../store/tagging'
  */
 const router = useRouter()
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
-const TODAY = '2026-09-06'
+const TODAY = localDate()
 
 const cursor = ref(new Date(TODAY))
 const selected = ref(TODAY)
@@ -28,7 +30,7 @@ function toggleKind(id) {
 }
 
 function iso(d) {
-  return d.toISOString().slice(0, 10)
+  return localDate(d)
 }
 function shiftMonth(delta) {
   const d = new Date(cursor.value)
@@ -41,21 +43,6 @@ function goToday() {
 }
 const monthLabel = computed(() => cursor.value.getFullYear() + '년 ' + (cursor.value.getMonth() + 1) + '월')
 
-/** 날짜 문자열이 없는 목업 데이터를 이 달 기준으로 해석한다 */
-function eventDate(e, index) {
-  const base = new Date(cursor.value.getFullYear(), cursor.value.getMonth(), 1)
-  const m = String(e.date ?? '').match(/(\d{1,2})\/(\d{1,2})/)
-  if (m) return iso(new Date(cursor.value.getFullYear(), Number(m[1]) - 1, Number(m[2])))
-  if (String(e.date ?? '').includes('오늘')) return TODAY
-  base.setDate(base.getDate() + ((index * 5) % 27))
-  return iso(base)
-}
-function ddayDate(d) {
-  const m = String(d.date ?? '').match(/(\d{1,2})월\s*(\d{1,2})일/)
-  if (!m) return null
-  return iso(new Date(cursor.value.getFullYear(), Number(m[1]) - 1, Number(m[2])))
-}
-
 /** 날짜 → 항목 목록 */
 const itemsByDate = computed(() => {
   const map = new Map()
@@ -64,13 +51,19 @@ const itemsByDate = computed(() => {
     if (!map.has(date)) map.set(date, [])
     map.get(date).push(item)
   }
-  if (on.value.event) events.value.forEach((e, i) => add(eventDate(e, i), { kind: 'event', title: e.title, meta: e.category ?? e.tag ?? '', link: '/events' }))
-  if (on.value.dday) ddays.value.forEach((d) => add(ddayDate(d), { kind: 'dday', title: d.title, meta: d.dday, link: '/dday/' + d.id }))
+  if (on.value.event) {
+    const from = iso(new Date(cursor.value.getFullYear(), cursor.value.getMonth(), -6)), to = iso(new Date(cursor.value.getFullYear(), cursor.value.getMonth() + 1, 7))
+    for (const event of eventOccurrences(events.value, from, to)) {
+      const date = new Date((event.startDate < from ? from : event.startDate) + 'T12:00:00')
+      while (iso(date) <= event.endDate && iso(date) <= to) {
+        add(iso(date), { kind: 'event', title: event.title, meta: event.category ?? event.tag ?? '', link: '/events' })
+        date.setDate(date.getDate() + 1)
+      }
+    }
+  }
+  if (on.value.dday) ddays.value.forEach((d) => add(d.date, { kind: 'dday', title: d.title, meta: d.dday, link: '/dday/' + d.id }))
   if (on.value.task) {
-    tasks.value.forEach((t, i) => {
-      const d = new Date(cursor.value.getFullYear(), cursor.value.getMonth(), ((i * 7) % 27) + 1)
-      add(iso(d), { kind: 'task', title: t.title, meta: t.done ? '완료' : t.category, link: '/tasks/' + t.id, done: t.done })
-    })
+    tasks.value.forEach(t => add(t.date, { kind: 'task', title: t.title, meta: t.done ? '완료' : t.category, link: '/tasks/' + t.id, done: t.done }))
   }
   if (on.value.post) posts.value.filter((p) => p.author === ME).forEach((p) => add(p.at, { kind: 'post', title: p.title, meta: p.kind, link: p.link }))
   return map

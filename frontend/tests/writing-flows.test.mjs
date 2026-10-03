@@ -165,3 +165,80 @@ test('WBS 업무 기록: 연차·반차·외근·출장·이직 유형별 상세
   assert.notEqual(workRecordError({...valid,type:'이직'}),'')
   assert.equal(workRecordError({...valid,type:'이직',toCompany:'테스트회사',role:'개발자'}),'')
 })
+
+test('통합 작성: 종류별 검증·저장과 다른 종류 초안의 독립성', async () => {
+  const { postKinds, makePostDraft, postDraftError, savePostDraft } = await load('store/postComposer.js')
+  const state = await load('store/appState.js'), writing = await load('store/writing.js')
+  const { moneyEntries } = await load('store/money.js'), { workRecords } = await load('store/workRecords.js')
+  const { communityPosts } = await load('store/communityPosts.js'), { ddays } = await load('store/ddays.js')
+  const { plannerReviews } = await load('store/plannerReviews.js'), { wiki } = await load('store/wiki.js')
+  const collections = [state.events, state.tasks, state.routines, writing.diaries, writing.memos, moneyEntries, workRecords, communityPosts, ddays, plannerReviews]
+  const backup = collections.map(list => [...list.value]), wikiBackup = [...wiki.docs]
+  const counts = () => [...collections.map(list => list.value.length), wiki.docs.length]
+  try {
+    for (const kind of postKinds) {
+      const invalid = makePostDraft(kind), before = counts()
+      assert.notEqual(postDraftError(kind, invalid), '', kind)
+      assert.equal(savePostDraft(kind, invalid), false, kind)
+      assert.deepEqual(counts(), before, kind + ' invalid draft must not save')
+      const valid = { ...makePostDraft(kind), title: '통합 작성 검증', body: '내용 #통합검증', amount: 12000 }
+      assert.equal(postDraftError(kind, valid), '', kind)
+      assert.equal(savePostDraft(kind, valid), true, kind)
+    }
+    assert.equal(moneyEntries.value[0].amount, -12000)
+    assert.deepEqual(state.routines.value[0].goal, { count: 1, unit: '회' })
+    assert.equal(workRecords.value[0].type, '연차')
+    assert.equal(savePostDraft('잘못된 종류', makePostDraft('일정')), false)
+    assert.notEqual(postDraftError('머니로그', { ...makePostDraft('머니로그'), title: '금액', amount: NaN }), '')
+    assert.notEqual(postDraftError('D-Day', { ...makePostDraft('D-Day'), title: '날짜', date: '2026-02-30' }), '')
+    const first = makePostDraft('루틴'), second = makePostDraft('루틴')
+    first.days.pop(); first.attendeeIds.push(42)
+    assert.equal(second.days.length, 7)
+    assert.deepEqual(second.attendeeIds, [])
+  } finally { collections.forEach((list, i) => list.value = backup[i]); wiki.docs = wikiBackup }
+})
+
+test('플래너: 기본 보기 저장, 유효하지 않은 값 거부, 기본 경로 반환', async () => {
+  const { defaultPlannerView, plannerLanding, setDefaultPlannerView } = await load('store/plannerPreferences.js')
+  const before = defaultPlannerView.value
+  try {
+    setDefaultPlannerView('weekly')
+    assert.equal(plannerLanding(), '/planner/weekly')
+    assert.equal(cache.get('timebar.planner.default-view'), 'weekly')
+    setDefaultPlannerView('unknown')
+    assert.equal(defaultPlannerView.value, 'weekly')
+    setDefaultPlannerView('daily')
+    assert.equal(plannerLanding(), '/planner/daily')
+  } finally { setDefaultPlannerView(before) }
+})
+
+test('통합 작성 모달: 확장 가능한 종류 선택, 입력 스크롤 구역, 외부 폼 제출·취소 버튼 렌더링', async () => {
+  const state = await load('store/appState.js')
+  state.openPostComposer('루틴')
+  const html = await render('components/PostComposer.vue')
+  assert.match(html, /modal-toolbar/)
+  assert.match(html, /modal-body/)
+  assert.match(html, /modal-footer/)
+  const { postKinds } = await load('store/postComposer.js')
+  const selector = html.slice(html.indexOf('composer-kind-select'), html.indexOf('</select>'))
+  assert.equal((selector.match(/<option/g) || []).length, postKinds.length)
+  assert.doesNotMatch(html, /role="tab"/)
+  assert.ok(html.indexOf('</form>') < html.indexOf('modal-footer'))
+  assert.match(html.slice(html.indexOf('modal-footer')), /type="submit" form="[^"]+"/)
+  assert.match(html.slice(html.indexOf('modal-footer')), /취소/)
+})
+
+test('메신저: 대화 목록과 말풍선·참여자·전송 입력창을 같은 컴포넌트에서 렌더링', async () => {
+  const { chat, selectRoom } = await load('features/chat/model/chatStore.js')
+  const selected = chat.selectedId
+  try {
+    await selectRoom('preview-group')
+    const html = await render('features/chat/views/ChatWorkspace.vue', { embedded: true, active: true })
+    assert.match(html, /chat-messenger/)
+    assert.match(html, /chat-message-avatar/)
+    assert.match(html, /aria-label="대화 목록으로"/)
+    assert.match(html, /aria-label="메시지 보내기"/)
+    assert.match(html, /aria-label="메시지 검색"/)
+    assert.doesNotMatch(html, /<nav[^>]*class="chat-nav"/)
+  } finally { chat.selectedId = selected }
+})

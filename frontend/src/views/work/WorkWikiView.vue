@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue'
+import { openPostComposer } from '../../store/appState'
 import Modal from '../../components/Modal.vue'
 import HelpPopover from '../../components/HelpPopover.vue'
 import ListFilterBar from '../../components/ListFilterBar.vue'
@@ -44,8 +45,7 @@ function empty(parentId = null) {
   return { space: filters.value.space === '전체' ? WIKI_SPACES[0] : filters.value.space, title: '', body: '', parentId }
 }
 function openAdd(parentId = null) {
-  editing.value = 'new'
-  draft.value = empty(parentId)
+  openPostComposer('업무 위키', '', empty(parentId))
 }
 function openEdit(doc) {
   editing.value = doc.id
@@ -193,7 +193,7 @@ function pickTag(tag) {
     </aside>
   </div>
 
-  <Modal v-if="editing" :title="editing === 'new' ? '새 문서' : '문서 수정'" wide @close="editing = null">
+  <Modal v-if="editing" :title="editing === 'new' ? '새 문서' : '문서 수정'" :edit-resource="editing !== 'new' ? 'wiki:' + editing : ''" wide @close="editing = null">
     <label>제목<input v-model="draft.title" placeholder="예: 배포 절차" autofocus /></label>
     <div class="form-row">
       <label style="flex: 1">공간<select v-model="draft.space"><option v-for="s in WIKI_SPACES" :key="s">{{ s }}</option></select></label>
@@ -207,6 +207,10 @@ function pickTag(tag) {
     <label>본문</label>
     <TagMentionInput v-model="draft.body" :rows="10" placeholder="문서 내용을 적어주세요. #태그 와 @이름 을 쓸 수 있어요" />
     <p v-if="!canSave" class="form-note">제목을 입력하면 저장할 수 있어요.</p>
-    <button class="primary" :disabled="!canSave" @click="save">{{ editing === 'new' ? '문서 만들기' : '변경 저장' }}</button>
+
+    <template #footer>
+      <button type="button" class="modal-secondary" @click="editing = null">취소</button>
+      <button class="primary" :disabled="!canSave" @click="save">{{ editing === 'new' ? '문서 만들기' : '변경 저장' }}</button>
+    </template>
   </Modal>
 </template>

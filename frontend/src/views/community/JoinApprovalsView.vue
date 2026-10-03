@@ -87,6 +87,10 @@ function revert(r) {
   <Modal v-if="rejecting" title="가입 거절" @close="rejecting = null">
     <p class="form-note" style="margin-top: 0">{{ rejecting.name }}님의 신청을 거절해요. 사유는 신청자에게 전달됩니다.</p>
     <label>거절 사유<textarea v-model="rejectReason" placeholder="예: 이번 기수 모집이 마감되었어요" autofocus></textarea></label>
-    <button class="primary" @click="confirmReject">거절 처리</button>
+
+    <template #footer>
+      <button type="button" class="modal-secondary" @click="rejecting = null">취소</button>
+      <button class="primary" @click="confirmReject">거절 처리</button>
+    </template>
   </Modal>
 </template>

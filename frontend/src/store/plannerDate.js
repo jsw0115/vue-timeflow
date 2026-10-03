@@ -1,4 +1,5 @@
 import { computed, ref } from 'vue'
+import { localDate } from '../utils/postValidation.mjs'
 
 /**
  * 플래너 기간 이동 — 일/주/월/연 화면이 같은 기준일을 공유한다.
@@ -6,7 +7,7 @@ import { computed, ref } from 'vue'
  */
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
 
-export const cursor = ref(new Date('2026-08-15'))
+export const cursor = ref(new Date())
 
 function clone(d) {
   return new Date(d.getTime())
@@ -20,7 +21,7 @@ export function shift(unit, delta) {
   cursor.value = d
 }
 export function goToday() {
-  cursor.value = new Date('2026-08-15')
+  cursor.value = new Date()
 }
 
 /** 그 주의 월요일 */
@@ -57,7 +58,7 @@ export const monthGrid = computed(() => {
     const d = clone(start)
     d.setDate(d.getDate() + i)
     cells.push({
-      key: d.toISOString().slice(0, 10),
+      key: localDate(d),
       date: d.getDate(),
       out: d.getMonth() !== cursor.value.getMonth(),
       // 기록 강도는 날짜에서 결정적으로 만들어 화면이 흔들리지 않게 한다
@@ -73,6 +74,6 @@ export const weekDays = computed(() => {
   return Array.from({ length: 7 }, (_, i) => {
     const d = clone(from)
     d.setDate(d.getDate() + i)
-    return { key: d.toISOString().slice(0, 10), label: WEEKDAYS[d.getDay()], date: d.getDate() }
+    return { key: localDate(d), label: WEEKDAYS[d.getDay()], date: d.getDate() }
   })
 })

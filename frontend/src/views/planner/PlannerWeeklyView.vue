@@ -29,10 +29,6 @@ const top5 = [
     <button aria-label="다음 주" @click="shift('week', 1)">›</button>
     <button class="review" style="margin: 0; padding: 5px 10px" @click="goToday">이번 주</button>
     <span></span>
-    <button @click="router.push('/planner')">일간</button>
-    <button class="selected">주간</button>
-    <button @click="router.push('/planner/monthly')">월간</button>
-    <button @click="router.push('/planner/yearly')">연간</button>
   </div>
   <div class="planner">
     <section class="card">
