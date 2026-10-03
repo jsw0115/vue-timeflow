@@ -30,3 +30,5 @@ CHAT-16의 `q`는 1~100자이며 NFKC·소문자로 정규화한다. `limit`은 
 CHAT-17 요청은 `{ clientId: UUID, active: boolean }`이다. 화면에서 메신저를 열고 앱이 보일 때만 활성으로 갱신하며, 클라이언트별 상태가 35초 후 만료된다. 다른 탭에서 활성화한 클라이언트가 있으면 사용자 전체 상태는 계속 활성이다. CHAT-18의 `userIds`는 쉼표로 구분한 최대 100개의 ID다. 현재 함께 참여하는 방의 사용자만 `{ userId, nickname, active }`로 반환한다. Redis 조회 실패 시 프런트엔드는 상태를 알 수 없다고 표시한다.
 
 정확한 요청·응답은 [설계서](design.md), Redis 명령/채널 단위 API는 [Redis API 목록서](../redis/api-catalog.md)에 분리했다. 서버 실행 시 `/v3/api-docs`에서도 실제 컨트롤러 계약을 조회할 수 있다.
+
+계정 `userId`/`memberIds`/`mentionUserIds`는 ULID 26자와 기존 UUID 36자를 모두 지원한다. 방·메시지 ID는 기존 ULID를 유지한다. chat V4는 계정 참조 폭을 36자, DM pair key를 73자로 확장하며 기존 FK를 복원한다. 실제 MySQL의 UUID/ULID DM 중복 방지·멘션·검색과 Redis 활성 상태를 [복구 검증](../../development/database-recovery-2026-10-03.md)에서 확인했다.

@@ -28,6 +28,10 @@ public class JwtTokenProvider {
 
     public JwtTokenProvider(JwtProperties properties) {
         this.properties = properties;
+        if (properties.getSecret() == null
+                || properties.getSecret().getBytes(StandardCharsets.UTF_8).length < 32) {
+            throw new IllegalStateException("JWT_SECRET를 UTF-8 32바이트 이상으로 설정해주세요.");
+        }
         this.key = Keys.hmacShaKeyFor(properties.getSecret().getBytes(StandardCharsets.UTF_8));
     }
 

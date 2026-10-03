@@ -39,7 +39,7 @@ public class TaskService {
 
     @Transactional
     public TaskResponse update(String userId, String taskId, TaskRequest request) {
-        TaskEntity entity = findOwned(userId, taskId);
+        TaskEntity entity = lockOwned(userId, taskId);
         entity.applyUpdate(request.title(), request.note(), request.priority(), request.energyLevel(),
                 request.durationMin() == null ? entity.getDurationMin() : request.durationMin(), request.due(),
                 request.categoryId(), request.categoryName(), request.categoryColor(), request.categoryIcon());
@@ -48,12 +48,13 @@ public class TaskService {
 
     @Transactional
     public void delete(String userId, String taskId) {
-        findOwned(userId, taskId).softDelete();
+        // Checklist changes lock the same parent, so deletion cannot race an item insertion.
+        lockOwned(userId, taskId).softDelete();
     }
 
     @Transactional
     public TaskResponse toggleStatus(String userId, String taskId) {
-        TaskEntity entity = findOwned(userId, taskId);
+        TaskEntity entity = lockOwned(userId, taskId);
         entity.toggleStatus();
         return TaskResponse.from(entity);
     }
@@ -74,5 +75,10 @@ public class TaskService {
             throw new ApiException(ErrorCode.FORBIDDEN);
         }
         return entity;
+    }
+
+    private TaskEntity lockOwned(String userId, String taskId) {
+        return taskRepository.findOwnedForUpdate(taskId, userId)
+                .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND, "할 일을 찾을 수 없습니다."));
     }
 }

@@ -1,0 +1,18 @@
+{
+  "date": "2026-10-03",
+  "sourceOperations": 117,
+  "implementationCompleted": 10,
+  "previouslyConnected": 50,
+  "serviceConnected": 60,
+  "stub": 52,
+  "inMemory": 5,
+  "chat": 18,
+  "redisHttp": 10,
+  "target": 169,
+  "originalTargetsPreserved": 114,
+  "missing": [],
+  "duplicates": [],
+  "checkedLinks": 380,
+  "runtimeOperations": 117,
+  "verificationScope": "Static source/document consistency; completion labels reference separate unit/MockMvc tests, not live DB verification"
+}

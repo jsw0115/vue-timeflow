@@ -8,6 +8,7 @@ import kr.timebar.diary.chat.infrastructure.redis.ChatEphemeral;
 import kr.timebar.diary.chat.infrastructure.redis.ChatEventHub;
 import kr.timebar.diary.chat.infrastructure.jdbc.ChatSearchBackfill;
 import kr.timebar.diary.common.ApiResponse;
+import kr.timebar.diary.common.UserIdentifier;
 import kr.timebar.diary.security.CurrentUser;
 import kr.timebar.diary.security.JwtTokenProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -25,7 +26,7 @@ import java.util.List;
 @RequestMapping("/api/chat")
 @ConditionalOnProperty(name="app.chat.enabled",havingValue="true")
 public class ChatController {
-    public record CreateRoom(@NotBlank String kind,@Size(max=80) String name,@NotEmpty @Size(max=19) List<@NotNull @Pattern(regexp="[0-9A-HJKMNP-TV-Z]{26}") String> memberIds) {}
+    public record CreateRoom(@NotBlank String kind,@Size(max=80) String name,@NotEmpty @Size(max=19) List<@NotNull @Pattern(regexp=UserIdentifier.PATTERN) String> memberIds) {}
     public record SendMessage(@NotBlank String clientMessageId,@NotBlank @Size(max=4000) String body,@Size(max=19) List<@NotBlank String> mentionUserIds) {}
     public record Read(@NotNull @Min(0) Long sequence) {}
     public record Owner(@NotBlank String userId) {}

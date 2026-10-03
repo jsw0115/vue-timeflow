@@ -55,4 +55,11 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
-tasks.named('test') { useJUnitPlatform() }
+tasks.named('test') {
+    useJUnitPlatform()
+    // Convention tests read source text, so whitespace-only edits must invalidate the test cache too.
+    inputs.files(fileTree('src/main/java') {
+        include 'kr/timebar/diary/task/checklist/**/*.java'
+        include 'kr/timebar/diary/planner/preferences/**/*.java'
+    }).withPropertyName('conventionSourceFiles').withPathSensitivity(PathSensitivity.RELATIVE)
+}

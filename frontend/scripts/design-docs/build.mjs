@@ -6,6 +6,7 @@ import { schemas, helpers } from './model.mjs'
 import { endpoints, groups, domainRules } from './endpoints.mjs'
 import { generateCurrent } from './current.mjs'
 import { generateDatabase } from './database.mjs'
+import { API_DOCUMENT_DATE } from '../api-status.mjs'
 const root = path.resolve(process.argv[2] ?? fileURLToPath(new URL('../../../', import.meta.url)))
 if (!existsSync(path.join(root,'backend/src/main/java/kr/timebar/diary'))) throw Error('Expected Timeflow project root')
 const check=process.argv.includes('--check')
@@ -24,6 +25,12 @@ if (process.argv.includes('--current-only')) {
   console.log((check ? 'Verified' : 'Generated') + ' current API contracts')
   process.exit(0)
 }
+let currentOperations
+generateCurrent(root, (file, value) => {
+  if (file.endsWith('current-operations.json')) currentOperations = JSON.parse(value)
+})
+const currentCount = currentOperations.length
+const chatCount = currentOperations.filter(operation => operation.controller === 'ChatController').length
 const json=value=>JSON.stringify(value,null,2)
 const cell=value=>String(value??'—').replaceAll('|','&#124;').replaceAll('\n',' ')
 const resolve=s=>s?.$ref?schemas[s.$ref.split('/').at(-1)]:s
@@ -156,9 +163,9 @@ const oldIds=[...oldCatalog.matchAll(/^\| ([A-Z]+-\d+) \|/gm)].map(m=>m[1])
 for(const id of oldIds) if(!endpoints.some(e=>e.id===id)) throw Error('Missing original API '+id)
 if(new Set(endpoints.map(e=>e.id)).size!==endpoints.length) throw Error('Duplicate operation ID')
 output('docs/api-info/openapi.target.json',json(spec))
-let catalog='# 전체 목표 API 목록\n\n기준 2026-09-26 · 전부 설계/미구현. 기존 '+oldIds.length+'개 범위 보존, 추가 '+(endpoints.length-oldIds.length)+'개, 총 '+endpoints.length+'개. 앞부분은 /api/v1.\n\n| ID | Method | Path | 기능 | 상세 문서 |\n|---|---|---|---|---|\n'
-for(const e of endpoints) catalog+=`| ${e.id} | ${e.method} | ${e.path} | ${e.summary} | [${groups[e.group][1]}](${groups[e.group][0]}.md#${e.id.toLowerCase()}) |\n`
-catalog=catalog.replace('\n\n','\n\n> 2026-09-27 현재 구현은 [104개 소스 API 목록](../api/current-api-inventory.md)을 따른다. 새 [채팅 15개](../chat/api/catalog.md) 및 [Redis 연동 목록](../chat/redis/api-catalog.md)은 `/api/chat` 기준으로 별도 관리한다. 아래 169개는 `/api/v1` 목표 계약이며 구현 API 수와 합산하지 않는다.\n\n')
+let catalog='# 전체 목표 API 목록\n\n기준 2026-09-26 설계 · 구현 상태 갱신 '+API_DOCUMENT_DATE+' · 전부 설계/미구현. 기존 '+oldIds.length+'개 범위 보존, 추가 '+(endpoints.length-oldIds.length)+'개, 총 '+endpoints.length+'개. 앞부분은 /api/v1.\n\n| ID | Method | Path | 기능 | 상세 문서 | 구현 상태 |\n|---|---|---|---|---|---|\n'
+for(const e of endpoints) catalog+=`| ${e.id} | ${e.method} | ${e.path} | ${e.summary} | [${groups[e.group][1]}](${groups[e.group][0]}.md#${e.id.toLowerCase()}) | 설계 · 미구현 |\n`
+catalog=catalog.replace('\n\n',`\n\n> ${API_DOCUMENT_DATE} 현재 구현은 [${currentCount}개 소스 API 목록](../api/current-api-inventory.md)을 따른다. [채팅 ${chatCount}개](../chat/api/catalog.md) 및 [Redis 연동 목록](../chat/redis/api-catalog.md)은 /api/chat 기준으로 별도 관리한다. 아래 ${endpoints.length}개는 /api/v1 목표 계약이며 구현 API 수와 합산하지 않는다.\n\n`)
 output('docs/api-info/catalog.md',catalog)
 for(const [index,[filename,label]] of groups.entries()) {
   const list=endpoints.filter(e=>e.group===index)
@@ -186,7 +193,7 @@ for(const [index,[filename,label]] of groups.entries()) {
     doc+=e.status===204?'응답 본문 없음. JSON 파싱하지 않습니다.\n':(e.status===202?'접수 상태이며 완료 여부는 작업 조회 API로 확인합니다. ':'')+'응답 헤더 및 구조는 아래와 같습니다.\n\n'+Object.entries(spec.paths[e.path][e.method.toLowerCase()].responses[e.status].headers).map(([k,v])=>'- '+k+': '+v.description).join('\n')+'\n\n'+fieldTable(e.successSchema)+'\n\n```json\n'+json(e.responseExample)+'\n```\n'
     doc+='\n### 오류와 처리\n\n| HTTP | code | 원인 | 클라이언트 해결 방법 |\n|---|---|---|---|\n'+e.errorCodes.map(code=>{const [status,cause,solution]=errorCatalog[code];return `| ${status} | ${code} | ${cause} | ${solution} |`}).join('\n')+'\n'
   }
-  if(index===6) doc=doc.replace('\n\n','\n\n> 2026-09-27: 실제 구현한 `/api/chat` 기능은 [채팅 전용 문서](../chat/README.md)를 따른다. 이 문서의 `/api/v1` 초대·차단·공유 목표 계약은 아직 구현되지 않았으며 현재 채팅 계약과 다르다.\n\n')
+  if(index===6) doc=doc.replace('\n\n',`\n\n> ${API_DOCUMENT_DATE}: 실제 구현한 /api/chat ${chatCount}개 기능은 [채팅 전용 문서](../chat/README.md)를 따른다. 이 문서의 /api/v1 초대·차단·공유 목표 계약은 아직 구현되지 않았으며 현재 채팅 계약과 다르다.\n\n`)
   output('docs/api-info/'+filename+'.md',doc)
 }
 output('docs/api-info/errors.md','# 오류 코드·예외 처리 사전\n\n**목표 /api/v1 계약**. 현재 /api는 error.code를 직렬화하지 않습니다. [현재 계약](current-contract.md)과 구분하세요.\n\n| HTTP | error.code | 원인 | 해결 방법 |\n|---|---|---|---|\n'+Object.entries(errorCatalog).map(([code,[status,cause,solution]])=>`| ${status} | ${code} | ${cause} | ${solution} |`).join('\n')+'\n\n## 오류 응답 예시\n\n```json\n'+json(spec.paths['/events'].post.responses[422].content['application/json'].examples.INVALID_RANGE.value)+'\n```\n\n파라미터 오류에는 원문 비밀번호/토큰/SQL/파일 경로를 넣지 않습니다. 401 재발급은 단일 실행 잠금으로 묶고, 403/404/409/412는 자동 반복하지 않습니다. 429/503은 Retry-After와 지수 backoff+jitter, 최대 시도 수를 적용합니다. 202 작업의 실제 실패는 조회 응답 status=FAILED와 errorCode로 표현합니다.\n')

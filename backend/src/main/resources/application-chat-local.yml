@@ -6,12 +6,14 @@ spring:
     username: timeflow_chat
     password: ${CHAT_DEV_DB_PASSWORD:local-chat-only}
   flyway:
-    locations: classpath:db/chat-local-core
+    locations: classpath:db/chat-local-core,classpath:db/core,classpath:db/workspace
   data:
     redis:
       host: 127.0.0.1
       port: 16389
 app:
+  database:
+    expected-schema: timeflow_chat_dev
   cors:
     allowed-origins: http://localhost:5173,http://127.0.0.1:5173,http://127.0.0.1:15173
   chat:

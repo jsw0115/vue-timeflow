@@ -26,7 +26,7 @@ public class TaskEntity {
     @Column(length = 26)
     private String id;
 
-    @Column(name = "user_id", nullable = false, length = 26)
+    @Column(name = "user_id", nullable = false, length = 36)
     private String userId;
 
     @Column(nullable = false, length = 200)

@@ -1,16 +1,17 @@
 # 현재 API 명세 — 구현 상태 기준
 
-2026-09-25. 이 문서는 기존 /api의 실제 소스 계약이며 목표 /api/v1과 다르다.
+2026-09-25 기존 계약 요약, 구현 상태 갱신 2026-10-03. 이 문서는 기존 /api의 실제 소스 계약이며 목표 /api/v1과 다르다. 최신 전체 DTO는 [자동 생성 상세 계약](../api-info/current-contract.md)을 따른다.
 전체 메서드·경로는 [자동 생성 목록](current-api-inventory.md), 신규 범위는 [API 목록서](api-catalog.md)를 참고한다.
 
-2026-09-27 추가: 현행 컨트롤러는 104개이며 채팅 15개가 추가되었다. [채팅 API 목록·상세 계약](../chat/api/catalog.md)을 함께 따른다. 채팅 생성은 200, 그룹 나가기·입력 중은 204, SSE는 text/event-stream이며 아래 기존 일반 규칙의 예외다.
+2026-10-03: 현행 컨트롤러는 117개이며 [채팅 18개](../chat/api/catalog.md), [체크리스트·담당자·플래너 설정 신규 10개](task-planner-contract.md)를 포함한다. 신규 10개는 소스·단위·MockMvc HTTP 계약 검증 완료이고 실 DB 통합 검증과 프런트엔드 연결은 별도다. 채팅 생성은 200, 그룹 나가기·입력 중·활성 갱신은 204, SSE는 text/event-stream이며 아래 기존 일반 규칙의 예외다.
 
 ## 공통
 
 응답 ApiResponse<T>: {success:boolean,data:T,message:string|null}. 오류도 같은 3필드이며 목표 설계의 error/meta는 아직 없다.
 JWT: Authorization: Bearer <access-token>. 공개 경로는 /api/auth/signup, /api/auth/login, /api/auth/refresh. logout은 인증 필요.
-POST 생성은 201, 대부분 DELETE는 200+data:null, 단 /api/planner/items/{id} DELETE는 204.
+POST 생성은 보통201, 대부분 기존 DELETE는 200+data:null이다. /api/planner/items/{id}, 신규 체크리스트 항목·담당자 후보 DELETE는204다. 신규 API의 성공 코드는 별도 상세 계약을 따른다.
 실제 DB 기동·영속화·권한 회귀 테스트 성공 여부는 별도 검증해야 한다.
+JSON 형식·enum·경로/쿼리 자료형·필수 쿼리 누락·Bean Validation 오류는400, 낙관적 잠금·DB 동시 변경 충돌은409로 처리한다. 예상하지 못한 실패는 상세 정보를 숨긴500이며 예외 유형·스택 위치를 서버 로그로 남긴다.
 
 ## 인증
 
@@ -46,6 +47,8 @@ PUT/DELETE /{eventId}/following은 해당 날짜 이후 시리즈 수정/종료.
 
 ## 할 일
 
+신규 체크리스트 목록·생성·수정·완료·삭제 5개와 담당자 후보 조회·등록·해제3개는 [상세 계약](task-planner-contract.md)을 따른다. 체크리스트 변경·삭제에는 기대 `version`을 요구한다. 담당자 후보는 본인 또는 소유자가 등록한 활성 계정이며 후보 등록 자체는 공유 읽기·쓰기 권한을 만들지 않는다.
+
 GET /api/tasks는 현재 쿼리 필터가 없는 사용자 전체 목록이다.
 TaskRequest: title 필수; note,priority,energyLevel,durationMin,due,categoryId,categoryName,categoryColor,categoryIcon.
 TaskResponse: id(String),title,note,status,priority,energyLevel,durationMin,due,categoryId,categoryName,categoryColor,categoryIcon.
@@ -61,6 +64,8 @@ PATCH /{routineId}/history/{date}/toggle는 status 선택. 없으면 done→miss
 DELETE /{routineId}/history/{date}는 날짜 기록 삭제.
 
 ## 플래너
+
+GET/PUT /api/planner/preferences는 인증한 본인의 defaultView(DAILY/WEEKLY/MONTHLY/YEARLY), version을 조회·저장한다. 미저장 기본값은 DAILY/version0이며 최초 저장은 version0, 저장 이후는 조회한 최신 version으로 변경한다. 자세한 충돌/권한 계약은 [신규 상세 계약](task-planner-contract.md)을 따른다.
 
 GET daily?date, weekly?start, monthly?year&month, yearly?year → {events:[],tasks:[],routines:[]}.
 GET upcoming?days=7 → EventResponse[].

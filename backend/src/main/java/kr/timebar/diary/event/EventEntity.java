@@ -30,7 +30,7 @@ public class EventEntity extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id", nullable = false, length = 26)
+    @Column(name = "user_id", nullable = false, length = 36)
     private String userId;
 
     @Column(nullable = false)
