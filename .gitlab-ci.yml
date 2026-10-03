@@ -1,13 +1,10 @@
-image: node:22-alpine
-
-pages:
-  stage: deploy
-  script:
-    - cd frontend
-    - npm ci
-    - npm run build -- --base=/$CI_PROJECT_NAME/
-    - mv dist ../public
+# The Docker image that will be used to build your app
+image: timeflow:lts
+create-pages:
   pages:
+    # The folder that contains the files to be exposed at the Page URL
     publish: public
   rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    # This ensures that only pushes to the default branch will trigger
+    # a pages deploy
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
