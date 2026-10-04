@@ -1,0 +1,20 @@
+services:
+  edge:
+    image: caddy:2.10-alpine
+    restart: unless-stopped
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?Set a real DNS domain for HTTPS}
+    ports:
+      - 80:80
+      - 443:443
+      - 443:443/udp
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      web:
+        condition: service_healthy
+volumes:
+  caddy_data:
+  caddy_config:

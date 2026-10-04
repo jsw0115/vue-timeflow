@@ -88,3 +88,7 @@ sketch
 .ionide
 
 package-lock.json
+!/frontend/package-lock.json
+.gradle-ci/
+infra/deploy/backups/
+infra/deploy/.release-state

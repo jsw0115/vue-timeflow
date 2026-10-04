@@ -1,13 +1,79 @@
-image: node:22-alpine
+stages: [verify, package]
 
-pages:
-  stage: deploy
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS && $CI_PIPELINE_SOURCE == "push"'
+      when: never
+    - if: '$CI_COMMIT_BRANCH'
+
+verify_web:
+  stage: verify
+  image: node:22-alpine
+  variables:
+    ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+  cache:
+    key:
+      files: [frontend/package-lock.json]
+    paths: [frontend/.npm/]
   script:
     - cd frontend
-    - npm ci
-    - npm run build -- --base=/$CI_PROJECT_NAME/
-    - mv dist ../public
-  pages:
-    publish: public
+    - npm ci --cache .npm --prefer-offline --no-audit
+    - node --test tests/*.test.mjs
+    - npm run build:web -- --base=/
+    - cd ..
+    - node frontend/scripts/api-inventory.mjs --check
+    - node frontend/scripts/design-docs/build.mjs . --api-only --check
+    - node frontend/scripts/audit-api-docs.mjs --check --date=2026-10-03
+  artifacts:
+    paths: [frontend/dist/]
+    expire_in: 7 days
+
+verify_api:
+  stage: verify
+  image: eclipse-temurin:17-jdk-jammy
+  variables:
+    GRADLE_USER_HOME: "$CI_PROJECT_DIR/.gradle-ci"
+  cache:
+    key: gradle-java17
+    paths: [.gradle-ci/caches/, .gradle-ci/wrapper/]
+  script:
+    - cd backend
+    - sh ./gradlew --no-daemon check bootJar --console=plain
+  artifacts:
+    when: always
+    reports:
+      junit: backend/build/test-results/test/TEST-*.xml
+    paths:
+      - backend/build/libs/timeflow-api-0.1.0.jar
+      - backend/build/reports/tests/test/
+    expire_in: 7 days
+
+package_images:
+  stage: package
+  image:
+    name: moby/buildkit:v0.20.2-rootless
+    entrypoint: [""]
+  variables:
+    BUILDKITD_FLAGS: --oci-worker-no-process-sandbox
+  needs:
+    - job: verify_web
+      artifacts: true
+    - job: verify_api
+      artifacts: true
+  parallel:
+    matrix:
+      - COMPONENT: [web, api]
+  before_script:
+    - mkdir -p ~/.docker
+    - |
+      AUTH=$(printf '%s:%s' "$CI_REGISTRY_USER" "$CI_REGISTRY_PASSWORD" | base64 | tr -d '\n')
+      printf '{"auths":{"%s":{"auth":"%s"}}}\n' "$CI_REGISTRY" "$AUTH" > ~/.docker/config.json
+  script:
+    - |
+      buildctl-daemonless.sh build --frontend dockerfile.v0 \
+        --local context=. --local dockerfile=infra/deploy \
+        --opt filename="Dockerfile.$COMPONENT" \
+        --output "type=image,name=$CI_REGISTRY_IMAGE/$COMPONENT:$CI_COMMIT_SHA,push=true"
   rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'

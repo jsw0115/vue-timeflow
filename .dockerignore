@@ -1,0 +1,12 @@
+# Allow only tested build artifacts and the web server config into image builds.
+**
+!backend/
+!backend/build/
+!backend/build/libs/
+!backend/build/libs/timeflow-api-0.1.0.jar
+!frontend/
+!frontend/dist/
+!frontend/dist/**
+!infra/
+!infra/deploy/
+!infra/deploy/nginx.conf
