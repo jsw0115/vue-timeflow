@@ -2,7 +2,7 @@
 
 2026-10-04. 현재 GitLab 원격 이름은 `gitlab`, 주소는 `https://gitlab.com/githubgroup4094208/vue-timeflow.git`다. `origin`은 GitHub이므로 유지한다. 현재 로컬 브랜치는 `master`이며 GitLab의 실제 기본 브랜치는 프로젝트 설정에서 확인한다.
 
-이 구성은 **GitLab 테스트·이미지 생성 → Linux 릴리스 실행** 방식이다. GitLab 자체에서 Spring Boot·DB를 실행하는 것은 아니다. 원격 푸시·실제 GitLab 파이프라인·운영 서버 배포는 아직 수행하지 않았으며 아래 순서로 반영한다.
+현재 기본 배포는 [GitLab Pages](../gitlab-pages-guide.md)다. 이 문서는 선택적인 GitLab 이미지 생성 → Linux 릴리스 실행 절차다. Linux 이미지가 필요하면 CI 변수 ENABLE_CONTAINER_BUILD=true를 설정한다. 해당 작업은 .gitlab/ci/linux.yml에 분리했다. 원격 푸시·실제 파이프라인·운영 서버 배포는 별도로 진행한다.
 
 ## 1. 추가한 구성
 
@@ -29,7 +29,7 @@ flowchart LR
 | [릴리스](../../scripts/deploy/release.sh), [백업](../../scripts/deploy/backup.sh) | 기존 DB 백업, 이미지 교체, health 대기, 성공한 SHA 기록 |
 | [.dockerignore](../../.dockerignore) | 비밀 파일·원본 소스·로컬 DB 백업을 이미지 컨텍스트에서 제외 |
 
-웹은 루트 `/`에 배포한다. 로그인·채팅 코드는 같은 출처의 `/api`를 호출하므로 VITE_API_BASE_URL을 설정할 필요가 없다. 현재 프런트엔드는 그 변수를 사용하지 않는다. GitLab Pages 대신 Linux 같은 출처 구성을 사용한다. Capacitor/Electron 설치 파일은 이번 파이프라인에서 만들지 않는다.
+Linux 웹은 루트 /에 배포한다. Linux 이미지 빌드는 VITE_API_BASE_URL을 비워 같은 출처의 /api를 사용한다. Pages는 별도 HTTPS API 주소를 VITE_API_BASE_URL로 지정할 수 있다. Capacitor/Electron 설치 파일은 이번 파이프라인에서 만들지 않는다.
 
 현재 관리자 API에는 역할 검사가 없어 Nginx가 `/api/admin`을 차단한다. actuator·Swagger도 외부 프록시에서 차단하고 health는 컨테이너 내부에서 확인한다. 52개 stub·5개 공용 메모리 API와 일부 로컬 저장 기능은 그대로다. 배포 설정이 전체 기능의 서버 연동을 구현하는 것은 아니다. [API 상태](../api/current-api-inventory.md)를 참고한다.
 
@@ -59,7 +59,7 @@ frontend/package-lock.json만 추적 허용으로 변경했다. npm ci에는 이
 1. **Settings → General**에서 기본 브랜치를 확인한다. master를 유지하면 기본 브랜치를 master로 지정한다. 이미 main을 사용한다면 MR을 main에 병합하고 서버 체크아웃도 main으로 맞춘다. 브랜치를 강제로 덮어쓰지 않는다.
 2. **Settings → CI/CD → Runners**에서 Linux Docker executor Runner를 확인한다. 자체 Runner는 rootless BuildKit의 user namespace/mount 시스템 호출을 허용해야 한다. [공식 BuildKit 문서](https://docs.gitlab.com/ci/docker/using_buildkit/)를 참고한다.
 3. Container Registry를 활성화한다. GitLab 버전에 따라 **Deploy → Container Registry** 또는 **Packages & Registries → Container Registry**에서 확인한다.
-4. chore/gitlab-linux-deploy에서 실제 기본 브랜치로 Merge Request를 만든다. verify_web·verify_api 성공 후 병합한다.
+4. ENABLE_CONTAINER_BUILD=true를 설정하고 실제 기본 브랜치로 Merge Request를 만든다. build_pages·build_linux_web·verify_api 성공 후 병합한다.
 5. 기본 브랜치 파이프라인에서 두 package_images 작업까지 성공했는지 확인한다.
 6. Registry에 `web:<40자리 SHA>`, `api:<같은 SHA>`가 생성되었는지 확인한다. latest 대신 정확한 커밋 SHA를 사용한다.
 

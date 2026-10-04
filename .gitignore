@@ -92,3 +92,6 @@ package-lock.json
 .gradle-ci/
 infra/deploy/backups/
 infra/deploy/.release-state
+frontend/.npm/
+frontend/.env.production.local
+/public/

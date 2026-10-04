@@ -1,4 +1,4 @@
-stages: [verify, package]
+stages: [build, verify, package, deploy]
 
 workflow:
   rules:
@@ -7,8 +7,11 @@ workflow:
       when: never
     - if: '$CI_COMMIT_BRANCH'
 
-verify_web:
-  stage: verify
+include:
+  - local: .gitlab/ci/linux.yml
+
+build_pages:
+  stage: build
   image: node:22-alpine
   variables:
     ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
@@ -19,8 +22,8 @@ verify_web:
   script:
     - cd frontend
     - npm ci --cache .npm --prefer-offline --no-audit
-    - node --test tests/*.test.mjs
-    - npm run build:web -- --base=/
+    - npm run build:pages
+    - node --test --test-concurrency=1 tests/*.test.mjs
     - cd ..
     - node frontend/scripts/api-inventory.mjs --check
     - node frontend/scripts/design-docs/build.mjs . --api-only --check
@@ -29,62 +32,19 @@ verify_web:
     paths: [frontend/dist/]
     expire_in: 7 days
 
-verify_api:
-  stage: verify
-  image: eclipse-temurin:17-jdk-jammy
-  variables:
-    GRADLE_USER_HOME: "$CI_PROJECT_DIR/.gradle-ci"
-  cache:
-    key: gradle-java17
-    paths: [.gradle-ci/caches/, .gradle-ci/wrapper/]
-  script:
-    - cd backend
-    - sh ./gradlew --no-daemon check bootJar --console=plain
-  artifacts:
-    when: always
-    reports:
-      junit: backend/build/test-results/test/TEST-*.xml
-    paths:
-      - backend/build/libs/timeflow-api-0.1.0.jar
-      - backend/build/reports/tests/test/
-    expire_in: 7 days
-
-package_images:
-  stage: package
-  image:
-    name: moby/buildkit:v0.20.2-rootless
-    entrypoint: [""]
-  variables:
-    BUILDKITD_FLAGS: --oci-worker-no-process-sandbox
+pages:
+  stage: deploy
+  image: alpine:3.21
   needs:
-    - job: verify_web
+    - job: build_pages
       artifacts: true
-    - job: verify_api
-      artifacts: true
-  parallel:
-    matrix:
-      - COMPONENT: [web, api]
-  before_script:
-    - mkdir -p ~/.docker
-    - |
-      AUTH=$(printf '%s:%s' "$CI_REGISTRY_USER" "$CI_REGISTRY_PASSWORD" | base64 | tr -d '\n')
-      printf '{"auths":{"%s":{"auth":"%s"}}}\n' "$CI_REGISTRY" "$AUTH" > ~/.docker/config.json
   script:
-    - |
-      buildctl-daemonless.sh build --frontend dockerfile.v0 \
-        --local context=. --local dockerfile=infra/deploy \
-        --opt filename="Dockerfile.$COMPONENT" \
-        --output "type=image,name=$CI_REGISTRY_IMAGE/$COMPONENT:$CI_COMMIT_SHA,push=true"
+    - mkdir -p public
+    - cp -a frontend/dist/. public/
+    - test -s public/index.html
+  pages:
+    publish: public
+  artifacts:
+    paths: [public/]
   rules:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-=======
-# The Docker image that will be used to build your app
-image: timeflow:lts
-create-pages:
-  pages:
-    # The folder that contains the files to be exposed at the Page URL
-    publish: public
-  rules:
-    # This ensures that only pushes to the default branch will trigger
-    # a pages deploy
-    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH

@@ -13,6 +13,7 @@
     "demo:mock": "vite --host 127.0.0.1 --open /mock-demo/",
     "build": "vite build",
     "build:web": "vite build",
+    "build:pages": "node scripts/build-pages.mjs",
     "preview": "vite preview",
     "mobile:sync": "npm run build:web && cap sync",
     "android:open": "cap open android",

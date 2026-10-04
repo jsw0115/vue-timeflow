@@ -1,4 +1,5 @@
 import { reactive } from 'vue'
+import { apiEndpoint } from './apiEndpoint.mjs'
 
 const key = 'timeflow.session.v1'
 function restore() {
@@ -13,7 +14,7 @@ function save(value) {
 }
 export function clearSession() { save({}) }
 async function publicRequest(path, body) {
-  const response = await fetch(`/api/auth/${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+  const response = await fetch(apiEndpoint(`/api/auth/${path}`), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
   const payload = await response.json().catch(() => ({}))
   if (!response.ok || !payload.success) throw new Error(payload.message || '서버에 연결하지 못했습니다. 잠시 후 다시 시도해주세요.')
   return payload.data
@@ -36,7 +37,7 @@ async function refresh() {
   return refreshing
 }
 export async function authorizedFetch(url, options = {}) {
-  const run = () => fetch(url, { ...options, headers: { 'Content-Type': 'application/json', ...options.headers, ...(session.accessToken ? { Authorization: `Bearer ${session.accessToken}` } : {}) } })
+  const run = () => fetch(apiEndpoint(url), { ...options, headers: { 'Content-Type': 'application/json', ...options.headers, ...(session.accessToken ? { Authorization: `Bearer ${session.accessToken}` } : {}) } })
   let response = await run()
   if (response.status === 401 && await refresh()) response = await run()
   return response

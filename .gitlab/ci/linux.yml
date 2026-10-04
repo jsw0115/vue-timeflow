@@ -1,0 +1,67 @@
+# Optional Linux container workflow. Pages does not require Java, Docker or registry jobs.
+build_linux_web:
+  stage: build
+  image: node:22-alpine
+  variables:
+    ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+    VITE_API_BASE_URL: ""
+    VITE_DEPLOY_TARGET: linux
+    VITE_ROUTER_MODE: history
+  script:
+    - cd frontend
+    - npm ci --no-audit
+    - npm run build:web -- --base=/
+  artifacts:
+    paths: [frontend/dist/]
+    expire_in: 7 days
+  rules:
+    - if: '$ENABLE_CONTAINER_BUILD == "true"'
+
+verify_api:
+  stage: verify
+  image: eclipse-temurin:17-jdk-jammy
+  variables:
+    GRADLE_USER_HOME: "$CI_PROJECT_DIR/.gradle-ci"
+  cache:
+    key: gradle-java17
+    paths: [.gradle-ci/caches/, .gradle-ci/wrapper/]
+  script:
+    - cd backend
+    - sh ./gradlew --no-daemon check bootJar --console=plain
+  artifacts:
+    when: always
+    reports:
+      junit: backend/build/test-results/test/TEST-*.xml
+    paths: [backend/build/libs/timeflow-api-0.1.0.jar, backend/build/reports/tests/test/]
+    expire_in: 7 days
+  rules:
+    - if: '$ENABLE_CONTAINER_BUILD == "true"'
+
+package_images:
+  stage: package
+  image:
+    name: moby/buildkit:v0.20.2-rootless
+    entrypoint: [""]
+  variables:
+    BUILDKITD_FLAGS: --oci-worker-no-process-sandbox
+  needs:
+    - job: build_linux_web
+      artifacts: true
+    - job: verify_api
+      artifacts: true
+  parallel:
+    matrix:
+      - COMPONENT: [web, api]
+  before_script:
+    - mkdir -p ~/.docker
+    - |
+      AUTH=$(printf '%s:%s' "$CI_REGISTRY_USER" "$CI_REGISTRY_PASSWORD" | base64 | tr -d '\n')
+      printf '{"auths":{"%s":{"auth":"%s"}}}\n' "$CI_REGISTRY" "$AUTH" > ~/.docker/config.json
+  script:
+    - |
+      buildctl-daemonless.sh build --frontend dockerfile.v0 \
+        --local context=. --local dockerfile=infra/deploy \
+        --opt filename="Dockerfile.$COMPONENT" \
+        --output "type=image,name=$CI_REGISTRY_IMAGE/$COMPONENT:$CI_COMMIT_SHA,push=true"
+  rules:
+    - if: '$ENABLE_CONTAINER_BUILD == "true" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
