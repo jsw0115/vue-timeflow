@@ -1,5 +1,7 @@
 # API 문서 읽는 순서
 
+**최신 작업은 [2026-10-10 프런트엔드 기준 API 목록·명세·소스 안내](frontend-backend-2026-10-10/README.md)를 확인하세요.** 아래 2026-10-03의 117개·stub 52개 수치는 당시 기록입니다. 현행 목록은 [자동 생성 목록](current-api-inventory.md)을 따릅니다. 외부 제공자는 추후 결정하며, 이번 요청의 범위는 내부 API 구현과 외부 연동 경계입니다.
+
 2026-10-03: [전체 117개 현행 목록·구현 상태](current-api-inventory.md) · [이번 구현 10개 계약](task-planner-contract.md) · [누락·상태 대조 결과](api-audit-2026-10-03.md) · [채팅 18개](../chat/api/catalog.md) · [Redis 연동](../chat/redis/api-catalog.md).
 
 | 현행 상태 | 개수 | 판정 근거 |

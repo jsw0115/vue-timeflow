@@ -78,7 +78,7 @@ public class AuthService {
         loginThrottleRepository.save(emailThrottle);
         user.recordLogin();
 
-        String accessToken = jwtTokenProvider.createAccessToken(user.getId(), user.getEmail(), user.getRole().name());
+        String accessToken = jwtTokenProvider.createAccessToken(user.getId(), user.getEmail(), user.getRole().name(), user.getAuthVersion());
         String refreshToken = issueRefreshToken(user.getId());
         return new LoginResponse(user.getId(), user.getEmail(), user.getNickname(), user.getRole().name(), accessToken, refreshToken);
     }
@@ -110,7 +110,7 @@ public class AuthService {
         stored.revoke();
         refreshTokenRepository.save(stored);
 
-        String newAccessToken = jwtTokenProvider.createAccessToken(user.getId(), user.getEmail(), user.getRole().name());
+        String newAccessToken = jwtTokenProvider.createAccessToken(user.getId(), user.getEmail(), user.getRole().name(), user.getAuthVersion());
         String newRefreshToken = issueRefreshToken(user.getId());
         return new TokenPairResponse(newAccessToken, newRefreshToken);
     }

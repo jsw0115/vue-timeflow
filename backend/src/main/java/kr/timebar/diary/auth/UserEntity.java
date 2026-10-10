@@ -66,6 +66,9 @@ public class UserEntity {
     @Column(name = "is_enabled")
     private Integer isEnabled;
 
+    @Column(name = "auth_version", nullable = false)
+    private long authVersion;
+
     public UserEntity(String email, String nickname, String passwordHash, UserRole role, UserStatus status) {
         this.id = UlidGenerator.newUlid();
         this.email = email;
@@ -80,11 +83,22 @@ public class UserEntity {
     public void changePassword(String newPasswordHash) {
         this.passwordHash = newPasswordHash;
         this.passwordChangedUtc = LocalDateTime.now();
+        this.authVersion++;
     }
 
     public void changeProfile(String nickname) {
         this.nickname = nickname;
     }
+
+    public void changeTimeZone(String timeZone) { this.timeZone = timeZone; }
+
+    public void changeAdminState(UserRole role, UserStatus status) {
+        this.role = role; this.status = status;
+        this.deletedAt = status == UserStatus.DELETED ? LocalDateTime.now(java.time.ZoneOffset.UTC) : null;
+        this.authVersion++;
+    }
+
+    public void invalidateSessions() { this.authVersion++; }
 
     public void recordLogin() {
         this.lastLoginUtc = LocalDateTime.now();

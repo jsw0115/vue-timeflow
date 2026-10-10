@@ -1,8 +1,9 @@
-export const API_DOCUMENT_DATE = '2026-10-03'
+export const API_DOCUMENT_DATE = '2026-10-10'
 
 export const API_STATUS = Object.freeze({
   completed: '구현 완료 · 단위/HTTP 계약 검증',
-  connected: '기존 구현 · 서비스 연결',
+  connected: '서비스 연결 · 검증 범위 별도',
+  boundary: '외부 제공자 경계 · 연동 대기',
   stub: '미구현 · stub',
   memory: '시연 · 메모리',
 })
@@ -24,8 +25,9 @@ const VERIFIED_OPERATIONS = new Set([
 // Keep this allowlist aligned with dated verification evidence; a future route
 // in the same package must not inherit completion without its own tests.
 export function implementationStatus(controller, source, method, route, stub) {
+  if (controller === 'IntegrationController') return API_STATUS.boundary
   if (stub ?? source.includes('ContractResponses.stub')) return API_STATUS.stub
-  if (controller === 'PlannerController') return API_STATUS.memory
+  if (controller === 'PlannerController' && source.includes('ConcurrentHashMap')) return API_STATUS.memory
   if (VERIFIED_OPERATIONS.has(`${method} ${route}`) &&
       /package kr\.timebar\.diary\.(?:task\.checklist|planner\.preferences)(?:\.|;)/.test(source)) {
     return API_STATUS.completed

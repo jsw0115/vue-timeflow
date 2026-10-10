@@ -36,12 +36,17 @@ public class JwtTokenProvider {
     }
 
     public String createAccessToken(String userId, String email, String role) {
+        return createAccessToken(userId, email, role, 0);
+    }
+
+    public String createAccessToken(String userId, String email, String role, long authVersion) {
         Instant now = Instant.now();
         return Jwts.builder()
                 .setSubject(userId)
                 .setIssuer(properties.getIssuer())
                 .claim("email", email)
                 .claim("role", role)
+                .claim("av", authVersion)
                 .claim("typ", "access")
                 .setIssuedAt(Date.from(now))
                 .setExpiration(Date.from(now.plusSeconds(properties.getAccessTtlSeconds())))

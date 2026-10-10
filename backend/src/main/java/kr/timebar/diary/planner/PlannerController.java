@@ -2,6 +2,7 @@ package kr.timebar.diary.planner;
 
 import jakarta.validation.Valid;
 import kr.timebar.diary.common.ApiResponse;
+import kr.timebar.diary.security.CurrentUser;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -29,7 +30,7 @@ public class PlannerController {
       */
     @GetMapping 
     public ApiResponse<List<PlannerItem>> list(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date, @RequestParam(required = false) PlannerItem.ItemType type, @RequestParam(required = false) String category, @RequestParam(required = false) PlannerItem.ItemStatus status) { 
-        List<PlannerItem> result = service.find(date, type, category, status);
+        List<PlannerItem> result = service.find(CurrentUser.id(), date, type, category, status);
         return ApiResponse.ok(result); 
     }
 
@@ -41,7 +42,7 @@ public class PlannerController {
     @PostMapping 
     @ResponseStatus(HttpStatus.CREATED) public ApiResponse<PlannerItem> create(@Valid @RequestBody PlannerItem item) { 
         
-        PlannerItem result = service.save(item);
+        PlannerItem result = service.save(CurrentUser.id(), item);
         return ApiResponse.ok(result); 
     }
     /**
@@ -53,7 +54,7 @@ public class PlannerController {
     @PutMapping("/{id}") 
     public ApiResponse<PlannerItem> update(@PathVariable long id, @Valid @RequestBody PlannerItem item) { 
         
-        PlannerItem result = service.update(id, item);
+        PlannerItem result = service.update(CurrentUser.id(), id, item);
         return ApiResponse.ok(result); 
     }
 
@@ -66,8 +67,7 @@ public class PlannerController {
     @PatchMapping("/{id}/status") 
     public ApiResponse<PlannerItem> changeStatus(@PathVariable long id, @RequestParam PlannerItem.ItemStatus status) { 
         
-        PlannerItem old = service.find(null, null, null, null).stream().filter(i -> i.id() == id).findFirst().orElseThrow(); 
-        PlannerItem result = service.update(id, new PlannerItem(id, old.type(), old.title(), old.category(), old.date(), old.startTime(), old.endTime(), status, old.dday(), old.note()));
+        PlannerItem result = service.changeStatus(CurrentUser.id(), id, status);
         return ApiResponse.ok(result); 
     }
 
@@ -78,7 +78,7 @@ public class PlannerController {
     @DeleteMapping("/{id}") 
     @ResponseStatus(HttpStatus.NO_CONTENT) 
     public void delete(@PathVariable long id) { 
-        service.delete(id); 
+        service.delete(CurrentUser.id(), id);
     }
 }
 

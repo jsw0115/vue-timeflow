@@ -24,6 +24,9 @@ public class PlannerItemEntity extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "user_id", length = 36)
+    private String userId;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private PlannerItem.ItemType type;
@@ -58,5 +61,17 @@ public class PlannerItemEntity extends BaseTimeEntity {
         this.status = status;
         this.dday = dday;
         this.note = note;
+    }
+
+    public void assignUser(String userId) { this.userId = userId; }
+
+    public void apply(PlannerItem item) {
+        this.type = item.type(); this.title = item.title(); this.category = item.category();
+        this.date = item.date(); this.startTime = item.startTime(); this.endTime = item.endTime();
+        this.status = item.status(); this.dday = item.dday(); this.note = item.note();
+    }
+
+    public PlannerItem response() {
+        return new PlannerItem(id, type, title, category, date, startTime, endTime, status, dday, note);
     }
 }

@@ -5,9 +5,9 @@ Vue 3 + Spring Boot 기반의 시간관리 OS MVP입니다.
 ## 실행
 
 ```bash
-# API (JDK 17+, Maven 필요)
+# API (JDK 17+, Gradle Wrapper 사용)
 cd backend
-mvn spring-boot:run
+./gradlew bootRun
 
 # Web (Node 22.12+, npm 10+)
 cd frontend
@@ -30,4 +30,6 @@ npm run dev
 - 할 일 상태 및 간단한 이월, 루틴 체크/달성률, 메모와 회고
 - Spring Boot의 회원가입/로그인 및 planner CRUD API 골격
 
-확장 기능(AI·음성·소셜·공유)은 API 경계를 분리해 두었고, 외부 제공자 및 개인정보 정책을 정한 뒤 연동하는 것이 안전합니다.
+개인 기록·업무·친구·공유 그룹·커뮤니티·관리자 API 소스를 구현했습니다. AI·음성·결제·외부 캘린더 등은 제공자 결정 전까지 미연결 상태와 503 경계를 반환합니다. 프런트엔드 store의 서버 연결은 별도 작업입니다.
+
+프런트엔드 기능별 API 목록, 실제 구현 스펙, 백엔드 모듈, 외부 연동 경계와 검증 방법은 [2026-10-10 API 문서](docs/api/frontend-backend-2026-10-10/README.md)를 확인하세요. Windows에서는 `gradlew.bat bootRun`을 사용합니다.

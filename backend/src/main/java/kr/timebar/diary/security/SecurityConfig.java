@@ -24,6 +24,7 @@ public class SecurityConfig {
             "/api/auth/signup", "/api/auth/login", "/api/auth/refresh",
             "/v3/api-docs/**", "/demo-ui.html", "/swagger-ui/**",
             "/actuator/health",
+            "/api/public/portfolios/*",
     };
 
     @Bean
@@ -37,7 +38,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtTokenProvider jwtTokenProvider, ObjectMapper objectMapper) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtTokenProvider jwtTokenProvider, ObjectMapper objectMapper, kr.timebar.diary.auth.UserRepository users) throws Exception {
         http
                 .cors(org.springframework.security.config.Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
@@ -45,11 +46,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .dispatcherTypeMatchers(jakarta.servlet.DispatcherType.ASYNC).permitAll()
                         .requestMatchers(PUBLIC_PATHS).permitAll()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .exceptionHandling(handling -> handling
                         .authenticationEntryPoint((request, response, authException) -> writeError(response, objectMapper, ErrorCode.TOKEN_INVALID))
                         .accessDeniedHandler((request, response, accessDeniedException) -> writeError(response, objectMapper, ErrorCode.FORBIDDEN)))
-                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider, users), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 

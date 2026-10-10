@@ -17,9 +17,11 @@ import java.util.List;
 /** Authorization: Bearer 헤더의 액세스 토큰을 검증해 SecurityContext에 인증 정보를 채우는 stateless 필터. */
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtTokenProvider jwtTokenProvider;
+    private final kr.timebar.diary.auth.UserRepository users;
 
-    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider) {
+    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, kr.timebar.diary.auth.UserRepository users) {
         this.jwtTokenProvider = jwtTokenProvider;
+        this.users = users;
     }
 
     @Override
@@ -34,6 +36,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     String userId = claims.getSubject();
                     String email = claims.get("email", String.class);
                     String role = claims.get("role", String.class);
+                    var account = users.findById(userId).orElse(null);
+                    Object rawVersion = claims.get("av");
+                    long version = rawVersion instanceof Number value ? value.longValue() : 0;
+                    if (account == null || !account.isActive() || account.getAuthVersion() != version || !account.getRole().name().equals(role)) {
+                        throw new IllegalArgumentException("폐기되었거나 비활성 계정의 토큰입니다.");
+                    }
                     AuthUserPrincipal principal = new AuthUserPrincipal(userId, email, role);
                     var authentication = new UsernamePasswordAuthenticationToken(
                             principal, null, List.of(new SimpleGrantedAuthority("ROLE_" + role)));

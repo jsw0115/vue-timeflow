@@ -10,6 +10,7 @@ import java.util.Optional;
 
 public interface RefreshTokenRepository extends JpaRepository<RefreshTokenEntity, String> {
     Optional<RefreshTokenEntity> findByTokenHash(String tokenHash);
+    java.util.List<RefreshTokenEntity> findByUserIdOrderByCreatedAtDesc(String userId);
 
     @Modifying
     @Query("update RefreshTokenEntity t set t.revokedAt = :now where t.userId = :userId and t.revokedAt is null")
