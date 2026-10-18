@@ -4,16 +4,18 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import java.time.LocalDate;
 import java.util.List;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import static kr.timebar.diary.planner.QPlannerItemEntity.plannerItemEntity;
 
 @Repository
-@RequiredArgsConstructor
 public class PlannerItemQueryRepositoryImpl implements PlannerItemQueryRepository {
 
     private final JPAQueryFactory queryFactory;
+
+    public PlannerItemQueryRepositoryImpl(JPAQueryFactory queryFactory) {
+        this.queryFactory = queryFactory;
+    }
 
     @Override
     public List<PlannerItemEntity> search(LocalDate date, PlannerItem.ItemType type, String category,
