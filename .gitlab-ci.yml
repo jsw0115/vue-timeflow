@@ -26,8 +26,8 @@ build_pages:
     - node --test --test-concurrency=1 tests/*.test.mjs
     - cd ..
     - node frontend/scripts/api-inventory.mjs --check
-    - node frontend/scripts/design-docs/build.mjs . --api-only --check
-    - node frontend/scripts/audit-api-docs.mjs --check --date=2026-10-03
+    # 현재 구현 계약을 검사하고 과거 목표 설계 스냅샷은 보존한다.
+    - node frontend/scripts/frontend-api-contract.mjs --check
   artifacts:
     paths: [frontend/dist/]
     expire_in: 7 days
