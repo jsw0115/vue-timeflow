@@ -1,5 +1,7 @@
 # Timebar Diary — 디자인 & 기능 구현 가이드
 
+> 과거 설계 기록입니다. 현재 범위·완료 상태·기술 선택은 [프로젝트 정의](planning/project-definition.md), [실제 아키텍처](architecture/system-architecture.md), [WBS](planning/wbs.md)를 기준으로 합니다. 이 문서의 Phase 완료·기술 제안을 현재 구현 사실로 사용하지 않습니다.
+
 > 기준일: 2026-08-21
 > 원본 자료: `/mnt/e/vscode-proj/timeflow 앱웹.xlsx` (문서 버전 2.1, 2026-02-16 수정) — 시트 `화면 목록서 및 기능 목록서`(89개 화면 / 약 300개 기능), `APP 컨셉`, `MVP 핵심 기능`
 > 이 문서의 역할: xlsx는 **무엇을 만들지**(기획 원본)를 담고 있다. 이 문서는 **이 저장소 기준으로 어떤 순서·구조로 만들지**를 정리한 실행 가이드다. 기존 `docs/product-spec-v2.md`는 초기 MVP 스코프 기준이라 범위가 좁다 — xlsx의 커뮤니티/채팅/실시간/감사로그 확장분을 반영해 로드맵을 다시 정렬했다.

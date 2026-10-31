@@ -1,5 +1,7 @@
 # 설계 단계 문서 안내
 
+> 보존 기록입니다. 본문의 현행은 2026-09-26 당시 소스 분석을 뜻합니다. 2026-10-31 현재 기준은 [전체 문서](../README.md), [시스템 구조](../architecture/system-architecture.md), [실제 DB 정의](../database/current-database.md), [최신 API](../api/README.md)입니다. 아래의 37개 V1·169개 목표 API를 현재 설치로 사용하지 않습니다.
+
 기준일: 2026-09-26. 현재 소스의 사실과 향후 구현 제안을 분리했습니다. 도표는 Mermaid 지원 Markdown 뷰어에서 렌더링됩니다.
 
 | 문서 | 내용 |

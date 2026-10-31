@@ -1,50 +1,60 @@
-# Timeflow documentation
+# Timebar Diary 전체 문서
 
-## AI 커리어·연구 성장 기능 설계 · 2026-10-31
+작성일 2026-10-31. 수정일 2026-10-31. 한국어 Markdown을 기준 원문으로 관리합니다. 현재 구현·향후 제안·과거 증거·생성 산출물을 구분합니다.
 
-[제품 설계 시작점](product/ai-growth-2026-10-31/README.md)에서 시장과 미래 업무·사용자 분석, 앱 경험과 유료화, AI 서버·데이터·API·단계별 구현 계획을 확인하세요. 현재 구현과 제안, 기관 전망과 제품 가설을 구분해 작성했습니다.
+## 목차
 
-## 신규 개발자용 한국어 Word 안내서
+- [역할별 읽는 순서](#역할별-읽는-순서)
+- [기획·개발·운영 기준 문서](#기획개발운영-기준-문서)
+- [날짜·버전·품질 관리](#날짜버전품질-관리)
+- [과거 기록과 배포본](#과거-기록과-배포본)
 
-[주제별 Word 문서 시작점](handbook/README.md)에서 로컬 실행, 배포, 프로젝트 구조, 버전과 릴리스 이력, 기능 명세를 확인하세요. 생성일과 수정일, 목차는 Word 필드로 갱신할 수 있습니다. 소스 기준일은 2026년 10월 31일이며 현재 API 계약과 로컬 저장 및 미연결 기능을 구분합니다.
+## 역할별 읽는 순서
 
-## Redis 채팅 구현 · 2026-09-27
+신규 개발자는 도구/환경 → 로컬 실행 → 구조 → 기능/화면 → DB/API → 코드 규칙 → 테스트를 읽습니다. 기획자는 범위/RFP → 요구 → 사업 → 화면/흐름 → WBS → 릴리스, 운영자는 환경/서버 설치 → DB → Linux/Pages → 배포 검수 → 운영 순서로 읽습니다.
 
-- [채팅 문서 시작점](chat/README.md) — 구현 범위, 모듈 구조, 실행 및 검증
-- [채팅 MySQL DB 설계](chat/database/design.md) · [채팅 API 목록](chat/api/catalog.md) · [API 상세 설계](chat/api/design.md)
-- [Redis 데이터 설계](chat/redis/database-design.md) · [Redis 연동 API 목록](chat/redis/api-catalog.md)
+## 기획·개발·운영 기준 문서
 
-채팅 문서는 실제 추가된 기능을 설명합니다. 아래의 기존 목표 설계와 구분하여 참고하세요.
+| 주제 | 기준 문서 |
+| --- | --- |
+| 개발 범위·프로젝트 정의·RFP | [프로젝트 정의](planning/project-definition.md) |
+| 요구사항·요청 명세·수용 기준 | [요구사항과 추적](planning/requirements.md) |
+| 사업·고객·수익·원가·실험 | [사업 계획](planning/business-plan.md) |
+| 작업·일정·의존·역할·검수 | [WBS](planning/wbs.md) |
+| 시스템 구성도·기술 스택 | [시스템 아키텍처](architecture/system-architecture.md) |
+| 모듈·인터페이스·트랜잭션 | [모듈 설계](architecture/modules-and-interfaces.md) |
+| 기능별 현재 동작·권한·한계 | [기능 명세](handbook/source/05-기능-명세서.md) |
+| 화면·와이어프레임·UI/UX 흐름 | [화면 명세](product/screen-design.md) · [실제 경로 목록](product/screen-catalog.md) |
+| ERD·전체 테이블·컬럼·키·인덱스 | [현재 DB 정의](database/current-database.md) |
+| DB·Redis·마이그레이션·보존 | [DB 환경](database/environment.md) |
+| API 목록·상세 계약·OpenAPI | [API 시작점](api/README.md) |
+| 용어·테이블·컬럼·변수 명명 | [용어 사전](standards/glossary.md) |
+| 코딩·리뷰·품질·커밋 규칙 | [코딩 표준](standards/coding-standards.md) |
+| 필수 도구·서버·환경변수·호스트 설치 | [환경 준비](development/environments.md) |
+| 로컬 웹·DB·API·앱 실행 | [로컬 실행 가이드](handbook/source/01-로컬-실행-가이드.md) |
+| 파일·폴더·변경 시작점 | [프로젝트 구조](handbook/source/03-프로젝트-구조.md) |
+| 개발/운영 Linux·이미지·HTTPS·복구 | [Linux 설치·배포](deployment/gitlab-cicd.md) |
+| 정적 웹 게시 | [GitLab Pages](gitlab-pages-guide.md) |
+| 출시 검수·중단·배포 기록 | [배포 계획](deployment/release-plan.md) |
+| 사용자·운영·장애·데이터 요청 | [운영 매뉴얼](operations/runbook.md) |
+| AI 시장·사용자·유료화·AI 서버 제안 | [AI 설계 묶음](product/ai-growth-2026-10-31/README.md) |
+| 포트폴리오·기능·기술·증거·저장소 | [포트폴리오](portfolio/README.md) |
 
-## 2026-09-26 설계 단계 상세 문서
+## 날짜·버전·품질 관리
 
-- [시스템 구성도·DB/ERD·외부 인터페이스 설계](design/README.md)
-- [9-API: 169개 목표 API 상세 계약](api-info/README.md) — 요청 URL/메서드/헤더/파라미터, 요청·응답 예시, 오류 원인·조치
-- [현행 104개 API와 구현 상태](api-info/current-contract.md) — 서비스 연결 47, stub 52, 메모리 시연 5
-- [현재 DDL의 이름 불일치·데이터 교체 위험](design/04-schema-gaps.md) — V1 재실행 전 확인 필수
+- [버전별 변경·릴리스 노트](releases/README.md).
+- [날짜별 개선·버그·문서 체크리스트](releases/backlog.md).
+- [테스트 계획·케이스·실행 명령](quality/test-plan.md).
+- [트러블슈팅·문제 해결](development/troubleshooting.md).
+- [문서 기준·중복 통합·갱신 규칙](project/document-register.md).
+- [이번 통합 작업 검증](development/documentation-system-2026-10-31/verification.md).
 
-현재 구현과 목표 설계는 다릅니다. 새 문서는 기능 구현 또는 DB 변경을 의미하지 않습니다.
+개발 중 추가·수정은 원장 등록 → 요구·영향·목표 버전 결정 → 해당 기준 문서와 WBS 갱신 → 구현·실행 검증 → 완료일·배포일 기록으로 관리합니다. 날짜가 지난 계획을 자동 완료하지 않습니다.
 
-- `development/`: local setup and quality checks
-- `deployment/`: production and GitLab CI/CD release guides
-- `architecture/`: client, API, and database boundaries
-- `product/`: feature scope and screen design
-- `database/`: table and migration design
-- `api/`: API design and endpoint specification
+## 과거 기록과 배포본
 
-Executable DDL is in `backend/src/main/resources/db/migration/`.
+[2026-10-31 실제 실행 검증](development/documentation-2026-10-31/verification.md), [2026-10-10 API 작업](api/frontend-backend-2026-10-10/README.md), [채팅 구현·검증](chat/README.md)은 해당 날짜·모듈의 증거입니다.
 
+[2026-09 설계 묶음](design/README.md)과 [목표 API 기록](api-info/README.md), [40개 목표 DB 설계](database/timeflow-database-design.md)는 현재 구현의 대체 기준이 아닙니다. 과거 목표를 현재 DB에 실행하지 않습니다.
 
-## 2026-09-25 API·플랫폼 설계
-
-- [API 목록서](api/api-catalog.md)
-- [API 설계서](api/api-design.md)
-- [현재 소스 API 목록](api/current-api-inventory.md)
-- [로컬 PC·모바일 실행](development/local-platforms.md)
-- [플랫폼 화면 설계](product/platform-preview-design.md)
-- [추가 기능 설계](product/api-enhancements.md)
-- [3단계 검증 기록](quality/review-2026-09-25.md)
-
-## 화면·작성 흐름 개선
-
-- [UI 변경 내역·사용법·검증 기록](product/ui-interaction-update-2026-09-25.md)
+[Word 안내서 6개](handbook/README.md)는 날짜·목차 필드를 갱신할 수 있는 배포본입니다. 이번 확장 문서는 Mermaid·텍스트 와이어프레임으로 유지보수하므로 추가 이미지 문서·Word 원문을 복제하지 않았습니다.

@@ -1,26 +1,38 @@
-# API 문서 읽는 순서
+# 현재 API 명세 안내
 
-**최신 작업은 [2026-10-10 프런트엔드 기준 API 목록·명세·소스 안내](frontend-backend-2026-10-10/README.md)를 확인하세요.** 아래 2026-10-03의 117개·stub 52개 수치는 당시 기록입니다. 현행 목록은 [자동 생성 목록](current-api-inventory.md)을 따릅니다. 외부 제공자는 추후 결정하며, 이번 요청의 범위는 내부 API 구현과 외부 연동 경계입니다.
+작성일 2026-10-31. 수정일 2026-10-31. 현재 기준은 소스에서 생성한 **277개 operation·190개 schema**입니다. 과거 104개·117개·169개 목표 계약은 현재 수치가 아닙니다.
 
-2026-10-03: [전체 117개 현행 목록·구현 상태](current-api-inventory.md) · [이번 구현 10개 계약](task-planner-contract.md) · [누락·상태 대조 결과](api-audit-2026-10-03.md) · [채팅 18개](../chat/api/catalog.md) · [Redis 연동](../chat/redis/api-catalog.md).
+## 목차
 
-| 현행 상태 | 개수 | 판정 근거 |
-|---|---|---|
-| 이번 구현 완료 | 10 | 체크리스트 5개, 담당자 후보 3개, 플래너 설정 2개. 소스·단위·MockMvc HTTP 계약 검증 |
-| 기존 구현 · 서비스 연결 | 50 | 기존 Service 경로 확인. 모든 기존 API를 이번에 재검증했다는 의미는 아님 |
-| 미구현 · stub | 52 | 실제 조회·저장 로직 없음 |
-| 시연 · 메모리 | 5 | 영속화·사용자 격리가 없는 공용 메모리 데이터 |
+- [기준 파일과 읽는 순서](#기준-파일과-읽는-순서)
+- [공통 계약과 한계](#공통-계약과-한계)
+- [변경과 검증](#변경과-검증)
 
-구현 완료 표시는 지정 테스트 범위입니다. 이후 실제 MySQL·Redis 검증과 로컬 DB 반영까지 수행했으며 [복구 기록](../development/database-recovery-2026-10-03.md)에 범위를 명시합니다. 프런트엔드 서버 연동은 별도입니다. 이번 신규 API의 [사전 설계·네이밍·잠금 정책](implementation-plan-2026-10-03.md)을 먼저 작성한 뒤 Java 소스를 구현했습니다. DB 오류 수정 단계에서 안전한 migration을 실제 로컬 DB에 적용하고 기존 회원·로그를 보존했습니다.
+## 기준 파일과 읽는 순서
 
-> 2026-09-26 상세 설계는 [9-API 문서 모음](../api-info/README.md)을 우선 확인하세요. 기존 목록의114개 경로를 포함한169개 목표 계약, 필드별 파라미터/요청/응답/오류, OpenAPI JSON을 제공합니다. 현행 서버 계약도 별도로 구분합니다. 아래 문서는 기존 설계 배경 자료입니다.
+1. [실제 API 작업 안내](frontend-backend-2026-10-10/README.md)에서 필드·권한·저장 정책을 읽습니다.
+2. [전체 메서드·경로 목록](frontend-backend-2026-10-10/catalog.md)에서 작업할 경로를 찾습니다.
+3. [상세 명세](frontend-backend-2026-10-10/specification.md)에서 요청·응답·입력·버전·권한을 확인합니다.
+4. [OpenAPI JSON](frontend-backend-2026-10-10/openapi.json)·[operation JSON](frontend-backend-2026-10-10/operations.json)·실제 DTO/Service를 대조합니다.
+5. [외부 미연결 경계](frontend-backend-2026-10-10/integrations.md)와 [테스트 범위](../quality/test-plan.md)를 확인합니다.
 
-1. [API 목록서](api-catalog.md): MVP와 추가 기능의 목표 경로·메서드·권한·우선순위.
-2. [API 설계서](api-design.md): 필터·DTO·응답·권한·시간·충돌·동기화·DB 전략.
-3. [현재 API 목록](current-api-inventory.md): 소스에서 생성한 전체 endpoint별 구현 상태.
-4. [현재 API 명세](api-specification.md): 현재 DTO와 목표 계약의 차이.
-5. [추가 기능 설계](../product/api-enhancements.md).
-6. [플랫폼 화면 설계](../product/platform-preview-design.md) / [로컬 실행](../development/local-platforms.md).
-7. [3단계 검증 기록](../quality/review-2026-09-25.md).
+위 목록·필드·OpenAPI는 같은 소스의 생성 표현입니다. 별도 수동 API 표를 복제하지 않습니다. [체크리스트·담당자·플래너 상세 정책](task-planner-contract.md)과 [채팅 프로토콜](../chat/api/design.md)은 해당 모듈의 보충 설명입니다.
 
-목표 /api/v1 169개는 각 행에 `설계 · 미구현` 상태를 명시합니다. 현행 /api 117개와 합산하지 않으며 stub과 메모리 시연도 구현 완료로 취급하지 않습니다. 과거 검증 기록은 당시 수치를 보존합니다.
+## 공통 계약과 한계
+
+현재 일반 응답은 success·data·message이며 Bearer 토큰을 사용합니다. 생성/삭제의 성공 코드·SSE·파일·채팅은 operation별로 다릅니다. 성공은 무조건 200, 삭제는 무조건 204라고 통일하지 않습니다.
+
+입력·인증·권한·숨겨진 타인 자원·동시 충돌은 400/401/403/404/409 등 실제 계약으로 구분합니다. 외부 제공자 미연결의 유효 실행은 503이며 그 전에 입력·권한 검사로 다른 오류가 날 수 있습니다.
+
+서버 계약이 있다는 것과 모든 화면이 연결됐다는 것은 다릅니다. 현재 일부 목록·집계는 소규모 자료의 메모리 필터이며 내보내기는 전체 계정 백업이 아닙니다. API 정적 개수 검사는 모든 경로의 실제 HTTP·DB 성공을 뜻하지 않습니다.
+
+## 변경과 검증
+
+```powershell
+node frontend/scripts/api-inventory.mjs --check
+node frontend/scripts/frontend-api-contract.mjs --check
+```
+
+Controller·DTO·FeatureType을 수정하면 생성기를 실행하고 결과·호환·관련 테스트를 리뷰합니다. 신규 필드는 길이·형식·필수/조건·소유권·version·오류를 정의합니다. [요구·작업·릴리스](../releases/README.md)에 같은 변경을 연결합니다.
+
+[과거 목표 API](../api-info/README.md)·이전 감사 기록은 날짜 있는 설계 이력입니다. 이를 최신 생성기에 덮어씌우지 않습니다.

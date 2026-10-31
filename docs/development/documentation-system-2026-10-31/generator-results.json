@@ -1,0 +1,8 @@
+{
+  "pythonAstFiles": 3,
+  "nonIsolatedContainerRejected": true,
+  "invalidCalendarDateRejected": true,
+  "nonCanonicalDateRejected": true,
+  "checkWithCaptureRejected": true,
+  "snapshotUnchanged": true
+}

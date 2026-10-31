@@ -1,13 +1,7 @@
-# Feature design
+# 기능 명세 기준 안내
 
-| Domain | Implemented | Next work |
-| --- | --- | --- |
-| Auth | signup/login/logout/refresh/me | verification, reset mail, social login |
-| Planner | day/week/month/year views | user-owned plan/actual time blocks |
-| Event | CRUD and recurrence | reminders and attendee/share policy |
-| Task | CRUD, status, duplicate | carry-over and event relation normalization |
-| Routine | CRUD, quick create, logs/history | notification delivery |
-| Diary/Memo/Share/Admin | UI and API contracts | entities, services, authorization |
+작성일 2026-10-31. 수정일 2026-10-31. 중복 본문을 기준 문서로 통합한 연결 안내입니다.
 
-MVP outcome: a user records event/task/routine and sees a daily summary. Community, ranking, AI/STT, social login, payment, and sharing require policy and moderation work before release.
+[기준 문서](../handbook/source/05-기능-명세서.md)를 확인하세요.
 
+검수할 약속은 [요구사항](../planning/requirements.md), 화면과 흐름은 [화면 명세](screen-design.md), 개발 계획은 [WBS](../planning/wbs.md)에 관리합니다. API 구현·화면 서버 연결·외부 제공자를 구분합니다.
