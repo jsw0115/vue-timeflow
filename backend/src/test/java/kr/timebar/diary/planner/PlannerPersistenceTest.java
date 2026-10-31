@@ -4,6 +4,7 @@ package kr.timebar.diary.planner;
 import kr.timebar.diary.common.*;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.*;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
@@ -20,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringJUnitConfig(PlannerPersistenceTest.Config.class)
 class PlannerPersistenceTest {
-    @Configuration
+    @TestConfiguration
     @EnableTransactionManagement
     @EnableJpaAuditing
     @Import(kr.timebar.diary.config.QuerydslConfig.class)

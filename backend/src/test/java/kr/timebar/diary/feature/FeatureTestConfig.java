@@ -7,6 +7,7 @@ import kr.timebar.diary.records.*;
 import kr.timebar.diary.operations.*;
 import kr.timebar.diary.social.*;
 import kr.timebar.diary.work.*;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
@@ -19,7 +20,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import javax.sql.DataSource;
 import static org.mockito.Mockito.mock;
 
-@Configuration
+@TestConfiguration
 @EnableTransactionManagement
 public class FeatureTestConfig {
     @Bean DataSource dataSource() {
