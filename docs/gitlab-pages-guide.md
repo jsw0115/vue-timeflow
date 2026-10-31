@@ -2,7 +2,7 @@
 
 2026-10-04. 이 프로젝트의 기본 배포는 **GitLab Pages 웹 배포**입니다. GitLab 원격 이름은 `gitlab`, 주소는 `https://gitlab.com/githubgroup4094208/vue-timeflow.git`입니다. `origin`은 GitHub이므로 유지합니다. 현재 로컬 브랜치는 master이며 GitLab 실제 기본 브랜치는 설정에서 확인합니다.
 
-API 서버가 아직 없으므로 지금은 웹 화면·브라우저 로컬 저장 기능을 먼저 배포합니다. 실제 회원가입·로그인·서버 채팅·사용자 간 실시간 상태는 별도 HTTPS API 서버를 등록한 뒤 사용할 수 있습니다. Pages는 정적 파일 호스팅이며 Java·MySQL·Redis를 실행하지 않습니다. [GitLab 공식 설명](https://docs.gitlab.com/user/project/pages/)을 참고하세요.
+별도 HTTPS API 서버를 연결하지 않은 Pages 환경에서는 웹 화면·브라우저 로컬 저장 기능을 먼저 배포합니다. 실제 회원가입·로그인·서버 채팅·사용자 간 실시간 상태는 별도 HTTPS API 서버를 등록한 뒤 사용할 수 있습니다. Pages는 정적 파일 호스팅이며 Java·MySQL·Redis를 실행하지 않습니다. [GitLab 공식 설명](https://docs.gitlab.com/user/project/pages/)을 참고하세요.
 
 ## 1. 생성·수정한 파일
 
@@ -24,7 +24,7 @@ API 서버가 아직 없으므로 지금은 웹 화면·브라우저 로컬 저�
 2. **Settings → General**의 기본 브랜치를 확인합니다. master를 사용 중이면 master, 이미 main을 사용 중이면 main을 대상으로 병합합니다. CI는 CI_DEFAULT_BRANCH를 사용하므로 이름을 강제로 변경할 필요가 없습니다.
 3. **Settings → CI/CD → Runners**에서 Linux 컨테이너 작업을 실행할 Runner가 사용 가능한지 확인합니다. GitLab.com 호스팅 Runner도 사용할 수 있습니다.
 4. **Settings → General → Visibility, project features, permissions**에서 Pages 기능을 사용할 수 있는지 확인합니다. 메뉴 이름은 GitLab 버전에 따라 다를 수 있습니다.
-5. 지금은 API 서버가 없으므로 CI 변수는 추가하지 않아도 됩니다. ENABLE_CONTAINER_BUILD는 설정하지 않거나 false로 둡니다.
+5. 화면만 게시하면 API 주소용 CI 변수는 추가하지 않아도 됩니다. ENABLE_CONTAINER_BUILD는 설정하지 않거나 false로 둡니다. 실제 API를 연결할 때는 아래 API 설정 절차를 따릅니다.
 
 ## 3. 파일 커밋 및 GitLab 업로드
 

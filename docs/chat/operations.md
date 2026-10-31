@@ -37,7 +37,7 @@ Java 실행 시 `java '-Duser.timezone=UTC' -jar build/libs/timeflow-api-0.1.0.j
 
 ## 기존 DB에 추가하기
 
-기존 [V1의 테이블명/FK 불일치](../design/04-schema-gaps.md)는 별도 기존 문제다. `chat-local` 프로필은 이를 우회하여 **새로운 전용 로컬 DB**에 현재 JPA 8개 테이블을 부트스트랩하는 경로다. 운영 V1을 덮어쓰거나 이미 적용된 이력을 repair하지 않는다.
+기존 [V1의 테이블명/FK 불일치](../design/04-schema-gaps.md)는 별도 기존 문제다. `chat-local` 프로필은 **새로운 전용 로컬 DB**에 JPA와 호환되는 core 및 workspace 테이블을 준비하는 경로다. 운영 V1을 덮어쓰거나 이미 적용된 이력을 repair하지 않는다. 최신 실행 절차와 검증 결과는 [한국어 로컬 실행 가이드](../handbook/source/01-로컬-실행-가이드.md)를 참고한다.
 
 기존 환경에서는 `CHAT_ENABLED=true`, 올바른 `spring.datasource.*`, `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`, `JWT_SECRET`을 주입한다. 기존 core Flyway 및 JPA 검증이 먼저 성공해야 채팅 migration이 실행된다. 적용 전 실제 테이블/이력·백업을 확인하고 새 `chat_` 테이블과 `flyway_chat_history`가 충돌하지 않는지 점검한다. `db/chat-local-core`를 기존 DB의 Flyway 경로로 설정하지 않는다.
 

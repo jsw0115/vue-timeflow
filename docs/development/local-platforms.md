@@ -70,7 +70,7 @@ cd E:\vscode-proj\vue-timeflow-proj\backend
 $env:JWT_SECRET = '<로컬 전용으로 생성한 충분히 긴 무작위 비밀키>'
 .\gradlew.bat bootRun
 ~~~
-MariaDB 연결 값은 백엔드의 실제 설정을 확인한다. 이 가이드는 DB 생성/삭제나 Flyway repair를 실행하지 않는다.
+기본 MySQL 연결 값은 백엔드의 실제 설정을 확인한다. DB 준비와 격리 chat-local 실행은 [한국어 로컬 실행 가이드](../handbook/source/01-로컬-실행-가이드.md)를 따른다. 이 가이드는 DB 생성/삭제나 Flyway repair를 실행하지 않는다.
 프록시 검증은 mock HTTP upstream으로 수행했으며 DB 기동 성공을 의미하지 않는다.
 
 ## 5. Android / iOS 앱

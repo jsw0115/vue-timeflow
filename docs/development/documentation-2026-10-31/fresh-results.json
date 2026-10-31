@@ -1,0 +1,15 @@
+{
+  "date": "2026-10-31",
+  "passed": [
+    "API health is UP with isolated MySQL and Redis",
+    "Vite web server responds on documented port 5173",
+    "real MySQL signup and login for two accounts",
+    "anonymous access and non-admin access are rejected",
+    "schedule persistence, recurrence, owner isolation, validation and 409 conflict",
+    "new feature record create, reload and delete use real MySQL",
+    "Redis pub/sub and authenticated SSE deliver a real message event",
+    "persisted chat, idempotent resend, read cursor, mentions and presence",
+    "unconfigured external provider returns documented 503"
+  ],
+  "scenarioCount": 9
+}

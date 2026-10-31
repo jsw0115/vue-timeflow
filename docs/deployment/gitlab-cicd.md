@@ -31,7 +31,7 @@ flowchart LR
 
 Linux 웹은 루트 /에 배포한다. Linux 이미지 빌드는 VITE_API_BASE_URL을 비워 같은 출처의 /api를 사용한다. Pages는 별도 HTTPS API 주소를 VITE_API_BASE_URL로 지정할 수 있다. Capacitor/Electron 설치 파일은 이번 파이프라인에서 만들지 않는다.
 
-현재 관리자 API에는 역할 검사가 없어 Nginx가 `/api/admin`을 차단한다. actuator·Swagger도 외부 프록시에서 차단하고 health는 컨테이너 내부에서 확인한다. 52개 stub·5개 공용 메모리 API와 일부 로컬 저장 기능은 그대로다. 배포 설정이 전체 기능의 서버 연동을 구현하는 것은 아니다. [API 상태](../api/current-api-inventory.md)를 참고한다.
+2026-10-31 재검토 기준으로 서버에는 ACTIVE 계정 및 ADMIN 권한 검사가 구현되어 있고 Nginx의 `/api/admin` 외부 차단도 유지한다. actuator·Swagger도 외부 프록시에서 차단하고 health는 컨테이너 내부에서 확인한다. 과거 52개 stub·5개 메모리 API 설명 대신 [최신 277개 API 계약](../api/frontend-backend-2026-10-10/README.md)을 참고한다. 일부 화면의 로컬 저장과 외부 제공자 미연결은 남아 있으며 배포 설정이 전체 기능의 서버 연동을 구현하는 것은 아니다.
 
 ## 2. 로컬 변경을 GitLab에 올리기
 
