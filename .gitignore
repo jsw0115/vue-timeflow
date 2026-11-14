@@ -95,3 +95,17 @@ infra/deploy/.release-state
 frontend/.npm/
 frontend/.env.production.local
 /public/
+
+# Codex 작업 중 생성되는 로컬 비밀값과 원본 진단 자료
+.env.*
+!.env.example
+!.env.*.example
+*.jks
+*.p12
+*.pfx
+*.key
+*.pem
+security/private-reports/
+docs/agent/records/*/raw-logs/
+__pycache__/
+*.pyc

@@ -178,3 +178,14 @@ This is the step coding agents skip most often after "run tests". They guess fro
 ---
 
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, verification is reported with exact checks, and clarifying questions come before implementation rather than after mistakes.
+
+## 14. Timebar Diary Codex 작업 안내
+
+- 프로젝트 사실·실행 명령은 [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md)에서 시작하고 실제 소스와 대조한다. 관련 문서만 읽고 기존 `docs/` 명세를 복제하지 않는다.
+- 변경 범위의 입력·출력·인증·소유권·비밀값·파일·쿼리는 [보안 정책](security/SECURITY_POLICY.md)에 따라 점검한다. SW 49개·웹 28개·OWASP 목록에서 해당 항목만 선택한다.
+- UI 변경은 상단 디자인 계약을 먼저 읽고 [DESIGN_GUIDE.md](DESIGN_GUIDE.md)와 KWCAG 점검표를 참고한다. 보조 가이드가 디자인 계약을 대체하지 않는다.
+- 새 비단순 작업은 `python scripts/start_task.py --task 작업명`으로 계획·체크리스트·메모·검증 양식을 생성할 수 있다. 기존 작업 폴더가 있으면 그 기록을 이어 쓴다.
+- 재사용 스킬은 `.agents/skills/`에 있다. [적용 안내](README_적용가이드.md)에서 작업에 맞는 스킬을 선택한다. JSP 전용 스킬은 JSP 소스나 해당 진단 보고서가 있을 때만 사용한다.
+- 결과는 `PASS / FAIL / REVIEW / NOT_RUN / N/A`와 증거로 남긴다. 구조 검사 성공을 앱 보안·접근성 합격으로 표현하지 않는다. 오탐 제외는 개별 증빙과 유효한 승인을 요구한다.
+- 기존 사용자 변경을 보존하고 검증한 자체 변경만 12절에 따라 커밋한다. 압축파일 예시의 추가 커밋 승인 절차는 채택하지 않는다. 푸시·배포·운영 DB 변경·외부 스캔은 요청의 허용 범위를 확인한다.
+- 세션 중단 전 완료 항목, 마지막 검증, 미해결 원인, 다음 명령을 작업 기록에 남긴다. 토큰 충전 감지·자동 재개가 설정되어 있다고 가정하지 않는다.
