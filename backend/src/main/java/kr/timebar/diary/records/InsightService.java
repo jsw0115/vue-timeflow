@@ -51,6 +51,12 @@ public class InsightService {
         List<Map<String,Object>> focus = store.all(user, FeatureType.FOCUS).stream().filter(row -> {
             LocalDate date = FeatureInput.date(row.get("date").toString()); return !date.isBefore(start) && !date.isAfter(end);
         }).toList();
+        for (var block : actualBlocks(user, start, end)) {
+            long minutes = ((Number)block.get("minutes")).longValue();
+            actual += minutes;
+            categories.computeIfAbsent("미분류", key -> new long[2])[1] += minutes;
+            blocks.add(block);
+        }
         for (var row : focus) if (row.get("endedAt") != null) focused += Math.max(0, Duration.between(FeatureInput.instant(row.get("startedAt").toString()), FeatureInput.instant(row.get("endedAt").toString())).toMinutes());
         List<Map<String,Object>> categoryRows = categories.entrySet().stream().map(e -> Map.<String,Object>of("category", e.getKey(), "plannedMinutes", e.getValue()[0], "actualMinutes", e.getValue()[1])).toList();
         long done = view.tasks().stream().filter(task -> task.status() == TaskStatus.DONE).count();
@@ -59,7 +65,25 @@ public class InsightService {
     }
     public List<Map<String,Object>> timeBlocks(String user, String date, String category) {
         LocalDate day = FeatureInput.date(date);
-        return planner.find(user, day, null, category, null).stream().map(item -> Map.<String,Object>of("id", item.id(), "title", item.title(), "date", day.toString(), "minutes", minutes(item.startTime(), item.endTime()), "type", item.type().name())).toList();
+        var result = new ArrayList<>(planner.find(user, day, null, category, null).stream().map(item -> Map.<String,Object>of("id", item.id(), "title", item.title(), "date", day.toString(), "minutes", minutes(item.startTime(), item.endTime()), "type", item.type().name())).toList());
+        if (category == null || category.equals("미분류")) result.addAll(actualBlocks(user, day, day));
+        return result;
+    }
+    private List<Map<String,Object>> actualBlocks(String user, LocalDate from, LocalDate to) {
+        var result = new ArrayList<Map<String,Object>>();
+        for (var row : store.all(user, FeatureType.ACTUAL_SESSION)) {
+            if (!"COMPLETED".equals(row.get("state"))) continue;
+            Instant start = Instant.parse(row.get("startedAt").toString()), end = Instant.parse(row.get("endedAt").toString());
+            ZoneId zone = ZoneId.of(row.get("timeZone").toString());
+            for (LocalDate day = from; !day.isAfter(to); day = day.plusDays(1)) {
+                Instant dayStart = day.atStartOfDay(zone).toInstant(), dayEnd = day.plusDays(1).atStartOfDay(zone).toInstant();
+                if (start.isBefore(dayEnd) && end.isAfter(dayStart)) {
+                    Instant clippedStart = start.isBefore(dayStart) ? dayStart : start, clippedEnd = end.isAfter(dayEnd) ? dayEnd : end;
+                    result.add(Map.of("id", row.get("id"), "title", row.get("title"), "date", day.toString(), "minutes", Duration.between(clippedStart, clippedEnd).toMinutes(), "type", "ACTUAL"));
+                }
+            }
+        }
+        return result;
     }
     private long minutes(LocalTime from, LocalTime to) { return from == null || to == null ? 0 : Math.max(0, Duration.between(from, to).toMinutes()); }
 }

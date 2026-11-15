@@ -36,6 +36,7 @@ public class FeatureTestConfig {
     @Bean ObjectMapper mapper() { return new ObjectMapper().findAndRegisterModules(); }
     @Bean FeatureStore store(JdbcTemplate jdbc, ObjectMapper mapper) { return new FeatureStore(jdbc, mapper); }
     @Bean RecordService records(FeatureStore store) { return new RecordService(store); }
+    @Bean ActualRecordingService actualRecordings(FeatureStore store, JdbcTemplate jdbc) { return new ActualRecordingService(store, jdbc); }
     @Bean ScheduleService schedules(FeatureStore store) { return new ScheduleService(store); }
     @Bean WorkService work(FeatureStore store) { return new WorkService(store); }
     @Bean UserRepository users() { return mock(UserRepository.class); }
