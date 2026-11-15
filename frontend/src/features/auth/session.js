@@ -37,7 +37,8 @@ async function refresh() {
   return refreshing
 }
 export async function authorizedFetch(url, options = {}) {
-  const run = () => fetch(apiEndpoint(url), { ...options, headers: { 'Content-Type': 'application/json', ...options.headers, ...(session.accessToken ? { Authorization: `Bearer ${session.accessToken}` } : {}) } })
+  const contentHeaders = typeof FormData !== 'undefined' && options.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }
+  const run = () => fetch(apiEndpoint(url), { ...options, headers: { ...contentHeaders, ...options.headers, ...(session.accessToken ? { Authorization: `Bearer ${session.accessToken}` } : {}) } })
   let response = await run()
   if (response.status === 401 && await refresh()) response = await run()
   return response

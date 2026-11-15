@@ -16,6 +16,7 @@ public enum FeatureType {
     REVIEW("body date", "body date"),
     FOCUS("title date category mode duration startedAt endedAt", "title date mode duration startedAt"),
     ACTUAL_SESSION("title startedAt endedAt timeZone state elapsedSeconds finishKey", "title startedAt timeZone state"),
+    BACKUP_JOB("value", "value"),
     EVENT_TEMPLATE("title color category duration repeat alarm", "title duration"),
     PLANNER_TEMPLATE("title color blocks", "title blocks"),
     BOARD("columns cards", "columns cards"),
