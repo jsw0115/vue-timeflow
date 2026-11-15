@@ -5243,6 +5243,184 @@
     "externalBoundary": false
   },
   {
+    "method": "GET",
+    "route": "/api/planner/recordings",
+    "parameters": [],
+    "status": 200,
+    "responseType": "?",
+    "controller": "ActualRecordingController",
+    "kind": "서비스 연결",
+    "implementationStatus": "서비스 연결 · 검증 범위 별도",
+    "public": false,
+    "responseSchema": {
+      "type": "array",
+      "items": {
+        "$ref": "#/components/schemas/ActualRecording"
+      }
+    },
+    "externalBoundary": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/planner/recordings/{id}",
+    "parameters": [
+      {
+        "name": "id",
+        "type": "String",
+        "location": "path",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "?",
+    "controller": "ActualRecordingController",
+    "kind": "서비스 연결",
+    "implementationStatus": "서비스 연결 · 검증 범위 별도",
+    "public": false,
+    "responseSchema": {
+      "$ref": "#/components/schemas/ActualRecording"
+    },
+    "externalBoundary": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/planner/recordings/{id}/finish",
+    "parameters": [
+      {
+        "name": "id",
+        "type": "String",
+        "location": "path",
+        "required": true
+      },
+      {
+        "name": "body",
+        "type": "Map<String,Object>",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "?",
+    "controller": "ActualRecordingController",
+    "kind": "서비스 연결",
+    "implementationStatus": "서비스 연결 · 검증 범위 별도",
+    "public": false,
+    "requestSchema": {
+      "type": "object",
+      "properties": {
+        "requestId": {
+          "type": "string",
+          "maxLength": 80,
+          "minLength": 16,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "endedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "시작 이후·서버 현재 시각+5초 이내. 응답 유실 시 같은 식별자와 시각으로 재전송."
+        }
+      },
+      "required": [
+        "requestId",
+        "version",
+        "endedAt"
+      ],
+      "additionalProperties": false
+    },
+    "responseSchema": {
+      "$ref": "#/components/schemas/ActualRecording"
+    },
+    "externalBoundary": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/planner/recordings/current",
+    "parameters": [],
+    "status": 200,
+    "responseType": "?",
+    "controller": "ActualRecordingController",
+    "kind": "서비스 연결",
+    "implementationStatus": "서비스 연결 · 검증 범위 별도",
+    "public": false,
+    "responseSchema": {
+      "type": "object",
+      "properties": {
+        "active": {
+          "anyOf": [
+            {
+              "$ref": "#/components/schemas/ActualRecording"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "serverTime": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "active",
+        "serverTime"
+      ],
+      "additionalProperties": false
+    },
+    "externalBoundary": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/planner/recordings/start",
+    "parameters": [
+      {
+        "name": "body",
+        "type": "Map<String,Object>",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "?",
+    "controller": "ActualRecordingController",
+    "kind": "서비스 연결",
+    "implementationStatus": "서비스 연결 · 검증 범위 별도",
+    "public": false,
+    "requestSchema": {
+      "type": "object",
+      "properties": {
+        "requestId": {
+          "type": "string",
+          "maxLength": 80,
+          "minLength": 16,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 200,
+          "minLength": 1
+        },
+        "timeZone": {
+          "type": "string",
+          "maxLength": 200
+        }
+      },
+      "required": [
+        "requestId",
+        "title",
+        "timeZone"
+      ],
+      "additionalProperties": false
+    },
+    "responseSchema": {
+      "$ref": "#/components/schemas/ActualRecording"
+    },
+    "externalBoundary": false
+  },
+  {
     "method": "DELETE",
     "route": "/api/planner/reviews/{date}",
     "parameters": [
@@ -8057,6 +8235,131 @@
     "public": false,
     "responseSchema": {
       "$ref": "#/components/schemas/TaskResponse"
+    },
+    "externalBoundary": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/user/data/backup",
+    "parameters": [],
+    "status": 200,
+    "responseType": "void",
+    "controller": "BackupController",
+    "kind": "서비스 연결",
+    "implementationStatus": "서비스 연결 · 검증 범위 별도",
+    "public": false,
+    "responseSchema": {
+      "$ref": "#/components/schemas/BackupFile"
+    },
+    "externalBoundary": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/user/data/backup/{jobId}/restore",
+    "parameters": [
+      {
+        "name": "jobId",
+        "type": "String",
+        "location": "path",
+        "required": true
+      },
+      {
+        "name": "file",
+        "type": "MultipartFile",
+        "location": "multipart",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "?",
+    "controller": "BackupController",
+    "kind": "서비스 연결",
+    "implementationStatus": "서비스 연결 · 검증 범위 별도",
+    "public": false,
+    "responseSchema": {
+      "$ref": "#/components/schemas/BackupJob"
+    },
+    "externalBoundary": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/user/data/backup/preview",
+    "parameters": [
+      {
+        "name": "file",
+        "type": "MultipartFile",
+        "location": "multipart",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "?",
+    "controller": "BackupController",
+    "kind": "서비스 연결",
+    "implementationStatus": "서비스 연결 · 검증 범위 별도",
+    "public": false,
+    "responseSchema": {
+      "$ref": "#/components/schemas/BackupJob"
+    },
+    "externalBoundary": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/user/data/backup/status",
+    "parameters": [],
+    "status": 200,
+    "responseType": "?",
+    "controller": "BackupController",
+    "kind": "서비스 연결",
+    "implementationStatus": "서비스 연결 · 검증 범위 별도",
+    "public": false,
+    "responseSchema": {
+      "type": "object",
+      "properties": {
+        "lastExport": {
+          "anyOf": [
+            {
+              "$ref": "#/components/schemas/BackupJob"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "lastRestore": {
+          "anyOf": [
+            {
+              "$ref": "#/components/schemas/BackupJob"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "includedTypes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "maxItems": 500
+        },
+        "excluded": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "maxItems": 500
+        }
+      },
+      "required": [
+        "lastExport",
+        "lastRestore",
+        "includedTypes",
+        "excluded"
+      ],
+      "additionalProperties": false
     },
     "externalBoundary": false
   },

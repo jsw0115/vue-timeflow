@@ -1,6 +1,6 @@
 # API 목록
 
-기준 2026-10-10. 총 277개 매핑이며 wildcard 경로는 허용된 값을 선택한다. 채팅은 CHAT_ENABLED=true 조건부 등록이다. 구현·검증 범위는 [검증 기록](verification.md)을 확인한다.
+기준 2026-10-10. 총 286개 매핑이며 wildcard 경로는 허용된 값을 선택한다. 채팅은 CHAT_ENABLED=true 조건부 등록이다. 구현·검증 범위는 [검증 기록](verification.md)을 확인한다.
 
 | 메서드 | 경로 | 인증 | 처리 | 소스 |
 |---|---|---|---|---|
@@ -155,6 +155,11 @@
 | GET | `/api/planner/monthly` | JWT | 실제 처리 소스 있음 | PlannerViewController |
 | GET | `/api/planner/preferences` | JWT | 실제 처리 소스 있음 | PlannerPreferenceController |
 | PUT | `/api/planner/preferences` | JWT | 실제 처리 소스 있음 | PlannerPreferenceController |
+| GET | `/api/planner/recordings` | JWT | 실제 처리 소스 있음 | ActualRecordingController |
+| GET | `/api/planner/recordings/{id}` | JWT | 실제 처리 소스 있음 | ActualRecordingController |
+| POST | `/api/planner/recordings/{id}/finish` | JWT | 실제 처리 소스 있음 | ActualRecordingController |
+| GET | `/api/planner/recordings/current` | JWT | 실제 처리 소스 있음 | ActualRecordingController |
+| POST | `/api/planner/recordings/start` | JWT | 실제 처리 소스 있음 | ActualRecordingController |
 | DELETE | `/api/planner/reviews/{date}` | JWT | 실제 처리 소스 있음 | RecordActionsController |
 | GET | `/api/planner/reviews/{date}` | JWT | 실제 처리 소스 있음 | RecordActionsController |
 | PUT | `/api/planner/reviews/{date}` | JWT | 실제 처리 소스 있음 | RecordActionsController |
@@ -241,6 +246,10 @@
 | PUT | `/api/tasks/{taskId}/checklist-items/{itemId}/completion` | JWT | 실제 처리 소스 있음 | TaskChecklistController |
 | POST | `/api/tasks/{taskId}/duplicate` | JWT | 실제 처리 소스 있음 | TaskController |
 | PATCH | `/api/tasks/{taskId}/status` | JWT | 실제 처리 소스 있음 | TaskController |
+| GET | `/api/user/data/backup` | JWT | 실제 처리 소스 있음 | BackupController |
+| POST | `/api/user/data/backup/{jobId}/restore` | JWT | 실제 처리 소스 있음 | BackupController |
+| POST | `/api/user/data/backup/preview` | JWT | 실제 처리 소스 있음 | BackupController |
+| GET | `/api/user/data/backup/status` | JWT | 실제 처리 소스 있음 | BackupController |
 | GET | `/api/user/data/export` | JWT | 실제 처리 소스 있음 | UserProfileController |
 | PUT | `/api/user/password` | JWT | 실제 처리 소스 있음 | UserProfileController |
 | GET | `/api/user/profile` | JWT | 실제 처리 소스 있음 | UserProfileController |

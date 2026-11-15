@@ -1896,6 +1896,56 @@ KRW 정수. type=in은 양수, out은 음수. 0은 거부한다.
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 
+## GET /api/planner/recordings
+
+인증은 JWT이며 소스는 ActualRecordingController.java다. 성공 HTTP는 200다.
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## GET /api/planner/recordings/{id}
+
+인증은 JWT이며 소스는 ActualRecordingController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | id | String | 예 | 없음 |
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## POST /api/planner/recordings/{id}/finish
+
+인증은 JWT이며 소스는 ActualRecordingController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | id | String | 예 | 없음 |
+
+| 본문 필드 | 타입 | 필수 | 제약 |
+|---|---|---|---|
+| requestId | string | 예 | 길이 ≤ 80 |
+| version | integer | 예 | 최소 1 |
+| endedAt | string | 예 | date-time · 시작 이후·서버 현재 시각+5초 이내. 응답 유실 시 같은 식별자와 시각으로 재전송. |
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## GET /api/planner/recordings/current
+
+인증은 JWT이며 소스는 ActualRecordingController.java다. 성공 HTTP는 200다.
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## POST /api/planner/recordings/start
+
+인증은 JWT이며 소스는 ActualRecordingController.java다. 성공 HTTP는 200다.
+
+| 본문 필드 | 타입 | 필수 | 제약 |
+|---|---|---|---|
+| requestId | string | 예 | 길이 ≤ 80 |
+| title | string | 예 | 길이 ≤ 200 |
+| timeZone | string | 예 | 길이 ≤ 200 |
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
 ## DELETE /api/planner/reviews/{date}
 
 인증은 JWT이며 소스는 RecordActionsController.java다. 성공 HTTP는 204다.
@@ -2939,6 +2989,38 @@ JSON 최대 깊이 8, 객체 100필드, 배열 500항목, 저장 크기 128 KiB.
 | 위치 | 이름 | 타입 | 필수 | 기본값 |
 |---|---|---|---|---|
 | path | taskId | String | 예 | 없음 |
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## GET /api/user/data/backup
+
+인증은 JWT이며 소스는 BackupController.java다. 성공 HTTP는 200다.
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## POST /api/user/data/backup/{jobId}/restore
+
+인증은 JWT이며 소스는 BackupController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | jobId | String | 예 | 없음 |
+
+file을 multipart/form-data로 전달한다. boundary는 HTTP 클라이언트가 지정한다.
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## POST /api/user/data/backup/preview
+
+인증은 JWT이며 소스는 BackupController.java다. 성공 HTTP는 200다.
+
+file을 multipart/form-data로 전달한다. boundary는 HTTP 클라이언트가 지정한다.
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## GET /api/user/data/backup/status
+
+인증은 JWT이며 소스는 BackupController.java다. 성공 HTTP는 200다.
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 

@@ -86,6 +86,7 @@ const arrays = { tags: array(string()), achievements: array(string()), notifyDay
 const featureSource = java.find(source => source.includes('public enum FeatureType'))
 for (const match of featureSource.matchAll(/(\w+)\("([^"]*)",\s*"([^"]*)"\)/g)) {
   const [_, name, fields, required] = match
+  if (['ACTUAL_SESSION', 'BACKUP_JOB'].includes(name)) continue // 서버 명령 전용 저장 종류는 일반 CRUD 입력을 노출하지 않는다.
   const properties = {}
   for (const field of fields.split(' ')) {
     properties[field] = booleans.has(field) ? boolean : numbers[field] ?? arrays[field] ?? (['date', 'startDate', 'endDate', 'from', 'to', 'deadline'].includes(field) ? date : ['startedAt', 'endedAt'].includes(field) ? { type: 'string', format: 'date-time' } : field === 'value' ? { oneOf: [{ type: 'object', additionalProperties: true }, { type: 'array', items: {} }] } : field === 'recurrence' ? ref('Recurrence') : field === 'goal' ? ref('Goal') : string(['body', 'handover'].includes(field) ? 20000 : 200))
@@ -111,6 +112,8 @@ for (const [name, schema] of Object.entries(schemas)) if (name.endsWith('Create'
 for (const name of ['DIARY', 'REVIEW']) { schemas[name + 'DateUpsert'] = object(schemas[name + 'Upsert'].properties, schemas[name + 'Upsert'].required.filter(field => field !== 'date')) }
 const resources = { '/api/schedules': 'SCHEDULE', '/api/routine-records': 'ROUTINE_RECORD', '/api/diaries': 'DIARY', '/api/memos': 'MEMO', '/api/ddays': 'DDAY', '/api/money/entries': 'MONEY', '/api/focus/sessions': 'FOCUS', '/api/events/templates': 'EVENT_TEMPLATE', '/api/planner/templates': 'PLANNER_TEMPLATE', '/api/work/records': 'WORK_RECORD', '/api/work/wiki': 'WIKI', '/api/work/wbs/nodes': 'WBS', '/api/work/career/projects': 'CAREER', '/api/work/portfolio': 'PORTFOLIO', '/api/contacts': 'CONTACT', '/api/share/groups': 'GROUP', '/api/communities': 'COMMUNITY', '/api/admin/content': 'CONTENT', '/api/admin/notices': 'NOTICE' }
 const custom = {
+  'POST /api/planner/recordings/start': object({ requestId: { ...string(80), minLength: 16, pattern: '^[A-Za-z0-9_-]+$' }, title: { ...string(200), minLength: 1 }, timeZone: string(200) }, ['requestId', 'title', 'timeZone']),
+  'POST /api/planner/recordings/{id}/finish': object({ requestId: { ...string(80), minLength: 16, pattern: '^[A-Za-z0-9_-]+$' }, version: integer(1), endedAt: { type: 'string', format: 'date-time', description: '시작 이후·서버 현재 시각+5초 이내. 응답 유실 시 같은 식별자와 시각으로 재전송.' } }, ['requestId', 'version', 'endedAt']),
   'POST /api/memos/{id}/convert-to-task': object({ version: integer(1), due: date, category: string() }, ['version']),
   'POST /api/events/templates/{id}/apply': object({ date, startTime: string(5) }, ['date', 'startTime']),
   'POST /api/planner/templates/{id}/apply': object({ date }, ['date']),
@@ -144,6 +147,18 @@ const custom = {
 }
 const pageOf = items => object({ items: array(items), page: integer(0), size: integer(1, 100), total: integer(0) }, ['items', 'page', 'size', 'total'])
 const flexible = properties => ({ type: 'object', properties, additionalProperties: true })
+const instant = { type: 'string', format: 'date-time' }
+const actualFields = { title: string(200), startedAt: instant, endedAt: instant, timeZone: string(200), state: choice('RUNNING', 'COMPLETED'), elapsedSeconds: integer(0), finishKey: string(80) }
+schemas.ActualRecording = object({ ...actualFields, id: string(100), version: integer(1), createdAt: instant, updatedAt: instant }, ['id', 'title', 'startedAt', 'timeZone', 'state', 'version', 'createdAt', 'updatedAt'])
+schemas.ActualRecording.description = '서버가 시작을 저장한다. 종료는 version·요청 식별자·시각으로 멱등 처리하며 초 단위로 집계한다. FOCUS나 planner_item에 같은 시간을 중복 생성하지 않는다.'
+const backupTypes = ['DIARY', 'MEMO', 'DDAY', 'MONEY', 'REVIEW', 'FOCUS', 'ACTUAL_SESSION']
+const actualBackup = object({ title: string(200), startedAt: instant, endedAt: instant, timeZone: string(200), state: { const: 'COMPLETED' }, elapsedSeconds: integer(0, 3155760000) }, ['title', 'startedAt', 'endedAt', 'timeZone', 'state', 'elapsedSeconds'])
+schemas.BackupRecord = { oneOf: backupTypes.map(kind => object({ kind: { const: kind }, id: { ...string(100), pattern: '^[A-Za-z0-9_@-]+$' }, version: integer(1), data: kind === 'ACTUAL_SESSION' ? actualBackup : ref(kind + 'Create') }, ['kind', 'id', 'version', 'data'])) }
+schemas.BackupAttachment = object({ id: string(100), name: string(200), sizeBytes: integer(1, 5242880), expiresAt: { type: ['string', 'null'], format: 'date-time' }, contentBase64: { type: 'string', maxLength: 8388608 }, sha256: { type: 'string', pattern: '^[a-f0-9]{64}$' } }, ['id', 'name', 'sizeBytes', 'expiresAt', 'contentBase64', 'sha256'])
+schemas.BackupFile = object({ schemaVersion: { const: 1 }, backupId: string(80), exportedAt: instant, timeZone: { const: 'UTC' }, includedTypes: { type: 'array', items: choice(...backupTypes) }, excluded: array(string()), records: array(ref('BackupRecord')), attachments: { type: 'array', maxItems: 50, items: ref('BackupAttachment') }, checksum: { type: 'string', pattern: '^[a-f0-9]{64}$' } }, ['schemaVersion', 'backupId', 'exportedAt', 'timeZone', 'includedTypes', 'excluded', 'records', 'attachments', 'checksum'])
+schemas.BackupFile.description = '전체 계정 백업이 아닌 7종 서버 기록·개인 첨부의 수동 백업. 최대 JSON 8 MiB, 기록 500개, 첨부 50개·총 5 MiB. checksum 제외 키를 재귀 정렬한 UTF-8 JSON의 SHA-256. 토큰·설정·공유 권한·진행 중 기록·만료/그룹 첨부 제외. 서명이나 파일 작성자 인증이 아니므로 입력·소유권 검사를 별도로 수행한다.'
+schemas.BackupJob = flexible({ id: string(100), operation: choice('EXPORT', 'RESTORE'), state: choice('FILE_READY', 'PREVIEWED', 'COMPLETED'), recordCount: integer(0,500), attachmentCount: integer(0,50), finishedAt: instant, items: { type: 'array', maxItems: 550, items: flexible({ kind: string(), sourceId: string(100), targetId: string(100), action: choice('CREATE','SKIP'), title: string(), reason: string(), result: choice('CREATED','PRESERVED') }) } })
+schemas.BackupJob.description = '인증 계정별 저장 작업. 미리보기 후 같은 파일로 복원하며 전체 트랜잭션 또는 롤백. 같은 파일의 완료 재시도는 저장된 결과를 반환한다. 기존 ID/회고 날짜는 건너뛰고 새 첨부 ID를 본문 링크에 반영한다.'
 schemas.CategoryStats = object({ category: string(), plannedMinutes: integer(0), actualMinutes: integer(0) }, ['category', 'plannedMinutes', 'actualMinutes'])
 schemas.TimeBlock = object({ id: { type: ['integer', 'string'] }, title: string(), date, minutes: integer(0), type: choice('EVENT', 'TASK', 'ROUTINE', 'DIARY', 'MEMO', 'ACTUAL') }, ['id', 'title', 'date', 'minutes', 'type'])
 schemas.Stats = object({ from: date, to: date, plannedMinutes: integer(0), actualMinutes: integer(0), focusMinutes: integer(0), completedTasks: integer(0), totalTasks: integer(0), categories: array(ref('CategoryStats')), timeBlocks: array(ref('TimeBlock')), focusSessions: array(ref('FOCUSResponse')) }, ['from', 'to', 'plannedMinutes', 'actualMinutes', 'focusMinutes', 'completedTasks', 'totalTasks', 'categories', 'timeBlocks', 'focusSessions'])
@@ -152,6 +167,12 @@ schemas.RoutineHistory = object({ routineId: string(), items: array(object({ dat
 schemas.POSTResponse.properties = { ...schemas.POSTResponse.properties, authorId: string(), name: string(), likes: integer(0), comments: integer(0), liked: boolean }
 schemas.Profile = object({ id: string(), nickname: string(80), email: { type: 'string', format: 'email' }, timeZone: string(64), extra: flexible({ intro: string(), mode: choice('J', 'P', 'B') }) }, ['id', 'nickname', 'email', 'timeZone', 'extra'])
 const responseOverrides = {
+  'GET /api/planner/recordings': { type: 'array', items: ref('ActualRecording') },
+  'GET /api/planner/recordings/current': object({ active: { anyOf: [ref('ActualRecording'), { type: 'null' }] }, serverTime: instant }, ['active', 'serverTime']),
+  'GET /api/planner/recordings/{id}': ref('ActualRecording'), 'POST /api/planner/recordings/start': ref('ActualRecording'), 'POST /api/planner/recordings/{id}/finish': ref('ActualRecording'),
+  'GET /api/user/data/backup': ref('BackupFile'),
+  'GET /api/user/data/backup/status': object({ lastExport: { anyOf: [ref('BackupJob'), { type: 'null' }] }, lastRestore: { anyOf: [ref('BackupJob'), { type: 'null' }] }, includedTypes: array(string()), excluded: array(string()) }, ['lastExport', 'lastRestore', 'includedTypes', 'excluded']),
+  'POST /api/user/data/backup/preview': ref('BackupJob'), 'POST /api/user/data/backup/{jobId}/restore': ref('BackupJob'),
   'GET /api/diary/calendar': array(object({ date, count: integer(0) }, ['date', 'count'])),
   'GET /api/diary/{date}': pageOf(ref('DIARYResponse')), 'POST /api/diary/{date}': ref('DIARYResponse'),
   'GET /api/schedules/occurrences': array(flexible({ ...schemas.SCHEDULEResponse.properties, sourceId: string(), occurrenceKey: string() })),
@@ -195,7 +216,7 @@ for (const operation of operations) {
     request = javaType(body.type)
   }
   const multipart = operation.parameters.some(parameter => parameter.location === 'multipart')
-  const requestBody = request ? { required: true, content: { 'application/json': { schema: request } } } : multipart ? { required: true, content: { 'multipart/form-data': { schema: object({ file: { type: 'string', format: 'binary', description: '첨부 최대 10 MiB. STT는 제공자 미설정.' } }, ['file']) } } } : undefined
+  const requestBody = request ? { required: true, content: { 'application/json': { schema: request } } } : multipart ? { required: true, content: { 'multipart/form-data': { schema: object({ file: { type: 'string', format: 'binary', description: operation.controller === 'BackupController' ? 'schemaVersion=1인 백업 JSON. 최대 8 MiB. 미리보기와 같은 파일로만 복원.' : '첨부 최대 10 MiB. STT는 제공자 미설정.' } }, ['file']) } } } : undefined
   let data = operation.responseType === 'void' ? {} : javaType(operation.responseType)
   if (resource && operation.responseType === '?') data = operation.method === 'GET' && operation.route === Object.keys(resources).find(base => resources[base] === resource) ? object({ items: array(ref(resource + 'Response')), page: integer(0), size: integer(1, 100), total: integer(0) }, ['items', 'page', 'size', 'total']) : ref(resource + 'Response')
   data = responseOverrides[key] ?? data

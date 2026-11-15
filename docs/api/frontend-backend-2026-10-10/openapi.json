@@ -17909,6 +17909,619 @@
         "x-test-evidence": "verification.md"
       }
     },
+    "/api/planner/recordings": {
+      "get": {
+        "operationId": "ActualRecordingController_get__api_planner_recordings",
+        "tags": [
+          "ActualRecordingController"
+        ],
+        "summary": "GET /api/planner/recordings",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "성공. 세부 정책은 README와 기능 규약을 따른다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ActualRecording"
+                      }
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 검증 오류.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 필요 또는 폐기된 토큰.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "역할·회원 권한 부족.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "없음·타인 리소스·만료.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "버전·현재 상태 충돌.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-implementation-status": "서비스 연결 · 검증 범위 별도",
+        "x-source": "ActualRecordingController.java",
+        "x-admin-required": false,
+        "x-test-evidence": "verification.md"
+      }
+    },
+    "/api/planner/recordings/{id}": {
+      "get": {
+        "operationId": "ActualRecordingController_get__api_planner_recordings__id_",
+        "tags": [
+          "ActualRecordingController"
+        ],
+        "summary": "GET /api/planner/recordings/{id}",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "성공. 세부 정책은 README와 기능 규약을 따른다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ActualRecording"
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 검증 오류.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 필요 또는 폐기된 토큰.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "역할·회원 권한 부족.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "없음·타인 리소스·만료.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "버전·현재 상태 충돌.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-implementation-status": "서비스 연결 · 검증 범위 별도",
+        "x-source": "ActualRecordingController.java",
+        "x-admin-required": false,
+        "x-test-evidence": "verification.md"
+      }
+    },
+    "/api/planner/recordings/{id}/finish": {
+      "post": {
+        "operationId": "ActualRecordingController_post__api_planner_recordings__id__finish",
+        "tags": [
+          "ActualRecordingController"
+        ],
+        "summary": "POST /api/planner/recordings/{id}/finish",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "requestId": {
+                    "type": "string",
+                    "maxLength": 80,
+                    "minLength": 16,
+                    "pattern": "^[A-Za-z0-9_-]+$"
+                  },
+                  "version": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "endedAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "시작 이후·서버 현재 시각+5초 이내. 응답 유실 시 같은 식별자와 시각으로 재전송."
+                  }
+                },
+                "required": [
+                  "requestId",
+                  "version",
+                  "endedAt"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "성공. 세부 정책은 README와 기능 규약을 따른다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ActualRecording"
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 검증 오류.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 필요 또는 폐기된 토큰.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "역할·회원 권한 부족.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "없음·타인 리소스·만료.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "버전·현재 상태 충돌.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-implementation-status": "서비스 연결 · 검증 범위 별도",
+        "x-source": "ActualRecordingController.java",
+        "x-admin-required": false,
+        "x-test-evidence": "verification.md"
+      }
+    },
+    "/api/planner/recordings/current": {
+      "get": {
+        "operationId": "ActualRecordingController_get__api_planner_recordings_current",
+        "tags": [
+          "ActualRecordingController"
+        ],
+        "summary": "GET /api/planner/recordings/current",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "성공. 세부 정책은 README와 기능 규약을 따른다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "active": {
+                          "anyOf": [
+                            {
+                              "$ref": "#/components/schemas/ActualRecording"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "serverTime": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "active",
+                        "serverTime"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 검증 오류.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 필요 또는 폐기된 토큰.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "역할·회원 권한 부족.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "없음·타인 리소스·만료.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "버전·현재 상태 충돌.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-implementation-status": "서비스 연결 · 검증 범위 별도",
+        "x-source": "ActualRecordingController.java",
+        "x-admin-required": false,
+        "x-test-evidence": "verification.md"
+      }
+    },
+    "/api/planner/recordings/start": {
+      "post": {
+        "operationId": "ActualRecordingController_post__api_planner_recordings_start",
+        "tags": [
+          "ActualRecordingController"
+        ],
+        "summary": "POST /api/planner/recordings/start",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "requestId": {
+                    "type": "string",
+                    "maxLength": 80,
+                    "minLength": 16,
+                    "pattern": "^[A-Za-z0-9_-]+$"
+                  },
+                  "title": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "minLength": 1
+                  },
+                  "timeZone": {
+                    "type": "string",
+                    "maxLength": 200
+                  }
+                },
+                "required": [
+                  "requestId",
+                  "title",
+                  "timeZone"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "성공. 세부 정책은 README와 기능 규약을 따른다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ActualRecording"
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 검증 오류.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 필요 또는 폐기된 토큰.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "역할·회원 권한 부족.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "없음·타인 리소스·만료.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "버전·현재 상태 충돌.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-implementation-status": "서비스 연결 · 검증 범위 별도",
+        "x-source": "ActualRecordingController.java",
+        "x-admin-required": false,
+        "x-test-evidence": "verification.md"
+      }
+    },
     "/api/planner/reviews/{date}": {
       "delete": {
         "operationId": "RecordActionsController_delete__api_planner_reviews__date_",
@@ -28022,6 +28635,506 @@
         },
         "x-implementation-status": "서비스 연결 · 검증 범위 별도",
         "x-source": "TaskController.java",
+        "x-admin-required": false,
+        "x-test-evidence": "verification.md"
+      }
+    },
+    "/api/user/data/backup": {
+      "get": {
+        "operationId": "BackupController_get__api_user_data_backup",
+        "tags": [
+          "BackupController"
+        ],
+        "summary": "GET /api/user/data/backup",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "성공. 세부 정책은 README와 기능 규약을 따른다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/BackupFile"
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 검증 오류.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 필요 또는 폐기된 토큰.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "역할·회원 권한 부족.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "없음·타인 리소스·만료.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "버전·현재 상태 충돌.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-implementation-status": "서비스 연결 · 검증 범위 별도",
+        "x-source": "BackupController.java",
+        "x-admin-required": false,
+        "x-test-evidence": "verification.md"
+      }
+    },
+    "/api/user/data/backup/{jobId}/restore": {
+      "post": {
+        "operationId": "BackupController_post__api_user_data_backup__jobId__restore",
+        "tags": [
+          "BackupController"
+        ],
+        "summary": "POST /api/user/data/backup/{jobId}/restore",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "schemaVersion=1인 백업 JSON. 최대 8 MiB. 미리보기와 같은 파일로만 복원."
+                  }
+                },
+                "required": [
+                  "file"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "성공. 세부 정책은 README와 기능 규약을 따른다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/BackupJob"
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 검증 오류.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 필요 또는 폐기된 토큰.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "역할·회원 권한 부족.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "없음·타인 리소스·만료.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "버전·현재 상태 충돌.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-implementation-status": "서비스 연결 · 검증 범위 별도",
+        "x-source": "BackupController.java",
+        "x-admin-required": false,
+        "x-test-evidence": "verification.md"
+      }
+    },
+    "/api/user/data/backup/preview": {
+      "post": {
+        "operationId": "BackupController_post__api_user_data_backup_preview",
+        "tags": [
+          "BackupController"
+        ],
+        "summary": "POST /api/user/data/backup/preview",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "schemaVersion=1인 백업 JSON. 최대 8 MiB. 미리보기와 같은 파일로만 복원."
+                  }
+                },
+                "required": [
+                  "file"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "성공. 세부 정책은 README와 기능 규약을 따른다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/BackupJob"
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 검증 오류.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 필요 또는 폐기된 토큰.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "역할·회원 권한 부족.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "없음·타인 리소스·만료.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "버전·현재 상태 충돌.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-implementation-status": "서비스 연결 · 검증 범위 별도",
+        "x-source": "BackupController.java",
+        "x-admin-required": false,
+        "x-test-evidence": "verification.md"
+      }
+    },
+    "/api/user/data/backup/status": {
+      "get": {
+        "operationId": "BackupController_get__api_user_data_backup_status",
+        "tags": [
+          "BackupController"
+        ],
+        "summary": "GET /api/user/data/backup/status",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "성공. 세부 정책은 README와 기능 규약을 따른다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "lastExport": {
+                          "anyOf": [
+                            {
+                              "$ref": "#/components/schemas/BackupJob"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "lastRestore": {
+                          "anyOf": [
+                            {
+                              "$ref": "#/components/schemas/BackupJob"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "includedTypes": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "maxLength": 200
+                          },
+                          "maxItems": 500
+                        },
+                        "excluded": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "maxLength": 200
+                          },
+                          "maxItems": 500
+                        }
+                      },
+                      "required": [
+                        "lastExport",
+                        "lastRestore",
+                        "includedTypes",
+                        "excluded"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 검증 오류.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 필요 또는 폐기된 토큰.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "역할·회원 권한 부족.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "없음·타인 리소스·만료.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "버전·현재 상태 충돌.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-implementation-status": "서비스 연결 · 검증 범위 별도",
+        "x-source": "BackupController.java",
         "x-admin-required": false,
         "x-test-evidence": "verification.md"
       }
@@ -42907,6 +44020,497 @@
           "body"
         ],
         "additionalProperties": false
+      },
+      "ActualRecording": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "timeZone": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "RUNNING",
+              "COMPLETED"
+            ]
+          },
+          "elapsedSeconds": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "finishKey": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "id": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "startedAt",
+          "timeZone",
+          "state",
+          "version",
+          "createdAt",
+          "updatedAt"
+        ],
+        "additionalProperties": false,
+        "description": "서버가 시작을 저장한다. 종료는 version·요청 식별자·시각으로 멱등 처리하며 초 단위로 집계한다. FOCUS나 planner_item에 같은 시간을 중복 생성하지 않는다."
+      },
+      "BackupRecord": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "DIARY"
+              },
+              "id": {
+                "type": "string",
+                "maxLength": 100,
+                "pattern": "^[A-Za-z0-9_@-]+$"
+              },
+              "version": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "data": {
+                "$ref": "#/components/schemas/DIARYCreate"
+              }
+            },
+            "required": [
+              "kind",
+              "id",
+              "version",
+              "data"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "MEMO"
+              },
+              "id": {
+                "type": "string",
+                "maxLength": 100,
+                "pattern": "^[A-Za-z0-9_@-]+$"
+              },
+              "version": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "data": {
+                "$ref": "#/components/schemas/MEMOCreate"
+              }
+            },
+            "required": [
+              "kind",
+              "id",
+              "version",
+              "data"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "DDAY"
+              },
+              "id": {
+                "type": "string",
+                "maxLength": 100,
+                "pattern": "^[A-Za-z0-9_@-]+$"
+              },
+              "version": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "data": {
+                "$ref": "#/components/schemas/DDAYCreate"
+              }
+            },
+            "required": [
+              "kind",
+              "id",
+              "version",
+              "data"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "MONEY"
+              },
+              "id": {
+                "type": "string",
+                "maxLength": 100,
+                "pattern": "^[A-Za-z0-9_@-]+$"
+              },
+              "version": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "data": {
+                "$ref": "#/components/schemas/MONEYCreate"
+              }
+            },
+            "required": [
+              "kind",
+              "id",
+              "version",
+              "data"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "REVIEW"
+              },
+              "id": {
+                "type": "string",
+                "maxLength": 100,
+                "pattern": "^[A-Za-z0-9_@-]+$"
+              },
+              "version": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "data": {
+                "$ref": "#/components/schemas/REVIEWCreate"
+              }
+            },
+            "required": [
+              "kind",
+              "id",
+              "version",
+              "data"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "FOCUS"
+              },
+              "id": {
+                "type": "string",
+                "maxLength": 100,
+                "pattern": "^[A-Za-z0-9_@-]+$"
+              },
+              "version": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "data": {
+                "$ref": "#/components/schemas/FOCUSCreate"
+              }
+            },
+            "required": [
+              "kind",
+              "id",
+              "version",
+              "data"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "ACTUAL_SESSION"
+              },
+              "id": {
+                "type": "string",
+                "maxLength": 100,
+                "pattern": "^[A-Za-z0-9_@-]+$"
+              },
+              "version": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "startedAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "endedAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "timeZone": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "state": {
+                    "const": "COMPLETED"
+                  },
+                  "elapsedSeconds": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 3155760000
+                  }
+                },
+                "required": [
+                  "title",
+                  "startedAt",
+                  "endedAt",
+                  "timeZone",
+                  "state",
+                  "elapsedSeconds"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "kind",
+              "id",
+              "version",
+              "data"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "BackupAttachment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "sizeBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5242880
+          },
+          "expiresAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "contentBase64": {
+            "type": "string",
+            "maxLength": 8388608
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "sizeBytes",
+          "expiresAt",
+          "contentBase64",
+          "sha256"
+        ],
+        "additionalProperties": false
+      },
+      "BackupFile": {
+        "type": "object",
+        "properties": {
+          "schemaVersion": {
+            "const": 1
+          },
+          "backupId": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "exportedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "timeZone": {
+            "const": "UTC"
+          },
+          "includedTypes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "DIARY",
+                "MEMO",
+                "DDAY",
+                "MONEY",
+                "REVIEW",
+                "FOCUS",
+                "ACTUAL_SESSION"
+              ]
+            }
+          },
+          "excluded": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "maxItems": 500
+          },
+          "records": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BackupRecord"
+            },
+            "maxItems": 500
+          },
+          "attachments": {
+            "type": "array",
+            "maxItems": 50,
+            "items": {
+              "$ref": "#/components/schemas/BackupAttachment"
+            }
+          },
+          "checksum": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "backupId",
+          "exportedAt",
+          "timeZone",
+          "includedTypes",
+          "excluded",
+          "records",
+          "attachments",
+          "checksum"
+        ],
+        "additionalProperties": false,
+        "description": "전체 계정 백업이 아닌 7종 서버 기록·개인 첨부의 수동 백업. 최대 JSON 8 MiB, 기록 500개, 첨부 50개·총 5 MiB. checksum 제외 키를 재귀 정렬한 UTF-8 JSON의 SHA-256. 토큰·설정·공유 권한·진행 중 기록·만료/그룹 첨부 제외. 서명이나 파일 작성자 인증이 아니므로 입력·소유권 검사를 별도로 수행한다."
+      },
+      "BackupJob": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "operation": {
+            "type": "string",
+            "enum": [
+              "EXPORT",
+              "RESTORE"
+            ]
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "FILE_READY",
+              "PREVIEWED",
+              "COMPLETED"
+            ]
+          },
+          "recordCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 500
+          },
+          "attachmentCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 50
+          },
+          "finishedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "items": {
+            "type": "array",
+            "maxItems": 550,
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                "sourceId": {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                "targetId": {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                "action": {
+                  "type": "string",
+                  "enum": [
+                    "CREATE",
+                    "SKIP"
+                  ]
+                },
+                "title": {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                "reason": {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                "result": {
+                  "type": "string",
+                  "enum": [
+                    "CREATED",
+                    "PRESERVED"
+                  ]
+                }
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        "additionalProperties": true,
+        "description": "인증 계정별 저장 작업. 미리보기 후 같은 파일로 복원하며 전체 트랜잭션 또는 롤백. 같은 파일의 완료 재시도는 저장된 결과를 반환한다. 기존 ID/회고 날짜는 건너뛰고 새 첨부 ID를 본문 링크에 반영한다."
       },
       "CategoryStats": {
         "type": "object",
