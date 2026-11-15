@@ -4,16 +4,13 @@ import ShareConsentModal from '../../components/ShareConsentModal.vue'
 import { mediaState, currentStream, startRecording, stopRecording, stopShare, formatElapsed } from '../../store/mediaShare'
 
 const mode = ref('포모도로')
-const sessions = ref([
-  { min: 25, title: '기획안 초안 작성', time: '09:10' },
-  { min: 50, title: '스터디 자료 정리', time: '10:20' },
-])
+const sessions = ref([])
 
 /* 집중 타이머 — 실제로 흐르고, 끝나면 세션 기록에 남는다 */
 const DURATION = computed(() => (mode.value === '포모도로' ? 25 * 60 : 50 * 60))
 const remain = ref(25 * 60)
 const running = ref(false)
-const doneCount = ref(2)
+const doneCount = ref(0)
 const sessionTitle = ref('기획안 초안 작성')
 let ticker = null
 
@@ -96,7 +93,7 @@ onBeforeUnmount(() => stopShare())
   </div>
   <div class="focus">
     <div style="text-align: center">
-      <span class="pill" style="margin-bottom: 20px">‘기획안 초안 작성’ 집중 중 · 2/4 세션</span>
+      <span class="pill" style="margin-bottom: 20px">{{ running ? '집중 중' : '집중 대기' }} · 이 화면에서 {{ doneCount }}세션</span>
       <div class="orb">
         <span>남은 시간</span>
         <b>{{ clock }}</b>
@@ -108,10 +105,12 @@ onBeforeUnmount(() => stopShare())
         </div>
       </div>
       <label class="orb-title"><input v-model="sessionTitle" placeholder="무엇에 집중할까요?" /></label>
-      <p style="margin-top: 12px">{{ running ? '집중 중이에요 · 방해 금지 켜짐' : '시작을 누르면 타이머가 흘러요' }}</p>
+      <p style="margin-top: 12px">{{ running ? '집중 타이머 실행 중' : '시작을 누르면 타이머가 흘러요' }}</p>
+      <p>OS 방해 금지 제어는 지원하지 않습니다. 필요한 경우 기기 설정에서 직접 켜주세요.</p>
     </div>
     <div>
-      <h3>오늘의 집중 세션</h3>
+      <h3>이 화면의 임시 집중 세션</h3>
+      <p>시연 기능입니다. 이 목록은 서버에 저장되지 않으며 화면을 나가면 사라집니다. 실제 활동은 플래너의 기록 기능으로 저장해주세요.</p>
       <p>누적 {{ hm(totalMinutes) }} · {{ sessions.length }}세션</p>
       <div class="session" v-for="(s, i) in sessions" :key="i"><b>{{ s.min }}분</b><span>{{ s.title }}</span><small>{{ s.time }}</small></div>
 
