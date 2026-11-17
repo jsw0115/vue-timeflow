@@ -122,6 +122,15 @@ class FeatureHttpTest {
         mvc.perform(get("/api/attachments/" + id + "/download")).andExpect(status().isNotFound());
         mvc.perform(post("/api/attachments/purge-expired")).andExpect(jsonPath("$.data.deleted").value(1));
     }
+    @Test void uploadAcceptsExactlyTenMebibytesAndRejectsEmptyOrLargerFiles() throws Exception {
+        int limit = 10 * 1024 * 1024;
+        mvc.perform(multipart("/api/attachments").file(new MockMultipartFile("file", "limit.bin", "application/octet-stream", new byte[limit])))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.data.sizeBytes").value(limit));
+        mvc.perform(multipart("/api/attachments").file(new MockMultipartFile("file", "over.bin", "application/octet-stream", new byte[limit + 1])))
+                .andExpect(status().isBadRequest());
+        mvc.perform(multipart("/api/attachments").file(new MockMultipartFile("file", "empty.bin", "application/octet-stream", new byte[0])))
+                .andExpect(status().isBadRequest());
+    }
     @Test void providerDependentRequestsAreUnavailableAndAdminRoutesDenyNormalUsers() throws Exception {
         mvc.perform(post("/api/insight/generate").contentType(MediaType.APPLICATION_JSON).content("{}")).andExpect(status().isServiceUnavailable()).andExpect(jsonPath("$.success").value(false));
         mvc.perform(post("/api/billing/checkout").contentType(MediaType.APPLICATION_JSON).content("{\"planId\":\"premium\"}")).andExpect(status().isServiceUnavailable());

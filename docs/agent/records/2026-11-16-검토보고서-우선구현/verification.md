@@ -15,3 +15,6 @@
 - P0-2 계약. FAIL 후 PASS. `node scripts/frontend-api-contract.mjs --check`가 openapi.json required의 version 중복으로 실패해 생성기로 재생성했다. 이후 286개 작업·197개 스키마 일치, api-inventory 286개 PASS.
 - P0-2 클라이언트·빌드. PASS. Node 테스트 64개, `npm run build:web` 종료 0. Node 20.18.0으로 실행했으며 요구 버전 미만이다.
 - P0-2 공백. PASS. 변경 범위 `git diff --check` 종료 0. `PlannerItemQueryRepositoryImpl.java`(빈 줄)와 `Modal.vue`는 기존 사용자 변경이라 제외했다.
+- P0-2 보완 설정 정렬. PASS. Nginx 11m 수정 후 `node --test tests/upload-limits.test.mjs` 3개 통과(수정 전 1개 의도한 실패), Node 테스트 전체 67개 통과.
+- P0-2 보완 서버. PASS. `gradlew.bat test --rerun --console=plain` 197개 통과. 10 MiB 허용·초과·0바이트 경계 테스트 추가.
+- P0-2 보완 프록시 실측. NOT_RUN. 실제 Nginx 경유 업로드와 `nginx -t`는 서버 환경·이미지가 없어 실행하지 않았다.
