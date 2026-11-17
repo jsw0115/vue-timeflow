@@ -68,7 +68,7 @@ def main():
     args = parser.parse_args()
     paths = {ROOT / p for p in PRIMARY + ALIASES}
     for folder in ['docs/handbook/source', 'docs/product/ai-growth-2026-10-31',
-                   'docs/development/documentation-system-2026-10-31']:
+                   'docs/development/documentation-system-2026-10-31', 'docs/dev-docs']:
         paths.update((ROOT / folder).glob('*.md'))
     paths.update(ROOT / p for p in ['docs/handbook/README.md', 'docs/design/README.md', 'docs/api-info/README.md',
                                    'docs/design-implementation-plan.md', 'docs/screen-function-list-supplement.md'])
