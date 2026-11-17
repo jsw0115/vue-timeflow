@@ -8,6 +8,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import kr.timebar.diary.common.BaseTimeEntity;
@@ -50,6 +51,10 @@ public class PlannerItemEntity extends BaseTimeEntity {
 
     private String note;
 
+    @Version
+    @Column(nullable = false)
+    private Long version;
+
     public PlannerItemEntity(PlannerItem.ItemType type, String title, String category, LocalDate date,
             LocalTime startTime, LocalTime endTime, PlannerItem.ItemStatus status, boolean dday, String note) {
         this.type = type;
@@ -65,6 +70,10 @@ public class PlannerItemEntity extends BaseTimeEntity {
 
     public void assignUser(String userId) { this.userId = userId; }
 
+    public long getPublicVersion() { return Math.addExact(version, 1); }
+
+    public void changeStatus(PlannerItem.ItemStatus status) { this.status = status; }
+
     public void apply(PlannerItem item) {
         this.type = item.type(); this.title = item.title(); this.category = item.category();
         this.date = item.date(); this.startTime = item.startTime(); this.endTime = item.endTime();
@@ -72,6 +81,6 @@ public class PlannerItemEntity extends BaseTimeEntity {
     }
 
     public PlannerItem response() {
-        return new PlannerItem(id, type, title, category, date, startTime, endTime, status, dday, note);
+        return new PlannerItem(id, type, title, category, date, startTime, endTime, status, dday, note, getPublicVersion());
     }
 }

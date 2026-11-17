@@ -41,20 +41,20 @@ class PlannerPersistenceTest {
 
     @Test void userScopedRowsPersistAndCannotBeMutatedByAnotherUser() {
         String alice = UUID.randomUUID().toString(), bob = UUID.randomUUID().toString();
-        var input = new PlannerItem(null, PlannerItem.ItemType.EVENT, "계획", "개인", LocalDate.parse("2026-10-10"), LocalTime.of(9,0), LocalTime.of(10,0), PlannerItem.ItemStatus.SCHEDULED, false, "");
+        var input = new PlannerItem(null, PlannerItem.ItemType.EVENT, "계획", "개인", LocalDate.parse("2026-10-10"), LocalTime.of(9,0), LocalTime.of(10,0), PlannerItem.ItemStatus.SCHEDULED, false, "", null);
         long id = planner.save(alice, input).id();
         assertEquals(1, new PlannerService(repository).find(alice, null, null, null, null).size());
         assertTrue(planner.find(bob, null, null, null, null).isEmpty());
         assertEquals(ErrorCode.NOT_FOUND, assertThrows(ApiException.class, () -> planner.update(bob, id, input)).errorCode());
-        assertThrows(ApiException.class, () -> planner.delete(bob, id));
-        planner.changeStatus(alice, id, PlannerItem.ItemStatus.DONE);
+        assertThrows(ApiException.class, () -> planner.delete(bob, id, 1L));
+        planner.changeStatus(alice, id, PlannerItem.ItemStatus.DONE, 1L);
         assertEquals(PlannerItem.ItemStatus.DONE, planner.find(alice, null, null, null, null).get(0).status());
-        planner.delete(alice, id); assertTrue(planner.find(alice, null, null, null, null).isEmpty());
+        planner.delete(alice, id, 2L); assertTrue(planner.find(alice, null, null, null, null).isEmpty());
     }
     @Test void oldUnownedRecordsAreHiddenAndInvalidTimeRangeIsRejected() {
         String user = UUID.randomUUID().toString();
         repository.saveAndFlush(new PlannerItemEntity(PlannerItem.ItemType.MEMO, "기존 행", "개인", LocalDate.now(), null, null, null, false, ""));
         assertTrue(planner.find(user, null, null, null, null).isEmpty());
-        assertThrows(ApiException.class, () -> planner.save(user, new PlannerItem(null, PlannerItem.ItemType.EVENT, "역전", null, LocalDate.now(), LocalTime.of(10,0), LocalTime.of(9,0), null, false, "")));
+        assertThrows(ApiException.class, () -> planner.save(user, new PlannerItem(null, PlannerItem.ItemType.EVENT, "역전", null, LocalDate.now(), LocalTime.of(10,0), LocalTime.of(9,0), null, false, "", null)));
     }
 }

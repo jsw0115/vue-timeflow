@@ -1821,6 +1821,7 @@ KRW 정수. type=in은 양수, out은 음수. 0은 거부한다.
 | status | string 또는 null | 아니오 | 기능 규약 참조 |
 | dday | boolean | 아니오 | 기능 규약 참조 |
 | note | string 또는 null | 아니오 | 기능 규약 참조 |
+| version | integer | 아니오 | 최소 0 · 최대 0 |
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 
@@ -1831,6 +1832,7 @@ KRW 정수. type=in은 양수, out은 음수. 0은 거부한다.
 | 위치 | 이름 | 타입 | 필수 | 기본값 |
 |---|---|---|---|---|
 | path | id | long | 예 | 없음 |
+| query | version | Long | 예 | 없음 |
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 
@@ -1854,6 +1856,7 @@ KRW 정수. type=in은 양수, out은 음수. 0은 거부한다.
 | status | string 또는 null | 아니오 | 기능 규약 참조 |
 | dday | boolean | 아니오 | 기능 규약 참조 |
 | note | string 또는 null | 아니오 | 기능 규약 참조 |
+| version | integer | 예 | 최소 1 |
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 
@@ -1865,6 +1868,7 @@ KRW 정수. type=in은 양수, out은 음수. 0은 거부한다.
 |---|---|---|---|---|
 | path | id | long | 예 | 없음 |
 | query | status | PlannerItem.ItemStatus | 예 | 없음 |
+| query | version | Long | 예 | 없음 |
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 

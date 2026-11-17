@@ -74,6 +74,11 @@ for (const source of java) for (const match of source.matchAll(/public record (\
   }
   schemas[match[1]] = object(properties, required)
 }
+// 플래너 생성은 버전 생략/0, 변경은 조회한 공개 버전 1 이상을 요구한다.
+schemas.PlannerItem.properties.version = integer(1)
+schemas.PlannerItem.required.push('version')
+schemas.PlannerItemCreate = object({ ...schemas.PlannerItem.properties, version: integer(0, 0) }, schemas.PlannerItem.required.filter(field => field !== 'version'))
+schemas.PlannerItemUpdate = object({ ...schemas.PlannerItem.properties }, [...schemas.PlannerItem.required])
 schemas.Recurrence = object({ frequency: choice('none', 'daily', 'weekly', 'monthly', 'yearly'), interval: integer(1, 99), weekdays: array(integer(0, 6)), endMode: choice('never', 'until', 'count'), until: { type: 'string', description: 'endMode=until이면 유효한 YYYY-MM-DD. 그 외 빈 문자열 허용.' }, count: integer(1, 999) }, ['frequency'])
 schemas.Recurrence.description = 'frequency=none 외에는 interval/endMode가 필수. weekly는 weekdays 최소 1개. until 종료는 시작일 이상. count 종료는 count 필수. 존재하지 않는 월말·윤년 회차는 건너뛴다.'
 schemas.Goal = object({ count: integer(1, 9999), unit: string() }, ['count', 'unit'])
@@ -112,6 +117,8 @@ for (const [name, schema] of Object.entries(schemas)) if (name.endsWith('Create'
 for (const name of ['DIARY', 'REVIEW']) { schemas[name + 'DateUpsert'] = object(schemas[name + 'Upsert'].properties, schemas[name + 'Upsert'].required.filter(field => field !== 'date')) }
 const resources = { '/api/schedules': 'SCHEDULE', '/api/routine-records': 'ROUTINE_RECORD', '/api/diaries': 'DIARY', '/api/memos': 'MEMO', '/api/ddays': 'DDAY', '/api/money/entries': 'MONEY', '/api/focus/sessions': 'FOCUS', '/api/events/templates': 'EVENT_TEMPLATE', '/api/planner/templates': 'PLANNER_TEMPLATE', '/api/work/records': 'WORK_RECORD', '/api/work/wiki': 'WIKI', '/api/work/wbs/nodes': 'WBS', '/api/work/career/projects': 'CAREER', '/api/work/portfolio': 'PORTFOLIO', '/api/contacts': 'CONTACT', '/api/share/groups': 'GROUP', '/api/communities': 'COMMUNITY', '/api/admin/content': 'CONTENT', '/api/admin/notices': 'NOTICE' }
 const custom = {
+  'POST /api/planner/items': ref('PlannerItemCreate'),
+  'PUT /api/planner/items/{id}': ref('PlannerItemUpdate'),
   'POST /api/planner/recordings/start': object({ requestId: { ...string(80), minLength: 16, pattern: '^[A-Za-z0-9_-]+$' }, title: { ...string(200), minLength: 1 }, timeZone: string(200) }, ['requestId', 'title', 'timeZone']),
   'POST /api/planner/recordings/{id}/finish': object({ requestId: { ...string(80), minLength: 16, pattern: '^[A-Za-z0-9_-]+$' }, version: integer(1), endedAt: { type: 'string', format: 'date-time', description: '시작 이후·서버 현재 시각+5초 이내. 응답 유실 시 같은 식별자와 시각으로 재전송.' } }, ['requestId', 'version', 'endedAt']),
   'POST /api/memos/{id}/convert-to-task': object({ version: integer(1), due: date, category: string() }, ['version']),
@@ -207,6 +214,7 @@ for (const operation of operations) {
   const publicRoute = operation.public || operation.route === '/api/public/portfolios/{token}'
   const external = operation.controller === 'IntegrationController'
   const parameters = operation.parameters.filter(parameter => !['body', 'multipart'].includes(parameter.location)).map(parameter => ({ name: parameter.name, in: parameter.location, required: parameter.required, schema: { ...javaType(parameter.type), ...(parameter.default == null ? {} : { default: parameter.type === 'int' ? Number(parameter.default) : parameter.default }) } }))
+  if (operation.controller === 'PlannerController') for (const parameter of parameters) if (parameter.name === 'version') parameter.schema.minimum = 1
   let request = custom[key]
   const resource = Object.entries(resources).find(([base]) => operation.route === base || operation.route === base + '/{id}')?.[1]
   if (!request && resource && ['POST', 'PUT'].includes(operation.method)) request = ref(resource + (operation.method === 'PUT' ? 'Update' : 'Create'))

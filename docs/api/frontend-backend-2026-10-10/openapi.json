@@ -17162,7 +17162,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PlannerItem"
+                "$ref": "#/components/schemas/PlannerItemCreate"
               }
             }
           }
@@ -17275,6 +17275,15 @@
             "schema": {
               "type": "integer"
             }
+          },
+          {
+            "name": "version",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
           }
         ],
         "responses": {
@@ -17363,7 +17372,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PlannerItem"
+                "$ref": "#/components/schemas/PlannerItemUpdate"
               }
             }
           }
@@ -17490,6 +17499,15 @@
                 "CANCELLED",
                 "SCHEDULED"
               ]
+            }
+          },
+          {
+            "name": "version",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
             }
           }
         ],
@@ -35166,11 +35184,16 @@
                 "type": "null"
               }
             ]
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
           }
         },
         "required": [
           "type",
-          "title"
+          "title",
+          "version"
         ],
         "additionalProperties": false
       },
@@ -36011,6 +36034,226 @@
           }
         },
         "required": [],
+        "additionalProperties": false
+      },
+      "PlannerItemCreate": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "EVENT",
+              "TASK",
+              "ROUTINE",
+              "DIARY",
+              "MEMO",
+              "ACTUAL"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "startTime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "endTime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "TODO",
+                  "IN_PROGRESS",
+                  "DONE",
+                  "CANCELLED",
+                  "SCHEDULED"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "dday": {
+            "type": "boolean"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 0
+          }
+        },
+        "required": [
+          "type",
+          "title"
+        ],
+        "additionalProperties": false
+      },
+      "PlannerItemUpdate": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "EVENT",
+              "TASK",
+              "ROUTINE",
+              "DIARY",
+              "MEMO",
+              "ACTUAL"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "startTime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "endTime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "TODO",
+                  "IN_PROGRESS",
+                  "DONE",
+                  "CANCELLED",
+                  "SCHEDULED"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "dday": {
+            "type": "boolean"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "type",
+          "title",
+          "version"
+        ],
         "additionalProperties": false
       },
       "Recurrence": {

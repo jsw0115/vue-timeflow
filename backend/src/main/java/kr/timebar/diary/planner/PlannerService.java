@@ -25,19 +25,38 @@ public class PlannerService {
     }
     public PlannerItem save(String user, PlannerItem item) {
         validate(item);
+        if (item.version() != null && item.version() != 0) throw new ApiException(ErrorCode.VALIDATION_FAILED, "새 기록의 버전은 생략하거나 0이어야 합니다.");
         PlannerItemEntity entity = new PlannerItemEntity(item.type(), item.title().trim(), item.category(), item.date(),
                 item.startTime(), item.endTime(), item.status(), item.dday(), item.note());
         entity.assignUser(user);
         return repository.saveAndFlush(entity).response();
     }
     public PlannerItem update(String user, long id, PlannerItem item) {
-        validate(item); PlannerItemEntity entity = owned(user, id); entity.apply(item); return entity.response();
+        validate(item);
+        PlannerItemEntity entity = owned(user, id);
+        requireVersion(item.version(), entity);
+        entity.apply(item);
+        repository.flush();
+        return entity.response();
     }
-    public PlannerItem changeStatus(String user, long id, PlannerItem.ItemStatus status) {
-        PlannerItem old = owned(user, id).response();
-        return update(user, id, new PlannerItem(id, old.type(), old.title(), old.category(), old.date(), old.startTime(), old.endTime(), status, old.dday(), old.note()));
+    public PlannerItem changeStatus(String user, long id, PlannerItem.ItemStatus status, Long version) {
+        if (status == null) throw new ApiException(ErrorCode.VALIDATION_FAILED);
+        PlannerItemEntity entity = owned(user, id);
+        requireVersion(version, entity);
+        entity.changeStatus(status);
+        repository.flush();
+        return entity.response();
     }
-    public void delete(String user, long id) { repository.delete(owned(user, id)); }
+    public void delete(String user, long id, Long version) {
+        PlannerItemEntity entity = owned(user, id);
+        requireVersion(version, entity);
+        repository.delete(entity);
+        repository.flush();
+    }
+    private void requireVersion(Long version, PlannerItemEntity entity) {
+        if (version == null || version < 1) throw new ApiException(ErrorCode.VALIDATION_FAILED, "조회한 기록의 버전이 필요합니다.");
+        if (version != entity.getPublicVersion()) throw new ApiException(ErrorCode.CONFLICT, "플래너 기록이 변경되었습니다. 다시 조회해주세요.");
+    }
     private PlannerItemEntity owned(String user, long id) {
         return repository.findByIdAndUserId(id, user).orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND));
     }

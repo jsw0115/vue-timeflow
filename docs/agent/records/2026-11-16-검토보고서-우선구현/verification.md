@@ -10,3 +10,8 @@
 - 오탐 제외. 없음. JSP는 변경 범위에 없어 N/A다.
 - P0-1 보안. PASS. 변경 범위에서 외부 실행·카드 정보 입력과 로컬 성공 변조를 제거했다. 상태는 인증 API로 확인하고 Vue 텍스트로 표시한다. SC-37·38·44, 웹 PV·XS, OWASP A06·A10에 해당한다.
 - UI 접근성. 상태/오류의 role, 시맨틱 재시도 button과 기존 focus-visible 스타일을 소스에서 확인했다. 실제 키보드·320px·200% 확대·화면낭독기 검사는 NOT_RUN이며 KWCAG 전체 통과를 뜻하지 않는다.
+- P0-2 플래너 테스트. PASS. 2026-11-17 `backend`에서 `gradlew.bat test --console=plain --tests "kr.timebar.diary.planner.*"`, 종료 0, 34개 통과(PlannerVersionTest 6개).
+- P0-2 서버 전체 회귀. PASS. `gradlew.bat test --rerun --console=plain`, 종료 0, 196개, 실패·오류·건너뜀 0.
+- P0-2 계약. FAIL 후 PASS. `node scripts/frontend-api-contract.mjs --check`가 openapi.json required의 version 중복으로 실패해 생성기로 재생성했다. 이후 286개 작업·197개 스키마 일치, api-inventory 286개 PASS.
+- P0-2 클라이언트·빌드. PASS. Node 테스트 64개, `npm run build:web` 종료 0. Node 20.18.0으로 실행했으며 요구 버전 미만이다.
+- P0-2 공백. PASS. 변경 범위 `git diff --check` 종료 0. `PlannerItemQueryRepositoryImpl.java`(빈 줄)와 `Modal.vue`는 기존 사용자 변경이라 제외했다.

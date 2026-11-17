@@ -65,9 +65,9 @@ public class PlannerController {
      * @return
       */
     @PatchMapping("/{id}/status") 
-    public ApiResponse<PlannerItem> changeStatus(@PathVariable long id, @RequestParam PlannerItem.ItemStatus status) { 
+    public ApiResponse<PlannerItem> changeStatus(@PathVariable long id, @RequestParam PlannerItem.ItemStatus status, @RequestParam Long version) {
         
-        PlannerItem result = service.changeStatus(CurrentUser.id(), id, status);
+        PlannerItem result = service.changeStatus(CurrentUser.id(), id, status, version);
         return ApiResponse.ok(result); 
     }
 
@@ -77,8 +77,8 @@ public class PlannerController {
       */
     @DeleteMapping("/{id}") 
     @ResponseStatus(HttpStatus.NO_CONTENT) 
-    public void delete(@PathVariable long id) { 
-        service.delete(CurrentUser.id(), id);
+    public void delete(@PathVariable long id, @RequestParam Long version) {
+        service.delete(CurrentUser.id(), id, version);
     }
 }
 

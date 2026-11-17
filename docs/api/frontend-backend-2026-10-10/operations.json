@@ -5088,7 +5088,7 @@
     "implementationStatus": "서비스 연결 · 검증 범위 별도",
     "public": false,
     "requestSchema": {
-      "$ref": "#/components/schemas/PlannerItem"
+      "$ref": "#/components/schemas/PlannerItemCreate"
     },
     "responseSchema": {
       "$ref": "#/components/schemas/PlannerItem"
@@ -5103,6 +5103,12 @@
         "name": "id",
         "type": "long",
         "location": "path",
+        "required": true
+      },
+      {
+        "name": "version",
+        "type": "Long",
+        "location": "query",
         "required": true
       }
     ],
@@ -5139,7 +5145,7 @@
     "implementationStatus": "서비스 연결 · 검증 범위 별도",
     "public": false,
     "requestSchema": {
-      "$ref": "#/components/schemas/PlannerItem"
+      "$ref": "#/components/schemas/PlannerItemUpdate"
     },
     "responseSchema": {
       "$ref": "#/components/schemas/PlannerItem"
@@ -5159,6 +5165,12 @@
       {
         "name": "status",
         "type": "PlannerItem.ItemStatus",
+        "location": "query",
+        "required": true
+      },
+      {
+        "name": "version",
+        "type": "Long",
         "location": "query",
         "required": true
       }

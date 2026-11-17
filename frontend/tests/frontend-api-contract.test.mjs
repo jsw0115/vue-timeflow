@@ -46,3 +46,19 @@ test('New record mutations require versions and reject unknown input fields', ()
   assert.ok(!api.components.schemas.REVIEWDateUpsert.required.includes('date'))
   assert.equal(api.components.schemas.Attachment.properties.sizeBytes.maximum, 10485760)
 })
+
+test('플래너 응답·수정·상태 변경·삭제는 공개 버전을 요구하고 생성 버전은 서버가 정한다', () => {
+  const schemas = api.components.schemas
+  assert.ok(schemas.PlannerItem.required.includes('version'))
+  assert.equal(schemas.PlannerItem.properties.version.minimum, 1)
+  assert.ok(schemas.PlannerItemUpdate.required.includes('version'))
+  assert.ok(!schemas.PlannerItemCreate.required.includes('version'))
+  assert.equal(schemas.PlannerItemCreate.properties.version.maximum, 0)
+  for (const operation of [api.paths['/api/planner/items/{id}'].delete, api.paths['/api/planner/items/{id}/status'].patch]) {
+    const version = operation.parameters.find(parameter => parameter.name === 'version')
+    assert.equal(version.required, true)
+    assert.equal(version.schema.minimum, 1)
+    assert.ok(operation.responses['409'])
+  }
+  assert.equal(api.paths['/api/planner/items/{id}'].put.requestBody.content['application/json'].schema.$ref, '#/components/schemas/PlannerItemUpdate')
+})

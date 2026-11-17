@@ -86,7 +86,7 @@ public class RecordActionsController {
         for (Object item : (List<?>) template.get("blocks")) {
             var block = FeatureInput.object(item); LocalTime start = FeatureInput.time(block.get("time").toString());
             LocalTime end = block.get("duration") == null ? null : start.plusMinutes(((Number)block.get("duration")).longValue());
-            items.add(planner.save(CurrentUser.id(), new PlannerItem(null, PlannerItem.ItemType.EVENT, block.get("title").toString(), "개인", date, start, end, PlannerItem.ItemStatus.SCHEDULED, false, "")));
+            items.add(planner.save(CurrentUser.id(), new PlannerItem(null, PlannerItem.ItemType.EVENT, block.get("title").toString(), "개인", date, start, end, PlannerItem.ItemStatus.SCHEDULED, false, "", null)));
         }
         return ApiResponse.ok(items);
     }
