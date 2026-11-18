@@ -73,7 +73,7 @@ python scripts/docs/verify_documentation.py
 
 ## 5. 주의할 기존 문서 상태
 
-- DESIGN.md 하단에 다른 프로젝트(ezConference)의 Design System Master가 섞여 있다. Timebar Diary 계약은 1~7장이며, 하단 Master의 색·폰트·컴포넌트를 적용하지 않는다. DESIGN.md는 omd 워크플로로만 고친다.
+- DESIGN.md는 2026-11-18에 9장 형식(Visual Theme ~ Agent Prompt Guide)으로 다시 썼고, 하단에 섞여 있던 ezConference Master를 제거했다. `.omd/system` 그래프의 해시는 이전 7장 형식에 묶여 있어 지금은 DESIGN.md가 독립 계약으로 쓰인다. 목표 값과 코드 값의 차이는 DESIGN.md 부록 B를 본다.
 - 루트 SECURITY.md에는 다른 프로젝트(Artibot)의 신고·버전 정보가 섞여 있다. Timebar Diary의 확정 사실로 인용하지 않는다.
 - `.omd/preferences.md`에 pending 항목이 쌓여 있다. 팔레트 밖 색·radius를 새로 쓰지 말고, 정리는 `/omd-learn`으로 한다.
 

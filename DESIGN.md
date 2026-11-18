@@ -1,568 +1,537 @@
 # Timebar Diary Design System
 
-<!-- design-md:section experience -->
-## 1. Experience
+Timebar Diary(저장소 이름 vue-timeflow)의 디자인 계약이다. 2026-11-18에 9개 섹션 형식으로 다시 썼다.
 
-<!-- design-md:claim scope kind=product-surface lang=en -->
-### Scope
+- 기존 계약(이전 DESIGN.md 1~7장)의 토큰 값과 규칙을 이어받는다.
+- Figma 레퍼런스(`.claude/data/references/figma/DESIGN.md`)에서는 중립 크롬 원칙, 보조 버튼·세그먼트 탭·원형 아이콘 버튼 형태, 테두리 색, 오버레이 그림자를 가져왔다.
+- 각 값의 출처는 `계약`(이전 DESIGN.md), `Figma`(Figma 레퍼런스), `코드`(현재 `frontend/src`)로 표기한다.
+- 이 문서의 목표 값과 현재 코드 값이 다른 곳은 [부록 B](#부록-b-현재-코드와의-차이)에 모았다.
 
-Timebar Diary는 계획(Plan)과 실제 기록(Actual)을 같은 시간축에서 비교하는 개인 시간관리 서비스다. 이 디자인 시스템은 정형화된 카드 그리드와 상투적인 블루/퍼플 그라데이션을 피하고, 절제된 모노톤 표면 위에 단 하나의 포인트 컬러만 쓰는 에디토리얼한 절제미를 추구한다.
-<!-- design-md:claim-end -->
+## 1. Visual Theme & Atmosphere
 
-<!-- design-md:claim primary-tasks kind=user-outcomes count=4 lang=en -->
-### Primary tasks
+### 제품
+
+Timebar Diary는 계획(Plan)과 실제 기록(Actual)을 같은 시간축에서 비교하는 개인 시간관리 서비스다. 사용자 화면은 다섯 묶음으로 나뉘고, 관리자용 운영·콘텐츠 묶음은 따로 있다(`frontend/src/router/index.js`).
+
+| 묶음 | 대표 화면 |
+|---|---|
+| 메인 | 홈, 알림, 캘린더, D-Day, 멘션함 |
+| 플래너 | 일간 플래너(계획과 실제 비교), 템플릿, 프로젝트 캔버스, 집중 모드, 같이 집중 |
+| 기록 | 일정, 할 일, 루틴, 다이어리, 메모, 태그, 머니로그 |
+| 인사이트 | 통계 보드, 일간·카테고리 통계, 비교 분석, 업무 리포트, WBS, 경력·포트폴리오 |
+| 소셜 | 공유 캘린더, 주소록, 채팅, 커뮤니티 |
+
+사용자는 J/P/B 세 가지 모드 중 하나를 고르고, 모드마다 글양식과 홈·통계 포틀릿 구성을 바꿀 수 있다(`SettingsEnvView.vue`, `SettingsFormStyleView.vue`).
+
+### 분위기
+
+화면은 "기록을 담는 중립적인 틀"이다. Figma가 흰 캔버스와 검정 크롬으로 사용자 작업물을 돋보이게 하듯, Timebar Diary도 크롬을 모노톤으로 두고 사용자가 고른 카테고리 색과 기록 내용이 색을 갖게 한다. 정형화된 카드 그리드와 상투적인 블루·퍼플 그라데이션을 피하고, 포인트 컬러는 딥 파인 그린 하나만 쓴다.
+
+### 핵심 특징
+
+- 흰 캔버스(`#ffffff`)와 따뜻한 오프화이트 표면(`#f5f3f1`), 검정 텍스트와 검정 주 액션
+- 포인트 컬러 `#2f5d46` 하나만 사용
+- 굵기 300의 큰 제목과 굵기 400의 본문으로 위계를 만드는 에디토리얼 타이포그래피
+- 숫자·시간은 JetBrains Mono로 표기해 자릿수를 맞춤
+- 넓은 여백, 얇은 테두리, 저알파 다단 그림자
+
+### 주요 작업 (계약)
 
 - 오늘의 일정·할 일·루틴을 한눈에 확인하고 실제 기록과 비교하기
-
-- 새 일정/할 일/루틴/다이어리를 빠르게 작성하기
-
+- 새 일정·할 일·루틴·다이어리를 빠르게 작성하기
 - 모드(J/P/B)와 글양식을 취향에 맞게 세부 설정하기
-
 - 지난 기록과 통계를 돌아보기
-<!-- design-md:claim-end -->
 
-### Design direction
+### 원칙
 
-- 절제된 모노톤 표면(canvas/surface/hairline) 위에 포인트 컬러 1개만 사용한다
-
-- 제목과 본문의 굵기·크기 대비를 극대화한 에디토리얼 타이포그래피를 쓴다
-
-- 넓은 여백과 명확한 시각적 위계를 우선한다
-
-- 미세한 다단 그림자와 얇은 테두리로 절제된 고급 질감을 표현한다
-
-### Principles
-
-- 실제 기록은 항상 3탭 이내에 남길 수 있어야 한다
-
-- 계획 미완료를 시각적으로 벌점화하지 않는다
-
-- 시간 데이터는 항상 명료한 위계로 보여준다(오늘/이번 주/과거)
-
-### Avoid
-
-- 정형화된 동일 크기 카드 격자의 기계적 반복
-
-- 무난한 블루/퍼플 톤 그라데이션 배경
-
-- 한 화면에서 여러 강조색을 동시에 쓰는 것
-
-- 장식적 이모지, 과도한 그림자, 네온톤 색상
-
-<!-- design-md:section foundations -->
-## 2. Foundations
-
-<!-- design-md:claim foundations kind=rules-or-constraints lang=en -->
-### Semantic tokens
-
-- **color.accent**: `#2f5d46` — Timebar Diary 전용 포인트 컬러(딥 파인 그린) — 절제된 모노톤 위에 단 하나만 쓰는 강조색. 기존 관행적인 블루/퍼플 SaaS 톤을 의도적으로 피하고, 루틴·성장의 이미지와 맞는 깊은 그린을 greenfield로 제안
-- **color.canvas**: `#ffffff` — ElevenLabs 공개 마케팅 표면에서 반복 관찰된 기본 캔버스 배경
-- **color.foreground**: `#000000` — ElevenLabs 공개 표면에서 반복 관찰된 기본 전경/텍스트 색
-- **color.hairline**: `#e5e5e5` — ElevenLabs 공개 라우트에서 반복 관찰된 computed border 색
-- **color.muted**: `#777169` — ElevenLabs 공개 라우트에서 반복 관찰된 보조/설명 텍스트 색
-- **color.on-accent**: `#ffffff` — 포인트 컬러 위에 놓이는 텍스트 색
-- **color.on-primary**: `#ffffff` — 검정 프라이머리 액션 위에 놓이는 텍스트 색 (ElevenLabs 관찰값)
-- **color.surface**: `#f5f3f1` — ElevenLabs 홈에서 관찰된 따뜻한 오프화이트 표면 — 캔버스보다 한 단계 낮은 구획 배경
-- **radius.full**: `9999px` — ElevenLabs 공개 액션(pill) 코너 관찰값
-- **radius.lg**: `16px` — ElevenLabs 에디토리얼 카드 코너 관찰값
-- **radius.md**: `12px` — ElevenLabs 공개 리스트박스/카드 코너 관찰값
-- **radius.sm**: `4px` — ElevenLabs 공개 텍스트 컨트롤 코너 관찰값
-- **shadow.card**: `0px 2px 4px rgba(0,0,0,0.04), 0px 0px 1.143px rgba(0,0,0,0.4)` — ElevenLabs 에디토리얼 카드에서 관찰된 저알파 다단 그림자
-- **shadow.raised**: `0px 0px 1px rgba(0,0,0,0.4), 0px 1px 1px rgba(0,0,0,0.04), 0px 2px 4px rgba(0,0,0,0.04)` — ElevenLabs 화이트 공개 액션에서 관찰된 저알파 3단 그림자
-- **space.gutter**: `48px` — 페이지 좌우 기본 거터 — project greenfield 확장
-- **space.lg**: `12px` — ElevenLabs 공개 컨트롤/컨테이너 간격
-- **space.md**: `8px` — ElevenLabs 공개 컨트롤 간격
-- **space.section**: `96px` — 섹션과 섹션 사이의 큰 수직 여백 — ElevenLabs 증거 범위(4~20px) 밖의 페이지 레벨 여백으로, 과감한 화이트스페이스 요구를 충족하기 위한 project greenfield 확장
-- **space.sm**: `6px` — ElevenLabs 공개 컨트롤 간격
-- **space.xl**: `16px` — ElevenLabs 공개 컨테이너 간격
-- **space.xs**: `4px` — ElevenLabs 공개 컨트롤에서 관찰된 최소 간격
-- **space.xxl**: `20px` — ElevenLabs 공개 컨테이너 간격
-
-### Contrast pairs
-
-- color.foreground on color.canvas: minimum 7:1
-- color.on-primary on color.foreground: minimum 7:1
-- color.muted on color.canvas: minimum 4.5:1
-- color.on-accent on color.accent: minimum 4.5:1
-
-### Reduced motion
-
-Required.
-
-### Foundation rules
-
-- 배경은 canvas/surface 단색만 사용하고 그라데이션은 쓰지 않는다.
-
-- 포인트 컬러(color.accent)는 한 화면에서 가장 중요한 단일 CTA·강조 요소 하나에만 사용한다.
-
-- 그림자는 shadow.card 또는 shadow.raised 토큰만 사용하며, 임의의 진한 단일 그림자를 새로 만들지 않는다.
-
-- 섹션 간 수직 여백은 최소 space.section(96px)을 기본으로 하고, 좁은 화면에서만 축소한다.
-
-- 정형화된 동일 크기 카드 격자를 기본값으로 삼지 않는다 — 콘텐츠 비중에 따라 폭과 높이를 달리한다.
-<!-- design-md:claim-end -->
-
-<!-- design-md:section typography-assets -->
-## 3. Typography & Assets
-
-### Type roles
-
-| Role | Usage | Family | Size | Weight | Line height | Tracking |
-|---|---|---|---|---|---|---|
-| display | 페이지 타이틀, 히어로 헤드라인 | Pretendard Variable, -apple-system, BlinkMacSystemFont, sans-serif | 40-56px (반응형) | 300 | 1.15 | -0.02em |
-| heading | 섹션 제목, 카드 타이틀 | Pretendard Variable, -apple-system, BlinkMacSystemFont, sans-serif | 18-24px | 600 | 1.3 | -0.01em |
-| body | 본문, 리스트, 설명 텍스트 | Pretendard Variable, -apple-system, BlinkMacSystemFont, sans-serif | 14-15px | 400 | 1.6 | 0em |
-| control | 버튼, 입력 라벨, UI 컨트롤 텍스트 | Pretendard Variable, -apple-system, BlinkMacSystemFont, sans-serif | 13px | 500 | 1 | 0em |
-| figure | 통계 수치, D-Day 카운터, 타임스탬프 등 숫자 강조 | JetBrains Mono, ui-monospace, monospace | 28-40px | 500 | 1 | -0.01em |
-
-### Assets
-
-| Asset | Kind | Source status | License status | Source | Notes |
-|---|---|---|---|---|---|
-| pretendard-variable | font | licensed-sourced | verified | Pretendard Variable (OFL-1.1), jsDelivr CDN 자체 호스팅 | 한글+라틴 가변 폰트, weight 45-920. 본문/제목/컨트롤 공통 사용 |
-| jetbrains-mono | font | licensed-sourced | verified | JetBrains Mono (OFL-1.1), Google Fonts | 숫자·시간 표기 전용 tabular figure. 타임바 앱의 정밀함을 시각적으로 강조 |
-
-### Rules
-
-- display 역할은 300 굵기의 큰 글자, body 역할은 400 굵기의 작은 글자로 두어 굵기·크기 대비로 위계를 만든다 — 같은 크기에서 굵기만 바꿔 위계를 만들지 않는다.
-
-- 숫자(통계, D-Day, 타임스탬프)는 항상 figure 역할(JetBrains Mono)로 표기해 표 형태 정렬과 이질적 텍스처를 동시에 얻는다.
-
-- 자간은 display/heading에서만 음수(-0.01em~-0.02em)를 주고, body/control은 0em을 유지해 긴 문단 가독성을 지킨다.
-
-<!-- design-md:section components-states -->
-## 4. Components & States
-
-### Component: button-primary
-
-**Semantics:** 화면당 가장 중요한 단일 행동에만 쓰는 검정 배경 pill 버튼
-
-- Anatomy: label
-- Variants: default
-- States: default, hover, focus-visible, disabled, loading
-- Token references: color.foreground, color.on-primary, radius.full, space.xl
-
-- Interaction kind: interactive
-
-#### State applicability
-
-| State | Applicability | Reason |
-|---|---|---|
-| default | applicable |  |
-| hover | applicable |  |
-| focus-visible | applicable |  |
-| disabled | applicable |  |
-| loading | applicable |  |
-| error | not-applicable | 버튼 자체는 오류 상태를 갖지 않으며 오류는 입력 필드에서 표현한다 |
-| success | not-applicable | 버튼 자체는 성공 상태를 갖지 않으며 성공은 토스트/배지로 표현한다 |
-
-### Component: button-secondary
-
-**Semantics:** 보조 행동을 위한 아웃라인/표면 버튼. color.accent는 쓰지 않는다
-
-- Anatomy: label
-- Variants: default
-- States: default, hover, focus-visible, disabled, loading
-- Token references: color.surface, color.foreground, color.hairline, radius.full
-
-- Interaction kind: interactive
-
-#### State applicability
-
-| State | Applicability | Reason |
-|---|---|---|
-| default | applicable |  |
-| hover | applicable |  |
-| focus-visible | applicable |  |
-| disabled | applicable |  |
-| loading | applicable |  |
-| error | not-applicable | 버튼 자체는 오류 상태를 갖지 않는다 |
-| success | not-applicable | 버튼 자체는 성공 상태를 갖지 않는다 |
-
-### Component: input-field
-
-**Semantics:** 텍스트/선택 입력 공통 스타일. 포커스 시 color.accent 2px 아웃라인
-
-- Anatomy: label, control, helper-text
-- Variants: text, select, textarea
-- States: default, hover, focus-visible, disabled, error, success
-- Token references: color.canvas, color.hairline, color.foreground, color.accent, radius.sm
-
-- Interaction kind: interactive
-
-#### State applicability
-
-| State | Applicability | Reason |
-|---|---|---|
-| default | applicable |  |
-| hover | applicable |  |
-| focus-visible | applicable |  |
-| disabled | applicable |  |
-| loading | not-applicable | 텍스트 입력 자체는 별도의 로딩 상태를 갖지 않는다 |
-| error | applicable |  |
-| success | applicable |  |
-
-### Component: nav-item
-
-**Semantics:** LNB 내비게이션 항목. active 상태는 surface 배경 + foreground 텍스트로만 표현하고 accent는 쓰지 않는다
-
-- Anatomy: icon, label
-- Variants: default, active
-- States: default, hover, focus-visible
-- Token references: color.foreground, color.muted, color.surface, radius.md
-
-- Interaction kind: interactive
-
-#### State applicability
-
-| State | Applicability | Reason |
-|---|---|---|
-| default | applicable |  |
-| hover | applicable |  |
-| focus-visible | applicable |  |
-| disabled | not-applicable | 내비게이션 항목은 비활성화하지 않는다 |
-| loading | not-applicable | 내비게이션 항목은 로딩 상태를 갖지 않는다 |
-| error | not-applicable | 내비게이션 항목은 오류 상태를 갖지 않는다 |
-| success | not-applicable | 내비게이션 항목은 성공 상태를 갖지 않는다 |
-
-### Component: surface-card
-
-**Semantics:** 정보를 묶는 정적 표면 컨테이너. 동일 크기로 반복 배치하지 않고 콘텐츠 비중에 따라 폭을 달리한다
-
-- Anatomy: header(optional), body, footer(optional)
-- Variants: default
-- States: default
-- Token references: color.canvas, color.hairline, radius.lg, shadow.card
-
-- Interaction kind: non-interactive
-- Interaction reason: 그 자체로 클릭 대상이 아닌 정적 컨테이너이며, 내부의 개별 요소가 상호작용을 담당한다
-
-### Rules
-
-- 모든 interactive 컴포넌트는 focus-visible 상태에서 color.accent 2px 아웃라인을 표시한다.
-
-- color.accent는 button-primary와 input-field의 포커스 표시 외에는 컴포넌트 배경색으로 쓰지 않는다.
-
-<!-- design-md:section layout-platforms -->
-## 5. Layout & Platforms
-
-### Responsive constraints
-
-- Minimum supported width: 320px
-- Reflow target: 200% zoom
-
-### Layout rules
-
-- 데스크톱 콘텐츠 최대폭은 1180px로 제한하고, 그 이상에서는 좌우 여백을 확장한다.
-
-- LNB(사이드바)와 메인 콘텐츠 영역은 각각 독립적으로 스크롤한다.
-
-- 760px 미만에서는 LNB를 오프캔버스로 전환하고 콘텐츠는 전체 폭을 사용한다.
-
-### Platform: web
-
-- 반응형 웹 우선, 데스크톱 사이드바 폭 244px 고정
-
-<!-- design-md:section content-locales -->
-## 6. Content & Locales
-
-### Voice
-
-- 담백하고 절제된 안내형 문장을 쓰고 과도한 이모지·느낌표는 쓰지 않는다.
-
-- 핵심 동사를 문장 앞쪽에 두어 사용자가 취할 행동을 명확히 한다.
-
-- 실패·미완료를 벌점화하는 표현을 쓰지 않는다(예: "실패" 대신 "이월"/"다음에").
-
-### Terminology
-
-| Term | Preferred form |
+| 원칙 | 출처 |
 |---|---|
-| Actual | 실제 기록 |
-| Diary | 다이어리 |
-| Event | 일정 |
+| 실제 기록은 항상 3탭 이내에 남길 수 있어야 한다. | 계약 |
+| 계획 미완료를 시각적으로 벌점화하지 않는다. | 계약 |
+| 시간 데이터는 항상 명료한 위계(오늘 → 이번 주 → 과거)로 보여준다. | 계약 |
+| 크롬은 중립으로 두고 색은 사용자의 기록이 갖게 한다. | Figma |
+| 굵기·자간·형태의 정밀한 차이로 위계를 만든다. | Figma |
+
+## 2. Color Palette & Roles
+
+### 인터페이스 토큰
+
+| 토큰 | CSS 변수 | 값 | 역할 | 출처 |
+|---|---|---|---|---|
+| color.canvas | `--color-canvas` | `#ffffff` | 페이지 배경, 카드 배경, 입력 배경 | 계약 (Figma canvas와 같은 값) |
+| color.surface | `--color-surface` | `#f5f3f1` | 캔버스보다 한 단계 낮은 구획, nav 활성 배경, 세그먼트 컨테이너, 배지 배경 | 계약 |
+| color.foreground | `--color-foreground` | `#000000` | 본문 텍스트, 주 액션 배경 | 계약 (Figma primary와 같은 값) |
+| color.muted | `--color-muted` | `#777169` | 보조 설명 텍스트, 비활성 nav 텍스트 | 계약 |
+| color.hairline | `--color-hairline` | `#ebebeb` | 구분선, 카드·입력·보조 버튼 테두리 | Figma border (이전 계약 값 `#e5e5e5`) |
+| color.on-primary | `--color-on-primary` | `#ffffff` | 검정 주 액션 위 텍스트 | 계약 |
+| color.accent | `--color-accent` | `#2f5d46` | 화면당 단일 강조, 포커스 표시 | 계약 |
+| color.on-accent | `--color-on-accent` | `#ffffff` | 포인트 컬러 위 텍스트 | 계약 |
+
+### 상태 색
+
+코드에서 이미 쓰는 값을 공식 토큰으로 기록했다. 의미 이름은 실제 사용 클래스에서 가져왔다.
+
+| 토큰 | 값 | 현재 사용처 | canvas 대비 | surface 대비 |
+|---|---|---|---|---|
+| color.status-danger | `#b23b3b` | `.danger`, `.out`, `.sla-over`, `.wip-over`, 공유 동의 모달 오류 문구 | 5.86:1 | 5.30:1 |
+| color.status-warning | `#8a6a3c` | `.warn`, `.offline` | 4.99:1 | 4.51:1 |
+| color.status-info | `#43596b` | `.info` | 7.29:1 | 6.59:1 |
+| 성공 표시 | color.accent | `.ok` (surface 배경 + accent 텍스트) | 7.57:1 | 6.84:1 |
+
+- 상태 색은 텍스트, 배지, 작은 점처럼 좁은 면적에만 쓴다. 버튼 배경이나 넓은 면에는 쓰지 않는다.
+- `status-danger`는 오류, 기한·한도 초과에만 쓴다. 계획 미완료에는 쓰지 않는다.
+
+### 콘텐츠 색
+
+카테고리·일정 블록·차트 색은 인터페이스 토큰이 아니라 사용자가 고르는 콘텐츠 색이다. Figma 레퍼런스가 작업물 안의 색을 인터페이스 팔레트로 끌어오지 않는 것과 같은 원칙이다.
+
+- 현재 카테고리 스와치(`SettingsCategoryView.vue`): `var(--color-accent)`, `#43596b`, `#8a6a3c`, `#b23b3b`, `#4a4740`, `#2f7a56`
+- 통계·일정 블록에서 추가로 쓰는 값: `#b5843f`, `#5c7891`
+- 콘텐츠 색은 시간 블록 왼쪽 3px 띠, 차트 막대, 범례 점처럼 작은 면적에만 쓴다.
+- `#b5843f`는 흰 배경 대비 3.31:1이라 텍스트 색으로 쓰지 않는다.
+
+### 채택하지 않은 Figma 색
+
+| 값 | Figma 역할 | 채택하지 않은 이유 |
+|---|---|---|
+| `#4d49fc` | 인디고 보조 강조 액션 | 포인트 컬러 1개 원칙과 블루·퍼플 강조 회피 원칙에 어긋난다. |
+| `#0d99ff` | 점선 포커스 | 흰 배경 대비 2.99:1로 비텍스트 대비 기준 3:1(WCAG 2.1 1.4.11)에 못 미친다. 포커스는 color.accent(7.57:1)로 표시한다. |
+
+### 대비 기준
+
+| 조합 | 최소 기준 (계약) | 실측 |
+|---|---|---|
+| foreground on canvas | 7:1 | 21:1 |
+| on-primary on foreground | 7:1 | 21:1 |
+| muted on canvas | 4.5:1 | 4.83:1 |
+| on-accent on accent | 4.5:1 | 7.57:1 |
+| muted on surface | 4.5:1 | **4.36:1 (미달)** |
+
+surface 위 본문 크기 텍스트에는 color.muted 대신 color.foreground를 쓴다.
+
+### CSS 변수
+
+```css
+:root {
+  --color-canvas: #ffffff;
+  --color-surface: #f5f3f1;
+  --color-foreground: #000000;
+  --color-muted: #777169;
+  --color-hairline: #ebebeb;
+  --color-on-primary: #ffffff;
+  --color-accent: #2f5d46;
+  --color-on-accent: #ffffff;
+  --color-status-danger: #b23b3b;
+  --color-status-warning: #8a6a3c;
+  --color-status-info: #43596b;
+}
+```
+
+## 3. Typography Rules
+
+### 서체
+
+| 서체 | 용도 | 불러오는 곳 | 라이선스 |
+|---|---|---|---|
+| Pretendard Variable | 제목, 본문, 컨트롤 | jsDelivr `orioncactus/pretendard@v1.3.9` dynamic subset | OFL-1.1 (계약 확인) |
+| JetBrains Mono | 숫자, 시간, 화면 ID | Google Fonts, `wght@400;500;600` | OFL-1.1 (계약 확인) |
+
+- 대체 스택(코드): `'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif`, `'JetBrains Mono', ui-monospace, monospace`
+- Google Fonts 대체안: Pretendard는 Google Fonts에 없다. jsDelivr를 쓸 수 없는 환경에서만 Google Fonts의 Noto Sans KR로 바꾼다. JetBrains Mono는 이미 Google Fonts에서 불러온다.
+
+### 타입 스케일 (계약)
+
+| 역할 | 용도 | 서체 | 크기 | 굵기 | 행간 | 자간 |
+|---|---|---|---|---|---|---|
+| display | 페이지 타이틀, 히어로 헤드라인 | Pretendard Variable | 40–56px | 300 | 1.15 | -0.02em |
+| heading | 섹션 제목, 카드 타이틀 | Pretendard Variable | 18–24px | 600 | 1.3 | -0.01em |
+| body | 본문, 리스트, 설명 | Pretendard Variable | 14–15px | 400 | 1.6 | 0 |
+| control | 버튼, 입력 라벨, 컨트롤 | Pretendard Variable | 13px | 500 | 1 | 0 |
+| figure | 통계 수치, D-Day, 타임스탬프 | JetBrains Mono | 28–40px | 500 | 1 | -0.01em |
+
+### 규칙
+
+- 위계는 굵기와 크기를 함께 바꿔 만든다. display는 300의 큰 글자, body는 400의 작은 글자로 둔다. 같은 크기에서 굵기만 바꿔 위계를 만들지 않는다. (계약)
+- 통계·D-Day·타임스탬프 숫자는 항상 figure 역할로 표기한다. 작은 시간 표기에도 JetBrains Mono와 `font-variant-numeric: tabular-nums`를 쓴다. (계약, 코드)
+- 음수 자간은 display와 heading에만 준다. body와 control은 0을 유지한다. (계약)
+- 모노 서체는 숫자·시간·ID 같은 구조 신호에만 쓰고 문단에는 쓰지 않는다. (Figma)
+- 섹션 위 작은 안내 라벨(`.eyebrow`)은 12px, 굵기 600, 대문자, 양수 자간 0.04em을 쓴다. (코드)
+- 글자 크기는 rem으로 지정한다. 앱의 글자 크기 설정이 `:root` font-size를 93.75%(작게)·112.5%(크게)로 바꾸기 때문이다. (코드 `typography.css`)
+- 한국어 제목에는 `word-break: keep-all`을 쓴다. (코드)
+
+## 4. Component Stylings
+
+### 공통 규칙
+
+- 모든 interactive 컴포넌트는 `:focus-visible`에서 color.accent 2px 실선 아웃라인, 오프셋 2px을 표시한다. (계약, 코드)
+- color.accent는 button-primary 포커스와 input-field 포커스 외에는 컴포넌트 배경색으로 쓰지 않는다. (계약)
+- 색·테두리·배경 전환은 0.15s로 한다. `prefers-reduced-motion: reduce`에서는 전환·애니메이션 시간을 0으로 만든다. (코드)
+- 계약에 상태가 있지만 공통 스타일이 아직 없는 경우는 "미정"으로 표기했다. 그럴듯한 기본값으로 채우지 않는다.
+
+### button-primary (계약)
+
+화면당 가장 중요한 단일 행동에만 쓰는 검정 pill 버튼이다.
+
+| 속성 | 값 |
+|---|---|
+| 배경 / 텍스트 | color.foreground / color.on-primary |
+| 모서리 | radius.full |
+| 여백 / 최소 높이 | 11px 18px / 40px (코드) |
+| 그림자 | shadow.raised |
+
+| 상태 | 표현 |
+|---|---|
+| default | 위 표 |
+| hover | 위로 1px 이동. 그림자는 shadow 토큰 안에서만 바꾼다. |
+| focus-visible | accent 2px 아웃라인 |
+| disabled | 불투명도 0.45, 이동·그림자 없음 (코드) |
+| loading | 미정 |
+| error / success | 해당 없음. 오류는 입력 필드, 성공은 토스트·배지로 표현한다. (계약) |
+
+### button-secondary (계약 역할 + Figma outline-action 형태)
+
+보조 행동용 아웃라인 버튼이다. color.accent는 쓰지 않는다.
+
+| 속성 | 값 |
+|---|---|
+| 배경 / 텍스트 | color.canvas(Figma는 투명) / color.foreground |
+| 테두리 | 1px color.hairline |
+| 모서리 | radius.control (8px, Figma) |
+| 여백 / 최소 높이 | button-primary와 같게 11px 18px / 40px |
+
+| 상태 | 표현 |
+|---|---|
+| hover | 테두리를 color.foreground로 바꾼다. |
+| focus-visible | accent 2px 아웃라인 |
+| disabled | button-primary와 같은 0.45 불투명도 |
+| loading | 미정 |
+| error / success | 해당 없음 (계약) |
+
+### icon-button (Figma round-icon 형태)
+
+헤더 액션처럼 아이콘만 있는 버튼이다.
+
+| 속성 | 값 |
+|---|---|
+| 크기 / 모서리 | 40×40px / radius.full (Figma 40px 원형) |
+| 배경 / 아이콘 | color.canvas / color.foreground |
+| 테두리 | 1px color.hairline |
+| hover | 테두리를 color.foreground로 바꾼다. (코드 `.icon:hover`) |
+| 접근성 | 보이는 라벨이 없으므로 `aria-label`로 이름을 준다. |
+
+Figma의 검정 채움 원형 버튼은 button-primary와 시선을 다투므로 쓰지 않는다.
+
+### input-field (계약)
+
+텍스트·선택·여러 줄 입력의 공통 스타일이다. Figma 레퍼런스는 입력 컴포넌트 근거가 없어 계약과 코드 값만 쓴다.
+
+| 속성 | 값 |
+|---|---|
+| 구조 | label, control, helper-text |
+| 배경 / 테두리 | color.canvas / 1px color.hairline |
+| 모서리 / 여백 | radius.sm / 9px (코드) |
+| 라벨 | 13px, 굵기 600 (코드 `.detail label`) |
+
+| 상태 | 표현 |
+|---|---|
+| hover | 미정 |
+| focus-visible | accent 2px 아웃라인 |
+| disabled | 미정 |
+| error | helper-text를 color.status-danger, 굵기 600으로 표시한다. (코드 공유 동의 모달) |
+| success | 미정 |
+| loading | 해당 없음 (계약) |
+
+체크박스·라디오는 17px 원형 테두리(1.5px hairline)를 쓰고, 선택하면 accent로 채우고 안쪽에 4px canvas 링을 둔다. (코드 `.task input`)
+
+### segmented-tab (Figma product-segment 형태 + 코드 색)
+
+필터·보기 전환·작성 유형 전환에 쓴다(`.tabs`, `.filter`, `.compose-tabs`).
+
+| 속성 | 값 |
+|---|---|
+| 컨테이너 | color.surface 배경, 안쪽 여백 3–4px, radius.full (Figma pill) |
+| 항목 | 최소 높이 32px, radius.full (코드 높이, Figma 형태) |
+| 선택 항목 | color.foreground 배경, color.on-primary 텍스트, 굵기 600 (코드) |
+| 비선택 항목 | color.foreground 텍스트 (surface 위 muted 대비 미달 때문) |
+
+### nav-item (계약)
+
+LNB 내비게이션 항목이다. 활성 상태는 surface 배경과 foreground 텍스트로만 표현하고 accent는 쓰지 않는다.
+
+| 속성 | 값 |
+|---|---|
+| 구조 | icon, label |
+| 높이 / 여백 / 간격 | 40px / 0 11px / 13px (코드) |
+| 모서리 | radius.md (계약) |
+| 기본 | color.muted 텍스트, 14px |
+| hover | color.surface 배경, color.foreground 텍스트 (코드) |
+| active | color.surface 배경, color.foreground 텍스트, 굵기 600 |
+| focus-visible | accent 2px 아웃라인 |
+
+### surface-card (계약)
+
+정보를 묶는 정적 컨테이너다. 자체 클릭 대상이 아니며 안쪽 요소가 상호작용을 맡는다.
+
+| 속성 | 값 |
+|---|---|
+| 구조 | header(선택), body, footer(선택) |
+| 배경 / 테두리 | color.canvas / 1px color.hairline |
+| 모서리 / 그림자 | radius.lg / shadow.card |
+| 여백 | 20px (코드 `.card`) |
+
+같은 크기로 반복 배치하지 않고 콘텐츠 비중에 따라 폭을 달리한다.
+
+### time-block (코드)
+
+플래너 타임라인에서 계획과 실제 기록을 구분하는 블록이다. Timebar Diary의 핵심 시각 언어다.
+
+| 종류 | 표현 |
+|---|---|
+| 계획(Plan) | canvas 배경, 1px **점선** color.muted 테두리, muted 텍스트 (`.plan`) |
+| 실제 기록(Actual) | canvas 배경, 1px hairline 테두리, 왼쪽 3px 콘텐츠 색 띠 (`.block`) |
+| 공통 | radius.sm, 여백 6px 8px, 12px 텍스트, 제목만 13px 굵게 |
+
+### status-badge (코드)
+
+`.tag`, `.state`, `.ok`, `.warn`, `.danger`, `.info`에 해당한다.
+
+| 속성 | 값 |
+|---|---|
+| 배경 | color.surface |
+| 텍스트 | 기본 color.foreground, 상태별로 상태 색 |
+| 크기 / 여백 / 모서리 | 12px / 4px 7px / radius.sm |
+
+### modal (코드 구조 + Figma 그림자)
+
+작성 모달(composer)과 확인 대화상자에 쓴다.
+
+| 속성 | 값 |
+|---|---|
+| 배경막 | `rgba(0,0,0,.4)` (코드 `.backdrop`) |
+| 패널 | color.canvas, radius.lg, 여백 24px |
+| 폭 | `min(420px, calc(100vw - 32px))` (코드 `.composer`) |
+| 그림자 | shadow.overlay (Figma panel) |
+| 주 액션 | 패널 폭 전체를 쓰는 button-primary |
+
+## 5. Layout Principles
+
+### 간격 스케일 (계약)
+
+| 토큰 | 값 | 용도 |
+|---|---|---|
+| space.xs | 4px | 최소 간격 |
+| space.sm | 6px | 컨트롤 안 간격 |
+| space.md | 8px | 컨트롤 사이 간격 |
+| space.lg | 12px | 컨트롤·컨테이너 간격 |
+| space.xl | 16px | 카드 사이 간격 |
+| space.xxl | 20px | 카드 안쪽 여백 |
+| space.gutter | 48px | 페이지 좌우 거터 |
+| space.section | 96px | 섹션 사이 수직 여백, 페이지 상단 여백 |
+
+### 모서리 스케일
+
+| 토큰 | 값 | 용도 | 출처 |
+|---|---|---|---|
+| radius.sm | 4px | 입력, 배지, 시간 블록 | 계약 |
+| radius.control | 8px | button-secondary | Figma |
+| radius.md | 12px | nav-item, 선택형 카드 | 계약 |
+| radius.lg | 16px | surface-card, 모달 | 계약 |
+| radius.full | 9999px | button-primary, icon-button, segmented-tab, 아바타 | 계약 |
+
+### 그리드
+
+- 데스크톱 콘텐츠 최대폭은 1180px로 제한하고, 그보다 넓으면 좌우 여백을 늘린다. (계약)
+- 사이드바(LNB)는 244px로 고정한다. LNB와 메인 영역은 각각 따로 스크롤한다. (계약, 코드)
+- 메인 영역 기본 여백은 위아래 space.section, 좌우 space.gutter다. (코드)
+- 열 폭은 콘텐츠 비중에 따라 다르게 준다. 현재 코드의 비율은 다음과 같다.
+
+| 화면 | 열 구성 |
+|---|---|
+| 홈 3단 | `1.1fr 1fr .7fr` |
+| 플래너 | `1.2fr .8fr` |
+| 목록 + 상세 | `1fr 300px` |
+| 다이어리 | `1fr 290px` |
+| 설정 | `280px 1fr` |
+| 통계 | `1.3fr .7fr` |
+
+- 홈 포틀릿은 크기 단계(`w-sm`, `w-md`, `w-lg`)가 있는 위젯 그리드로 배치한다. (코드)
+
+### 여백 리듬
+
+- 컨테이너를 늘리기 전에 글자 크기와 여백으로 먼저 구분한다. (Figma)
+- 섹션 사이는 space.section, 카드 사이는 space.xl, 카드 안쪽은 space.xxl을 기본으로 한다.
+- 목록 행은 위아래 14px 여백과 hairline 구분선으로 나눈다. (코드 `.event`, `.task`)
+
+## 6. Depth & Elevation
+
+### 표면 위계
+
+| 단계 | 표면 | 표현 |
+|---|---|---|
+| 0 | 페이지 | color.canvas, 그림자 없음 |
+| 1 | 구획 | color.surface, 그림자 없음. 배경색 차이로만 구분한다. |
+| 2 | 카드 | color.canvas + 1px hairline + shadow.card |
+| 3 | 주 액션 | button-primary + shadow.raised |
+| 4 | 오버레이 | 배경막 `rgba(0,0,0,.4)` + 패널 + shadow.overlay |
+
+### 그림자 토큰
+
+| 토큰 | 값 | 용도 | 출처 |
+|---|---|---|---|
+| shadow.card | `0px 2px 4px rgba(0,0,0,0.04), 0px 0px 1.143px rgba(0,0,0,0.4)` | surface-card | 계약 |
+| shadow.raised | `0px 0px 1px rgba(0,0,0,0.4), 0px 1px 1px rgba(0,0,0,0.04), 0px 2px 4px rgba(0,0,0,0.04)` | button-primary | 계약 |
+| shadow.overlay | `0 24px 70px rgba(0,0,0,0.1)` | 모달, 작성 패널 | Figma panel |
+
+### 규칙
+
+- 대부분의 크롬은 평평하게 둔다. 그림자는 위 세 토큰만 쓰고 진한 단일 그림자를 새로 만들지 않는다. (계약, Figma)
+- shadow.overlay는 화면 위에 뜨는 패널에만 쓰고 일반 카드 그림자로 쓰지 않는다. (Figma)
+- 배경은 canvas·surface 단색만 쓰고 그라데이션을 쓰지 않는다. (계약) 차트 도넛(`conic-gradient`)과 타임라인 격자선(`repeating-linear-gradient`)은 데이터 표현이라 배경 규칙과 별개다. (코드)
+
+## 7. Do's and Don'ts
+
+### Do
+
+- 크롬은 canvas·surface·foreground·hairline으로 구성하고, 포인트 컬러는 화면에서 가장 중요한 요소 하나에만 쓴다.
+- 계획은 점선, 실제 기록은 실선과 콘텐츠 색 띠로 구분한다.
+- 숫자와 시간은 JetBrains Mono로 표기한다.
+- 콘텐츠 비중에 따라 카드 폭과 높이를 달리한다.
+- 새 화면도 실제 기록을 3탭 이내에 남길 수 있게 설계한다.
+- 아이콘만 있는 버튼에는 `aria-label`을 준다.
+- 핵심 동사를 문장 앞쪽에 두어 사용자가 할 행동을 분명히 한다. (계약)
+
+### Don't
+
+- 같은 크기 카드 격자를 기계적으로 반복하지 않는다. (계약)
+- 블루·퍼플 그라데이션 배경을 쓰지 않는다. Figma 인디고(`#4d49fc`)도 쓰지 않는다. (계약)
+- 한 화면에 강조색을 여러 개 쓰지 않는다. (계약)
+- 장식용 이모지, 과한 그림자, 네온 색을 쓰지 않는다. (계약)
+- 사용자 콘텐츠 색(카테고리 색)을 버튼·nav 같은 크롬에 쓰지 않는다. (Figma)
+- 팔레트와 모서리 스케일 밖의 값을 새로 만들지 않는다. 필요하면 먼저 기존 토큰으로 표현할 수 있는지 검토한다. (계약)
+- 계획 미완료를 빨간색, "실패" 같은 벌점 표현으로 보여주지 않는다. (계약)
+- 로컬 시연 저장 화면을 서버 저장이 끝난 화면처럼 표현하지 않는다. AI·음성·결제·외부 캘린더 연동을 성공한 것처럼 표시하지 않는다. (CLAUDE.md)
+
+### 문구
+
+- 담백하고 절제된 안내형 문장을 쓴다. 과한 이모지와 느낌표를 쓰지 않는다. (계약)
+- 실패·미완료는 "이월", "다음에"처럼 벌점 없는 말로 쓴다. (계약)
+- 기본 로케일은 ko다. 모든 UI 문자열은 한국어를 1차 기준으로 한다. (계약)
+
+| 용어 | 화면 표기 |
+|---|---|
 | Plan | 계획 |
-| Routine | 루틴 |
+| Actual | 실제 기록 |
+| Event | 일정 |
 | Task | 할 일 |
+| Routine | 루틴 |
+| Diary | 다이어리 |
 
-### Locale: ko (supported)
+## 8. Responsive Behavior
 
-- 기본 로케일. 모든 UI 문자열의 1차 기준이다.
+### 지원 범위 (계약)
 
-<!-- design-md:section governance -->
-## 7. Governance
+- 최소 지원 폭은 320px이다.
+- 200% 확대에서도 가로 스크롤 없이 다시 배치되어야 한다.
+- 웹 반응형을 우선한다.
 
-<!-- design-md:claim authority kind=project-system lang=en -->
-### Authority
+### 브레이크포인트 (코드)
 
-This document is the project design contract for the declared scope.
-<!-- design-md:claim-end -->
+| 폭 | 동작 |
+|---|---|
+| 1150px 초과 | 사이드바 244px + 메인 여백 96px/48px |
+| 1150px 이하 | 메인 여백 30px 25px. 지표 2열, 홈 3단은 2열, 플래너·집중·목록 상세·다이어리·설정·통계는 1열. D-Day 카드와 상세·캘린더 보조 패널 숨김. 위젯 그리드 2열 |
+| 1000px 이하 | 히어로를 세로로 쌓음. 루틴 표 머리행 숨김 |
+| 860px 이하 | 통계 보드 1열 |
+| 760px 이하 | LNB를 오프캔버스로 전환(왼쪽에서 0.2s 이동, 배경막 `rgba(0,0,0,.4)`), 햄버거 버튼 표시. 메인 여백 22px 15px. 페이지 제목 1.75rem·행간 1.3, 헤더 액션은 제목 아래 줄로 내림. 위젯 그리드 1열. 헤더 아이콘 버튼 숨김. 목록 표는 가로 스크롤. 입력 글자는 16px 이상 |
+| 600px 이하 | 도움말 팝오버 용어 목록 1열 |
+| 높이 600px 이하 | 사이드바 전체를 세로 스크롤 |
 
-<!-- design-md:claim application-priority order=prompt-fact,repository-fact,system-contract,reference-inspiration lang=en -->
-### Application priority
+### 터치 타깃
 
-1. Direct user instructions for the requested scope.
-2. Repository facts.
-3. This system contract.
-4. Reference inspiration.
-<!-- design-md:claim-end -->
+- 주 컨트롤(button-primary, nav-item, 요일 선택)은 높이 40px이다. (코드)
+- segmented-tab 항목은 최소 32px이다. (코드)
+- 새 컨트롤은 높이 40px 이상을 기본으로 한다.
 
-<!-- design-md:claim unknowns policy=absent-at-smallest-unresolved-boundary lang=en -->
-### Unknowns
+### 접힘 규칙
 
-Omit only the smallest unresolved value or group. Do not replace it with a plausible default.
-<!-- design-md:claim-end -->
+- 760px 미만에서는 LNB를 오프캔버스로 바꾸고 콘텐츠가 전체 폭을 쓴다. (계약)
+- 섹션 여백 space.section은 좁은 화면에서만 줄인다. (계약)
 
-<!-- design-md:claim changes policy=review-record-validate-before-adoption lang=en -->
-### Changes
+## 9. Agent Prompt Guide
 
-Record, review, and validate changes before adoption.
-<!-- design-md:claim-end -->
+새 화면이나 컴포넌트를 만들 때 아래 프롬프트를 그대로 쓰거나 화면에 맞게 고쳐 쓴다.
 
-### Project priority details
+### 기본 프롬프트
+
+> Timebar Diary 화면을 만든다. 흰 캔버스(#ffffff)와 따뜻한 오프화이트 표면(#f5f3f1), 검정 텍스트와 검정 pill 주 액션을 쓰고, 포인트 컬러 #2f5d46은 화면에서 가장 중요한 요소 하나에만 쓴다. 테두리는 1px #ebebeb, 카드는 16px 모서리와 저알파 다단 그림자를 쓴다. 제목은 Pretendard Variable 300의 큰 글자, 본문은 400의 14–15px로 위계를 만들고, 숫자와 시간은 JetBrains Mono로 표기한다. 크롬은 모노톤으로 두고 색은 사용자의 카테고리 색이 갖게 한다. 카드 폭은 콘텐츠 비중에 따라 달리하고, 섹션 사이에는 96px 여백을 둔다. 모든 컨트롤은 :focus-visible에서 #2f5d46 2px 아웃라인을 보이고, 760px 미만에서는 사이드바를 오프캔버스로 바꾼다.
+
+### 화면 유형별 프롬프트
+
+| 화면 | 프롬프트 |
+|---|---|
+| 홈 | 오늘 → 이번 주 → 과거 순으로 위계를 둔다. 히어로에 오늘의 핵심 문장 하나를 display로 두고, 지표는 figure 숫자로, 일정·루틴·D-Day는 폭이 다른 카드로 배치한다. 포인트 컬러는 "실제 기록 남기기" 하나에만 쓴다. |
+| 플래너 | 왼쪽에 시간 눈금(JetBrains Mono), 오른쪽에 time-block을 둔다. 계획은 점선 muted 블록, 실제 기록은 실선 블록과 왼쪽 3px 카테고리 색 띠로 구분한다. 계획 미완료는 벌점 색으로 칠하지 않는다. |
+| 작성 모달 | modal 패턴을 쓴다. 상단에 segmented-tab으로 일정·할 일·루틴·다이어리를 전환하고, input-field를 한 열로 쌓고, 패널 폭 전체 button-primary 하나로 저장한다. |
+| 목록 + 상세 | `1fr 300px` 2단으로 두고, 목록 행은 hairline 구분선과 14px 위아래 여백을 쓴다. 상태는 status-badge로 표시한다. 1150px 이하에서는 상세 패널을 숨긴다. |
+| 통계 | 큰 수치는 figure 역할로, 비교 막대는 계획 hairline 색과 실제 accent 색으로 그린다. 카테고리 비중은 사용자 콘텐츠 색을 쓴다. |
+
+### 생성 전 점검
+
+- [ ] 팔레트(2장)와 모서리 스케일(5장) 밖의 값을 쓰지 않았다.
+- [ ] 포인트 컬러가 화면에 하나만 있다.
+- [ ] 숫자·시간이 JetBrains Mono로 표기되었다.
+- [ ] surface 위 본문 크기 텍스트에 color.muted를 쓰지 않았다.
+- [ ] 모든 interactive 요소에 accent 2px 포커스 아웃라인이 보인다.
+- [ ] 아이콘만 있는 버튼에 `aria-label`이 있다.
+- [ ] 320px 폭과 200% 확대에서 가로 스크롤이 생기지 않는다.
+- [ ] 계획 미완료를 벌점처럼 표현하지 않았다.
+
+## 부록 A. 문서 관리
+
+### 적용 우선순위 (계약)
+
+1. 요청 범위에 대한 사용자의 직접 지시
+2. 저장소 사실
+3. 이 디자인 계약
+4. 레퍼런스 영감
+
+### 프로젝트 우선순위 (계약)
 
 1. 접근성
-
 2. 일관성
-
 3. 심미성
-
 4. 성능
 
-### Additional change rules
+### 변경 규칙
 
-- DESIGN.md 변경은 omd:init/omd:apply 워크플로를 통해서만 이루어지며 파일을 직접 수정하지 않는다.
+- 새 토큰을 추가하기 전에 기존 토큰으로 표현할 수 있는지 먼저 검토한다. (계약)
+- 정하지 못한 값은 가장 작은 단위만 "미정"으로 남기고, 그럴듯한 기본값으로 채우지 않는다. (계약)
+- 변경은 기록하고 검토한 뒤 채택한다. (계약)
 
-- 새 토큰을 추가하기 전에 기존 토큰으로 표현 가능한지 먼저 검토한다.
+### omd 시스템 그래프 상태
 
+`.omd/system/graph.json`과 `manifest.json`은 이전 7장 형식 DESIGN.md를 기준으로 해시가 묶여 있다. 이번 9장 형식으로 바꾸면서 해시가 맞지 않게 되었으므로, omd 도구는 그래프 대신 이 DESIGN.md를 기준으로 읽는다. 그래프를 다시 기준으로 쓰려면 omd 워크플로로 다시 채택해야 한다.
 
-# Design System Master File
+## 부록 B. 현재 코드와의 차이
 
-> **LOGIC:** When building a specific page, first check `design-system/pages/[page-name].md`.
-> If that file exists, its rules **override** this Master file.
-> If not, strictly follow the rules below.
+이 문서의 목표 값과 2026-11-18 기준 `frontend/src` 값이 다른 항목이다. 코드는 아직 바꾸지 않았다.
 
----
-
-**Project:** ezConference
-**Generated:** 2026-08-13 18:03:33
-**Category:** B2B Service
-**Design Dials:** Variance 4/10 (Balanced / Modern) | Motion 3/10 (Subtle) | Density 6/10 (Standard)
-
----
-
-## Global Rules
-
-### Color Palette
-
-| Role | Hex | CSS Variable |
-|------|-----|--------------|
-| Primary | `#2563EB` | `--color-primary` |
-| On Primary | `#FFFFFF` | `--color-on-primary` |
-| Secondary | `#3B82F6` | `--color-secondary` |
-| Accent/CTA | `#059669` | `--color-accent` |
-| Background | `#F8FAFC` | `--color-background` |
-| Foreground | `#0F172A` | `--color-foreground` |
-| Muted | `#F1F5FD` | `--color-muted` |
-| Border | `#E4ECFC` | `--color-border` |
-| Destructive | `#DC2626` | `--color-destructive` |
-| Ring | `#2563EB` | `--color-ring` |
-
-**Color Notes:** Professional blue + deal green
-
-### Typography
-
-- **Heading Font:** Lexend
-- **Body Font:** Source Sans 3
-- **Mood:** corporate, trustworthy, accessible, readable, professional, clean
-- **Google Fonts:** [Lexend + Source Sans 3](https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&family=Source+Sans+3:wght@300;400;500;600;700&display=swap)
-
-**CSS Import:**
-```css
-@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&family=Source+Sans+3:wght@300;400;500;600;700&display=swap');
-```
-
-### Spacing Variables
-
-*Density: 6/10 — Standard*
-
-| Token | Value | Usage |
-|-------|-------|-------|
-| `--space-xs` | `4px` / `0.25rem` | Tight gaps |
-| `--space-sm` | `8px` / `0.5rem` | Icon gaps, inline spacing |
-| `--space-md` | `16px` / `1rem` | Standard padding |
-| `--space-lg` | `24px` / `1.5rem` | Section padding |
-| `--space-xl` | `32px` / `2rem` | Large gaps |
-| `--space-2xl` | `48px` / `3rem` | Section margins |
-| `--space-3xl` | `64px` / `4rem` | Hero padding |
-
-### Shadow Depths
-
-| Level | Value | Usage |
-|-------|-------|-------|
-| `--shadow-sm` | `0 1px 2px rgba(0,0,0,0.05)` | Subtle lift |
-| `--shadow-md` | `0 4px 6px rgba(0,0,0,0.1)` | Cards, buttons |
-| `--shadow-lg` | `0 10px 15px rgba(0,0,0,0.1)` | Modals, dropdowns |
-| `--shadow-xl` | `0 20px 25px rgba(0,0,0,0.15)` | Hero images, featured cards |
-
----
-
-## Component Specs
-
-### Buttons
-
-```css
-/* Primary Button */
-.btn-primary {
-  background: #059669;
-  color: white;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 200ms ease;
-  cursor: pointer;
-}
-
-.btn-primary:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
-}
-
-/* Secondary Button */
-.btn-secondary {
-  background: transparent;
-  color: #2563EB;
-  border: 2px solid #2563EB;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 200ms ease;
-  cursor: pointer;
-}
-```
-
-### Cards
-
-```css
-.card {
-  background: #F8FAFC;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: var(--shadow-md);
-  transition: all 200ms ease;
-  cursor: pointer;
-}
-
-.card:hover {
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-2px);
-}
-```
-
-### Inputs
-
-```css
-.input {
-  padding: 12px 16px;
-  border: 1px solid #E2E8F0;
-  border-radius: 8px;
-  font-size: 16px;
-  transition: border-color 200ms ease;
-}
-
-.input:focus {
-  border-color: #2563EB;
-  outline: none;
-  box-shadow: 0 0 0 3px #2563EB20;
-}
-```
-
-### Modals
-
-```css
-.modal-overlay {
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
-}
-
-.modal {
-  background: white;
-  border-radius: 16px;
-  padding: 32px;
-  box-shadow: var(--shadow-xl);
-  max-width: 500px;
-  width: 90%;
-}
-```
-
----
-
-## Style Guidelines
-
-**Style:** Trust & Authority
-
-**Keywords:** Certificates/badges displayed, expert credentials, case studies with metrics, before/after comparisons, industry recognition, security badges
-
-**Best For:** Healthcare/medical landing pages, financial services, enterprise software, premium/luxury products, legal services
-
-**Key Effects:** Badge hover effects, metric pulse animations, certificate carousel, smooth stat reveal
-
-### Page Pattern
-
-**Pattern Name:** Enterprise Gateway
-
-- **Conversion Strategy:** Path selection (I am a...). Mega menu navigation. Trust signals prominent.
-- **CTA Placement:** Contact Sales (Primary) + Login (Secondary)
-- **Section Order:** 1. Hero (Video/Mission), 2. Solutions by Industry, 3. Solutions by Role, 4. Client Logos, 5. Contact Sales
-
----
-
-## Motion
-
-**Scroll Reveal** (Subtle) — Trigger: scroll (viewport enter) | Duration: 300-400ms | Easing: `power1.out`
-
-```js
-gsap.from(el, { opacity: 0, y: 12, duration: 0.35, ease: 'power1.out', scrollTrigger: { trigger: el, start: 'top 90%', toggleActions: 'play none none reverse' } });
-```
-
-**Framework notes:** Requires the ScrollTrigger plugin registered once via gsap.registerPlugin(ScrollTrigger)
-
-- ✅ Keep the y offset small (8-16px) so it reads as a fade, not a slide
-- ❌ Don't reveal below-the-fold content needed for SEO/crawlers as invisible-by-default without a no-JS fallback
-- ⚡ toggleActions 'play none none reverse' avoids re-triggering on every scroll direction change
-
----
-
-## Anti-Patterns (Do NOT Use)
-
-- ❌ Playful design
-- ❌ Hidden credentials
-- ❌ AI purple/pink gradients
-
-### Additional Forbidden Patterns
-
-- ❌ **Emojis as icons** — Use SVG icons (Heroicons, Lucide, Simple Icons)
-- ❌ **Missing cursor:pointer** — All clickable elements must have cursor:pointer
-- ❌ **Layout-shifting hovers** — Avoid scale transforms that shift layout
-- ❌ **Low contrast text** — Maintain 4.5:1 minimum contrast ratio
-- ❌ **Instant state changes** — Always use transitions (150-300ms)
-- ❌ **Invisible focus states** — Focus states must be visible for a11y
-
----
-
-## Pre-Delivery Checklist
-
-Before delivering any UI code, verify:
-
-- [ ] No emojis used as icons (use SVG instead)
-- [ ] All icons from consistent icon set (Heroicons/Lucide)
-- [ ] `cursor-pointer` on all clickable elements
-- [ ] Hover states with smooth transitions (150-300ms)
-- [ ] Light mode: text contrast 4.5:1 minimum
-- [ ] Focus states visible for keyboard navigation
-- [ ] `prefers-reduced-motion` respected
-- [ ] Responsive: 375px, 768px, 1024px, 1440px
-- [ ] No content hidden behind fixed navbars
-- [ ] No horizontal scroll on mobile
-
----
+| 항목 | 이 문서 | 현재 코드 | 위치 |
+|---|---|---|---|
+| color.hairline | `#ebebeb` (Figma) | `#e5e5e5` | `styles.css` `:root` |
+| 상태 색 변수 | `--color-status-*` | hex 값 직접 사용 | 여러 `.vue`·`.css` |
+| shadow.card | `0px 2px 4px rgba(0,0,0,0.04), 0px 0px 1.143px rgba(0,0,0,0.4)` | `0px 2px 4px rgba(0,0,0,.04), 0px 1px 1px rgba(0,0,0,.05)` | `styles.css` `:root` |
+| shadow.raised | `0px 0px 1px rgba(0,0,0,0.4), …` | `0px 1px 1px rgba(0,0,0,.16), …` | `styles.css` `:root` |
+| shadow.overlay | `0 24px 70px rgba(0,0,0,0.1)` | `0 22px 70px rgba(0,0,0,.2)`, `0 22px 60px rgba(0,0,0,.14)` | `.composer`, `.modal-preview` |
+| button-primary hover | shadow 토큰 안에서 변경 | `0 6px 18px rgba(0,0,0,.16)` | `.primary:hover` |
+| control 글자 | 13px / 500 | 14px / 600 | `.primary` |
+| display 행간 | 1.15 | 1.2 | `typography.css` |
+| button-secondary | 공통 컴포넌트 | 공통 클래스 없음 | — |
+| radius.control | 8px | 변수 없음 | `styles.css` `:root` |
+| icon-button | 40px 원형 | 37px, radius.sm | `.icon` |
+| segmented-tab | radius.full, 비선택 foreground | radius.sm·radius.md, 비선택 muted | `.tabs`, `.filter`, `.compose-tabs` |
+| nav-item 모서리 | radius.md | radius.sm | `nav button` |
+| 콘텐츠 최대폭 | 1180px | 주석 처리됨 | `main` |
+| accent 배경 사용 | button-primary·포커스 외 금지 | 체크 완료, 진행 막대, 다이어리 작성일, 일부 차트 | `.task input:checked`, `.progress em`, `.calendar .written`, `.chart b` |
+| muted on surface | 사용 금지 (4.36:1) | 사용 중 | `.workspace small`, `.filter button`, `.phase-badge` 등 |
+| 모서리 스케일 밖 값 | 사용 금지 | 2px·3px 사용 | `.omd/preferences.md` pending 항목 |
