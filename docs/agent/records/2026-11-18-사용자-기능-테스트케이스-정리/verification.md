@@ -12,3 +12,4 @@
 - 웹 접근성: UI 변경 없음. N/A
 - 오탐 제외: 없음.
 - 남은 위험과 승인 필요: Q-01~Q-09는 결정 전이다. 기존 관련 테스트가 UT를 정확히 검사하는지는 확인하지 않았다.
+- 2026-11-18 권장 결정 추가: `python scripts/docs/verify_documentation.py` 종료 코드 0, `git diff --check -- docs/dev-docs` 종료 코드 0, 08→09 `#권장-결정` 링크 대상 제목 존재 확인. PASS
