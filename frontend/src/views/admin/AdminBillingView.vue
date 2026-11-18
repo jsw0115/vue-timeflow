@@ -67,7 +67,7 @@ function stateClass(s) {
         <small v-else style="color: var(--color-muted)">처리 완료</small>
       </span>
     </div>
-    <p v-if="!visible.length" class="form-note" style="margin: 12px 0 0">해당 상태의 결제가 없어요.</p>
+    <p v-if="!visible.length" class="empty-state" role="status">이 상태의 결제가 없어요. 다른 상태를 골라 보세요.</p>
   </section>
   <p class="form-note" style="margin-top: 12px">환불 승인·거절·재결제는 모두 감사 로그에 기록돼요.</p>
 

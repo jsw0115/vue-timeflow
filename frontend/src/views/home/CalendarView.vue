@@ -149,7 +149,7 @@ function labelOf(kind) {
           <small>{{ labelOf(it.kind) }} · {{ it.meta }}</small>
         </span>
       </div>
-      <p v-if="!selectedItems.length" class="form-note" style="margin: 0">이 날에는 기록이 없어요.</p>
+      <p v-if="!selectedItems.length" class="empty-state">이 날에는 기록이 없어요. 다른 날짜를 고르거나 '＋ 새 글 작성'으로 남겨 보세요.</p>
 
       <div class="section-label" style="margin-top: 20px">다가오는 D-Day</div>
       <div class="event" v-for="d in upcomingDdays" :key="d.id" @click="router.push('/dday/' + d.id)" style="cursor: pointer">
@@ -157,7 +157,7 @@ function labelOf(kind) {
         <span style="flex: 1"><b>{{ d.title }}</b><small>{{ d.date }}</small></span>
         <b class="figure">{{ d.dday }}</b>
       </div>
-      <p v-if="!upcomingDdays.length" class="form-note" style="margin: 0">예정된 D-Day가 없어요.</p>
+      <p v-if="!upcomingDdays.length" class="empty-state">예정된 D-Day가 없어요. D-Day 관리에서 기념일을 추가해 보세요.</p>
     </aside>
   </div>
 </template>

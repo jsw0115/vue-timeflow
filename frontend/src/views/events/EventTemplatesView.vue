@@ -107,7 +107,7 @@ function alarmLabel(min) {
         <button class="review" style="margin: 0" @click="remove(t)">삭제</button>
       </span>
     </div>
-    <p v-if="!visible.length" class="form-note" style="margin: 12px 0 0">조건에 맞는 템플릿이 없어요.</p>
+    <p v-if="!visible.length" class="empty-state" role="status">조건에 맞는 템플릿이 없어요. 검색어를 바꾸거나 '+ 템플릿 저장'으로 만들어 보세요.</p>
   </section>
 
   <Modal v-if="editing" :title="editing === 'new' ? '템플릿 저장' : '템플릿 수정'" wide @close="editing = null">

@@ -259,7 +259,7 @@ function removeRoutine(r) {
         <button class="review" style="margin: 0" @click="removeRoutine(r)">삭제</button>
       </span>
     </div>
-    <p v-if="!visible.length" class="form-note" style="margin: 12px 0 0">조건에 맞는 루틴이 없어요.</p>
+    <p v-if="!visible.length" class="empty-state" role="status">조건에 맞는 루틴이 없어요. 검색어나 필터를 바꾸거나 '+ 새 루틴'으로 만들어 보세요.</p>
   </section>
 
   <Modal v-if="showModal" :title="editingId ? '루틴 수정' : '새 루틴 만들기'" :edit-resource="editingId ? 'routine:' + editingId : ''" wide @close="showModal = false">
@@ -311,7 +311,7 @@ function removeRoutine(r) {
         <button type="button" class="review" style="margin: 0" :aria-label="restLabel(date) + ' 쉬는 날 해제'" @click="removeRest(date)">해제</button>
       </li>
     </ul>
-    <p v-else class="form-note">예정된 쉬는 날이 없어요.</p>
+    <p v-else class="empty-state">예정된 쉬는 날이 없어요. 위에서 기간을 고르고 '쉬는 날 추가'를 눌러 보세요.</p>
     <p v-if="restPastCount" class="form-note">지난 쉬는 날 {{ restPastCount }}일은 기록 계산에 그대로 반영돼요.</p>
 
     <template #footer>

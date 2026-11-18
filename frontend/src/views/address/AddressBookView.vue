@@ -84,7 +84,7 @@ function inviteToGroup(g) {
         <button class="review" style="margin: 0" @click="toggleBlock(c.id)">{{ isBlocked(c.id) ? '차단 해제' : '차단' }}</button>
       </span>
     </div>
-    <p v-if="!rows.length" class="form-note" style="margin: 12px 0 0">조건에 맞는 연락처가 없어요.</p>
+    <p v-if="!rows.length" class="empty-state" role="status">조건에 맞는 연락처가 없어요. 검색어나 필터를 바꿔 보세요.</p>
   </section>
 
   <p class="form-note" style="margin-top: 12px">

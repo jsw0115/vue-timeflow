@@ -63,7 +63,7 @@ function save() {
         <input type="checkbox" :checked="targetIds.includes(g.id)" @change="toggleTarget(g.id)" />
         <span style="flex: 1"><b>{{ g.title }}</b><small>멤버 {{ membersOf(g).length }}명</small></span>
       </label>
-      <p v-if="!groups.length" class="form-note">아직 캘린더 그룹이 없어요.</p>
+      <p v-if="!groups.length" class="empty-state">아직 캘린더 그룹이 없어요. 캘린더 그룹 화면에서 그룹을 만들어 보세요.</p>
 
       <p v-if="!targetIds.length" class="form-note">적용할 그룹을 하나 이상 선택해주세요.</p>
       <button class="primary" :disabled="!canSave" @click="save">저장하기</button>

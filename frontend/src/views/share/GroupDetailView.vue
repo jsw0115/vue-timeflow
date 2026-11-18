@@ -65,7 +65,7 @@ function removeGroup() {
 
     <h3 style="margin: 24px 0 12px">멤버</h3>
     <section class="card">
-      <p v-if="!memberList.length" class="form-note" style="margin: 0">아직 멤버가 없어요. 주소록에서 초대해보세요.</p>
+      <p v-if="!memberList.length" class="empty-state">아직 멤버가 없어요. 주소록에서 초대해 보세요.</p>
       <div class="event" v-for="m in memberList" :key="m.id">
         <i></i>
         <span style="flex: 1"><b>{{ m.name }}</b><small>{{ m.relation }} · {{ m.email }}</small></span>

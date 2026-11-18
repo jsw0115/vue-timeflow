@@ -78,7 +78,7 @@ function onRemove(m) {
       <button v-if="!m.read" class="review" style="margin: 0" @click="markMentionRead(m)">읽음</button>
       <button class="person-info" title="삭제" aria-label="삭제" @click="onRemove(m)">×</button>
     </div>
-    <p v-if="!visible.length" class="form-note" style="margin: 0">조건에 맞는 멘션이 없어요.</p>
+    <p v-if="!visible.length" class="empty-state" role="status">조건에 맞는 멘션이 없어요. 필터를 바꿔 보세요.</p>
   </section>
 
   <p class="form-note" style="margin-top: 12px">

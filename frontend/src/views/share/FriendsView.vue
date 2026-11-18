@@ -60,7 +60,7 @@ function unfriend(f) {
       <button class="primary" style="padding: 6px 12px" @click="accept(r)">수락</button>
       <button class="review" style="margin: 0" @click="reject(r)">거절</button>
     </div>
-    <p v-if="!incoming.length" class="form-note" style="margin: 0">받은 친구 요청이 없어요.</p>
+    <p v-if="!incoming.length" class="empty-state">받은 친구 요청이 없어요. '+ 친구 찾기'로 먼저 요청을 보내 보세요.</p>
   </section>
 
   <!-- 차단 목록 -->
@@ -70,7 +70,7 @@ function unfriend(f) {
       <span style="flex: 1"><PersonTag :name="c.name" bold /><small>{{ c.relation }} · {{ c.email }}</small></span>
       <button class="review" style="margin: 0" @click="toggleBlock(c.id)">차단 해제</button>
     </div>
-    <p v-if="!blockedIds.length" class="form-note" style="margin: 0">차단한 사용자가 없어요.</p>
+    <p v-if="!blockedIds.length" class="empty-state">차단한 사용자가 없어요. 차단은 주소록에서 할 수 있어요.</p>
   </section>
 
   <!-- 친구 목록 -->
@@ -81,7 +81,7 @@ function unfriend(f) {
       <span :style="{ width: '8px', height: '8px', borderRadius: '50%', background: f.online ? 'var(--color-accent)' : 'var(--color-hairline)' }"></span>
       <button class="review" style="margin: 0" @click="unfriend(f)">삭제</button>
     </div>
-    <p v-if="!friends.length" class="form-note" style="margin: 0">아직 친구가 없어요.</p>
+    <p v-if="!friends.length" class="empty-state">아직 친구가 없어요. '+ 친구 찾기'로 친구를 추가해 보세요.</p>
   </section>
 
   <Modal v-if="showModal" title="친구 찾기" @close="showModal = false">

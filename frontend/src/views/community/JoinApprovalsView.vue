@@ -81,7 +81,7 @@ function revert(r) {
         </template>
       </span>
     </div>
-    <p v-if="!visible.length" class="form-note" style="margin: 12px 0 0">해당 상태의 신청이 없어요.</p>
+    <p v-if="!visible.length" class="empty-state" role="status">이 상태의 가입 신청이 없어요. 다른 상태를 골라 보세요.</p>
   </section>
 
   <Modal v-if="rejecting" title="가입 거절" @close="rejecting = null">

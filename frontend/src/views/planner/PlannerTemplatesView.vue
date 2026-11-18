@@ -124,7 +124,7 @@ function applyToday(t) {
           <button class="review" style="margin: 0" @click.stop="remove(t)">삭제</button>
         </span>
       </div>
-      <p v-if="!templates.length" class="form-note" style="margin: 12px 0 0">저장된 템플릿이 없어요. 새로 추가해보세요.</p>
+      <p v-if="!templates.length" class="empty-state">저장된 템플릿이 없어요. '+ 템플릿 추가'로 자주 쓰는 하루를 저장해 보세요.</p>
     </section>
 
     <aside class="card detail" v-if="active">

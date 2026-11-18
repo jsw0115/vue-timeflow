@@ -93,7 +93,7 @@ function forceLogout(u) {
         <button class="review" style="margin: 0" @click="forceLogout(u)">강제 로그아웃</button>
       </span>
     </div>
-    <p v-if="!visible.length" class="form-note" style="margin: 12px 0 0">조건에 맞는 사용자가 없어요.</p>
+    <p v-if="!visible.length" class="empty-state" role="status">조건에 맞는 사용자가 없어요. 검색어나 필터를 바꿔 보세요.</p>
   </section>
   <p class="form-note" style="margin-top: 12px">상태 변경과 강제 로그아웃은 감사 로그에 기록돼요.</p>
 </template>

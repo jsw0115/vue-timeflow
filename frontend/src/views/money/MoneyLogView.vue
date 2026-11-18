@@ -159,7 +159,7 @@ function importCsv(event) {
         <b class="figure" :class="e.type">{{ won(e.amount) }}</b>
         <span><button class="review" style="margin: 0; padding: 4px 8px" @click="removeEntry(e)">삭제</button></span>
       </div>
-      <p v-if="!visible.length" class="form-note" style="margin: 12px 0 0">이 달에는 기록이 없어요.</p>
+      <p v-if="!visible.length" class="empty-state">이 달에는 머니로그 기록이 없어요. '+ 내역 추가'로 수입이나 지출을 남겨 보세요.</p>
     </section>
 
     <section class="card">
@@ -169,7 +169,7 @@ function importCsv(event) {
         <div class="progress"><em :style="{ width: c.pct + '%' }"></em></div>
         <b class="figure">{{ c.pct }}%</b>
       </div>
-      <p v-if="!byCategory.length" class="form-note" style="margin: 12px 0 0">지출 기록이 없어요.</p>
+      <p v-if="!byCategory.length" class="empty-state">지출 기록이 없어요. 지출 내역을 추가하면 분류별 비중이 여기에 나와요.</p>
     </section>
   </div>
 

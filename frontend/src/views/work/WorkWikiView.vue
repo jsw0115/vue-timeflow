@@ -142,7 +142,7 @@ function pickTag(tag) {
           <small>{{ d.space }} · {{ d.updatedAt }}</small>
         </span>
       </button>
-      <p v-if="!results.length" class="form-note" style="margin: 8px 0 0">조건에 맞는 문서가 없어요.</p>
+      <p v-if="!results.length" class="empty-state" role="status">조건에 맞는 문서가 없어요. 검색어나 태그를 바꿔 보세요.</p>
     </section>
 
     <aside class="card" v-if="active">

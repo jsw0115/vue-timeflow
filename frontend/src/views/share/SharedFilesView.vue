@@ -157,7 +157,7 @@ function kindIcon(kind) {
       <b>{{ f.name }}</b>
       <small>{{ f.from }} · {{ expiryLabel(f) }}</small>
     </button>
-    <p v-if="!visible.length" class="form-note">조건에 맞는 이미지가 없어요.</p>
+    <p v-if="!visible.length" class="empty-state" role="status">조건에 맞는 이미지가 없어요. 검색어나 필터를 바꿔 보세요.</p>
   </div>
 
   <!-- 목록 -->
@@ -180,7 +180,7 @@ function kindIcon(kind) {
         <button class="review" style="margin: 0" @click="onRemove(f)">삭제</button>
       </span>
     </div>
-    <p v-if="!visible.length" class="form-note" style="margin: 12px 0 0">조건에 맞는 파일이 없어요.</p>
+    <p v-if="!visible.length" class="empty-state" role="status">조건에 맞는 파일이 없어요. 검색어나 필터를 바꿔 보세요.</p>
   </section>
 
   <!-- 이미지 미리보기 -->

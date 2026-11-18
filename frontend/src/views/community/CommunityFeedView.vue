@@ -80,5 +80,5 @@ function open(g) {
       </button>
     </section>
   </div>
-  <p v-if="!visible.length" class="form-note">조건에 맞는 커뮤니티가 없어요. 직접 만들어보세요.</p>
+  <p v-if="!visible.length" class="empty-state" role="status">조건에 맞는 커뮤니티가 없어요. 검색어를 바꾸거나 '+ 커뮤니티 만들기'로 직접 만들어 보세요.</p>
 </template>

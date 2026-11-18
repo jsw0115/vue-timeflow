@@ -64,7 +64,7 @@ const noResult = computed(() => query.value.trim() && !filteredGroups.value.leng
         </button>
       </template>
 
-      <p v-if="noResult" class="form-note" style="padding: 12px">검색 결과가 없어요.</p>
+      <p v-if="noResult" class="empty-state" role="status">검색 결과가 없어요. 설정 이름의 일부만 입력해 보세요.</p>
     </nav>
 
     <div class="setting-pane">

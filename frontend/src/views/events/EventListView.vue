@@ -143,7 +143,7 @@ function removeActive() {
         <span class="tag">{{ e.category }}</span>
         <span class="badge" :class="{ ok: e.state === '예정', info: e.state === '공유받음' }">{{ e.state }}</span>
       </div>
-      <p v-if="!visibleEvents.length" class="form-note" style="margin: 12px 0 0">조건에 맞는 일정이 없어요.</p>
+      <p v-if="!visibleEvents.length" class="empty-state" role="status">조건에 맞는 일정이 없어요. 검색어나 필터를 바꾸거나 '+ 새 일정'으로 추가해 보세요.</p>
     </section>
     <aside class="card detail">
       <h3>{{ active?.title }}</h3>
@@ -154,7 +154,7 @@ function removeActive() {
       <p v-if="attendeeNames(active?.attendeeIds).length" class="attendee-chips">
         <PersonTag v-for="n in attendeeNames(active?.attendeeIds)" :key="n" :name="n" />
       </p>
-      <p v-else class="form-note" style="margin: 4px 0 0">아직 참석자가 없어요. 상세 보기에서 주소록으로 추가하세요.</p>
+      <p v-else class="empty-state">아직 참석자가 없어요. '상세 보기'에서 주소록의 사람을 추가해 보세요.</p>
       <button class="primary" @click="openDetail">상세 보기</button>
     </aside>
   </div>

@@ -83,7 +83,7 @@ function remove(d) {
         <button class="review" style="margin: 0" @click="remove(d)">삭제</button>
       </span>
     </div>
-    <p v-if="!visible.length" class="form-note" style="margin: 12px 0 0">조건에 맞는 D-Day가 없어요.</p>
+    <p v-if="!visible.length" class="empty-state" role="status">조건에 맞는 D-Day가 없어요. 검색어나 필터를 바꿔 보세요.</p>
   </section>
 
 </template>

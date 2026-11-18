@@ -94,7 +94,7 @@ function remove(n) {
         <button class="review" style="margin: 0" @click="remove(n)">삭제</button>
       </span>
     </div>
-    <p v-if="!visible.length" class="form-note" style="margin: 12px 0 0">해당 상태의 공지가 없어요.</p>
+    <p v-if="!visible.length" class="empty-state" role="status">이 상태의 공지가 없어요. 다른 상태를 고르거나 '+ 새 공지'로 등록해 보세요.</p>
   </section>
 
   <Modal v-if="editing" :title="editing === 'new' ? '새 공지' : '공지 수정'" wide @close="editing = null">

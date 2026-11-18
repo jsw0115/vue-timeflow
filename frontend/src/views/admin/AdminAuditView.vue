@@ -61,7 +61,7 @@ function exportCsv() {
       <span>{{ l.action }}</span>
       <span>{{ l.target }}<small v-if="l.memo" style="display: block; color: var(--color-muted)">{{ l.memo }}</small></span>
     </div>
-    <p v-if="!visible.length" class="form-note" style="margin: 12px 0 0">조건에 맞는 기록이 없어요.</p>
+    <p v-if="!visible.length" class="empty-state" role="status">조건에 맞는 감사 기록이 없어요. 검색어나 필터를 바꿔 보세요.</p>
   </section>
   <p class="form-note" style="margin-top: 12px">감사 로그는 수정·삭제할 수 없어요. 필요하면 CSV로 내보내 보관하세요.</p>
 </template>

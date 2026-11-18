@@ -61,7 +61,7 @@ function remove(record) {
       </div>
       <div class="record-actions"><button class="review" @click="open(record)">상세 · 수정</button><button class="review" @click="remove(record)">삭제</button></div>
     </article>
-    <p v-if="!visible.length" class="empty-state">등록된 기록이 없어요. 연차부터 이직 준비까지 한곳에 정리하세요.</p>
+    <p v-if="!visible.length" class="empty-state">등록된 업무 기록이 없어요. 연차부터 이직 준비까지 '기록 추가'로 한곳에 정리해 보세요.</p>
   </section>
   <Modal v-if="show" :title="editing ? '업무 기록 수정' : '업무 기록 작성'" :edit-resource="editing ? 'work-record:' + editing : ''" wide @close="show = false">
     <form @submit.prevent="save" :id="modalFormId1">

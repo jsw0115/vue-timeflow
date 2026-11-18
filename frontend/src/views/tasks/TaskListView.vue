@@ -70,7 +70,7 @@ watch(() => route.query.new, (v) => { if (v) openModal() }, { immediate: true })
         <span class="tag">{{ t.category }}</span>
         <span class="badge" :class="{ ok: t.done }">{{ t.done ? '완료' : '진행중' }}</span>
       </div>
-      <p v-if="!visible.length" class="form-note" style="margin: 12px 0 0">조건에 맞는 할 일이 없어요.</p>
+      <p v-if="!visible.length" class="empty-state" role="status">조건에 맞는 할 일이 없어요. 검색어나 필터를 바꾸거나 '+ 새 할 일'로 추가해 보세요.</p>
     </section>
     <aside class="card detail" v-if="activeTask">
       <h3>{{ activeTask.title }}</h3>

@@ -68,7 +68,7 @@ function daysOpen(t) {
         <button class="review" style="margin: 0" @click="openReply(t)">답변</button>
       </span>
     </div>
-    <p v-if="!visible.length" class="form-note" style="margin: 12px 0 0">해당 상태의 문의가 없어요.</p>
+    <p v-if="!visible.length" class="empty-state" role="status">이 상태의 문의가 없어요. 다른 상태를 골라 보세요.</p>
   </section>
 
   <Modal v-if="replying" :title="replying.name + ' · ' + replying.title" wide @close="replying = null">

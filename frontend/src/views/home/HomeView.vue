@@ -121,13 +121,13 @@ function onDrop(id) {
         <template v-if="w.id === 'events'">
           <div class="head"><div><h3>오늘의 흐름</h3><p>계획과 실제 기록을 확인하세요</p></div><button @click="router.push('/planner')">플래너 열기 →</button></div>
           <div class="event" v-for="event in todayEvents" :key="event.title"><time>{{ event.time }}</time><i></i><span><b>{{ event.title }}</b><small>{{ event.tag }} · 종료 {{ event.endDate }} {{ event.endTime }}</small></span></div>
-          <p v-if="!todayEvents.length" class="empty-state">오늘은 비어 있어요. 여유롭게 하루를 계획해보세요.</p>
+          <p v-if="!todayEvents.length" class="empty-state">오늘 예정된 일정이 없어요. '플래너 열기'에서 하루를 계획해 보세요.</p>
         </template>
 
         <template v-else-if="w.id === 'routine'">
           <div class="head"><div><h3>오늘의 루틴</h3><p>작은 반복이 하루를 만들어요</p></div><button @click="router.push('/routines')">전체 보기 →</button></div>
           <label v-for="item in todayRoutines" :key="item.id"><input type="checkbox" :checked="item.done" @change="toggleRoutine(item)" /><span :class="{ done: item.done }">{{ item.title }}</span><small>{{ item.time }} · {{ item.streak }}일 연속</small></label>
-          <p v-if="!todayRoutines.length" class="form-note" style="margin: 8px 0 0">오늘 예정된 루틴이 없어요.</p>
+          <p v-if="!todayRoutines.length" class="empty-state">오늘 예정된 루틴이 없어요. '전체 보기'에서 루틴을 만들거나 쉬는 날을 확인해 보세요.</p>
         </template>
 
         <template v-else-if="w.id === 'tasksProgress'">

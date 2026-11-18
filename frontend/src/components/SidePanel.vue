@@ -55,7 +55,7 @@ function goNotif(n) {
           </button>
           <button class="person-info" title="삭제" aria-label="삭제" @click="removeNotification(n.id)">×</button>
         </div>
-        <p v-if="!visibleNotifs.length" class="form-note">표시할 알림이 없어요.</p>
+        <p v-if="!visibleNotifs.length" class="empty-state">표시할 알림이 없어요. 받을 알림 종류는 알림 설정에서 고를 수 있어요.</p>
       </div>
     </template>
   </div>

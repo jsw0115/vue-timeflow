@@ -68,6 +68,6 @@ function open(n) {
       <button v-if="!n.read" class="review" style="margin: 0" @click="markRead(n)">읽음</button>
       <button class="person-info" title="삭제" aria-label="삭제" @click="removeNotification(n.id)">×</button>
     </div>
-    <p v-if="!visible.length" class="form-note" style="margin: 0">조건에 맞는 알림이 없어요.</p>
+    <p v-if="!visible.length" class="empty-state" role="status">조건에 맞는 알림이 없어요. 필터를 바꿔 보세요.</p>
   </section>
 </template>

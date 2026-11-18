@@ -213,7 +213,7 @@ surface 위 본문 크기 텍스트에는 color.muted 대신 color.foreground를
 | segmented-tab | `.segmented-tab` | `.tabs`, `.filter`, `.compose-tabs` |
 | surface-card | `.card` | 같음 |
 | status-badge | `.tag` | `.state`, `.ok`, `.warn`, `.danger`, `.info` |
-| empty-state | `.empty-state` | `.form-note`로 쓴 빈 목록 문구 |
+| empty-state | `.empty-state` | 같음. 2026-11-18 빈 목록 문구 44곳을 옮겼다. 멤버 칩 줄 안의 인라인 문구 1곳만 `.form-note` |
 
 ### button-primary (계약)
 

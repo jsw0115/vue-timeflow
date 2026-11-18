@@ -80,7 +80,7 @@ const relatedTags = computed(() => {
       >
         #{{ t.tag }}<em>{{ t.count }}</em>
       </button>
-      <p v-if="!tagCounts.length" class="form-note" style="margin: 0">아직 태그가 달린 글이 없어요.</p>
+      <p v-if="!tagCounts.length" class="empty-state">아직 태그가 달린 글이 없어요. 글을 쓸 때 #태그를 붙여 보세요.</p>
     </div>
   </section>
 
@@ -116,6 +116,6 @@ const relatedTags = computed(() => {
         <span v-if="p.author === ME" class="badge ok">내 글</span>
       </div>
     </article>
-    <p v-if="!visible.length" class="form-note" style="margin: 0">조건에 맞는 글이 없어요.</p>
+    <p v-if="!visible.length" class="empty-state" role="status">조건에 맞는 글이 없어요. 다른 태그를 골라 보세요.</p>
   </section>
 </template>

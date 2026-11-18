@@ -56,7 +56,7 @@ function onRemove(c) {
         <button class="review" style="margin: 0" @click="onRemove(c)">삭제</button>
       </span>
     </div>
-    <p v-if="!visible.length" class="form-note" style="margin: 12px 0 0">등록된 {{ tab }} 콘텐츠가 없어요.</p>
+    <p v-if="!visible.length" class="empty-state">등록된 {{ tab }} 콘텐츠가 없어요. '+ 콘텐츠 추가'로 첫 콘텐츠를 등록해 보세요.</p>
   </section>
 
   <Modal v-if="showAdd" :title="tab + ' 추가'" @close="showAdd = false">

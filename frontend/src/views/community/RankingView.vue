@@ -81,7 +81,7 @@ const maxValue = computed(() => Math.max(1, ...ranked.value.map((r) => r.value))
       <span style="flex: 1">{{ r.name }}<small v-if="r.me"> · 나</small></span>
       <b class="figure">{{ r.value }}{{ unit }}</b>
     </div>
-    <p v-if="!rest.length" class="form-note" style="margin: 0">4위 이하 참가자가 없어요.</p>
+    <p v-if="!rest.length" class="empty-state">4위 아래 참가자가 아직 없어요. 참가자가 늘면 순위가 이어서 표시돼요.</p>
   </section>
 
   <section class="card" style="margin-top: 16px" v-if="myRow">

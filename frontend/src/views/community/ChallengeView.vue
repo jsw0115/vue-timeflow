@@ -84,7 +84,7 @@ function createChallenge() {
         </template>
       </div>
     </section>
-    <p v-if="!ongoing.length" class="form-note">진행중인 챌린지가 없어요. 새로 만들어보세요.</p>
+    <p v-if="!ongoing.length" class="empty-state">진행 중인 챌린지가 없어요. '+ 챌린지 만들기'로 새 챌린지를 시작해 보세요.</p>
   </div>
 
   <section class="card" style="margin-top: 16px">
@@ -92,7 +92,7 @@ function createChallenge() {
     <div class="event" v-for="f in finished" :key="f.id" style="border-bottom: none">
       <span style="flex: 1">{{ f.title }}</span><small>{{ f.result }}</small>
     </div>
-    <p v-if="!finished.length" class="form-note" style="margin: 0">아직 완주한 챌린지가 없어요.</p>
+    <p v-if="!finished.length" class="empty-state">아직 완주한 챌린지가 없어요. 진행 중인 챌린지를 끝까지 인증하면 여기에 쌓여요.</p>
   </section>
 
   <Modal v-if="showCreate" title="챌린지 만들기" @close="showCreate = false">

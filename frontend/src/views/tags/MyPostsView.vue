@@ -90,6 +90,6 @@ const share = computed(() => (posts.value.length ? Math.round((myPosts.value.len
       </div>
       <p><RichText :text="p.body" /></p>
     </article>
-    <p v-if="!visible.length" class="form-note" style="margin: 0">조건에 맞는 글이 없어요.</p>
+    <p v-if="!visible.length" class="empty-state" role="status">조건에 맞는 글이 없어요. 검색어나 필터를 바꿔 보세요.</p>
   </section>
 </template>

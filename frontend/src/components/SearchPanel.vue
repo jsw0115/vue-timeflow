@@ -68,7 +68,7 @@ async function openHit(hit) {
         <button v-if="chatCursor" type="button" :disabled="chatBusy" class="review" @click="searchChat(true)">이전 검색 결과 더 보기</button>
       </template>
     </div>
-    <p v-if="query.trim() && !localBusy && !chatBusy && !error && !indexing && !chatHits.length && (chatOnly || !result.total)" class="form-note">검색 결과가 없어요.</p>
+    <p v-if="query.trim() && !localBusy && !chatBusy && !error && !indexing && !chatHits.length && (chatOnly || !result.total)" class="empty-state" role="status">검색 결과가 없어요. 다른 낱말이나 더 짧은 검색어로 찾아보세요.</p>
   </div>
 </template>
 <style>

@@ -60,7 +60,7 @@ function open(g) {
       <p>{{ g.description || '설명이 없어요' }}</p>
       <div class="member-chips">
         <i v-for="m in membersOf(g).slice(0, 5)" :key="m.id" :title="m.name">{{ m.name[0] }}</i>
-        <span v-if="!membersOf(g).length" class="form-note" style="margin: 0">아직 멤버가 없어요</span>
+        <span v-if="!membersOf(g).length" class="form-note" style="margin: 0">아직 멤버가 없어요. '멤버 관리'에서 초대해 보세요.</span>
       </div>
       <button class="primary" style="width: 100%; margin-top: 12px" @click.stop="open(g)">멤버 관리</button>
     </section>

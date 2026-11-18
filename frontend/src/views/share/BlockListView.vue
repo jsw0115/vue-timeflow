@@ -14,7 +14,7 @@ const blocked = computed(() => contacts.value.filter((c) => blockedIds.value.inc
   </div>
 
   <section class="card">
-    <p v-if="!blocked.length" class="form-note" style="margin: 0">차단한 사용자가 없어요.</p>
+    <p v-if="!blocked.length" class="empty-state">차단한 사용자가 없어요. 필요하면 '주소록에서 차단하기'로 차단할 수 있어요.</p>
     <div class="event" v-for="b in blocked" :key="b.id">
       <i></i>
       <span style="flex: 1"><b>{{ b.name }}</b><small>{{ b.relation }} · {{ b.email }}</small></span>
