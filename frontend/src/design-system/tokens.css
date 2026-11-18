@@ -1,0 +1,73 @@
+/* Timebar Diary 디자인 토큰. 값과 근거의 원문은 루트 DESIGN.md 2~6장이다.
+   출처 표기: 계약(이전 DESIGN.md), Figma(Figma 레퍼런스), 코드(기존 frontend/src), 보완(2026-11-18 기존 규칙에서 유도).
+   DESIGN.md 목표 값과 다른 현재 값은 DESIGN.md 부록 B 항목이다. 화면을 맞출 때 이 파일과 부록 B를 함께 고친다.
+   tests/design-tokens.test.mjs가 이 파일과 DESIGN.md의 값이 같은지 검사한다. */
+:root {
+  /* 2장 인터페이스 색. 크롬은 모노톤으로 두고 강조는 accent 하나만 쓴다(계약). */
+  --color-canvas: #ffffff;      /* 페이지·카드·입력 배경 */
+  --color-surface: #f5f3f1;     /* canvas보다 한 단계 낮은 구획. 위에 본문 크기 muted 금지(4.36:1) */
+  --color-foreground: #000000;  /* 본문 텍스트, 주 액션 배경. canvas 대비 21:1 */
+  --color-muted: #777169;       /* 보조 설명 텍스트. canvas 대비 4.83:1 */
+  --color-hairline: #e5e5e5;    /* 구분선·테두리. 목표 #ebebeb(Figma), 부록 B */
+  --color-on-primary: #ffffff;  /* 검정 주 액션 위 텍스트 */
+  --color-accent: #2f5d46;      /* 화면당 단일 강조, 포커스 표시. on-accent 대비 7.57:1 */
+  --color-on-accent: #ffffff;
+
+  /* 2장 상태 색. 텍스트·배지·작은 점에만 쓰고 버튼 배경에는 쓰지 않는다. danger는 오류·초과에만, 계획 미완료에는 쓰지 않는다(계약). */
+  --color-status-danger: #b23b3b;   /* canvas 대비 5.86:1 */
+  --color-status-warning: #8a6a3c;  /* canvas 대비 4.99:1 */
+  --color-status-info: #43596b;     /* canvas 대비 7.29:1 */
+
+  /* 3장 서체. 숫자·시간·ID에만 mono를 쓴다(계약, Figma). */
+  --font-sans: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* 3장 타입 역할. 크기는 글자 크기 설정을 따르도록 rem으로 쓴다(코드).
+     범위로 정한 display(40–56px)·heading(18–24px)·figure(28–40px) 크기는 화면에서 정한다. */
+  --type-display-weight: 300;  --type-display-leading: 1.15; --type-display-tracking: -0.02em;
+  --type-heading-weight: 600;  --type-heading-leading: 1.3;  --type-heading-tracking: -0.01em;
+  --type-body-size: 0.875rem;  --type-body-weight: 400;      --type-body-leading: 1.6;
+  --type-control-size: 0.8125rem; --type-control-weight: 500; --type-control-leading: 1;
+  --type-figure-weight: 500;   --type-figure-tracking: -0.01em;
+  --type-caption-size: 0.75rem; /* 보조 설명·도움말 12px. 텍스트 최소 크기(코드 typography 검사) */
+
+  /* 5장 간격(계약). 화면 밀도 설정이 아래 data-density에서 덮어쓴다(코드). */
+  --space-xs: 4px;
+  --space-sm: 6px;
+  --space-md: 8px;
+  --space-lg: 12px;
+  --space-xl: 16px;
+  --space-xxl: 20px;
+  --space-section: 96px;
+  --space-gutter: 48px;
+
+  /* 5장 모서리. 이 다섯 값 밖의 모서리를 새로 만들지 않는다(계약). */
+  --radius-sm: 4px;       /* 입력, 배지, 시간 블록 */
+  --radius-control: 8px;  /* button-secondary(Figma) */
+  --radius-md: 12px;      /* nav-item, 선택형 카드 */
+  --radius-lg: 16px;      /* surface-card, 모달 */
+  --radius-full: 9999px;  /* button-primary, icon-button, segmented-tab, 아바타 */
+
+  /* 6장 그림자. 이 세 토큰 밖의 그림자를 새로 만들지 않는다(계약, Figma). */
+  --shadow-card: 0px 2px 4px rgba(0,0,0,.04), 0px 1px 1px rgba(0,0,0,.05);
+  /* 목표 0px 2px 4px rgba(0,0,0,0.04), 0px 0px 1.143px rgba(0,0,0,0.4)(계약), 부록 B */
+  --shadow-raised: 0px 1px 1px rgba(0,0,0,.16), 0px 1px 1px rgba(0,0,0,.04), 0px 2px 4px rgba(0,0,0,.04);
+  /* 목표 0px 0px 1px rgba(0,0,0,0.4), 0px 1px 1px rgba(0,0,0,0.04), 0px 2px 4px rgba(0,0,0,0.04)(계약), 부록 B */
+  --shadow-overlay: 0 24px 70px rgba(0,0,0,0.1); /* 화면 위에 뜨는 패널에만(Figma panel) */
+
+  /* 4·8장 컴포넌트 치수. 주 컨트롤 높이 40px, 탭 32px, 버튼 여백 11px 18px, 입력 여백 9px(코드). */
+  --control-height: 40px;
+  --control-padding-y: 11px;
+  --control-padding-x: 18px;
+  --tab-height: 32px;
+  --input-padding: 9px;
+
+  /* 4장 공통 상호작용. 전환 0.15s, 포커스 accent 2px 실선·오프셋 2px(계약, 코드).
+     disabled 불투명도는 button-primary 값을 모든 컨트롤에 같게 쓴다(보완). */
+  --motion-fast: 0.15s;
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+  --opacity-disabled: 0.45;
+}
+:root[data-density='compact']{--space-xs:3px;--space-sm:5px;--space-md:6px;--space-lg:9px;--space-xl:12px;--space-xxl:15px;--space-section:52px;--space-gutter:32px}
+:root[data-density='roomy']{--space-xl:20px;--space-xxl:26px;--space-section:120px;--space-gutter:60px}

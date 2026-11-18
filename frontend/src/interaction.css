@@ -58,7 +58,6 @@
 .widget-editbar { flex-wrap: wrap; }
 .widget-editbar .review { padding: 6px; font-size: 0.8125rem; margin: 0; }
 .sample-label { align-self: flex-start; margin-bottom: 10px; font-size: 0.75rem; color: var(--color-muted); }
-.empty-state { padding: 24px 0; line-height: 1.8; }
 .work-records { margin-top: 24px; }
 .work-records .head { gap: 16px; flex-wrap: wrap; }
 .work-records .head .primary { padding: 10px 16px; color: var(--color-on-primary); font-size: 0.875rem; margin: 0; }

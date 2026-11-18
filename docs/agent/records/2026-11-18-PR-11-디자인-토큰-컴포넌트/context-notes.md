@@ -1,0 +1,38 @@
+# 맥락 메모
+
+## 결정
+
+- 사용자 답변에 따라 화면 모양은 바꾸지 않았다. 부록 B에 걸린 토큰(hairline·shadow.card·shadow.raised)은 tokens.css에 현재 값을 두고 DESIGN.md 목표 값을 주석으로 남겼다. CLAUDE.md 5절(DESIGN.md 우선)과 충돌처럼 보이지만, 사용자의 직접 지시가 DESIGN.md 부록 A 우선순위 1이라 이번 범위에서는 이것이 맞다.
+- 토큰을 `styles.css`에서 옮길 때 값을 그대로 옮겼다. 변경 전후 선언 비교(07 RUN-40)에서 기존 토큰 값 변화가 0인 것을 확인했다.
+- 새 공통 클래스는 기존 화면 클래스와 이름을 겹치지 않게 DESIGN.md 컴포넌트 이름(`.button-secondary`, `.icon-button`, `.input-field`, `.segmented-tab`)으로 지었다. `typography.css`에 정의 없이 쓰인 `.secondary`는 피했다(나중에 불러와 글자 크기를 덮는다).
+- `.modal-secondary`를 바로 바꾸지 않았다. 사용자가 `Modal.vue`를 수정 중이고, 바꾸면 모든 모달 보조 버튼 모양이 바뀐다(IM-11 4단계).
+- 컴포넌트 치수(높이 40px, 탭 32px, 여백 11px 18px, 입력 9px)를 토큰으로 올렸다. DESIGN.md 4·8장에 이미 적힌 값이라 새 값이 아니고, 공통 클래스에 px 숫자를 직접 쓰지 않게 하려는 것이다.
+- 빠진 상태는 기존 규칙 세 가지에서 유도했다. hover는 보조 버튼·아이콘 버튼의 "테두리 → foreground"와 nav-item의 "배경 한 단계"를 컴포넌트 강도에 맞춰 넓혔다(입력은 한 단계 약한 muted). disabled는 button-primary의 0.45를 모든 컨트롤에 넓혔다. loading은 장식 모션 금지·동작 줄이기 규칙에 맞춰 회전 표시 없이 문구와 `aria-busy`로 정했다.
+- input-field 오류에 빨간 테두리를 넣지 않았다. DESIGN.md 2장은 상태 색을 좁은 면적의 글자·배지·점에만 쓰라고 한다. 성공은 같은 형식에 accent(상태 색 표의 성공 표시)를 썼다.
+- empty-state는 기존 `.empty-state` 클래스를 정식화했다. 24px은 간격 스케일 밖이라 space.xxl(20px)로 맞췄고, `margin: 0`으로 문단 기본 여백을 없앴다. 쓰는 2곳(홈 오늘 일정, 업무 기록)의 위아래 여백이 줄어든다. 사용자 선택("화면 변화 없이")에서 벗어나는 유일한 변화라 보고에 적는다.
+- 토큰 파일을 먼저 불러오면 `styles.css`의 글꼴 `@import`가 번들 중간으로 갈 수 있어 빌드 결과를 확인했다. Vite가 맨 앞으로 올려 문제없었다.
+- 토큰 계약 테스트는 부록 B 예외가 "아직 다르다"도 검사한다. 코드를 목표 값으로 바꾸고 예외를 지우지 않으면 실패해 정리를 강제한다.
+
+## 발견
+
+- DESIGN.md 안의 충돌: 4장 input-field는 "체크박스를 선택하면 accent로 채운다(코드)"고 적고, 같은 장 공통 규칙("accent는 포커스 외 배경 금지")과 부록 B("체크 완료의 accent 배경")는 위반으로 본다. 대체 색이 문서에 없어 고치지 않고 IM-11 7단계 결정 필요로 등록했다.
+- `.omd/preferences.md` pending 18건은 모두 `confidence: inferred`다. CLAUDE.md 5절에 DESIGN.md보다 앞서지 않는다고 적었다.
+
+## 보안 점검
+
+- 해당 없음. CSS·문서·테스트만 바꿨다. 외부 자원(글꼴 CDN)은 기존 그대로이고 새로 추가하지 않았다.
+
+## 접근성 점검(KWCAG 2.2, 변경 범위)
+
+- 포커스: 기존 전역 `:focus-visible`(accent 2px)을 그대로 쓴다. 공통 클래스가 outline을 지우지 않는다. 입력 hover는 포커스 중에는 바꾸지 않아 포커스 표시와 겹치지 않는다.
+- 대비: surface 위 segmented-tab 비선택 글자는 foreground(muted 4.36:1 미달 회피). helper-text muted는 canvas 위 4.83:1.
+- 색만으로 알리지 않기: 오류·성공은 helper-text 문구를 함께 바꾸고 `aria-invalid`·`aria-describedby`를 쓰도록 규칙에 적었다.
+- 상태 전달: loading은 `aria-busy`와 라벨 문구, 선택은 `aria-selected`·`aria-pressed`, disabled는 네이티브 `disabled` 또는 `aria-disabled`.
+- 크기: 공통 컨트롤 높이 40px, 탭 32px(기존 규칙). 좁은 화면 입력 16px 규칙(`typography.css`)은 선택자 우선순위가 더 높아 공통 클래스가 덮지 않는다.
+- 실제 화면 적용 전이라 브라우저 키보드·320px·확대 점검은 하지 않았다(NOT_RUN). 공통 클래스를 화면에 적용하는 IM-11 단계마다 한다.
+
+## 남은 일
+
+- IM-11 2단계(상태 색 hex → 변수, 모양 변화 없음)부터 차례로.
+- 7단계 결정: 체크박스·진행 막대·다이어리 작성일·차트의 accent 배경.
+- 세 번째 요청(화면 구현)은 사용자가 "지금은 없음"으로 답해 하지 않았다.

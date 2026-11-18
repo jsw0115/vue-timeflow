@@ -1,10 +1,7 @@
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css');
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
 :root{
-  --color-canvas:#ffffff;--color-surface:#f5f3f1;--color-foreground:#000000;--color-muted:#777169;--color-hairline:#e5e5e5;--color-on-primary:#ffffff;--color-accent:#2f5d46;--color-on-accent:#ffffff;
-  --space-xs:4px;--space-sm:6px;--space-md:8px;--space-lg:12px;--space-xl:16px;--space-xxl:20px;--space-section:96px;--space-gutter:48px;
-  --radius-sm:4px;--radius-md:12px;--radius-lg:16px;--radius-full:9999px;
-  --shadow-card:0px 2px 4px rgba(0,0,0,.04),0px 1px 1px rgba(0,0,0,.05);--shadow-raised:0px 1px 1px rgba(0,0,0,.16),0px 1px 1px rgba(0,0,0,.04),0px 2px 4px rgba(0,0,0,.04);
+  /* 디자인 토큰은 design-system/tokens.css에 있다(DESIGN.md 2~6장). */
   font-family:'Pretendard Variable','Pretendard',-apple-system,BlinkMacSystemFont,sans-serif;color:var(--color-foreground);background:var(--color-canvas)
 }
 *{box-sizing:border-box}body{margin:0}button,input,textarea,select{font:inherit}button{border:0;background:none;cursor:pointer;color:inherit}
@@ -540,8 +537,6 @@ p{font-size:0.875rem;color:var(--color-muted);line-height:1.6;font-weight:400}
 .domain-count{margin-left:auto;font-size:0.8125rem;color:var(--color-muted)}
 
 /* 화면 밀도 · 글자 크기 (설정 > 환경설정) */
-:root[data-density='compact']{--space-xs:3px;--space-sm:5px;--space-md:6px;--space-lg:9px;--space-xl:12px;--space-xxl:15px;--space-section:52px;--space-gutter:32px}
-:root[data-density='roomy']{--space-xl:20px;--space-xxl:26px;--space-section:120px;--space-gutter:60px}
 :root[data-reduce-motion='on'] *{transition-duration:0s!important;animation-duration:0s!important}
 @media (prefers-reduced-motion: reduce){*{transition-duration:0s!important;animation-duration:0s!important}}
 .density-picker{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}

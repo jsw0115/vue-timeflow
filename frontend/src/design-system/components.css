@@ -1,0 +1,86 @@
+/* DESIGN.md 4장 컴포넌트의 공통 클래스와 상태. tokens.css의 변수만 쓰고 색 코드·임의 px 값을 쓰지 않는다(1px 테두리 제외).
+   상태 원칙(DESIGN.md 4장 공통 규칙)
+   - hover: 테두리나 배경을 한 단계만 진하게 바꾼다. 위치 이동은 button-primary에만 쓴다.
+   - disabled: 모든 컨트롤에서 --opacity-disabled와 not-allowed 커서로 같게 표현하고 hover 변화를 없앤다.
+   - loading: 장식 모션 없이 라벨을 진행형 문구로 바꾸고 aria-busy="true"와 progress 커서로 표현한다.
+   기존 화면 클래스(.icon, .tabs, .filter, .compose-tabs, .modal-secondary)는 DESIGN.md 부록 B 순서에 따라 이 클래스로 옮긴다. */
+
+/* button-primary. 기본·hover·disabled는 styles.css의 .primary다. 여기서는 빠져 있던 loading만 더한다(보완). */
+.primary[aria-busy='true'],
+.primary[aria-busy='true']:hover { transform: none; box-shadow: var(--shadow-raised); cursor: progress; }
+
+/* button-secondary. 보조 행동용 아웃라인 버튼. accent를 쓰지 않는다(계약 역할, Figma 형태). */
+.button-secondary {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-sm);
+  min-height: var(--control-height); padding: var(--control-padding-y) var(--control-padding-x);
+  border: 1px solid var(--color-hairline); border-radius: var(--radius-control);
+  background: var(--color-canvas); color: var(--color-foreground);
+  font-size: var(--type-control-size); font-weight: var(--type-control-weight); line-height: var(--type-control-leading);
+  transition: border-color var(--motion-fast);
+}
+.button-secondary:hover { border-color: var(--color-foreground); }
+.button-secondary[aria-busy='true'] { border-color: var(--color-hairline); cursor: progress; }
+
+/* icon-button. 아이콘만 있는 40px 원형 버튼. 보이는 라벨이 없으므로 aria-label이 필요하다(Figma round-icon). */
+.icon-button {
+  display: inline-grid; place-items: center; flex: none;
+  width: var(--control-height); height: var(--control-height); padding: 0;
+  border: 1px solid var(--color-hairline); border-radius: var(--radius-full);
+  background: var(--color-canvas); color: var(--color-foreground);
+  font-size: 1.125rem; line-height: 1; /* 아이콘 글리프 크기(코드 .icon) */
+  transition: border-color var(--motion-fast);
+}
+.icon-button:hover { border-color: var(--color-foreground); }
+
+/* 버튼 공통 disabled(보완). button-primary와 같은 불투명도를 쓴다. */
+:is(.button-secondary, .icon-button):is(:disabled, [aria-disabled='true']),
+:is(.button-secondary, .icon-button):is(:disabled, [aria-disabled='true']):hover {
+  opacity: var(--opacity-disabled); border-color: var(--color-hairline); cursor: not-allowed;
+}
+
+/* input-field. 구조는 label, control, helper-text. 라벨로 감싸거나 for로 연결한다(계약).
+   <label class="input-field">이름<input aria-describedby="도움말ID"><span class="input-field-help" id="도움말ID">…</span></label> */
+.input-field {
+  display: flex; flex-direction: column; gap: var(--space-sm); min-width: 0;
+  font-size: var(--type-control-size); font-weight: 600; line-height: 1.5; color: var(--color-foreground);
+}
+.input-field :is(input, select, textarea) {
+  width: 100%; min-width: 0; padding: var(--input-padding);
+  border: 1px solid var(--color-hairline); border-radius: var(--radius-sm);
+  background: var(--color-canvas); color: var(--color-foreground);
+  font-family: inherit; font-size: var(--type-body-size); font-weight: var(--type-body-weight); line-height: 1.5;
+  transition: border-color var(--motion-fast);
+}
+/* hover: 버튼보다 한 단계 약한 muted 테두리로 포커스(accent)와 구분한다(보완). */
+.input-field :is(input, select, textarea):hover:not(:disabled):not(:focus-visible) { border-color: var(--color-muted); }
+.input-field :is(input, select, textarea):disabled { opacity: var(--opacity-disabled); cursor: not-allowed; }
+.input-field-help { font-size: var(--type-caption-size); font-weight: 400; line-height: 1.5; color: var(--color-muted); }
+/* error는 helper-text를 status-danger·600으로(계약·코드), success는 같은 형식으로 accent를 쓴다(보완). 색만으로 알리지 않도록 문구를 함께 바꾼다. */
+.input-field-help[data-state='error'] { color: var(--color-status-danger); font-weight: 600; }
+.input-field-help[data-state='success'] { color: var(--color-accent); font-weight: 600; }
+
+/* segmented-tab. 필터·보기 전환·작성 유형 전환(Figma product-segment 형태, 코드 색).
+   선택은 aria-selected(role=tab) 또는 aria-pressed(토글 버튼)로 표시한다. */
+.segmented-tab {
+  display: inline-flex; flex-wrap: wrap; gap: var(--space-xs); padding: var(--space-xs); max-width: 100%;
+  border-radius: var(--radius-full); background: var(--color-surface);
+}
+.segmented-tab > button {
+  min-height: var(--tab-height); padding: 0 var(--space-lg); border-radius: var(--radius-full);
+  color: var(--color-foreground); /* surface 위라 muted 대신 foreground(대비 기준) */
+  font-size: var(--type-control-size); font-weight: var(--type-control-weight); line-height: var(--type-control-leading);
+  transition: background-color var(--motion-fast), color var(--motion-fast);
+}
+/* hover: surface 위 항목은 canvas 배경으로 한 단계 올린다(보완). */
+.segmented-tab > button:hover:not(:disabled):not([aria-selected='true']):not([aria-pressed='true']) { background: var(--color-canvas); }
+.segmented-tab > button:is([aria-selected='true'], [aria-pressed='true']) { background: var(--color-foreground); color: var(--color-on-primary); font-weight: 600; }
+.segmented-tab > button:disabled { opacity: var(--opacity-disabled); cursor: not-allowed; }
+
+/* empty-state. 목록·카드가 비었을 때 무엇이 비었는지와 다음 행동을 한 문장으로 알린다(보완).
+   장식 이모지·일러스트를 쓰지 않고, 행동은 button-secondary 하나까지 둔다. surface 위에서는 foreground 글자를 쓴다. */
+.empty-state {
+  margin: 0; padding: var(--space-xxl) 0;
+  color: var(--color-muted); font-size: var(--type-body-size); line-height: var(--type-body-leading);
+}
+.empty-state > p { margin: 0; color: inherit; font-size: inherit; line-height: inherit; }
+.empty-state > .button-secondary { margin-top: var(--space-lg); }

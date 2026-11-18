@@ -4,7 +4,8 @@ Timebar Diary(저장소 이름 vue-timeflow)의 디자인 계약이다. 2026-11-
 
 - 기존 계약(이전 DESIGN.md 1~7장)의 토큰 값과 규칙을 이어받는다.
 - Figma 레퍼런스(`.claude/data/references/figma/DESIGN.md`)에서는 중립 크롬 원칙, 보조 버튼·세그먼트 탭·원형 아이콘 버튼 형태, 테두리 색, 오버레이 그림자를 가져왔다.
-- 각 값의 출처는 `계약`(이전 DESIGN.md), `Figma`(Figma 레퍼런스), `코드`(현재 `frontend/src`)로 표기한다.
+- 각 값의 출처는 `계약`(이전 DESIGN.md), `Figma`(Figma 레퍼런스), `코드`(현재 `frontend/src`), `보완`(2026-11-18 기존 규칙의 톤과 비율에서 유도해 채운 값. 근거를 함께 적는다)으로 표기한다.
+- 토큰과 공통 컴포넌트 클래스의 코드 위치는 [부록 A](#코드-위치)에 있다.
 - 이 문서의 목표 값과 현재 코드 값이 다른 곳은 [부록 B](#부록-b-현재-코드와의-차이)에 모았다.
 
 ## 1. Visual Theme & Atmosphere
@@ -127,6 +128,8 @@ surface 위 본문 크기 텍스트에는 color.muted 대신 color.foreground를
 }
 ```
 
+코드 정의는 `frontend/src/design-system/tokens.css`다. 간격·모서리·그림자·서체·상호작용 변수도 같은 파일에 있다. 목표 값과 다른 현재 값은 부록 B에 있다.
+
 ## 3. Typography Rules
 
 ### 서체
@@ -158,6 +161,7 @@ surface 위 본문 크기 텍스트에는 color.muted 대신 color.foreground를
 - 섹션 위 작은 안내 라벨(`.eyebrow`)은 12px, 굵기 600, 대문자, 양수 자간 0.04em을 쓴다. (코드)
 - 글자 크기는 rem으로 지정한다. 앱의 글자 크기 설정이 `:root` font-size를 93.75%(작게)·112.5%(크게)로 바꾸기 때문이다. (코드 `typography.css`)
 - 한국어 제목에는 `word-break: keep-all`을 쓴다. (코드)
+- 역할별 굵기·행간·자간은 `--type-{역할}-weight`·`-leading`·`-tracking` 변수로 쓴다. 크기가 하나로 정해진 body·control은 `--type-body-size`·`--type-control-size`를, 도움말 같은 12px 글자는 `--type-caption-size`를 쓴다. 범위로 정한 display·heading·figure 크기는 화면에서 범위 안의 값을 고른다. (보완)
 
 ## 4. Component Stylings
 
@@ -166,7 +170,25 @@ surface 위 본문 크기 텍스트에는 color.muted 대신 color.foreground를
 - 모든 interactive 컴포넌트는 `:focus-visible`에서 color.accent 2px 실선 아웃라인, 오프셋 2px을 표시한다. (계약, 코드)
 - color.accent는 button-primary 포커스와 input-field 포커스 외에는 컴포넌트 배경색으로 쓰지 않는다. (계약)
 - 색·테두리·배경 전환은 0.15s로 한다. `prefers-reduced-motion: reduce`에서는 전환·애니메이션 시간을 0으로 만든다. (코드)
-- 계약에 상태가 있지만 공통 스타일이 아직 없는 경우는 "미정"으로 표기했다. 그럴듯한 기본값으로 채우지 않는다.
+- 계약에 상태가 있지만 값이 없던 hover·disabled·loading과 빈 상태는 2026-11-18에 아래 세 원칙으로 채우고 `보완`으로 표기했다. 원칙으로 정할 수 없는 값은 여전히 "미정"으로 두고 그럴듯한 기본값으로 채우지 않는다.
+  - hover는 테두리나 배경을 한 단계만 진하게 바꾼다. 버튼·아이콘 버튼은 테두리를 foreground로, 입력은 muted로, surface 위 항목은 canvas 배경으로 바꾼다. 위치 이동은 button-primary에만 쓴다. 기존 규칙(보조 버튼·아이콘 버튼 hover의 테두리 변화, nav-item hover의 배경 변화)을 컴포넌트 강도에 맞춰 넓힌 것이다.
+  - disabled는 모든 컨트롤에서 불투명도 0.45(`--opacity-disabled`)와 `cursor: not-allowed`로 같게 표현하고 hover 변화를 없앤다. button-primary의 기존 값을 그대로 넓혔다. 비활성 컨트롤은 대비 기준(WCAG 2.1 1.4.3)의 예외지만, 왜 쓸 수 없는지는 근처 문구로 알린다.
+  - loading은 회전 표시 같은 장식 모션 없이 라벨을 "저장하는 중"처럼 진행형 문구로 바꾸고 `aria-busy="true"`와 `progress` 커서로 표현한다. 크기·대비·그림자는 그대로 둔다. 동작 줄이기 설정과 관계없이 같은 정보를 주고, 화면낭독기에도 라벨 변화로 전달된다. 요청이 끝날 때까지 다시 누른 입력은 처리하지 않는다.
+
+### 코드 클래스
+
+공통 클래스는 `frontend/src/design-system/components.css`에, 기존 클래스는 `styles.css`에 있다. "기존 화면 클래스"는 아직 이 문서와 값이 다르며 부록 B 순서로 공통 클래스에 옮긴다.
+
+| 컴포넌트 | 공통 클래스 | 기존 화면 클래스 |
+|---|---|---|
+| button-primary | `.primary` | 같음 |
+| button-secondary | `.button-secondary` | `.modal-secondary` |
+| icon-button | `.icon-button` | `.icon` |
+| input-field | `.input-field`, `.input-field-help` | `.detail label`, `.modal-card input` 등 |
+| segmented-tab | `.segmented-tab` | `.tabs`, `.filter`, `.compose-tabs` |
+| surface-card | `.card` | 같음 |
+| status-badge | `.tag` | `.state`, `.ok`, `.warn`, `.danger`, `.info` |
+| empty-state | `.empty-state` | `.form-note`로 쓴 빈 목록 문구 |
 
 ### button-primary (계약)
 
@@ -185,7 +207,7 @@ surface 위 본문 크기 텍스트에는 color.muted 대신 color.foreground를
 | hover | 위로 1px 이동. 그림자는 shadow 토큰 안에서만 바꾼다. |
 | focus-visible | accent 2px 아웃라인 |
 | disabled | 불투명도 0.45, 이동·그림자 없음 (코드) |
-| loading | 미정 |
+| loading | 라벨을 진행형 문구로 바꾸고 `aria-busy="true"`, `progress` 커서. hover 이동 없음, shadow.raised 유지 (보완) |
 | error / success | 해당 없음. 오류는 입력 필드, 성공은 토스트·배지로 표현한다. (계약) |
 
 ### button-secondary (계약 역할 + Figma outline-action 형태)
@@ -203,8 +225,8 @@ surface 위 본문 크기 텍스트에는 color.muted 대신 color.foreground를
 |---|---|
 | hover | 테두리를 color.foreground로 바꾼다. |
 | focus-visible | accent 2px 아웃라인 |
-| disabled | button-primary와 같은 0.45 불투명도 |
-| loading | 미정 |
+| disabled | button-primary와 같은 0.45 불투명도, 테두리는 hairline으로 고정 (보완) |
+| loading | button-primary와 같다. 테두리는 hairline으로 고정 (보완) |
 | error / success | 해당 없음 (계약) |
 
 ### icon-button (Figma round-icon 형태)
@@ -217,6 +239,8 @@ surface 위 본문 크기 텍스트에는 color.muted 대신 color.foreground를
 | 배경 / 아이콘 | color.canvas / color.foreground |
 | 테두리 | 1px color.hairline |
 | hover | 테두리를 color.foreground로 바꾼다. (코드 `.icon:hover`) |
+| focus-visible | accent 2px 아웃라인 (계약 공통 규칙) |
+| disabled | 0.45 불투명도, 테두리는 hairline으로 고정 (보완) |
 | 접근성 | 보이는 라벨이 없으므로 `aria-label`로 이름을 준다. |
 
 Figma의 검정 채움 원형 버튼은 button-primary와 시선을 다투므로 쓰지 않는다.
@@ -234,12 +258,15 @@ Figma의 검정 채움 원형 버튼은 button-primary와 시선을 다투므로
 
 | 상태 | 표현 |
 |---|---|
-| hover | 미정 |
+| hover | 테두리를 color.muted로 바꾼다. 버튼(foreground)보다 한 단계 약하게 둬서 포커스(accent)와 구분한다. 포커스 중에는 바꾸지 않는다. (보완) |
 | focus-visible | accent 2px 아웃라인 |
-| disabled | 미정 |
-| error | helper-text를 color.status-danger, 굵기 600으로 표시한다. (코드 공유 동의 모달) |
-| success | 미정 |
+| disabled | 0.45 불투명도, `cursor: not-allowed` (보완) |
+| error | helper-text를 color.status-danger, 굵기 600으로 표시한다. (코드 공유 동의 모달) 컨트롤에 `aria-invalid="true"`를 주고 helper-text를 `aria-describedby`로 연결한다. (보완) |
+| success | helper-text를 color.accent, 굵기 600으로 표시한다. error와 같은 형식이고 상태 색 표의 성공 표시(accent)를 따른다. (보완) |
 | loading | 해당 없음 (계약) |
+
+- helper-text는 12px(`--type-caption-size`), 굵기 400, color.muted다. 오류·성공일 때는 색과 함께 문구도 바꿔 색만으로 알리지 않는다. (보완)
+- 테두리 색으로 오류를 표시하지 않는다. 상태 색은 좁은 면적의 글자에만 쓴다는 2장 규칙을 따른다. (보완)
 
 체크박스·라디오는 17px 원형 테두리(1.5px hairline)를 쓰고, 선택하면 accent로 채우고 안쪽에 4px canvas 링을 둔다. (코드 `.task input`)
 
@@ -253,6 +280,11 @@ Figma의 검정 채움 원형 버튼은 button-primary와 시선을 다투므로
 | 항목 | 최소 높이 32px, radius.full (코드 높이, Figma 형태) |
 | 선택 항목 | color.foreground 배경, color.on-primary 텍스트, 굵기 600 (코드) |
 | 비선택 항목 | color.foreground 텍스트 (surface 위 muted 대비 미달 때문) |
+| 비선택 hover | color.canvas 배경. surface 위 항목을 한 단계 올린다. (보완) |
+| focus-visible | accent 2px 아웃라인 (계약 공통 규칙) |
+| disabled | 0.45 불투명도, `cursor: not-allowed` (보완) |
+
+선택 상태는 탭 역할이면 `aria-selected`, 토글 버튼이면 `aria-pressed`로 표시한다. 좁은 화면에서는 가로 스크롤 대신 줄을 바꾼다. (보완)
 
 ### nav-item (계약)
 
@@ -300,6 +332,22 @@ LNB 내비게이션 항목이다. 활성 상태는 surface 배경과 foreground 
 | 배경 | color.surface |
 | 텍스트 | 기본 color.foreground, 상태별로 상태 색 |
 | 크기 / 여백 / 모서리 | 12px / 4px 7px / radius.sm |
+
+### empty-state (코드 클래스 + 보완)
+
+목록·카드·검색 결과가 비었을 때 쓴다. 코드에 `.empty-state` 클래스가 있었지만 규칙이 없어 2026-11-18에 정했다. 기존 빈 목록 문구(`.form-note`)의 톤을 따른다.
+
+| 속성 | 값 |
+|---|---|
+| 구조 | 문구(필수), 행동(선택, button-secondary 하나) |
+| 글자 | body 크기, color.muted. surface 위에서는 color.foreground (2장 대비 규칙) |
+| 여백 | 위아래 space.xxl, 행동 버튼 위 space.lg. 목록 시작선에 맞춰 왼쪽 정렬 |
+| 장식 | 이모지·일러스트·아이콘 타일을 쓰지 않는다. (7장 Don't) |
+
+- 문구는 무엇이 비었는지를 먼저, 할 수 있는 다음 행동을 뒤에 쓴다. 예: "오늘 예정된 루틴이 없어요. 새 루틴을 만들어 보세요."
+- 비어 있음을 실패처럼 말하지 않는다. "기록 실패", "아무것도 하지 않았어요" 대신 "아직 남긴 기록이 없어요"를 쓴다. (계약 문구 규칙)
+- 행동은 화면의 주 액션과 겹치지 않게 button-secondary로 둔다. 주 액션(button-primary)이 이미 화면에 있으면 행동을 생략한다.
+- 검색·필터 결과로 비었으면 `role="status"`로 결과 변화를 알린다.
 
 ### modal (코드 구조 + Figma 그림자)
 
@@ -485,6 +533,8 @@ LNB 내비게이션 항목이다. 활성 상태는 surface 배경과 foreground 
 - [ ] 아이콘만 있는 버튼에 `aria-label`이 있다.
 - [ ] 320px 폭과 200% 확대에서 가로 스크롤이 생기지 않는다.
 - [ ] 계획 미완료를 벌점처럼 표현하지 않았다.
+- [ ] hover·disabled·loading이 4장 공통 원칙과 같고, 비어 있는 목록에 empty-state가 있다.
+- [ ] 새 스타일이 `design-system/tokens.css` 변수를 쓰고 색 코드를 직접 쓰지 않았다.
 
 ## 부록 A. 문서 관리
 
@@ -508,28 +558,43 @@ LNB 내비게이션 항목이다. 활성 상태는 surface 배경과 foreground 
 - 정하지 못한 값은 가장 작은 단위만 "미정"으로 남기고, 그럴듯한 기본값으로 채우지 않는다. (계약)
 - 변경은 기록하고 검토한 뒤 채택한다. (계약)
 
+### 코드 위치
+
+| 파일 | 내용 |
+|---|---|
+| `frontend/src/design-system/tokens.css` | 2~6장 토큰과 근거 주석. 화면 밀도 설정의 간격 덮어쓰기 |
+| `frontend/src/design-system/components.css` | 4장 공통 클래스와 상태. 토큰만 쓴다 |
+| `frontend/src/main.js` | 토큰을 가장 먼저, 공통 클래스를 가장 나중에 불러온다 |
+| `frontend/tests/design-tokens.test.mjs` | 이 문서와 tokens.css 값 일치, 부록 B 예외, 공통 클래스의 토큰 사용을 검사한다 |
+
+### 변경 기록
+
+| 날짜 | 내용 |
+|---|---|
+| 2026-11-18 | 9장 형식으로 재작성 |
+| 2026-11-18 | 4장 hover·disabled·loading 원칙과 빈 상태(empty-state) 보완, 코드 클래스 표·코드 위치 추가, 부록 B 갱신 |
+
 ### omd 시스템 그래프 상태
 
 `.omd/system/graph.json`과 `manifest.json`은 이전 7장 형식 DESIGN.md를 기준으로 해시가 묶여 있다. 이번 9장 형식으로 바꾸면서 해시가 맞지 않게 되었으므로, omd 도구는 그래프 대신 이 DESIGN.md를 기준으로 읽는다. 그래프를 다시 기준으로 쓰려면 omd 워크플로로 다시 채택해야 한다.
 
 ## 부록 B. 현재 코드와의 차이
 
-이 문서의 목표 값과 2026-11-18 기준 `frontend/src` 값이 다른 항목이다. 코드는 아직 바꾸지 않았다.
+이 문서의 목표 값과 2026-11-18 기준 `frontend/src` 값이 다른 항목이다. 토큰 파일과 공통 클래스는 만들었지만 화면 모양은 아직 바꾸지 않았다. 맞추는 순서는 [개발 문서 06의 IM-11](docs/dev-docs/06-구현-방안.md#im-11-디자인-기준-단일화)을 따른다. 항목을 맞추면 이 표와 `design-tokens.test.mjs`의 예외 목록에서 함께 지운다.
 
 | 항목 | 이 문서 | 현재 코드 | 위치 |
 |---|---|---|---|
-| color.hairline | `#ebebeb` (Figma) | `#e5e5e5` | `styles.css` `:root` |
-| 상태 색 변수 | `--color-status-*` | hex 값 직접 사용 | 여러 `.vue`·`.css` |
-| shadow.card | `0px 2px 4px rgba(0,0,0,0.04), 0px 0px 1.143px rgba(0,0,0,0.4)` | `0px 2px 4px rgba(0,0,0,.04), 0px 1px 1px rgba(0,0,0,.05)` | `styles.css` `:root` |
-| shadow.raised | `0px 0px 1px rgba(0,0,0,0.4), …` | `0px 1px 1px rgba(0,0,0,.16), …` | `styles.css` `:root` |
-| shadow.overlay | `0 24px 70px rgba(0,0,0,0.1)` | `0 22px 70px rgba(0,0,0,.2)`, `0 22px 60px rgba(0,0,0,.14)` | `.composer`, `.modal-preview` |
+| color.hairline | `#ebebeb` (Figma) | `#e5e5e5` | `design-system/tokens.css` |
+| 상태 색 변수 | `--color-status-*` 사용 | 변수는 정의됨. 사용처는 hex 값 직접 사용 | 여러 `.vue`·`.css` |
+| shadow.card | `0px 2px 4px rgba(0,0,0,0.04), 0px 0px 1.143px rgba(0,0,0,0.4)` | `0px 2px 4px rgba(0,0,0,.04), 0px 1px 1px rgba(0,0,0,.05)` | `design-system/tokens.css` |
+| shadow.raised | `0px 0px 1px rgba(0,0,0,0.4), …` | `0px 1px 1px rgba(0,0,0,.16), …` | `design-system/tokens.css` |
+| shadow.overlay | `var(--shadow-overlay)` 사용 | 변수는 정의됨. 사용처는 `0 22px 70px rgba(0,0,0,.2)`, `0 22px 60px rgba(0,0,0,.14)` | `.composer`, `.modal-preview` |
 | button-primary hover | shadow 토큰 안에서 변경 | `0 6px 18px rgba(0,0,0,.16)` | `.primary:hover` |
 | control 글자 | 13px / 500 | 14px / 600 | `.primary` |
 | display 행간 | 1.15 | 1.2 | `typography.css` |
-| button-secondary | 공통 컴포넌트 | 공통 클래스 없음 | — |
-| radius.control | 8px | 변수 없음 | `styles.css` `:root` |
-| icon-button | 40px 원형 | 37px, radius.sm | `.icon` |
-| segmented-tab | radius.full, 비선택 foreground | radius.sm·radius.md, 비선택 muted | `.tabs`, `.filter`, `.compose-tabs` |
+| button-secondary | `.button-secondary` (radius.control 8px, 13px/500) | 화면은 `.modal-secondary` (radius.full, 13px/400, 여백 10px 18px) | `components/Modal.vue` |
+| icon-button | `.icon-button` 40px 원형 | 화면은 `.icon` 37px, radius.sm | `.icon` |
+| segmented-tab | `.segmented-tab` radius.full, 비선택 foreground | 화면은 radius.sm·radius.md, 비선택 muted | `.tabs`, `.filter`, `.compose-tabs` |
 | nav-item 모서리 | radius.md | radius.sm | `nav button` |
 | 콘텐츠 최대폭 | 1180px | 주석 처리됨 | `main` |
 | accent 배경 사용 | button-primary·포커스 외 금지 | 체크 완료, 진행 막대, 다이어리 작성일, 일부 차트 | `.task input:checked`, `.progress em`, `.calendar .written`, `.chart b` |
