@@ -1,0 +1,21 @@
+# 검증 기록
+
+- 실행 일시/환경: 2026-11-18, Windows 11, JDK 17(Gradle Wrapper), H2(MySQL 모드)·MockMvc, Node 20.18.0, Python.
+- 명령/버전/종료코드
+  - 수정 전 `backend`에서 `gradlew.bat test --tests "kr.timebar.diary.records.RecurrenceExceptionTest"`: 종료 1. 7개 모두 실패(6개 `exceptions` 키 거부 400, 1개 `status` 없음). 의도한 실패. FAIL
+  - 수정 후 `RecurrenceExceptionTest`, `FeaturePersistenceTest`, `FeatureHttpTest`: 종료 0. 38개(7·8·23), 실패 0. PASS
+  - 수정 전 `frontend`에서 `node --test tests/recurrence-exceptions.test.mjs`: 종료 1. 내보내기 없음. 의도한 실패. FAIL
+  - 수정 후 `recurrence-exceptions`·`search-recurrence`·`writing-flows`: 24개, 실패 0. PASS
+  - `writing-flows.test.mjs`(UF-134 화면 테스트 추가, 구현 뒤 작성): 15개, 실패 0. PASS
+  - `node frontend/scripts/frontend-api-contract.mjs`(생성) 후 `--check`: 종료 0, 286개 작업·198개 스키마. `node frontend/scripts/api-inventory.mjs --check`: 종료 0, 286개 경로. PASS
+  - `backend`에서 `gradlew.bat test --rerun --console=plain`: 종료 0. 25개 클래스 211개, 실패·오류·건너뜀 0. PASS
+  - `frontend`에서 Node 테스트 전체(`--test-concurrency=1`): 74개, 실패 0. `npm run build:web`: 종료 0(500 kB 청크 경고는 기존, PR-18). PASS
+  - "이미 쉬는 날" 안내 추가 후 `writing-flows`·`recurrence-exceptions` 19개 실패 0, `npm run build:web` 종료 0. PASS
+  - `python scripts/docs/verify_documentation.py`: 종료 0, 오류 0. `python -B scripts/verify_agent_kit.py`: 종료 0. PASS
+  - `git diff --check`(사용자 미커밋 2개 파일 제외): 종료 0. PASS
+- 실제 테스트 결과: 07 RUN-30~RUN-37에 기록.
+- 보안: context-notes의 보안 점검 참조. 입력 경계는 자동 테스트로 확인.
+- 웹 접근성: 정적 확인과 SSR 렌더 테스트만. 브라우저 키보드·320px·200% 확대·화면낭독기 실측은 NOT_RUN.
+- 브라우저 화면 확인: NOT_RUN. 대화상자 동작은 SSR 렌더와 계산 함수 테스트로만 확인했다.
+- 오탐 제외: 없음.
+- 남은 위험과 승인 필요: 지난 날짜 쉬는 날을 API로 넣을 수 있다(Q-19). 중지한 루틴의 지난 기록이 history에서 빠진다(Q-20, 기존 동작). history `total`의 뜻이 바뀌었으나 화면 호출부는 아직 없다. Node 요구 버전 재실행은 PR-06.

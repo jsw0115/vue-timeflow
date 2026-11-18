@@ -242,3 +242,29 @@ test('메신저: 대화 목록과 말풍선·참여자·전송 입력창을 같�
     assert.doesNotMatch(html, /<nav[^>]*class="chat-nav"/)
   } finally { chat.selectedId = selected }
 })
+
+test('루틴 쉬는 날: 오늘을 쉬면 오늘 목록·홈에서 빠지고, 예전 루틴도 요일로 규칙을 만들어 쉰다(UF-134)', async () => {
+  const { routines, isRoutineToday, isRestToday, routineRule, routinePlannedDates } = await load('store/appState.js')
+  const { addSkipDates } = await import('../src/utils/recurrence.mjs')
+  const today = localDate(), backup = routines.value
+  try {
+    const legacy = { id: 91, title: '쉬는 루틴', time: '07:00', days: [0, 1, 2, 3, 4, 5, 6], goal: { count: 1, unit: '회' }, done: false, streak: 3, best: 3, history: [], paused: false }
+    const ruled = { id: 92, title: '하는 루틴', time: '08:00', startDate: '2026-01-01', recurrence: routineRule(legacy), days: [0, 1, 2, 3, 4, 5, 6], goal: { count: 1, unit: '회' }, done: false, streak: 0, best: 0, history: [], paused: false }
+    assert.equal(routineRule(legacy).frequency, 'weekly')
+    legacy.recurrence = addSkipDates(routineRule(legacy), [today])
+    assert.equal(isRestToday(legacy), true)
+    assert.equal(isRoutineToday(legacy), false)
+    assert.equal(isRoutineToday(ruled), true)
+    assert.equal(isRoutineToday({ ...ruled, recurrence: addSkipDates(ruled.recurrence, [today]) }), false)
+    assert.deepEqual(routinePlannedDates({ days: [1, 2, 3, 4, 5] }, '2026-11-16', '2026-11-22'), ['2026-11-16', '2026-11-17', '2026-11-18', '2026-11-19', '2026-11-20'])
+    assert.deepEqual(routinePlannedDates({ startDate: '2026-11-01', recurrence: addSkipDates(routineRule({ days: [1] }), ['2026-11-16']) }, '2026-11-16', '2026-11-22'), ['2026-11-16'], '이미 쉬는 날이어도 예정 회차로 본다')
+    routines.value = [legacy, ruled]
+    const home = await render('views/home/HomeView.vue')
+    assert.match(home, /하는 루틴/)
+    assert.doesNotMatch(home, /쉬는 루틴/)
+    const list = await render('views/routines/RoutineListView.vue')
+    assert.match(list, /aria-label="하는 루틴 쉬는 날 정하기"/)
+    assert.match(list, />중지</)
+    assert.doesNotMatch(list, />쉬기</)
+  } finally { routines.value = backup }
+})

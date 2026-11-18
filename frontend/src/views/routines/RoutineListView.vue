@@ -3,10 +3,11 @@ import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   routines, openPostComposer, ROUTINE_DAYS, isRoutineToday, routineRate, dayLabel, toggleRoutine,
+  isRestToday, routineRule, routinePlannedDates,
 } from '../../store/appState'
 import { isAutomationOn, automationParam } from '../../store/automations'
 import RepeatSettings from '../../components/RepeatSettings.vue'
-import { makeRecurrence } from '../../utils/recurrence.mjs'
+import { makeRecurrence, skipDates, addSkipDates, removeSkipDate, recurrenceError, datesBetween, MAX_EXCEPTIONS } from '../../utils/recurrence.mjs'
 import { localDate } from '../../utils/postValidation.mjs'
 import TagMentionInput from '../../components/TagMentionInput.vue'
 import { routineError } from '../../utils/postValidation.mjs'
@@ -48,7 +49,7 @@ const visible = computed(() => {
     const scope = filters.value.scope
     if (scope === '오늘' && !isRoutineToday(r)) return false
     if (scope === '미완료' && (r.done || r.paused)) return false
-    if (scope === '쉬는 중' && !r.paused) return false
+    if (scope === '쉬는 중' && !r.paused && !isRestToday(r)) return false
     if (filters.value.category !== '전체' && r.category !== filters.value.category) return false
     if (k && !r.title.includes(k) && !(r.category ?? '').includes(k)) return false
     return true
@@ -138,6 +139,47 @@ function saveRoutine() {
 function togglePause(r) {
   r.paused = !r.paused
 }
+
+/* ---------- 쉬는 날 (UF-134) ---------- */
+const restTarget = ref(null)
+const restFrom = ref('')
+const restTo = ref('')
+const today = computed(() => localDate())
+function openRest(r) {
+  restTarget.value = r
+  restFrom.value = today.value
+  restTo.value = today.value
+}
+const restDates = computed(() => {
+  if (!restTarget.value || !restFrom.value || !restTo.value || restFrom.value < today.value || restTo.value < restFrom.value) return []
+  return routinePlannedDates(restTarget.value, restFrom.value, restTo.value)
+})
+const restNextRule = computed(() => (restTarget.value ? addSkipDates(routineRule(restTarget.value), restDates.value) : null))
+const restError = computed(() => {
+  const r = restTarget.value
+  if (!r) return ''
+  if (!restFrom.value || !restTo.value) return '시작일과 종료일을 선택해주세요.'
+  if (restFrom.value < today.value) return '오늘 이후 날짜만 쉬는 날로 정할 수 있어요.'
+  if (restTo.value < restFrom.value) return '종료일은 시작일 이후로 선택해주세요.'
+  if (!datesBetween(restFrom.value, restTo.value).length) return `기간은 최대 ${MAX_EXCEPTIONS}일까지 정할 수 있어요.`
+  if (!restDates.value.length) return '이 기간에는 예정된 회차가 없어요.'
+  const already = skipDates(r.recurrence)
+  if (restDates.value.every((date) => already.has(date))) return '이미 쉬는 날로 정한 기간이에요.'
+  if (r.done && restDates.value.includes(today.value)) return '오늘 완료한 루틴은 쉬는 날로 정할 수 없어요. 체크를 해제한 뒤 정해주세요.'
+  return recurrenceError(restNextRule.value, r.startDate ?? today.value)
+})
+const restUpcoming = computed(() => [...skipDates(restTarget.value?.recurrence)].filter((date) => date >= today.value).sort())
+const restPastCount = computed(() => [...skipDates(restTarget.value?.recurrence)].filter((date) => date < today.value).length)
+function addRest() {
+  if (restError.value) return
+  restTarget.value.recurrence = restNextRule.value
+}
+function removeRest(date) {
+  restTarget.value.recurrence = removeSkipDate(restTarget.value.recurrence, date)
+}
+function restLabel(date) {
+  return `${date} (${ROUTINE_DAYS[new Date(date + 'T12:00:00').getDay()]})`
+}
 function removeRoutine(r) {
   if (!window.confirm('‘' + r.title + '’ 루틴을 삭제할까요? 연속 기록도 함께 사라져요.')) return
   routines.value = routines.value.filter((x) => x.id !== r.id)
@@ -153,12 +195,14 @@ function removeRoutine(r) {
       :steps="[
         '‘+ 새 루틴’으로 이름·시간·요일·목표를 정해요.',
         '오늘 탭에서 체크하면 연속 기록이 하루 올라가요.',
-        '잠시 쉬고 싶으면 ‘쉬기’로 전환해요 — 연속 기록이 끊기지 않아요.',
+        '‘쉬는 날’에서 오늘이나 휴가 기간을 정해요. 그날은 오늘 목록에서 빠지고 연속 기록이 이어져요.',
+        '기간 없이 멈추려면 ‘중지’를 눌러요. ‘재개’하면 다시 오늘 목록에 나와요.',
         '검색과 필터로 분류·미완료만 골라 볼 수 있어요.',
       ]"
       :terms="[
         { term: '연속 기록', desc: '빠짐없이 이어온 날수예요. 체크를 해제하면 하루 줄어들어요.' },
-        { term: '쉬는 중', desc: '일시 중지 상태로, 오늘 목록에서 빠지고 연속 기록도 유지돼요.' },
+        { term: '쉬는 날', desc: '달성률과 연속 기록 계산에서 빼는 날이에요. 반복에 없는 날처럼 다뤄요. 오늘 이후 날짜만 정할 수 있어요.' },
+        { term: '쉬는 중', desc: '중지했거나 오늘이 쉬는 날인 루틴이에요. 오늘 목록에서 빠지고 연속 기록도 유지돼요.' },
         { term: '최근 7일', desc: '지난 7일 중 실제로 체크한 비율이에요.' },
       ]"
       :tips="['요일을 고르면 그 요일에만 오늘 목록에 나타나요.']"
@@ -197,9 +241,9 @@ function removeRoutine(r) {
     </div>
     <div class="row routine-grid" v-for="r in visible" :key="r.id" :class="{ 'routine-paused': r.paused }">
       <label>
-        <input type="checkbox" :checked="r.done" :disabled="r.paused" @change="toggleRoutine(r)" />
+        <input type="checkbox" :checked="r.done" :disabled="r.paused || isRestToday(r)" @change="toggleRoutine(r)" />
         <span :class="{ done: r.done }">{{ r.title }}</span>
-        <small style="color: var(--color-muted); margin-left: 6px">{{ r.time }} · {{ r.duration ?? 30 }}분</small>
+        <small style="color: var(--color-muted); margin-left: 6px">{{ r.time }} · {{ r.duration ?? 30 }}분<template v-if="isRestToday(r)"> · 오늘 쉬는 날</template></small>
       </label>
       <span class="tag">{{ dayLabel(r) }}</span>
       <span class="figure">{{ r.goal?.count }}{{ r.goal?.unit }}</span>
@@ -208,9 +252,10 @@ function removeRoutine(r) {
         <i v-for="(h, i) in r.history" :key="i" :class="{ on: h }" :title="ROUTINE_DAYS[i]"></i>
         <b class="figure">{{ routineRate(r) }}%</b>
       </span>
-      <span style="display: flex; gap: 6px">
+      <span style="display: flex; flex-wrap: wrap; gap: 6px">
         <button class="review" style="margin: 0" @click="openEdit(r)">수정</button>
-        <button class="review" style="margin: 0" @click="togglePause(r)">{{ r.paused ? '재개' : '쉬기' }}</button>
+        <button class="review" style="margin: 0" :aria-label="r.title + ' 쉬는 날 정하기'" @click="openRest(r)">쉬는 날</button>
+        <button class="review" style="margin: 0" @click="togglePause(r)">{{ r.paused ? '재개' : '중지' }}</button>
         <button class="review" style="margin: 0" @click="removeRoutine(r)">삭제</button>
       </span>
     </div>
@@ -250,4 +295,36 @@ function removeRoutine(r) {
       <button class="primary" :disabled="!canSave" @click="saveRoutine">{{ editingId ? '변경 저장' : '루틴 만들기' }}</button>
     </template>
   </Modal>
+
+  <Modal v-if="restTarget" :title="'쉬는 날 · ' + restTarget.title" @close="restTarget = null">
+    <p class="form-note" style="margin: 0">쉬는 날은 달성률과 연속 기록 계산에서 빠져요. 하루 쉬어도 연속 기록이 이어지고, 그날은 오늘 목록에 나오지 않아요.</p>
+    <div class="form-row rest-range">
+      <label style="flex: 1">시작일<input v-model="restFrom" type="date" :min="today" /></label>
+      <label style="flex: 1">종료일<input v-model="restTo" type="date" :min="restFrom || today" /></label>
+    </div>
+    <p class="form-note" role="status">{{ restError || `예정된 회차 ${restDates.length}일을 쉬는 날로 정해요.` }}</p>
+
+    <h4 class="rest-heading">예정된 쉬는 날</h4>
+    <ul v-if="restUpcoming.length" class="rest-list">
+      <li v-for="date in restUpcoming" :key="date">
+        <span class="figure">{{ restLabel(date) }}</span>
+        <button type="button" class="review" style="margin: 0" :aria-label="restLabel(date) + ' 쉬는 날 해제'" @click="removeRest(date)">해제</button>
+      </li>
+    </ul>
+    <p v-else class="form-note">예정된 쉬는 날이 없어요.</p>
+    <p v-if="restPastCount" class="form-note">지난 쉬는 날 {{ restPastCount }}일은 기록 계산에 그대로 반영돼요.</p>
+
+    <template #footer>
+      <button type="button" class="modal-secondary" @click="restTarget = null">닫기</button>
+      <button type="button" class="primary" :disabled="!!restError" @click="addRest">쉬는 날 추가</button>
+    </template>
+  </Modal>
 </template>
+
+<style scoped>
+.rest-range { flex-wrap: wrap; }
+.rest-range label { min-width: 130px; }
+.rest-heading { margin: var(--space-xxl) 0 var(--space-md); font-size: 0.875rem; font-weight: 600; }
+.rest-list { list-style: none; margin: 0; padding: 0; }
+.rest-list li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-md); padding: var(--space-md) 0; border-bottom: 1px solid var(--color-hairline); font-size: 0.875rem; }
+</style>

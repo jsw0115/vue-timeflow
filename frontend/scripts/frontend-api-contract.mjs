@@ -79,8 +79,9 @@ schemas.PlannerItem.properties.version = integer(1)
 schemas.PlannerItem.required.push('version')
 schemas.PlannerItemCreate = object({ ...schemas.PlannerItem.properties, version: integer(0, 0) }, schemas.PlannerItem.required.filter(field => field !== 'version'))
 schemas.PlannerItemUpdate = object({ ...schemas.PlannerItem.properties }, [...schemas.PlannerItem.required])
-schemas.Recurrence = object({ frequency: choice('none', 'daily', 'weekly', 'monthly', 'yearly'), interval: integer(1, 99), weekdays: array(integer(0, 6)), endMode: choice('never', 'until', 'count'), until: { type: 'string', description: 'endMode=until이면 유효한 YYYY-MM-DD. 그 외 빈 문자열 허용.' }, count: integer(1, 999) }, ['frequency'])
-schemas.Recurrence.description = 'frequency=none 외에는 interval/endMode가 필수. weekly는 weekdays 최소 1개. until 종료는 시작일 이상. count 종료는 count 필수. 존재하지 않는 월말·윤년 회차는 건너뛴다.'
+schemas.RecurrenceException = object({ date, action: choice('skip') }, ['date', 'action'])
+schemas.Recurrence = object({ frequency: choice('none', 'daily', 'weekly', 'monthly', 'yearly'), interval: integer(1, 99), weekdays: array(integer(0, 6)), endMode: choice('never', 'until', 'count'), until: { type: 'string', description: 'endMode=until이면 유효한 YYYY-MM-DD. 그 외 빈 문자열 허용.' }, count: integer(1, 999), exceptions: { type: 'array', maxItems: 366, items: ref('RecurrenceException') } }, ['frequency'])
+schemas.Recurrence.description = 'frequency=none 외에는 interval/endMode가 필수. weekly는 weekdays 최소 1개. until 종료는 시작일 이상. count 종료는 count 필수. 존재하지 않는 월말·윤년 회차는 건너뛴다. exceptions는 쉬는 날 목록(최대 366개, 날짜 중복 불가)이며 그 날짜의 회차를 뺀다. 쉬는 날도 count 종료의 회차 수에는 포함된다.'
 schemas.Goal = object({ count: integer(1, 9999), unit: string() }, ['count', 'unit'])
 schemas.TemplateBlock = object({ time: { type: 'string', pattern: '^(?:[01][0-9]|2[0-3]):[0-5][0-9]$' }, title: string(), duration: integer(1, 1440) }, ['time', 'title'])
 schemas.BoardColumn = object({ id: string(), title: string(), wip: integer(0, 500) }, ['id', 'title', 'wip'])
@@ -170,7 +171,8 @@ schemas.CategoryStats = object({ category: string(), plannedMinutes: integer(0),
 schemas.TimeBlock = object({ id: { type: ['integer', 'string'] }, title: string(), date, minutes: integer(0), type: choice('EVENT', 'TASK', 'ROUTINE', 'DIARY', 'MEMO', 'ACTUAL') }, ['id', 'title', 'date', 'minutes', 'type'])
 schemas.Stats = object({ from: date, to: date, plannedMinutes: integer(0), actualMinutes: integer(0), focusMinutes: integer(0), completedTasks: integer(0), totalTasks: integer(0), categories: array(ref('CategoryStats')), timeBlocks: array(ref('TimeBlock')), focusSessions: array(ref('FOCUSResponse')) }, ['from', 'to', 'plannedMinutes', 'actualMinutes', 'focusMinutes', 'completedTasks', 'totalTasks', 'categories', 'timeBlocks', 'focusSessions'])
 schemas.Attachment = object({ id: string(), ownerId: string(), groupId: { type: ['string', 'null'] }, name: string(), sizeBytes: integer(1, 10485760), expiresAt: { type: ['string', 'null'], format: 'date-time' } }, ['id', 'ownerId', 'groupId', 'name', 'sizeBytes', 'expiresAt'])
-schemas.RoutineHistory = object({ routineId: string(), items: array(object({ date, completed: boolean }, ['date', 'completed'])), done: integer(0), total: integer(0), rate: integer(0, 100), streak: integer(0), best: integer(0) }, ['routineId', 'items', 'done', 'total', 'rate', 'streak', 'best'])
+schemas.RoutineHistory = object({ routineId: string(), items: array(object({ date, completed: boolean, status: choice('done', 'missed', 'skipped', 'pending') }, ['date', 'completed', 'status'])), done: integer(0), total: integer(0), skipped: integer(0), rate: integer(0, 100), streak: integer(0), best: integer(0) }, ['routineId', 'items', 'done', 'total', 'skipped', 'rate', 'streak', 'best'])
+schemas.RoutineHistory.description = 'total은 done과 missed 회차 수다. 쉬는 날(skipped)과 오늘·미래의 미완료 회차(pending)는 rate 분모에 넣지 않고 연속 기록을 끊지 않는다. 지난 미완료 회차(missed)만 연속 기록을 끊는다.'
 schemas.POSTResponse.properties = { ...schemas.POSTResponse.properties, authorId: string(), name: string(), likes: integer(0), comments: integer(0), liked: boolean }
 schemas.Profile = object({ id: string(), nickname: string(80), email: { type: 'string', format: 'email' }, timeZone: string(64), extra: flexible({ intro: string(), mode: choice('J', 'P', 'B') }) }, ['id', 'nickname', 'email', 'timeZone', 'extra'])
 const responseOverrides = {

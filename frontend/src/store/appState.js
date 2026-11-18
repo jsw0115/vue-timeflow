@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { localCollection } from './localCollection'
 import { localDate } from '../utils/postValidation.mjs'
-import { occurrenceDates } from '../utils/recurrence.mjs'
+import { occurrenceDates, skipDates, datesBetween, makeRecurrence } from '../utils/recurrence.mjs'
 
 export const composer = ref(false)
 
@@ -23,12 +23,29 @@ export const routines = localCollection('routines', [
   { id: 3, title: '하루 회고 5분', time: '22:30', done: false, category: '개인', days: [0, 1, 2, 3, 4, 5, 6], goal: { count: 1, unit: '회' }, streak: 3, best: 14, history: [1, 0, 1, 1, 0, 1, 1], paused: false, notify: false },
 ])
 
-/** 오늘 요일에 해당하는 루틴인지 */
+/** 오늘 요일에 해당하는 루틴인지. 오늘을 쉬는 날로 정했으면 오늘 루틴이 아니다(UF-134). */
 export function isRoutineToday(routine, weekday = new Date().getDay()) {
   if (routine.paused) return false
+  if (arguments.length < 2 && isRestToday(routine)) return false
   if (routine.recurrence && routine.startDate && arguments.length < 2) return occurrenceDates(routine.startDate, routine.recurrence, localDate(), localDate()).length > 0
   if (!routine.days || !routine.days.length) return true
   return routine.days.includes(weekday)
+}
+export function isRestToday(routine) {
+  return skipDates(routine.recurrence).has(localDate())
+}
+/** 쉬는 날을 넣을 반복 규칙. 반복 규칙이 없는 예전 루틴은 요일로 같은 규칙을 만든다. */
+export function routineRule(routine) {
+  return routine.recurrence ?? makeRecurrence({ frequency: 'weekly', weekdays: routine.days?.length ? routine.days : [0, 1, 2, 3, 4, 5, 6] })
+}
+/** 기간 안에서 루틴을 하기로 한 날짜. 쉬는 날·중지 여부와 관계없이 반복 규칙만 본다. */
+export function routinePlannedDates(routine, from, to) {
+  const dates = datesBetween(from, to)
+  if (routine.recurrence && routine.startDate) {
+    const planned = new Set(occurrenceDates(routine.startDate, { ...routine.recurrence, exceptions: undefined }, from, to))
+    return dates.filter((date) => planned.has(date))
+  }
+  return dates.filter((date) => isRoutineToday({ days: routine.days }, new Date(date + 'T12:00:00').getDay()))
 }
 /** 최근 7일 달성률 */
 export function routineRate(routine) {

@@ -36256,6 +36256,26 @@
         ],
         "additionalProperties": false
       },
+      "RecurrenceException": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "skip"
+            ]
+          }
+        },
+        "required": [
+          "date",
+          "action"
+        ],
+        "additionalProperties": false
+      },
       "Recurrence": {
         "type": "object",
         "properties": {
@@ -36299,13 +36319,20 @@
             "type": "integer",
             "minimum": 1,
             "maximum": 999
+          },
+          "exceptions": {
+            "type": "array",
+            "maxItems": 366,
+            "items": {
+              "$ref": "#/components/schemas/RecurrenceException"
+            }
           }
         },
         "required": [
           "frequency"
         ],
         "additionalProperties": false,
-        "description": "frequency=none 외에는 interval/endMode가 필수. weekly는 weekdays 최소 1개. until 종료는 시작일 이상. count 종료는 count 필수. 존재하지 않는 월말·윤년 회차는 건너뛴다."
+        "description": "frequency=none 외에는 interval/endMode가 필수. weekly는 weekdays 최소 1개. until 종료는 시작일 이상. count 종료는 count 필수. 존재하지 않는 월말·윤년 회차는 건너뛴다. exceptions는 쉬는 날 목록(최대 366개, 날짜 중복 불가)이며 그 날짜의 회차를 뺀다. 쉬는 날도 count 종료의 회차 수에는 포함된다."
       },
       "Goal": {
         "type": "object",
@@ -44949,11 +44976,21 @@
                 },
                 "completed": {
                   "type": "boolean"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "done",
+                    "missed",
+                    "skipped",
+                    "pending"
+                  ]
                 }
               },
               "required": [
                 "date",
-                "completed"
+                "completed",
+                "status"
               ],
               "additionalProperties": false
             },
@@ -44964,6 +45001,10 @@
             "minimum": 0
           },
           "total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "skipped": {
             "type": "integer",
             "minimum": 0
           },
@@ -44986,11 +45027,13 @@
           "items",
           "done",
           "total",
+          "skipped",
           "rate",
           "streak",
           "best"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "total은 done과 missed 회차 수다. 쉬는 날(skipped)과 오늘·미래의 미완료 회차(pending)는 rate 분모에 넣지 않고 연속 기록을 끊지 않는다. 지난 미완료 회차(missed)만 연속 기록을 끊는다."
       },
       "Profile": {
         "type": "object",
