@@ -1,9 +1,10 @@
 import { reactive, watch } from 'vue'
+import { isHex, themeTokens } from '../utils/colorTheme.mjs'
 
 /**
- * 테마 — 표면(라이트/다크/세피아/고대비)과 포인트 컬러를 분리해서 관리한다.
- * DESIGN.md 원칙대로 포인트 컬러는 화면당 하나만 쓰이므로, 여기서 --color-accent 하나만 바꿔도
- * 앱 전체 강조 요소가 일관되게 따라온다.
+ * 테마 — 표면(라이트/다크/세피아/고대비)과 색상 테마(포인트 컬러)를 분리해서 관리한다.
+ * 색상을 고르면 utils/colorTheme.mjs가 표면에 맞춰 포인트·데이터·상태 색을 대비 기준에 맞게 계산한다(DESIGN.md 2장 테마).
+ * 포인트 컬러는 여전히 화면당 하나의 강조에만 쓰인다.
  */
 const STORAGE_KEY = 'timeflow.theme.v1'
 
@@ -58,14 +59,19 @@ export const THEMES = {
   },
 }
 
-/** 포인트 컬러 — 각각 대비 4.5:1 이상을 만족하는 어두운 톤으로만 구성한다 */
+/**
+ * 색상 테마 — value는 포인트 컬러, data는 밝은 표면에서 쓸 데이터 색(같은 색상, 채도 2/3, 밝기 +0.115)이다.
+ * 밝은 표면 기준 흰 글자 대비: 포인트 7:1 이상, 데이터 4.5:1 이상. 어두운 표면에서는 colorTheme.mjs가 밝게 다시 맞춘다.
+ */
 export const ACCENTS = {
-  forest: { label: '포레스트', value: '#2f5d46' },
-  ink: { label: '잉크', value: '#243b53' },
-  plum: { label: '플럼', value: '#5b2f4d' },
-  clay: { label: '클레이', value: '#7a4327' },
-  moss: { label: '모스', value: '#3f4d24' },
+  forest: { label: '포레스트', value: '#2f5d46', data: '#4e7963' },
+  ink: { label: '잉크', value: '#243b53', data: '#415870' },
+  plum: { label: '플럼', value: '#5b2f4d', data: '#774d6a' },
+  clay: { label: '클레이', value: '#7a4327', data: '#946148' },
+  moss: { label: '모스', value: '#3f4d24', data: '#5c6b41' },
 }
+export const CUSTOM_ACCENT = 'custom'
+const DEFAULT_CUSTOM = '#2f5d46'
 
 function load() {
   try {
@@ -74,7 +80,8 @@ function load() {
     if (!parsed) return null
     return {
       theme: THEMES[parsed.theme] ? parsed.theme : 'light',
-      accent: ACCENTS[parsed.accent] ? parsed.accent : 'forest',
+      accent: ACCENTS[parsed.accent] || parsed.accent === CUSTOM_ACCENT ? parsed.accent : 'forest',
+      customAccent: isHex(parsed.customAccent) ? parsed.customAccent.toLowerCase() : DEFAULT_CUSTOM,
       followSystem: !!parsed.followSystem,
     }
   } catch {
@@ -82,20 +89,31 @@ function load() {
   }
 }
 
-export const themeState = reactive(load() ?? { theme: 'light', accent: 'forest', followSystem: false })
+export const themeState = reactive(load() ?? { theme: 'light', accent: 'forest', customAccent: DEFAULT_CUSTOM, followSystem: false })
 
-function effectiveTheme() {
+export function effectiveTheme() {
   if (!themeState.followSystem) return themeState.theme
   const prefersDark = typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: dark)')?.matches
   return prefersDark ? 'dark' : 'light'
 }
 
+/** 고른 색상 테마. 사용자 지정이면 고른 hex만 주고, 프리셋이면 검증된 데이터 색도 함께 준다. */
+export function accentChoice(key = themeState.accent, custom = themeState.customAccent) {
+  if (key === CUSTOM_ACCENT) return { accent: isHex(custom) ? custom : DEFAULT_CUSTOM }
+  const preset = ACCENTS[key] ?? ACCENTS.forest
+  return { accent: preset.value, data: preset.data }
+}
+
+/** 표면·색상 조합의 토큰과, 고른 색을 대비 기준 때문에 바꿨는지 여부 */
+export function resolveTheme(themeKey = effectiveTheme(), key = themeState.accent, custom = themeState.customAccent) {
+  return themeTokens((THEMES[themeKey] ?? THEMES.light).tokens, accentChoice(key, custom))
+}
+
 export function applyTheme() {
   const root = typeof document !== 'undefined' ? document.documentElement : null
   if (!root?.style?.setProperty) return
-  const active = THEMES[effectiveTheme()] ?? THEMES.light
-  Object.entries(active.tokens).forEach(([key, value]) => root.style.setProperty(key, value))
-  root.style.setProperty('--color-accent', ACCENTS[themeState.accent]?.value ?? ACCENTS.forest.value)
+  const { tokens } = resolveTheme()
+  Object.entries(tokens).forEach(([key, value]) => root.style.setProperty(key, value))
   root.dataset.theme = effectiveTheme()
 }
 

@@ -130,6 +130,8 @@ test('accent를 채움색으로 쓰는 곳은 상태 점과 콘텐츠 색뿐이�
 const STATUS_HEX_CONTENT_USES = {
   'styles.css': 9, 'views/auth/SocialLoginView.vue': 1, 'views/home/CalendarView.vue': 2,
   'views/home/HomeView.vue': 1, 'views/settings/SettingsCategoryView.vue': 6, 'views/stats/StatsBoardView.vue': 1,
+  // 테마 계산의 상태 색 기준 값(DESIGN.md 2장 상태 색). 표면에 맞춘 값을 --color-status-*로 내보낸다.
+  'utils/colorTheme.mjs': 3,
 }
 test('상태 표시는 상태 색 변수를 쓰고, 같은 hex는 콘텐츠 색 자리에만 남는다', async () => {
   const { readdirSync } = await import('node:fs')

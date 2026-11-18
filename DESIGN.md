@@ -86,6 +86,35 @@ accent를 컴포넌트 배경으로 쓰지 않는다는 규칙(4장)을 지키�
 - 데이터 단계 표현(히트맵 단계)은 color.data를 color.surface와 섞어 만든다. 가장 진한 단계가 color.data다.
 - 선택 상태를 표시하는 테두리(선택한 카드·옵션의 1px 테두리)는 배경 규칙과 별개라 아직 accent를 쓴다. 정리 여부는 부록 B에서 다룬다.
 
+### 테마 (보완)
+
+사용자는 환경설정 > 테마 · 디자인에서 두 가지를 고른다. 2026-11-18 사용자 요청으로 정했다. 기본값(라이트 + 포레스트)은 이 문서의 토큰과 같다.
+
+| 축 | 선택지 | 바뀌는 토큰 |
+|---|---|---|
+| 표면 테마 | 라이트, 다크, 세피아, 고대비 (`frontend/src/store/theme.js`의 `THEMES`) | canvas, surface, foreground, muted, hairline, on-primary |
+| 색상 테마 | 포레스트(기본), 잉크, 플럼, 클레이, 모스, 사용자 지정 | accent, on-accent, data, on-data |
+| 계산 결과 | 표면에 맞춰 자동 | status-danger, status-warning, status-info |
+
+| 색상 테마 | accent | data (밝은 표면) |
+|---|---|---|
+| 포레스트 | `#2f5d46` | `#4e7963` |
+| 잉크 | `#243b53` | `#415870` |
+| 플럼 | `#5b2f4d` | `#774d6a` |
+| 클레이 | `#7a4327` | `#946148` |
+| 모스 | `#3f4d24` | `#5c6b41` |
+
+계산 규칙은 `frontend/src/utils/colorTheme.mjs` 한 곳에 있다.
+
+- 표면에 맞추기: 색상(hue)과 채도는 두고 밝기만 0.005씩 옮겨 아래 하한을 모두 넘긴다. 밝은 표면에서는 어둡게, 어두운 표면에서는 밝게 옮긴다.
+- accent: canvas 대비 7:1 이상, surface 대비 4.5:1 이상. accent는 링크·강조 글자로도 쓰이고, 데이터 색이 그보다 한 단계 약하게 보일 여유가 필요해 7:1로 둔다.
+- on-accent·on-data: 밝은 표면은 흰색, 어두운 표면은 canvas 색.
+- data: 프리셋은 위 표의 검증된 값을 쓴다. 사용자 지정이나 어두운 표면에서는 accent와 같은 색상에서 채도를 2/3로 낮추고 밝기를 0.115 옮긴 색(어두운 표면에서는 반대 방향)에서 시작한다. 그 뒤 on-data 글자 4.5:1, hairline·canvas·surface 대비 3:1을 넘을 때까지 맞춘다.
+- status: 위 상태 색 표의 값에서 시작해 canvas·surface 대비 4.5:1을 넘을 때까지 맞춘다. 다크 표면에서는 밝아지고, 세피아·고대비 표면의 경고 색은 조금 어두워진다.
+- 사용자 지정 색이 기준에 못 미치면 밝기만 바꿔 쓰고, 설정 화면에 고른 색과 실제로 쓰는 색을 함께 알린다. 지금 대비 값(포인트, 데이터 색 위 글자, 막대와 트랙)도 같은 자리에 보인다.
+- 테마가 바뀌어도 포인트 컬러는 화면당 하나의 강조에만 쓴다. 콘텐츠 색(카테고리·템플릿), 간격·모서리·그림자는 테마와 관계없다.
+- 고대비 표면은 트랙(hairline)이 진해서 데이터 색이 포인트 컬러만큼 어두워질 수 있다. 이 표면에서는 대비를 구분보다 앞세운다.
+
 ### 상태 색
 
 코드에서 이미 쓰는 값을 공식 토큰으로 기록했다. 의미 이름은 실제 사용 클래스에서 가져왔다.
@@ -593,6 +622,9 @@ LNB 내비게이션 항목이다. 활성 상태는 surface 배경과 foreground 
 | `frontend/src/design-system/components.css` | 4장 공통 클래스와 상태. 토큰만 쓴다 |
 | `frontend/src/main.js` | 토큰을 가장 먼저, 공통 클래스를 가장 나중에 불러온다 |
 | `frontend/tests/design-tokens.test.mjs` | 이 문서와 tokens.css 값 일치, 부록 B 예외, 공통 클래스의 토큰 사용을 검사한다 |
+| `frontend/src/utils/colorTheme.mjs` | 2장 테마 계산(대비 맞추기, 데이터·상태 색 계산) |
+| `frontend/src/store/theme.js` | 표면 테마·색상 테마 프리셋, 사용자 선택 저장과 적용 |
+| `frontend/tests/color-theme.test.mjs`, `frontend/tests/empty-states.test.mjs` | 모든 표면 × 색상 조합의 대비, 빈 상태 형식을 검사한다 |
 
 ### 변경 기록
 
@@ -603,6 +635,7 @@ LNB 내비게이션 항목이다. 활성 상태는 surface 배경과 foreground 
 | 2026-11-18 | 2장 color.data·color.on-data와 색 역할 나눔 추가. 체크박스 선택 색을 accent에서 foreground로 바꿔 4장 안의 충돌을 없앰. 부록 B의 accent 배경 사용 항목 해소 |
 | 2026-11-18 | 빈 목록 44곳을 empty-state로 통일. 상태 표시의 hex를 상태 색 변수로 바꾸고 콘텐츠 색과 구분하는 규칙 추가, 부록 B의 상태 색 변수 항목 해소 |
 | 2026-11-18 | `.icon`·`.tabs`·`.filter`·`.compose-tabs`·`.modal-secondary`를 공통 컴포넌트 별칭으로 묶고, 기존 입력에 hover·disabled 공통 상태 적용. 이름 없던 아이콘 버튼 9곳에 `aria-label`. 부록 B 컨트롤 형태 3항목 해소 |
+| 2026-11-18 | 2장 테마 추가. 표면 4종 × 색상 테마 5종 + 사용자 지정, 대비 맞추기 규칙, 프리셋 데이터 색 |
 
 ### omd 시스템 그래프 상태
 
