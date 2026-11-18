@@ -94,3 +94,34 @@ test('토큰은 가장 먼저, 공통 컴포넌트는 가장 나중에 불러온
   assert.ok(order.every(index => index >= 0))
   assert.deepEqual([...order].sort((a, b) => a - b), order)
 })
+
+// DESIGN.md 2장 색 역할 나눔. accent 채움은 단일 강조(실제 기록), 상태 점(성공 표시), 사용자 콘텐츠 색(템플릿·카테고리)에만 남긴다.
+const ACCENT_FILL_ALLOWED = new Set([
+  'features/chat/styles/chat.css :: .chat-status-dot.connected',
+  'features/chat/styles/chat.css :: .chat-presence-dot',
+  'styles.css :: .tpl-dot.mint',
+  'styles.css :: .tpl-bar.mint',
+  'styles.css :: .cat>strong',
+  'views/share/FriendsView.vue :: template',
+  // 플래너의 "실제 기록" 버튼(기록 중). DESIGN.md가 포인트 컬러를 쓰라고 정한 화면의 단일 강조다.
+  'styles.css :: .record.record-on',
+])
+test('accent를 채움색으로 쓰는 곳은 상태 점과 콘텐츠 색뿐이다(선택 상태는 foreground, 데이터는 color.data)', async () => {
+  const { readdirSync } = await import('node:fs')
+  const { parse } = await import('@vue/compiler-sfc')
+  const src = path.join(repo, 'frontend/src')
+  const walk = dir => readdirSync(dir, { withFileTypes: true }).flatMap(e => e.isDirectory() ? walk(path.join(dir, e.name)) : [path.join(dir, e.name)])
+  const found = []
+  for (const file of walk(src).filter(f => /\.(css|vue)$/.test(f))) {
+    const name = path.relative(src, file).split(path.sep).join('/')
+    const source = readFileSync(file, 'utf8')
+    const styles = file.endsWith('.vue') ? parse(source).descriptor.styles.map(s => s.content) : [source]
+    for (const css of styles) postcss.parse(css).walkDecls(/^(background(-color)?|accent-color|fill|stroke)$/, decl => {
+      if (decl.value.includes('var(--color-accent)')) found.push(`${name} :: ${decl.parent.selector}`)
+    })
+    const template = file.endsWith('.vue') ? parse(source).descriptor.template?.content ?? '' : ''
+    if (/(background|fill|stroke)\s*[:=]\s*[^>]*?var\(--color-accent\)/.test(template)) found.push(`${name} :: template`)
+  }
+  assert.deepEqual(found.filter(entry => !ACCENT_FILL_ALLOWED.has(entry)), [])
+  assert.ok(found.length >= 4, '허용 목록이 실제 사용처와 맞는지 확인한다')
+})

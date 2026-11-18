@@ -47,6 +47,6 @@ function preset(days) { emit('update:modelValue', { ...rule.value, frequency: 'w
 .repeat-presets button { padding: 6px 12px; font-size: .8125rem; border: 1px solid var(--color-hairline); border-radius: var(--radius-sm); }
 .repeat-weekdays { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; margin-bottom: 12px; }
 .repeat-weekdays button { min-width: 0; min-height: 40px; padding: 8px 0; border: 1px solid var(--color-hairline); border-radius: var(--radius-sm); font-size: .8125rem; }
-.repeat-weekdays button[aria-pressed="true"] { background: var(--color-accent); border-color: var(--color-accent); color: white; }
+.repeat-weekdays button[aria-pressed="true"] { background: var(--color-foreground); border-color: var(--color-foreground); color: var(--color-on-primary); }
 @media (max-width: 400px) { .repeat-fields { grid-template-columns: 1fr; } .repeat-settings { padding: 12px; } .repeat-weekdays { gap: 3px; } }
 </style>

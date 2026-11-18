@@ -12,7 +12,7 @@ const done = Array.from({ length: 84 }, (_, i) => ![2, 10, 16, 21].includes(i))
   <section class="card heatmap-pattern">
     <div class="head">
       <h3>수행 이력</h3>
-      <div class="legend">미수행 <i style="background: var(--color-surface)"></i><i style="background: var(--color-accent)"></i> 수행</div>
+      <div class="legend">미수행 <i style="background: var(--color-surface)"></i><i style="background: var(--color-data)"></i> 수행</div>
     </div>
     <div class="heat-cells streak">
       <i v-for="(d, i) in done" :key="i" :class="{ done: d }"></i>

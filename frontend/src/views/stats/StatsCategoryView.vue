@@ -43,7 +43,7 @@ function hm(min) {
     </div>
 
     <svg viewBox="0 0 400 150" style="width: 100%; height: 190px">
-      <polyline :points="points" fill="none" stroke="var(--color-accent)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+      <polyline :points="points" fill="none" stroke="var(--color-data)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
       <circle
         v-for="(v, i) in current.series"
         :key="i"
@@ -51,7 +51,7 @@ function hm(min) {
         :cy="150 - (v / 100) * 130"
         r="3.5"
         fill="var(--color-canvas)"
-        stroke="var(--color-accent)"
+        stroke="var(--color-data)"
         stroke-width="2"
       />
     </svg>

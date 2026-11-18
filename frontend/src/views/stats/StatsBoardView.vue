@@ -162,7 +162,7 @@ const focusPath = FOCUS_TREND.map((v, i) => (i * 100) / (FOCUS_TREND.length - 1)
       <section v-else-if="p.id === 'focusTrend'" class="card stats-portlet">
         <h3>{{ STATS_CATALOG.focusTrend.title }}</h3>
         <svg viewBox="0 0 100 60" preserveAspectRatio="none" class="spark">
-          <polyline :points="focusPath" fill="none" stroke="var(--color-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          <polyline :points="focusPath" fill="none" stroke="var(--color-data)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
         <p class="form-note">최근 7{{ unit === '주' ? '일' : unit }} · 평균 {{ hm(Math.round(FOCUS_TREND.reduce((a, b) => a + b, 0) / FOCUS_TREND.length)) }}</p>
       </section>

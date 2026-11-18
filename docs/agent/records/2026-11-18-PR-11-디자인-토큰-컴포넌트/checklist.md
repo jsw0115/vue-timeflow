@@ -13,5 +13,8 @@
 - [x] 접근성 점검(context-notes), 보안 해당 없음 기록
 - [x] 테스트/실제 증빙 기록(07 RUN-38~RUN-41, verification.md)
 - [x] 자체 검증 변경만 커밋
-- [ ] IM-11 2단계부터(다음 작업)
-- [ ] 결정 대기: 체크박스 등 accent 배경 사용 규칙(IM-11 7단계)
+- [x] 7a: 사용자 위임으로 색 역할 결정(선택 상태 foreground, 데이터 color.data `#4e7963`)
+- [x] 7a: DESIGN.md 2장 토큰·색 역할 나눔·대비 표, 4장 체크박스 규칙, 7·9장, 부록 A·B 갱신
+- [x] 7a: tokens.css, styles.css·interaction.css·chat.css·Vue 4개 컴포넌트·통계 화면 3개 수정
+- [x] 7a: accent 채움 재발 방지 검사, 헤드리스 Chrome 화면 7장 확인
+- [ ] IM-11 2~6단계, 7b(선택 테두리·모서리·pending 정리)

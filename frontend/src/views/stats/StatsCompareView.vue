@@ -143,14 +143,14 @@ function hm(min) {
     <svg :viewBox="'0 0 ' + W + ' ' + H" class="compare-chart" preserveAspectRatio="none">
       <g v-for="(s, i) in series" :key="'b' + i">
         <rect :x="i * barW + barW * 0.16" :y="y(s.planned)" :width="barW * 0.32" :height="H - y(s.planned)" fill="var(--color-hairline)" />
-        <rect :x="i * barW + barW * 0.52" :y="y(s.actual)" :width="barW * 0.32" :height="H - y(s.actual)" fill="var(--color-accent)" opacity="0.9" />
+        <rect :x="i * barW + barW * 0.52" :y="y(s.actual)" :width="barW * 0.32" :height="H - y(s.actual)" fill="var(--color-data)" opacity="0.9" />
       </g>
     </svg>
 
     <svg viewBox="0 0 640 110" class="compare-chart" style="height: 110px" preserveAspectRatio="none">
       <line x1="0" :y1="rateY(target)" x2="640" :y2="rateY(target)" stroke="var(--color-muted)" stroke-width="1" stroke-dasharray="4 4" />
-      <polyline :points="ratePath" fill="none" stroke="var(--color-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
-      <circle v-for="(s, i) in series" :key="'c' + i" :cx="(i + 0.5) * barW" :cy="rateY(s.rate)" r="3" fill="var(--color-canvas)" stroke="var(--color-accent)" stroke-width="2" />
+      <polyline :points="ratePath" fill="none" stroke="var(--color-data)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+      <circle v-for="(s, i) in series" :key="'c' + i" :cx="(i + 0.5) * barW" :cy="rateY(s.rate)" r="3" fill="var(--color-canvas)" stroke="var(--color-data)" stroke-width="2" />
     </svg>
 
     <div class="compare-axis">

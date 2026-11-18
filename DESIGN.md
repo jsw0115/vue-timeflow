@@ -67,6 +67,24 @@ Timebar Diary는 계획(Plan)과 실제 기록(Actual)을 같은 시간축에서
 | color.on-primary | `--color-on-primary` | `#ffffff` | 검정 주 액션 위 텍스트 | 계약 |
 | color.accent | `--color-accent` | `#2f5d46` | 화면당 단일 강조, 포커스 표시 | 계약 |
 | color.on-accent | `--color-on-accent` | `#ffffff` | 포인트 컬러 위 텍스트 | 계약 |
+| color.data | `--color-data` | `#4e7963` | 기록·달성 데이터 표시(진행 막대, 실제 기록 막대·선, 히트맵, 연속 점, 다이어리 작성일) | 보완 |
+| color.on-data | `--color-on-data` | `#ffffff` | 데이터 색 위 텍스트 | 보완 |
+
+### 색 역할 나눔 (보완)
+
+accent를 컴포넌트 배경으로 쓰지 않는다는 규칙(4장)을 지키면서 화면에 필요한 채움 색을 쓰임새로 나눴다. 2026-11-18 사용자 요청으로 정했다.
+
+| 쓰임새 | 색 | 이유 |
+|---|---|---|
+| 단일 강조, 포커스 표시 | color.accent | 계약. 화면에서 가장 짙은 그린은 이것 하나다. 예: 플래너 "실제 기록" 버튼의 기록 중 채움(`.record.record-on`) |
+| 선택·켜짐 상태(체크박스, 토글 스위치, 눌린 요일, 현재 보기, 선택한 목록 항목) | color.foreground 채움 + color.on-primary 글자 | segmented-tab 선택과 같은 규칙이다. 모노톤 크롬과 맞고, 포커스 표시(accent)와 색이 겹치지 않아 "선택됨"과 "포커스"가 구분된다 |
+| 개수 배지(알림·안 읽음 수) | color.foreground 채움 + color.on-primary 글자 | 크롬 요소라 모노톤으로 둔다. 화면에 여러 개 나와도 단일 강조를 흐리지 않는다 |
+| 기록·달성 데이터 | color.data | accent와 같은 파인 그린 계열(색상 150°)에서 밝기를 높이고 채도를 낮춘 세이지 톤이다. 기록의 분위기를 유지하면서 accent보다 한 단계 약해 단일 강조를 가리지 않는다 |
+| 연결·온라인 상태 점 | color.accent | 상태 색 표의 성공 표시. 작은 점에만 쓴다 |
+| 카테고리·템플릿 색 | 콘텐츠 색 | 사용자가 고르는 색이다. 아래 콘텐츠 색 규칙을 따른다 |
+
+- 데이터 단계 표현(히트맵 단계)은 color.data를 color.surface와 섞어 만든다. 가장 진한 단계가 color.data다.
+- 선택 상태를 표시하는 테두리(선택한 카드·옵션의 1px 테두리)는 배경 규칙과 별개라 아직 accent를 쓴다. 정리 여부는 부록 B에서 다룬다.
 
 ### 상태 색
 
@@ -106,6 +124,11 @@ Timebar Diary는 계획(Plan)과 실제 기록(Actual)을 같은 시간축에서
 | on-primary on foreground | 7:1 | 21:1 |
 | muted on canvas | 4.5:1 | 4.83:1 |
 | on-accent on accent | 4.5:1 | 7.57:1 |
+| on-data on data (보완) | 4.5:1 | 4.95:1 |
+| data on canvas, 그래픽 (보완) | 3:1 | 4.95:1 |
+| data on surface, 그래픽 (보완) | 3:1 | 4.48:1 |
+| data on hairline, 막대와 트랙 (보완) | 3:1 | 3.93:1 (현재 `#e5e5e5`), 4.16:1 (목표 `#ebebeb`) |
+| on-primary on foreground, 선택 상태 (보완) | 4.5:1 | 21:1 |
 | muted on surface | 4.5:1 | **4.36:1 (미달)** |
 
 surface 위 본문 크기 텍스트에는 color.muted 대신 color.foreground를 쓴다.
@@ -122,6 +145,8 @@ surface 위 본문 크기 텍스트에는 color.muted 대신 color.foreground를
   --color-on-primary: #ffffff;
   --color-accent: #2f5d46;
   --color-on-accent: #ffffff;
+  --color-data: #4e7963;
+  --color-on-data: #ffffff;
   --color-status-danger: #b23b3b;
   --color-status-warning: #8a6a3c;
   --color-status-info: #43596b;
@@ -168,7 +193,7 @@ surface 위 본문 크기 텍스트에는 color.muted 대신 color.foreground를
 ### 공통 규칙
 
 - 모든 interactive 컴포넌트는 `:focus-visible`에서 color.accent 2px 실선 아웃라인, 오프셋 2px을 표시한다. (계약, 코드)
-- color.accent는 button-primary 포커스와 input-field 포커스 외에는 컴포넌트 배경색으로 쓰지 않는다. (계약)
+- color.accent는 button-primary 포커스와 input-field 포커스 외에는 컴포넌트 배경색으로 쓰지 않는다. (계약) 선택·켜짐 상태는 foreground로, 기록·달성 데이터는 color.data로 채운다. (2장 색 역할 나눔, 보완)
 - 색·테두리·배경 전환은 0.15s로 한다. `prefers-reduced-motion: reduce`에서는 전환·애니메이션 시간을 0으로 만든다. (코드)
 - 계약에 상태가 있지만 값이 없던 hover·disabled·loading과 빈 상태는 2026-11-18에 아래 세 원칙으로 채우고 `보완`으로 표기했다. 원칙으로 정할 수 없는 값은 여전히 "미정"으로 두고 그럴듯한 기본값으로 채우지 않는다.
   - hover는 테두리나 배경을 한 단계만 진하게 바꾼다. 버튼·아이콘 버튼은 테두리를 foreground로, 입력은 muted로, surface 위 항목은 canvas 배경으로 바꾼다. 위치 이동은 button-primary에만 쓴다. 기존 규칙(보조 버튼·아이콘 버튼 hover의 테두리 변화, nav-item hover의 배경 변화)을 컴포넌트 강도에 맞춰 넓힌 것이다.
@@ -268,7 +293,7 @@ Figma의 검정 채움 원형 버튼은 button-primary와 시선을 다투므로
 - helper-text는 12px(`--type-caption-size`), 굵기 400, color.muted다. 오류·성공일 때는 색과 함께 문구도 바꿔 색만으로 알리지 않는다. (보완)
 - 테두리 색으로 오류를 표시하지 않는다. 상태 색은 좁은 면적의 글자에만 쓴다는 2장 규칙을 따른다. (보완)
 
-체크박스·라디오는 17px 원형 테두리(1.5px hairline)를 쓰고, 선택하면 accent로 채우고 안쪽에 4px canvas 링을 둔다. (코드 `.task input`)
+체크박스·라디오는 17px 원형 테두리(1.5px hairline)를 쓰고, 선택하면 foreground로 채우고 안쪽에 4px canvas 링을 둔다. 네이티브 체크박스는 `accent-color`를 foreground로 둔다. (코드 `.task input`, 2026-11-18 accent에서 바꿈, 보완)
 
 ### segmented-tab (Figma product-segment 형태 + 코드 색)
 
@@ -441,6 +466,7 @@ LNB 내비게이션 항목이다. 활성 상태는 surface 배경과 foreground 
 ### Do
 
 - 크롬은 canvas·surface·foreground·hairline으로 구성하고, 포인트 컬러는 화면에서 가장 중요한 요소 하나에만 쓴다.
+- 선택·켜짐 상태는 foreground로, 진행 막대·차트·히트맵 같은 기록 데이터는 color.data로 칠한다.
 - 계획은 점선, 실제 기록은 실선과 콘텐츠 색 띠로 구분한다.
 - 숫자와 시간은 JetBrains Mono로 표기한다.
 - 콘텐츠 비중에 따라 카드 폭과 높이를 달리한다.
@@ -511,7 +537,7 @@ LNB 내비게이션 항목이다. 활성 상태는 surface 배경과 foreground 
 
 ### 기본 프롬프트
 
-> Timebar Diary 화면을 만든다. 흰 캔버스(#ffffff)와 따뜻한 오프화이트 표면(#f5f3f1), 검정 텍스트와 검정 pill 주 액션을 쓰고, 포인트 컬러 #2f5d46은 화면에서 가장 중요한 요소 하나에만 쓴다. 테두리는 1px #ebebeb, 카드는 16px 모서리와 저알파 다단 그림자를 쓴다. 제목은 Pretendard Variable 300의 큰 글자, 본문은 400의 14–15px로 위계를 만들고, 숫자와 시간은 JetBrains Mono로 표기한다. 크롬은 모노톤으로 두고 색은 사용자의 카테고리 색이 갖게 한다. 카드 폭은 콘텐츠 비중에 따라 달리하고, 섹션 사이에는 96px 여백을 둔다. 모든 컨트롤은 :focus-visible에서 #2f5d46 2px 아웃라인을 보이고, 760px 미만에서는 사이드바를 오프캔버스로 바꾼다.
+> Timebar Diary 화면을 만든다. 흰 캔버스(#ffffff)와 따뜻한 오프화이트 표면(#f5f3f1), 검정 텍스트와 검정 pill 주 액션을 쓰고, 포인트 컬러 #2f5d46은 화면에서 가장 중요한 요소 하나에만 쓴다. 테두리는 1px #ebebeb, 카드는 16px 모서리와 저알파 다단 그림자를 쓴다. 제목은 Pretendard Variable 300의 큰 글자, 본문은 400의 14–15px로 위계를 만들고, 숫자와 시간은 JetBrains Mono로 표기한다. 크롬은 모노톤으로 두고 색은 사용자의 카테고리 색이 갖게 한다. 체크·토글 같은 선택 상태는 검정으로, 진행 막대·차트·히트맵 같은 기록 데이터는 세이지 그린 #4e7963으로 칠한다. 카드 폭은 콘텐츠 비중에 따라 달리하고, 섹션 사이에는 96px 여백을 둔다. 모든 컨트롤은 :focus-visible에서 #2f5d46 2px 아웃라인을 보이고, 760px 미만에서는 사이드바를 오프캔버스로 바꾼다.
 
 ### 화면 유형별 프롬프트
 
@@ -521,12 +547,12 @@ LNB 내비게이션 항목이다. 활성 상태는 surface 배경과 foreground 
 | 플래너 | 왼쪽에 시간 눈금(JetBrains Mono), 오른쪽에 time-block을 둔다. 계획은 점선 muted 블록, 실제 기록은 실선 블록과 왼쪽 3px 카테고리 색 띠로 구분한다. 계획 미완료는 벌점 색으로 칠하지 않는다. |
 | 작성 모달 | modal 패턴을 쓴다. 상단에 segmented-tab으로 일정·할 일·루틴·다이어리를 전환하고, input-field를 한 열로 쌓고, 패널 폭 전체 button-primary 하나로 저장한다. |
 | 목록 + 상세 | `1fr 300px` 2단으로 두고, 목록 행은 hairline 구분선과 14px 위아래 여백을 쓴다. 상태는 status-badge로 표시한다. 1150px 이하에서는 상세 패널을 숨긴다. |
-| 통계 | 큰 수치는 figure 역할로, 비교 막대는 계획 hairline 색과 실제 accent 색으로 그린다. 카테고리 비중은 사용자 콘텐츠 색을 쓴다. |
+| 통계 | 큰 수치는 figure 역할로, 비교 막대는 계획 hairline 색과 실제 color.data 색으로 그린다. 카테고리 비중은 사용자 콘텐츠 색을 쓴다. |
 
 ### 생성 전 점검
 
 - [ ] 팔레트(2장)와 모서리 스케일(5장) 밖의 값을 쓰지 않았다.
-- [ ] 포인트 컬러가 화면에 하나만 있다.
+- [ ] 포인트 컬러가 화면에 하나만 있다. 선택 상태와 데이터 표시에 accent를 쓰지 않았다.
 - [ ] 숫자·시간이 JetBrains Mono로 표기되었다.
 - [ ] surface 위 본문 크기 텍스트에 color.muted를 쓰지 않았다.
 - [ ] 모든 interactive 요소에 accent 2px 포커스 아웃라인이 보인다.
@@ -573,6 +599,7 @@ LNB 내비게이션 항목이다. 활성 상태는 surface 배경과 foreground 
 |---|---|
 | 2026-11-18 | 9장 형식으로 재작성 |
 | 2026-11-18 | 4장 hover·disabled·loading 원칙과 빈 상태(empty-state) 보완, 코드 클래스 표·코드 위치 추가, 부록 B 갱신 |
+| 2026-11-18 | 2장 color.data·color.on-data와 색 역할 나눔 추가. 체크박스 선택 색을 accent에서 foreground로 바꿔 4장 안의 충돌을 없앰. 부록 B의 accent 배경 사용 항목 해소 |
 
 ### omd 시스템 그래프 상태
 
@@ -597,6 +624,6 @@ LNB 내비게이션 항목이다. 활성 상태는 surface 배경과 foreground 
 | segmented-tab | `.segmented-tab` radius.full, 비선택 foreground | 화면은 radius.sm·radius.md, 비선택 muted | `.tabs`, `.filter`, `.compose-tabs` |
 | nav-item 모서리 | radius.md | radius.sm | `nav button` |
 | 콘텐츠 최대폭 | 1180px | 주석 처리됨 | `main` |
-| accent 배경 사용 | button-primary·포커스 외 금지 | 체크 완료, 진행 막대, 다이어리 작성일, 일부 차트 | `.task input:checked`, `.progress em`, `.calendar .written`, `.chart b` |
+| 선택 테두리의 accent | 2장 색 역할 나눔에 따라 정리 여부 결정 | 선택한 카드·옵션·날짜 테두리, 태그 hover 테두리에 accent | `.mode.selected`, `.policy-row button.selected`, `.confirm-option.selected`, `.tag-chip:hover`, `.cal-cell.selected` |
 | muted on surface | 사용 금지 (4.36:1) | 사용 중 | `.workspace small`, `.filter button`, `.phase-badge` 등 |
 | 모서리 스케일 밖 값 | 사용 금지 | 2px·3px 사용 | `.omd/preferences.md` pending 항목 |
