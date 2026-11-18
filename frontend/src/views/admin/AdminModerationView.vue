@@ -26,7 +26,7 @@ const reports = [
         <td>{{ r.reason }}</td>
         <td>{{ r.date }}</td>
         <td>
-          <span v-if="r.pending"><b style="color: #b23b3b; margin-right: 8px">제재</b><b>기각</b></span>
+          <span v-if="r.pending"><b style="color: var(--color-status-danger); margin-right: 8px">제재</b><b>기각</b></span>
           <span v-else class="badge ok">처리완료</span>
         </td>
       </tr>

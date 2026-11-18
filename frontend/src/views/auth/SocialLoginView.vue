@@ -8,7 +8,7 @@
       <section class="card" style="margin-top: 16px">
         <div class="trow">
           <span style="display: flex; align-items: center; gap: 10px"><i style="width: 32px; height: 32px; border-radius: 9px; background: var(--color-surface); color: #8a6a3c; font-weight: 700; display: flex; align-items: center; justify-content: center; font-style: normal">G</i><b>Google<br /><small>jisu@gmail.com · 연동됨</small></b></span>
-          <span style="color: #b23b3b; font-weight: 700; font-size: 0.8125rem">연동 해제</span>
+          <span style="color: var(--color-status-danger); font-weight: 700; font-size: 0.8125rem">연동 해제</span>
         </div>
         <div class="trow">
           <span style="display: flex; align-items: center; gap: 10px"><i style="width: 32px; height: 32px; border-radius: 9px; background: var(--color-surface); color: var(--color-foreground); font-weight: 700; display: flex; align-items: center; justify-content: center; font-style: normal">K</i><b>Kakao<br /><small>연동되지 않음</small></b></span>

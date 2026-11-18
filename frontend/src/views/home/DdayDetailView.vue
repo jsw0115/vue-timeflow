@@ -43,7 +43,7 @@ function remove() {
       <label>내용 · 태그 · 멘션<TagMentionInput v-model="draft.body" /></label>
       <label>카테고리<select v-model="draft.category"><option>개인</option><option>업무</option><option>가족</option><option>건강</option><option>공부</option></select></label>
       <button class="primary" style="width: 100%; margin-top: 16px" @click="save">저장하기</button>
-      <button style="width: 100%; margin-top: 8px; color: #b23b3b; font-weight: 700; padding: 10px" @click="remove">삭제하기</button>
+      <button style="width: 100%; margin-top: 8px; color: var(--color-status-danger); font-weight: 700; padding: 10px" @click="remove">삭제하기</button>
     </div>
   </section>
   <p v-else>D-Day 항목을 찾을 수 없어요. <a @click="router.push('/dday')" style="color: var(--color-accent); font-weight: 700; cursor: pointer">목록으로 돌아가기</a></p>

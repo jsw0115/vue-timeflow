@@ -46,10 +46,10 @@ function purge(item) {
       <label>{{ i.title }}</label>
       <span class="tag">{{ i.type }}</span>
       <span>{{ i.deleted }}</span>
-      <span :style="{ color: i.left <= 7 ? '#b23b3b' : 'var(--color-muted)', fontWeight: i.left <= 7 ? 700 : 400 }">{{ i.left }}일</span>
+      <span :style="{ color: i.left <= 7 ? 'var(--color-status-danger)' : 'var(--color-muted)', fontWeight: i.left <= 7 ? 700 : 400 }">{{ i.left }}일</span>
       <span style="display: flex; gap: 8px">
         <button class="review" style="margin: 0; padding: 6px 10px" @click="restore(i)">복구</button>
-        <button class="review" style="margin: 0; padding: 6px 10px; color: #b23b3b" @click="purge(i)">영구 삭제</button>
+        <button class="review" style="margin: 0; padding: 6px 10px; color: var(--color-status-danger)" @click="purge(i)">영구 삭제</button>
       </span>
     </div>
     <p v-if="visible.length === 0" style="padding: 20px 0">휴지통에 {{ filter === '전체' ? '' : filter + ' ' }}항목이 없어요.</p>

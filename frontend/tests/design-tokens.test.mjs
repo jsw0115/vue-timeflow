@@ -125,3 +125,22 @@ test('accent를 채움색으로 쓰는 곳은 상태 점과 콘텐츠 색뿐이�
   assert.deepEqual(found.filter(entry => !ACCENT_FILL_ALLOWED.has(entry)), [])
   assert.ok(found.length >= 4, '허용 목록이 실제 사용처와 맞는지 확인한다')
 })
+
+// 상태 색과 같은 hex를 쓰는 콘텐츠 색(시간 블록·템플릿·단계 배지·달력 종류·카테고리 스와치·아이콘 대용 글자). 상태 표시는 --color-status-* 변수를 쓴다.
+const STATUS_HEX_CONTENT_USES = {
+  'styles.css': 9, 'views/auth/SocialLoginView.vue': 1, 'views/home/CalendarView.vue': 2,
+  'views/home/HomeView.vue': 1, 'views/settings/SettingsCategoryView.vue': 6, 'views/stats/StatsBoardView.vue': 1,
+}
+test('상태 표시는 상태 색 변수를 쓰고, 같은 hex는 콘텐츠 색 자리에만 남는다', async () => {
+  const { readdirSync } = await import('node:fs')
+  const src = path.join(repo, 'frontend/src')
+  const walk = dir => readdirSync(dir, { withFileTypes: true }).flatMap(e => e.isDirectory() ? walk(path.join(dir, e.name)) : [path.join(dir, e.name)])
+  const counts = {}
+  for (const file of walk(src).filter(f => /\.(vue|css|js|mjs)$/.test(f))) {
+    const name = path.relative(src, file).split(path.sep).join('/')
+    if (name.startsWith('design-system/')) continue
+    const n = (readFileSync(file, 'utf8').match(/#(b23b3b|8a6a3c|43596b)\b/gi) ?? []).length
+    if (n) counts[name] = n
+  }
+  assert.deepEqual(counts, STATUS_HEX_CONTENT_USES)
+})

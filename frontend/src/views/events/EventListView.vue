@@ -193,7 +193,7 @@ function removeActive() {
     <template #footer>
       <button type="button" class="modal-secondary" @click="showDetailModal = false">취소</button>
       <button class="primary" :disabled="!!eventError(detailDraft)" @click="saveDetail">저장하기</button>
-      <button style="width: 100%; margin-top: 8px; color: #b23b3b; font-weight: 700; padding: 10px" @click="removeActive">삭제하기</button>
+      <button style="width: 100%; margin-top: 8px; color: var(--color-status-danger); font-weight: 700; padding: 10px" @click="removeActive">삭제하기</button>
     </template>
   </Modal>
 </template>

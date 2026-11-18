@@ -61,7 +61,7 @@ function remove() {
     </div>
 
 
-    <button style="width: 100%; margin-top: 20px; color: #b23b3b; font-weight: 700; padding: 10px" @click="remove">삭제하기</button>
+    <button style="width: 100%; margin-top: 20px; color: var(--color-status-danger); font-weight: 700; padding: 10px" @click="remove">삭제하기</button>
   </section>
   <p v-else>할 일을 찾을 수 없어요. <a @click="router.push('/tasks')" style="color: var(--color-accent); font-weight: 700; cursor: pointer">목록으로 돌아가기</a></p>
 </template>

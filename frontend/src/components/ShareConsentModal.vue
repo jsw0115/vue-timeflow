@@ -39,7 +39,7 @@ async function proceed() {
     <label class="task" style="border: 0"><input type="checkbox" v-model="agreeShare" /><span style="flex: 1"><b>화면·캠 공유에 동의합니다</b><small>동의해야 세션에 영상을 올릴 수 있어요 (필수)</small></span></label>
     <label class="task" style="border: 0"><input type="checkbox" v-model="agreeRecord" /><span style="flex: 1"><b>세션 녹화에 동의합니다</b><small>녹화본은 내 기기에만 저장되고, 원할 때 파일로 내려받을 수 있어요 (선택)</small></span></label>
 
-    <p v-if="mediaState.error" style="color: #b23b3b; font-weight: 600; margin-top: 8px">{{ mediaState.error }}</p>
+    <p v-if="mediaState.error" style="color: var(--color-status-danger); font-weight: 600; margin-top: 8px">{{ mediaState.error }}</p>
 
     <template #footer>
       <button type="button" class="modal-secondary" @click="$emit('close')">취소</button>

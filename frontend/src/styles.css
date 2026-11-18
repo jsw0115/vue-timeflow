@@ -242,7 +242,7 @@ p{font-size:0.875rem;color:var(--color-muted);line-height:1.6;font-weight:400}
 .share-meta{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:0.8125rem}
 .share-meta b{font-size:0.875rem;font-weight:600}
 .share-timer{font-family:'JetBrains Mono',ui-monospace,monospace;color:var(--color-muted)}
-.badge.danger{background:var(--color-surface);color:#b23b3b}
+.badge.danger{background:var(--color-surface);color:var(--color-status-danger)}
 .cofocus-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-xl)}
 .cofocus-tile{padding:12px}
 .cofocus-placeholder{width:100%;aspect-ratio:16/9;border-radius:var(--radius-md);background:var(--color-surface);border:1px dashed var(--color-hairline);display:grid;place-items:center;color:var(--color-muted);font-size:0.8125rem;text-align:center;padding:10px}
@@ -350,16 +350,16 @@ p{font-size:0.875rem;color:var(--color-muted);line-height:1.6;font-weight:400}
 /* 배지 공통 */
 .badge{font-size:0.75rem;font-weight:700;padding:4px 7px;border-radius:var(--radius-sm);background:var(--color-surface);color:var(--color-muted)}
 .badge.ok{background:var(--color-surface);color:var(--color-accent)}
-.badge.warn{background:var(--color-surface);color:#8a6a3c}
-.badge.danger{background:var(--color-surface);color:#b23b3b}
-.badge.info{background:var(--color-surface);color:#43596b}
+.badge.warn{background:var(--color-surface);color:var(--color-status-warning)}
+.badge.danger{background:var(--color-surface);color:var(--color-status-danger)}
+.badge.info{background:var(--color-surface);color:var(--color-status-info)}
 .badge.brand{background:var(--color-foreground);color:var(--color-on-primary)}
 .badge.new{background:var(--color-surface);color:var(--color-accent);margin-left:4px}
 
 /* 오프라인 상태 배지 (GLB-009) */
 .offline-badge{display:inline-flex;align-items:center;gap:7px;border-radius:var(--radius-md);padding:8px 12px;font-size:0.8125rem;font-weight:700;margin-bottom:16px}
-.offline-badge.offline{background:var(--color-surface);color:#8a6a3c;border:1px solid var(--color-hairline)}
-.offline-badge.offline i{width:7px;height:7px;border-radius:50%;background:#8a6a3c}
+.offline-badge.offline{background:var(--color-surface);color:var(--color-status-warning);border:1px solid var(--color-hairline)}
+.offline-badge.offline i{width:7px;height:7px;border-radius:50%;background:var(--color-status-warning)}
 .offline-badge.synced{background:var(--color-surface);color:var(--color-accent);border:1px solid var(--color-hairline)}
 
 /* 머니로그 (MONEY-001, 통화 설정 포함) */
@@ -368,7 +368,7 @@ p{font-size:0.875rem;color:var(--color-muted);line-height:1.6;font-weight:400}
 .money-summary span{font-size:0.8125rem;color:var(--color-muted)}
 .money-summary b{font-family:'JetBrains Mono',ui-monospace,monospace;display:block;font-size:1.375rem;font-weight:500;letter-spacing:-.01em;margin-top:6px}
 .money-summary .in{color:var(--color-accent)}
-.money-summary .out{color:#b23b3b}
+.money-summary .out{color:var(--color-status-danger)}
 .money-list{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;align-items:center;min-height:52px;border-bottom:1px solid var(--color-hairline);font-size:0.875rem}
 .currency-picker{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--color-hairline);border-radius:var(--radius-sm);padding:9px 12px;font-size:0.8125rem;color:var(--color-muted);background:var(--color-canvas)}
 
@@ -587,7 +587,7 @@ p{font-size:0.875rem;color:var(--color-muted);line-height:1.6;font-weight:400}
 .sticker-pack b{display:block;font-size:0.8125rem;margin-bottom:4px}
 .sticker-pack span{font-size:1.125rem;letter-spacing:4px}
 .mini-select{border:1px solid var(--color-hairline);border-radius:var(--radius-sm);padding:5px 7px;font-size:0.8125rem;background:var(--color-canvas);max-width:96px}
-.sla-over{color:#b23b3b;font-weight:700}
+.sla-over{color:var(--color-status-danger);font-weight:700}
 .integration-row{display:flex;gap:16px;align-items:flex-start;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--color-hairline)}
 .integration-row b{font-size:0.875rem}
 .integration-row p{margin:4px 0 0;font-size:0.8125rem}
@@ -709,12 +709,12 @@ p{font-size:0.875rem;color:var(--color-muted);line-height:1.6;font-weight:400}
 .kanban{grid-template-columns:repeat(auto-fit,minmax(230px,1fr));align-items:start}
 .kanban-col{min-height:140px;transition:background .15s ease,outline-color .15s ease;outline:2px solid transparent;outline-offset:-2px}
 .kanban-col.drag-over{outline-color:var(--color-accent);background:var(--color-canvas)}
-.kanban-col-head.wip-over{color:#b23b3b;font-weight:700}
-.kanban-col-head.wip-over span{background:#b23b3b;color:var(--color-on-primary)}
+.kanban-col-head.wip-over{color:var(--color-status-danger);font-weight:700}
+.kanban-col-head.wip-over span{background:var(--color-status-danger);color:var(--color-on-primary)}
 .kanban-card{position:relative;cursor:pointer;transition:box-shadow .15s ease,transform .15s ease}
 .kanban-card:hover{box-shadow:var(--shadow-raised)}
 .kanban-card.dragging{opacity:.45}
-.kanban-card.overdue{border-left:3px solid #b23b3b}
+.kanban-card.overdue{border-left:3px solid var(--color-status-danger)}
 .kanban-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
 .kanban-card-top b{font-size:0.875rem;line-height:1.45}
 .prio{font-size:0.75rem;font-weight:700;padding:2px 6px;border-radius:var(--radius-sm);background:var(--color-surface);color:var(--color-muted);flex:none}
@@ -805,7 +805,7 @@ nav button:focus-visible{outline:2px solid var(--color-accent);outline-offset:-2
 .record.record-on{background:var(--color-accent);color:var(--color-on-accent);border-color:var(--color-accent)}
 .orb-title{display:block;margin-top:14px}
 .orb-title input{width:min(260px,80vw);border:1px solid var(--color-hairline);border-radius:var(--radius-sm);padding:8px 10px;font-size:0.8125rem;background:var(--color-canvas);text-align:center}
-.form-error{color:#b23b3b;font-weight:600;margin-top:8px;font-size:0.8125rem}
+.form-error{color:var(--color-status-danger);font-weight:600;margin-top:8px;font-size:0.8125rem}
 
 /* 공유 이미지 미리보기 · 다이어리 사진 */
 .share-canvas-wrap{margin-top:12px;border-radius:var(--radius-md);overflow:hidden;background:var(--color-surface);display:grid;place-items:center}

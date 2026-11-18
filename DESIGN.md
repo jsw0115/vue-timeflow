@@ -108,6 +108,7 @@ accent를 컴포넌트 배경으로 쓰지 않는다는 규칙(4장)을 지키�
 - 통계·일정 블록에서 추가로 쓰는 값: `#b5843f`, `#5c7891`
 - 콘텐츠 색은 시간 블록 왼쪽 3px 띠, 차트 막대, 범례 점처럼 작은 면적에만 쓴다.
 - `#b5843f`는 흰 배경 대비 3.31:1이라 텍스트 색으로 쓰지 않는다.
+- 상태 색과 같은 값(`#b23b3b`·`#8a6a3c`·`#43596b`)이 콘텐츠 색으로도 쓰인다. 오류·경고·안내 같은 상태 표시는 반드시 `--color-status-*` 변수를 쓰고, 콘텐츠 색 자리에서만 hex를 쓴다. 테마가 상태 색을 바꿔도 사용자가 고른 카테고리 색은 바뀌지 않게 하려는 구분이다. (보완)
 
 ### 채택하지 않은 Figma 색
 
@@ -600,6 +601,7 @@ LNB 내비게이션 항목이다. 활성 상태는 surface 배경과 foreground 
 | 2026-11-18 | 9장 형식으로 재작성 |
 | 2026-11-18 | 4장 hover·disabled·loading 원칙과 빈 상태(empty-state) 보완, 코드 클래스 표·코드 위치 추가, 부록 B 갱신 |
 | 2026-11-18 | 2장 color.data·color.on-data와 색 역할 나눔 추가. 체크박스 선택 색을 accent에서 foreground로 바꿔 4장 안의 충돌을 없앰. 부록 B의 accent 배경 사용 항목 해소 |
+| 2026-11-18 | 빈 목록 44곳을 empty-state로 통일. 상태 표시의 hex를 상태 색 변수로 바꾸고 콘텐츠 색과 구분하는 규칙 추가, 부록 B의 상태 색 변수 항목 해소 |
 
 ### omd 시스템 그래프 상태
 
@@ -612,7 +614,6 @@ LNB 내비게이션 항목이다. 활성 상태는 surface 배경과 foreground 
 | 항목 | 이 문서 | 현재 코드 | 위치 |
 |---|---|---|---|
 | color.hairline | `#ebebeb` (Figma) | `#e5e5e5` | `design-system/tokens.css` |
-| 상태 색 변수 | `--color-status-*` 사용 | 변수는 정의됨. 사용처는 hex 값 직접 사용 | 여러 `.vue`·`.css` |
 | shadow.card | `0px 2px 4px rgba(0,0,0,0.04), 0px 0px 1.143px rgba(0,0,0,0.4)` | `0px 2px 4px rgba(0,0,0,.04), 0px 1px 1px rgba(0,0,0,.05)` | `design-system/tokens.css` |
 | shadow.raised | `0px 0px 1px rgba(0,0,0,0.4), …` | `0px 1px 1px rgba(0,0,0,.16), …` | `design-system/tokens.css` |
 | shadow.overlay | `var(--shadow-overlay)` 사용 | 변수는 정의됨. 사용처는 `0 22px 70px rgba(0,0,0,.2)`, `0 22px 60px rgba(0,0,0,.14)` | `.composer`, `.modal-preview` |
