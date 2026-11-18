@@ -157,12 +157,12 @@ const todayLabel = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'full' }).forma
         <button class="hamburger" @click="mobileNav = true">☰</button>
         <div><p class="eyebrow">{{ route.name === '홈' ? todayLabel : 'TIMEBAR WORKSPACE' }}</p><h1>{{ pageTitle }}</h1></div>
         <div class="actions">
-          <button class="icon" title="통합 검색" @click="goSearch">⌕</button>
-          <button class="icon icon-badge" title="알림" @click="togglePanel('notif')">
+          <button class="icon" title="통합 검색" aria-label="통합 검색" @click="goSearch">⌕</button>
+          <button class="icon icon-badge" title="알림" :aria-label="unreadNotifications ? `알림, 안 읽은 알림 ${unreadNotifications}개` : '알림'" @click="togglePanel('notif')">
             ◔<em v-if="unreadNotifications">{{ unreadNotifications }}</em>
           </button>
           <router-link to="/mentions" custom v-slot="{ navigate }">
-            <button class="icon icon-badge" title="멘션함" @click="navigate">
+            <button class="icon icon-badge" title="멘션함" :aria-label="hasUnreadMentions || unreadPostMentions ? '멘션함, 안 읽은 멘션 있음' : '멘션함'" @click="navigate">
               @<em v-if="hasUnreadMentions || unreadPostMentions" aria-label="안 읽은 멘션 있음">N</em>
             </button>
           </router-link>

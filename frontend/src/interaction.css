@@ -23,9 +23,9 @@
 .policy-row button { padding: 14px; min-width: 0; border: 1px solid var(--color-hairline); border-radius: var(--radius-md); text-align: left; }
 .policy-row button.selected { border-color: var(--color-accent); background: var(--color-surface); }
 .policy-row small { display: block; margin-top: 6px; line-height: 1.5; color: var(--color-muted); }
-.compose-tabs { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; margin: 16px 0; background: var(--color-surface); border-radius: var(--radius-md); }
-.compose-tabs button { flex: 1; min-width: 60px; padding: 10px 8px; border-radius: var(--radius-sm); }
-.compose-tabs .selected { background: var(--color-foreground); color: var(--color-on-primary); }
+/* .compose-tabs의 모양은 design-system/components.css의 segmented-tab이 맡고, 여기서는 폭 채우기만 정한다. */
+.compose-tabs { margin: 16px 0; }
+.compose-tabs button { flex: 1; min-width: 60px; }
 .date-end { display: block; margin-top: 4px; line-height: 1.6; }
 .tag-input { width: 100%; min-width: 0; }
 .tag-input textarea { width: 100%; padding: 12px; border: 1px solid var(--color-hairline); border-radius: var(--radius-sm); background: var(--color-canvas); color: var(--color-foreground); font: inherit; resize: vertical; }

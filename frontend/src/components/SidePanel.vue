@@ -40,7 +40,7 @@ function goNotif(n) {
       <div class="side-panel-head">
         <b>알림<small v-if="unreadNotifications"> · 안 읽음 {{ unreadNotifications }}</small></b>
         <button class="review" style="margin: 0" @click="markAllRead">모두 읽음</button>
-        <button class="icon side-panel-close" @click="closePanel">×</button>
+        <button class="icon side-panel-close" aria-label="닫기" @click="closePanel">×</button>
       </div>
       <div class="side-panel-subhead">
         <div class="filter">

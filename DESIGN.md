@@ -203,15 +203,15 @@ surface 위 본문 크기 텍스트에는 color.muted 대신 color.foreground를
 
 ### 코드 클래스
 
-공통 클래스는 `frontend/src/design-system/components.css`에, 기존 클래스는 `styles.css`에 있다. "기존 화면 클래스"는 아직 이 문서와 값이 다르며 부록 B 순서로 공통 클래스에 옮긴다.
+공통 클래스는 `frontend/src/design-system/components.css`에 있다. "기존 화면 클래스"는 2026-11-18부터 같은 규칙을 쓰는 별칭이다. 화면 마크업을 바꾸지 않고 `components.css` 한 곳에서 모양과 상태를 정한다. 새 화면은 공통 클래스 이름을 쓴다.
 
 | 컴포넌트 | 공통 클래스 | 기존 화면 클래스 |
 |---|---|---|
 | button-primary | `.primary` | 같음 |
-| button-secondary | `.button-secondary` | `.modal-secondary` |
-| icon-button | `.icon-button` | `.icon` |
-| input-field | `.input-field`, `.input-field-help` | `.detail label`, `.modal-card input` 등 |
-| segmented-tab | `.segmented-tab` | `.tabs`, `.filter`, `.compose-tabs` |
+| button-secondary | `.button-secondary` | `.modal-secondary`(별칭. 정의가 `Modal.vue`에도 남아 있어 `button.modal-secondary`로 우선순위를 높였다) |
+| icon-button | `.icon-button` | `.icon`(별칭) |
+| input-field | `.input-field`, `.input-field-help` | 기존 입력은 마크업을 그대로 두고 hover·disabled 상태만 공통 규칙을 받는다 |
+| segmented-tab | `.segmented-tab` | `.tabs`, `.filter`, `.compose-tabs`(별칭. 선택은 기존 `.selected` 클래스도 인정) |
 | surface-card | `.card` | 같음 |
 | status-badge | `.tag` | `.state`, `.ok`, `.warn`, `.danger`, `.info` |
 | empty-state | `.empty-state` | 같음. 2026-11-18 빈 목록 문구 44곳을 옮겼다. 멤버 칩 줄 안의 인라인 문구 1곳만 `.form-note` |
@@ -602,6 +602,7 @@ LNB 내비게이션 항목이다. 활성 상태는 surface 배경과 foreground 
 | 2026-11-18 | 4장 hover·disabled·loading 원칙과 빈 상태(empty-state) 보완, 코드 클래스 표·코드 위치 추가, 부록 B 갱신 |
 | 2026-11-18 | 2장 color.data·color.on-data와 색 역할 나눔 추가. 체크박스 선택 색을 accent에서 foreground로 바꿔 4장 안의 충돌을 없앰. 부록 B의 accent 배경 사용 항목 해소 |
 | 2026-11-18 | 빈 목록 44곳을 empty-state로 통일. 상태 표시의 hex를 상태 색 변수로 바꾸고 콘텐츠 색과 구분하는 규칙 추가, 부록 B의 상태 색 변수 항목 해소 |
+| 2026-11-18 | `.icon`·`.tabs`·`.filter`·`.compose-tabs`·`.modal-secondary`를 공통 컴포넌트 별칭으로 묶고, 기존 입력에 hover·disabled 공통 상태 적용. 이름 없던 아이콘 버튼 9곳에 `aria-label`. 부록 B 컨트롤 형태 3항목 해소 |
 
 ### omd 시스템 그래프 상태
 
@@ -620,9 +621,6 @@ LNB 내비게이션 항목이다. 활성 상태는 surface 배경과 foreground 
 | button-primary hover | shadow 토큰 안에서 변경 | `0 6px 18px rgba(0,0,0,.16)` | `.primary:hover` |
 | control 글자 | 13px / 500 | 14px / 600 | `.primary` |
 | display 행간 | 1.15 | 1.2 | `typography.css` |
-| button-secondary | `.button-secondary` (radius.control 8px, 13px/500) | 화면은 `.modal-secondary` (radius.full, 13px/400, 여백 10px 18px) | `components/Modal.vue` |
-| icon-button | `.icon-button` 40px 원형 | 화면은 `.icon` 37px, radius.sm | `.icon` |
-| segmented-tab | `.segmented-tab` radius.full, 비선택 foreground | 화면은 radius.sm·radius.md, 비선택 muted | `.tabs`, `.filter`, `.compose-tabs` |
 | nav-item 모서리 | radius.md | radius.sm | `nav button` |
 | 콘텐츠 최대폭 | 1180px | 주석 처리됨 | `main` |
 | 선택 테두리의 accent | 2장 색 역할 나눔에 따라 정리 여부 결정 | 선택한 카드·옵션·날짜 테두리, 태그 hover 테두리에 accent | `.mode.selected`, `.policy-row button.selected`, `.confirm-option.selected`, `.tag-chip:hover`, `.cal-cell.selected` |

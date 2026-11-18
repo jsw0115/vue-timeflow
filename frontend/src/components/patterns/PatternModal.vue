@@ -11,7 +11,7 @@ const rows = buildItems(props.screen, 5)
     <div class="modal-preview">
       <div class="head">
         <div><p class="eyebrow">PICKER</p><h2>{{ screen.name }}</h2></div>
-        <button class="icon" type="button">×</button>
+        <button class="icon" type="button" aria-label="닫기">×</button>
       </div>
       <input placeholder="이름으로 검색" />
       <div class="picker-list">

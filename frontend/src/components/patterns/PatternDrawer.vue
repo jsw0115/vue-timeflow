@@ -11,7 +11,7 @@ const score = percent(props.screen.id, 0, 55, 92)
     <div class="drawer-preview card">
       <div class="head">
         <div><i class="avatar">지</i></div>
-        <button class="icon" type="button">×</button>
+        <button class="icon" type="button" aria-label="닫기">×</button>
       </div>
       <h3>지수 김</h3>
       <p class="eyebrow">{{ screen.role }}</p>

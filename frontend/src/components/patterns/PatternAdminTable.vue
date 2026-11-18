@@ -24,10 +24,10 @@ const states = ['정상', '검토 필요', '보류', '처리 완료']
           <td><span class="tag">{{ row.category }}</span></td>
           <td><span class="state">{{ states[i % states.length] }}</span></td>
           <td>{{ row.time }}</td>
-          <td><button class="icon" style="width:30px;height:30px;font-size:0.875rem">⋯</button></td>
+          <td><button class="icon" style="width:30px;height:30px;font-size:0.875rem" aria-label="더보기">⋯</button></td>
         </tr>
       </tbody>
     </table>
-    <div class="pagination"><button class="icon" style="width:30px;height:30px">‹</button><span>1 / 4</span><button class="icon" style="width:30px;height:30px">›</button></div>
+    <div class="pagination"><button class="icon" style="width:30px;height:30px" aria-label="이전 페이지">‹</button><span>1 / 4</span><button class="icon" style="width:30px;height:30px" aria-label="다음 페이지">›</button></div>
   </section>
 </template>
