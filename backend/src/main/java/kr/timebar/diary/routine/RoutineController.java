@@ -1,6 +1,8 @@
 package kr.timebar.diary.routine;
 
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import kr.timebar.diary.common.ApiDeprecation;
 import kr.timebar.diary.common.ApiResponse;
 import kr.timebar.diary.routine.dto.RoutineHistoryGridResponse;
 import kr.timebar.diary.routine.dto.RoutineLogEntryResponse;
@@ -16,6 +18,8 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 
+/** 구형 루틴 API. 기준 계약은 신형 /api/routine-records이며 이 API는 폐지 예정이다(IM-03). 제거는 별도 PR에서 한다. */
+@Deprecated
 @RestController
 @RequestMapping("/api/routines")
 public class RoutineController {
@@ -23,6 +27,11 @@ public class RoutineController {
 
     public RoutineController(RoutineService routineService) {
         this.routineService = routineService;
+    }
+
+    @ModelAttribute
+    void markDeprecated(HttpServletResponse response) {
+        ApiDeprecation.mark(response, ApiDeprecation.LEGACY_SCHEDULE_DEPRECATED_AT, "/api/routine-records");
     }
 
     @GetMapping

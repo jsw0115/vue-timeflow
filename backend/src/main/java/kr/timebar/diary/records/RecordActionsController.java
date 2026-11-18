@@ -6,9 +6,6 @@ import kr.timebar.diary.common.ApiResponse;
 import kr.timebar.diary.security.CurrentUser;
 import kr.timebar.diary.task.TaskService;
 import kr.timebar.diary.task.dto.TaskRequest;
-import kr.timebar.diary.event.EventService;
-import kr.timebar.diary.event.EventVisibility;
-import kr.timebar.diary.event.dto.EventRequest;
 import kr.timebar.diary.planner.*;
 import kr.timebar.diary.work.WorkService;
 import org.springframework.web.bind.annotation.*;
@@ -24,11 +21,10 @@ public class RecordActionsController {
     private final RecordService records;
     private final FeatureStore store;
     private final TaskService tasks;
-    private final EventService events;
     private final PlannerService planner;
     private final WorkService work;
-    public RecordActionsController(RecordService records, FeatureStore store, TaskService tasks, EventService events, PlannerService planner, WorkService work) {
-        this.records = records; this.store = store; this.tasks = tasks; this.events = events; this.planner = planner; this.work = work;
+    public RecordActionsController(RecordService records, FeatureStore store, TaskService tasks, PlannerService planner, WorkService work) {
+        this.records = records; this.store = store; this.tasks = tasks; this.planner = planner; this.work = work;
     }
 
     @GetMapping("/planner/reviews/{date}")
@@ -73,7 +69,11 @@ public class RecordActionsController {
         LocalTime start = FeatureInput.time(FeatureInput.requiredText(body, "startTime"));
         int duration = ((Number)template.get("duration")).intValue();
         if (start.toSecondOfDay() + duration * 60 >= 86400) FeatureInput.fail("일정 템플릿은 같은 날짜 안에 종료되어야 합니다.");
-        return ApiResponse.ok(events.create(CurrentUser.id(), new EventRequest(template.get("title").toString(), FeatureInput.text(template, "category"), date, start, start.plusMinutes(duration), null, EventVisibility.PRIVATE, "")));
+        // 일정의 기준 저장소는 신형 SCHEDULE이다. 폐지 예정인 구형 events에 만들지 않는다(IM-03).
+        var schedule = new LinkedHashMap<String,Object>(Map.of("title", template.get("title").toString(), "startDate", date.toString(), "endDate", date.toString(),
+                "startTime", start.toString(), "endTime", start.plusMinutes(duration).toString()));
+        if (!FeatureInput.text(template, "category").isEmpty()) schedule.put("category", FeatureInput.text(template, "category"));
+        return ApiResponse.ok(records.create(CurrentUser.id(), FeatureType.SCHEDULE, schedule));
     }
 
     @PostMapping("/planner/templates/{id}/apply")

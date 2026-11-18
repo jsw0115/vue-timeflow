@@ -1,6 +1,8 @@
 package kr.timebar.diary.event;
 
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import kr.timebar.diary.common.ApiDeprecation;
 import kr.timebar.diary.common.ApiResponse;
 import kr.timebar.diary.event.dto.EventRequest;
 import kr.timebar.diary.event.dto.EventResponse;
@@ -13,6 +15,8 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 
+/** 구형 일정 API. 기준 계약은 신형 /api/schedules이며 이 API는 폐지 예정이다(IM-03). 제거는 별도 PR에서 한다. */
+@Deprecated
 @RestController
 @RequestMapping("/api/events")
 public class EventController {
@@ -20,6 +24,11 @@ public class EventController {
 
     public EventController(EventService eventService) {
         this.eventService = eventService;
+    }
+
+    @ModelAttribute
+    void markDeprecated(HttpServletResponse response) {
+        ApiDeprecation.mark(response, ApiDeprecation.LEGACY_SCHEDULE_DEPRECATED_AT, "/api/schedules");
     }
 
     @GetMapping

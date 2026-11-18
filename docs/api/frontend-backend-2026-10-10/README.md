@@ -66,11 +66,13 @@
 
 머니로그는 KRW 정수다. `type=in`이면 양수, `out`이면 음수, 0은 거부한다. 요약의 expense는 양수, balance는 income-expense다. 페이지 크기와 관계없이 전체 필터 구간을 집계한다. 집중 기록은 mode `pomodoro/stopwatch/free`, duration 1~1440분, startedAt 필수, endedAt은 시작 이후다. 집중 통계는 완료 세션의 실제 timestamp 차이를 분으로 집계한다.
 
-템플릿 적용은 실제 일정 또는 플래너 항목을 생성한다. 이벤트 템플릿은 같은 날짜 내에 끝나야 하고 반복/알람 필드는 저장 메타데이터이며 적용 시 반복 시리즈나 알람 작업을 만들지 않는다. 플래너 캔버스는 개인 singleton이며 컬럼/카드 ID 중복, 없는 컬럼 참조, 잘못된 우선순위·체크리스트를 거부한다. 카드의 assignee/plannerBlock은 참조 메타데이터이고 타인 기록을 변경하지 않는다.
+템플릿 적용은 실제 일정 또는 플래너 항목을 생성한다. 2026-11-18부터 일정 템플릿 적용(`/events/templates/{id}/apply`)은 구형 `/events`가 아니라 신형 일정(`/schedules`, `SCHEDULE`)을 만들고 그 레코드(문자열 `id`, `version` 1)를 돌려준다. 이벤트 템플릿은 같은 날짜 내에 끝나야 하고 반복/알람 필드는 저장 메타데이터이며 적용 시 반복 시리즈나 알람 작업을 만들지 않는다. 플래너 캔버스는 개인 singleton이며 컬럼/카드 ID 중복, 없는 컬럼 참조, 잘못된 우선순위·체크리스트를 거부한다. 카드의 assignee/plannerBlock은 참조 메타데이터이고 타인 기록을 변경하지 않는다.
 
 2026-11-16부터 기존 `/planner/items`도 version을 검사한다. 생성은 version 생략 또는 0을 허용하며 응답은 1부터 시작한다. PUT 본문과 PATCH `/{id}/status`·DELETE `/{id}`의 query에 조회한 version이 필요하다. 누락·0 이하 값은 400, 오래된 값과 DB 동시 쓰기 충돌은 409, 타인 항목은 404다. 실제 변경이 없는 동일 값 요청은 버전을 올리지 않을 수 있다. 충돌 후에는 최신 값을 다시 조회하고 사용자의 입력과 비교해야 하며 무조건 재전송하지 않는다. 화면 로컬 저장을 서버로 자동 연결하는 변경은 아니다.
 
-홈/통계는 기존 일정·할 일, 새로운 일정 회차, 개인 플래너와 완료 집중 세션의 실데이터를 사용한다. 계획 시간은 일정 회차와 ACTUAL이 아닌 플래너 항목의 합계, 실제 시간은 ACTUAL 플래너 항목의 합계다. 같은 시간 블록을 일정과 플래너에 이중 저장한 경우 자동 중복 제거하지 않는다. 루틴의 예정 시간과 업무 휴가 시간은 이 합계에 자동 가산하지 않는다. `/reports/draft`는 조회한 시간 블록을 텍스트로 조합하는 규칙 기반 초안이며 AI 호출은 아니다.
+홈/통계는 할 일, 신형 일정 회차(`/schedules`), 개인 플래너, 완료된 실제 기록(`/planner/recordings`)과 완료 집중 세션의 실데이터를 사용한다. 계획 시간은 신형 일정 회차와 ACTUAL이 아닌 플래너 항목의 합계, 실제 시간은 ACTUAL 플래너 항목과 완료된 실제 기록의 합계다. 2026-11-18부터 구형 `/events` 일정은 계획 시간에 더하지 않고, `/home/summary`의 `planner.events`·`planner.routines`는 항상 빈 배열이다(`planner.tasks`는 유지). 루틴은 `routineRecords`, 일정은 `schedules` 필드를 쓴다. 같은 시간 블록을 일정과 플래너에 이중 저장한 경우 자동 중복 제거하지 않는다. 루틴의 예정 시간과 업무 휴가 시간은 이 합계에 자동 가산하지 않는다. `/reports/draft`는 조회한 시간 블록을 텍스트로 조합하는 규칙 기반 초안이며 AI 호출은 아니다.
+
+2026-11-18부터 구형 `/events`(일정 템플릿 `/events/templates` 제외)와 `/routines`는 폐지 예정이다. 일정·루틴의 기준 계약은 `/schedules`·`/schedules/occurrences`·`/routine-records`다. 구형 응답 본문과 동작은 그대로이고, 모든 응답(오류 포함)에 RFC 9745 `Deprecation: @1794960000` 헤더와 `Link: </api/schedules>; rel="successor-version"`(루틴은 `</api/routine-records>`) 헤더가 붙는다. 새 화면 코드는 구형 경로를 호출하지 않는다(`frontend/tests/legacy-schedule-api.test.mjs`). 제거 시점은 별도 작업에서 정한다.
 
 ## 업무·공개 범위.
 

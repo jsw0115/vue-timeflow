@@ -49,7 +49,7 @@ class FeatureHttpTest {
         var user = new UserEntity("http@example.test", "테스터", "hash", UserRole.USER, UserStatus.ACTIVE);
         owner = user.getId(); when(users.findById(owner)).thenReturn(Optional.of(user));
         authenticate(owner, "USER");
-        var actions = new RecordActionsController(records, store, mock(TaskService.class), mock(kr.timebar.diary.event.EventService.class), mock(kr.timebar.diary.planner.PlannerService.class), work);
+        var actions = new RecordActionsController(records, store, mock(TaskService.class), mock(kr.timebar.diary.planner.PlannerService.class), work);
         mvc = MockMvcBuilders.standaloneSetup(new RecordsController(records), new ContactsController(records), new WorkController(records, work), actions,
                 new EventDiaryMemoController(records), new SettingsController(settings), new UserProfileController(settings), new ShareController(social),
                 new CommunityController(social), new AdminController(admin), new SupportController(records, store), new IntegrationController(admin), new AttachmentController(jdbc, social), new ScheduleController(records, schedules), new PortfolioLinkController(store, users))
@@ -103,6 +103,21 @@ class FeatureHttpTest {
         mvc.perform(post("/api/settings/appearance").contentType(MediaType.APPLICATION_JSON).content("{\"value\":{\"fontSize\":\"lg\"},\"version\":1}")).andExpect(jsonPath("$.data.version").value(2));
         mvc.perform(post("/api/settings/ai").contentType(MediaType.APPLICATION_JSON).content("{\"value\":{\"apiKey\":\"secret\"}}")).andExpect(status().isBadRequest());
         mvc.perform(post("/api/settings/security").contentType(MediaType.APPLICATION_JSON).content("{\"value\":{\"twoFactor\":true}}")).andExpect(status().isServiceUnavailable());
+    }
+    /** PR-03: 일정 템플릿 적용은 폐지 예정인 구형 events가 아니라 신형 SCHEDULE을 만든다. */
+    @Test void applyingAnEventTemplateCreatesANewModelSchedule() throws Exception {
+        var template = records.create(owner, FeatureType.EVENT_TEMPLATE, new LinkedHashMap<>(Map.of("title", "주간 회의", "category", "업무", "duration", 90)));
+        String path = "/api/events/templates/" + template.get("id") + "/apply";
+        mvc.perform(post(path).contentType(MediaType.APPLICATION_JSON).content("{\"date\":\"2026-11-18\",\"startTime\":\"10:00\"}"))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.data.title").value("주간 회의")).andExpect(jsonPath("$.data.category").value("업무"))
+                .andExpect(jsonPath("$.data.startDate").value("2026-11-18")).andExpect(jsonPath("$.data.endDate").value("2026-11-18"))
+                .andExpect(jsonPath("$.data.startTime").value("10:00")).andExpect(jsonPath("$.data.endTime").value("11:30")).andExpect(jsonPath("$.data.version").value(1));
+        assertEquals(1, schedules.occurrences(owner, "2026-11-18", "2026-11-18").size());
+        mvc.perform(post(path).contentType(MediaType.APPLICATION_JSON).content("{\"date\":\"2026-11-18\",\"startTime\":\"23:00\"}")).andExpect(status().isBadRequest());
+        authenticate("other", "USER");
+        mvc.perform(post(path).contentType(MediaType.APPLICATION_JSON).content("{\"date\":\"2026-11-18\",\"startTime\":\"10:00\"}")).andExpect(status().isNotFound());
+        authenticate(owner, "USER");
+        assertEquals(1, schedules.occurrences(owner, "2026-11-18", "2026-11-18").size());
     }
     @Test void diaryAllowsSeveralEntriesPerDayAndCalendarCountsThem() throws Exception {
         records.create(owner, FeatureType.DIARY, Map.of("title", "아침", "date", "2026-10-10"));

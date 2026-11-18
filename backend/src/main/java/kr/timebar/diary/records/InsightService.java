@@ -17,20 +17,19 @@ public class InsightService {
     public InsightService(FeatureStore store, PlannerAggregationService aggregation, PlannerService planner, ScheduleService schedules) { this.store = store; this.aggregation = aggregation; this.planner = planner; this.schedules = schedules; }
     public Map<String,Object> summary(String user, String date) {
         LocalDate day = date == null ? LocalDate.now(ZoneId.of("Asia/Seoul")) : FeatureInput.date(date);
-        return Map.of("date", day.toString(), "planner", aggregation.daily(user, day), "items", planner.find(user, day, null, null, null), "stats", stats(user, day.toString(), day.toString()),
+        // 일정·루틴의 기준은 신형(schedules·routineRecords)이다. 구형 일정·루틴은 중복이므로 빼고 할 일만 남긴다(IM-03).
+        var planned = new PlannerViewResponse(List.of(), aggregation.daily(user, day).tasks(), List.of());
+        return Map.of("date", day.toString(), "planner", planned, "items", planner.find(user, day, null, null, null), "stats", stats(user, day.toString(), day.toString()),
                 "unreadNotifications", store.all(user, FeatureType.NOTIFICATION).stream().filter(row -> !Boolean.TRUE.equals(row.get("read"))).count(), "schedules", schedules.occurrences(user, day.toString(), day.toString()), "routineRecords", store.all(user, FeatureType.ROUTINE_RECORD));
     }
     public Map<String,Object> stats(String user, String from, String to) {
         LocalDate start = from == null ? LocalDate.now(ZoneId.of("Asia/Seoul")).withDayOfMonth(1) : FeatureInput.date(from);
         LocalDate end = to == null ? start.plusMonths(1).minusDays(1) : FeatureInput.date(to);
         if (end.isBefore(start) || java.time.temporal.ChronoUnit.DAYS.between(start, end) > 366) FeatureInput.fail("통계 기간은 최대 367일입니다.");
+        // 구형 일정(view.events())은 신형 일정 회차와 중복되므로 계획 시간에 더하지 않는다(IM-03). view는 할 일 집계에만 쓴다.
         var view = aggregation.range(user, start, end);
         long planned = 0, actual = 0, focused = 0;
         Map<String,long[]> categories = new TreeMap<>();
-        for (var event : view.events()) {
-            long minutes = minutes(event.startTime(), event.endTime()); planned += minutes;
-            categories.computeIfAbsent(Objects.toString(event.category(), "미분류"), key -> new long[2])[0] += minutes;
-        }
         for (var event : schedules.occurrences(user, start.toString(), end.toString())) {
             LocalDateTime eventStart = FeatureInput.date(event.get("startDate").toString()).atTime(FeatureInput.time(event.get("startTime").toString()));
             LocalDateTime eventEnd = FeatureInput.date(event.get("endDate").toString()).atTime(FeatureInput.time(event.get("endTime").toString()));
