@@ -152,7 +152,7 @@ function addNode() {
     <button class="primary" @click="openAdd(null)">+ 최상위 작업</button>
   </div>
 
-  <div class="metrics" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 16px">
+  <div class="metrics" style="--metric-cols: 3; margin-bottom: 16px">
     <article><span>총 공수</span><b class="figure">{{ totalMd }}<small>MD</small></b><small>{{ (totalMd / 20).toFixed(2) }} MM</small></article>
     <article><span>전체 진척</span><b class="figure">{{ totalProgress }}<small>%</small></b><small>공수 가중 평균</small></article>
     <article><span>작업 수</span><b class="figure">{{ nodes.length }}<small>개</small></b><small>하위 포함</small></article>

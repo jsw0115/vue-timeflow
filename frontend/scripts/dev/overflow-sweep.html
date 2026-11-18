@@ -1,0 +1,43 @@
+<!doctype html>
+<!-- 모든 정적 화면을 정해진 폭의 iframe에 띄워 가로 넘침을 찾는 개발 서버 전용 점검 페이지(DESIGN.md 8장 320px 기준). -->
+<meta charset="utf-8">
+<title>가로 넘침 점검</title>
+<body style="margin:0;font:13px/1.5 ui-monospace,monospace">
+<pre id="out">점검 중…</pre>
+<script type="module">
+// 사용법: npm run dev 후 http://127.0.0.1:5173/scripts/dev/overflow-sweep.html?w=320
+// 헤드리스 Chrome은 창 최소 폭이 약 526px라 --window-size=320으로 찍으면 넓은 화면을 잘라 보여 준다. 반드시 이 페이지의 iframe 폭으로 잰다.
+import { router } from '/src/router/index.js'
+import { SETTINGS_SECTIONS } from '/src/router/settingsSections.js'
+const q = new URLSearchParams(location.search)
+const W = Number(q.get('w') || 320), WAIT = Number(q.get('wait') || 2500)
+// 경로 변수가 있는 화면은 빼되, 환경설정은 섹션마다 화면이 달라 섹션 경로를 모두 넣는다.
+const routes = [...new Set([...router.getRoutes().map(r => r.path).filter(p => !p.includes(':') && !p.includes('*')), ...SETTINGS_SECTIONS.map(s => '/settings/' + s.id)])]
+const frame = document.createElement('iframe')
+frame.style.cssText = `width:${W}px;height:800px;border:0`
+document.body.prepend(frame)
+const name = el => el.tagName.toLowerCase() + (typeof el.className === 'string' && el.className.trim() ? '.' + el.className.trim().split(/\s+/).join('.') : '')
+const path = el => { const p = []; for (let e = el; e && e.nodeType === 1 && p.length < 5; e = e.parentElement) p.unshift(name(e)); return p.join(' > ') }
+function measure(route) {
+  const d = frame.contentDocument, w = frame.contentWindow, vw = d.documentElement.clientWidth
+  const scrollers = [d.documentElement, d.body, ...d.querySelectorAll('main, .app')]
+  const pageScroll = Math.max(...scrollers.map(el => el.scrollWidth - el.clientWidth))
+  const over = el => { const r = el.getBoundingClientRect(); return r.width > 0 && r.right > vw + 1 }
+  // 표처럼 자기 안에서 가로로 스크롤하는 영역 안의 요소는 의도한 것이라 뺀다.
+  const contained = el => { for (let a = el.parentElement; a && a !== d.body; a = a.parentElement) { if (a.matches('main, .app')) return false; if (w.getComputedStyle(a).overflowX !== 'visible' && !over(a)) return true } return false }
+  const roots = []
+  for (const el of d.querySelectorAll('body *')) {
+    if (!over(el) || (el.parentElement && over(el.parentElement)) || contained(el) || w.getComputedStyle(el).position === 'fixed') continue
+    const r = el.getBoundingClientRect()
+    roots.push(`${path(el)} [right ${Math.round(r.right)}, w ${Math.round(r.width)}]`)
+  }
+  return pageScroll > 1 || roots.length ? { route, pageScroll, roots: roots.slice(0, 6) } : null
+}
+const results = []
+for (const route of routes) {
+  await new Promise(resolve => { frame.onload = resolve; frame.src = route })
+  await new Promise(resolve => setTimeout(resolve, WAIT))
+  try { const r = measure(route); if (r) results.push(r) } catch (error) { results.push({ route, error: String(error) }) }
+}
+document.getElementById('out').textContent = JSON.stringify({ width: W, checked: routes.length, overflowing: results.length, results }, null, 1)
+</script>

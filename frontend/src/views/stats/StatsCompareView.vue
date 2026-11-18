@@ -118,7 +118,7 @@ function hm(min) {
     </label>
   </div>
 
-  <div class="metrics" style="grid-template-columns: repeat(4, 1fr); margin: 16px 0">
+  <div class="metrics" style="--metric-cols: 4; margin: 16px 0">
     <article><span>싱크로율(누적)</span><b class="figure">{{ syncRate }}<small>%</small></b></article>
     <article><span>평균 달성률</span><b class="figure">{{ Math.round(mean) }}<small>%</small></b></article>
     <article>

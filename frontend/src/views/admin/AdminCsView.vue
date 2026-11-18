@@ -39,7 +39,7 @@ function daysOpen(t) {
     </span>
   </div>
 
-  <div class="metrics" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 16px">
+  <div class="metrics" style="--metric-cols: 3; margin-bottom: 16px">
     <article><span>전체 문의</span><b class="figure">{{ csMetrics.total }}<small>건</small></b></article>
     <article><span>미답변</span><b class="figure">{{ csMetrics.open }}<small>건</small></b></article>
     <article><span>SLA 초과</span><b class="figure">{{ csMetrics.overdue }}<small>건</small></b><small>접수 후 48시간</small></article>

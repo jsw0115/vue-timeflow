@@ -125,7 +125,7 @@ function kindIcon(kind) {
     <button class="review" style="margin: 0" @click="onPurge">만료 파일 정리{{ expiredCount ? ' (' + expiredCount + ')' : '' }}</button>
   </div>
 
-  <div class="metrics" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 16px">
+  <div class="metrics" style="--metric-cols: 4; margin-bottom: 16px">
     <article><span>전체 파일</span><b class="figure">{{ attachments.length }}<small>개</small></b></article>
     <article><span>이미지</span><b class="figure">{{ images.length }}<small>개</small></b></article>
     <article><span>만료 임박</span><b class="figure">{{ expiringSoon.length }}<small>개</small></b><small>7일 이내</small></article>

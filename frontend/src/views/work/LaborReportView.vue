@@ -106,7 +106,7 @@ function fixAll() {
     </div>
   </div>
 
-  <div class="metrics" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 16px">
+  <div class="metrics" style="--metric-cols: 4; margin-bottom: 16px">
     <article><span>산정 공수</span><b class="figure">{{ totalPlanned }}<small>MD</small></b><small>{{ (totalPlanned / MD_PER_MM).toFixed(2) }} MM</small></article>
     <article><span>실제 공수</span><b class="figure">{{ totalActual }}<small>MD</small></b><small>{{ (totalActual / MD_PER_MM).toFixed(2) }} MM</small></article>
     <article><span>편차</span><b class="figure">{{ totalDiff >= 0 ? '+' : '' }}{{ totalDiff }}<small>MD</small></b><small>보정 요청 {{ pendingCount }}건</small></article>

@@ -88,7 +88,7 @@ const focusPath = FOCUS_TREND.map((v, i) => (i * 100) / (FOCUS_TREND.length - 1)
       <!-- 한눈에 보기 -->
       <section v-if="p.id === 'summary'" class="card stats-portlet wide">
         <h3>{{ STATS_CATALOG.summary.title }}</h3>
-        <div class="metrics" style="grid-template-columns: repeat(4, 1fr); margin-top: 12px">
+        <div class="metrics" style="--metric-cols: 4; margin-top: 12px">
           <article><span>총 기록 시간</span><b class="figure">{{ hm(totalMinutes) }}</b></article>
           <article><span>계획 달성률</span><b class="figure">87<small>%</small></b></article>
           <article><span>완료 할 일</span><b class="figure">{{ Math.round(41 * scale) }}<small>건</small></b></article>
@@ -141,7 +141,7 @@ const focusPath = FOCUS_TREND.map((v, i) => (i * 100) / (FOCUS_TREND.length - 1)
       <!-- 연속 기록 -->
       <section v-else-if="p.id === 'streak'" class="card stats-portlet">
         <h3>{{ STATS_CATALOG.streak.title }}</h3>
-        <div class="metrics" style="grid-template-columns: 1fr 1fr; margin-top: 12px">
+        <div class="metrics" style="--metric-cols: 2; margin-top: 12px">
           <article><span>현재 연속</span><b class="figure">12<small>일</small></b></article>
           <article><span>최장 연속</span><b class="figure">31<small>일</small></b></article>
         </div>

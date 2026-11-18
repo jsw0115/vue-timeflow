@@ -14,7 +14,7 @@ const activeRules = computed(() => monitoring.alertRules.filter((r) => r.on).len
     </span>
   </div>
 
-  <div class="metrics" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 16px">
+  <div class="metrics" style="--metric-cols: 4; margin-bottom: 16px">
     <article><span>API 성공률</span><b class="figure">{{ monitoring.apiSuccess }}<small>%</small></b></article>
     <article><span>평균 응답시간</span><b class="figure">{{ monitoring.latencyMs }}<small>ms</small></b></article>
     <article><span>오늘 에러</span><b class="figure">{{ monitoring.errorsToday }}<small>건</small></b></article>

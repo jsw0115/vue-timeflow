@@ -4,7 +4,7 @@ const done = Array.from({ length: 84 }, (_, i) => ![2, 10, 16, 21].includes(i))
 
 <template>
   <div class="crumbs">아침 스트레칭 · 매일 07:00 · 지난 12주</div>
-  <div class="metrics" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 16px">
+  <div class="metrics" style="--metric-cols: 3; margin-bottom: 16px">
     <article><span>달성률</span><b>86<small>%</small></b></article>
     <article><span>현재 연속</span><b>12<small>일</small></b></article>
     <article><span>최장 연속</span><b>28<small>일</small></b></article>

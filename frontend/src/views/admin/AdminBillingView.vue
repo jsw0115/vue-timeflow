@@ -34,7 +34,7 @@ function stateClass(s) {
     </span>
   </div>
 
-  <div class="metrics" style="grid-template-columns: repeat(5, 1fr); margin-bottom: 16px">
+  <div class="metrics" style="--metric-cols: 5; margin-bottom: 16px">
     <article><span>유료 구독자</span><b class="figure">{{ billingMetrics.subscribers.toLocaleString('ko-KR') }}</b></article>
     <article><span>결제 완료 합계</span><b class="figure" style="font-size: 1.0625rem">{{ won(billingMetrics.revenue) }}</b></article>
     <article><span>해지율</span><b class="figure">{{ billingMetrics.churn }}<small>%</small></b></article>

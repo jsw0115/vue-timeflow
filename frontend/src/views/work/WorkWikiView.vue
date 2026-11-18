@@ -102,7 +102,7 @@ function pickTag(tag) {
     <button class="primary" @click="openAdd(null)">+ 새 문서</button>
   </div>
 
-  <div class="metrics" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 16px">
+  <div class="metrics" style="--metric-cols: 4; margin-bottom: 16px">
     <article><span>전체 문서</span><b class="figure">{{ wiki.docs.length }}<small>개</small></b></article>
     <article><span>공간</span><b class="figure">{{ WIKI_SPACES.length }}<small>개</small></b></article>
     <article><span>고정 문서</span><b class="figure">{{ pinnedDocs.length }}<small>개</small></b></article>

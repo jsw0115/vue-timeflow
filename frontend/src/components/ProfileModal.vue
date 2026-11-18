@@ -32,7 +32,7 @@ function onChat() {
       <span v-if="p.blocked" class="badge danger">차단됨</span>
     </div>
 
-    <div class="metrics" style="grid-template-columns: repeat(3, 1fr); margin: 16px 0">
+    <div class="metrics" style="--metric-cols: 3; margin: 16px 0">
       <article><span>연속 기록</span><b class="figure">{{ p.streak }}<small>일</small></b></article>
       <article><span>사용 모드</span><b class="figure" style="font-size: 1.0625rem">{{ p.mode }}</b><small>{{ modeMeta(p.mode).name }}</small></article>
       <article><span>가입</span><b class="figure" style="font-size: 1.0625rem">{{ p.joined }}</b></article>

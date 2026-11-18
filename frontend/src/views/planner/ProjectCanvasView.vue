@@ -155,7 +155,7 @@ function priorityLabel(id) {
     <button class="primary" @click="openAdd(board.columns[0].id)">+ 카드 추가</button>
   </div>
 
-  <div class="metrics" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 16px">
+  <div class="metrics" style="--metric-cols: 4; margin-bottom: 16px">
     <article><span>전체 카드</span><b class="figure">{{ progress.total }}<small>개</small></b></article>
     <article><span>완료</span><b class="figure">{{ progress.done }}<small>개</small></b><small>{{ progress.pct }}%</small></article>
     <article><span>지연</span><b class="figure">{{ overdueCount }}<small>개</small></b><small>마감 초과</small></article>

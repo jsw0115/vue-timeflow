@@ -137,7 +137,7 @@ function download(kind) {
     <button class="primary" @click="openCreate">인수인계 문서 생성</button>
   </div>
 
-  <div class="metrics" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 16px">
+  <div class="metrics" style="--metric-cols: 3; margin-bottom: 16px">
     <article><span>총 누적 시간</span><b class="figure">{{ totalHours }}<small>h</small></b></article>
     <article><span>업무 유형</span><b class="figure">{{ types.length }}<small>종</small></b></article>
     <article><span>인수인계 문서</span><b class="figure">{{ docs.length }}<small>건</small></b></article>

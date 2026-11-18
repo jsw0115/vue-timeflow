@@ -57,7 +57,7 @@ const share = computed(() => (posts.value.length ? Math.round((myPosts.value.len
     <button class="review" style="margin: 0" @click="router.push('/tags')">태그로 보기</button>
   </div>
 
-  <div class="metrics" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 16px">
+  <div class="metrics" style="--metric-cols: 4; margin-bottom: 16px">
     <article><span>내 글</span><b class="figure">{{ myPosts.length }}<small>개</small></b><small>전체의 {{ share }}%</small></article>
     <article v-for="b in byKind.slice(0, 2)" :key="b.kind"><span>{{ b.kind }}</span><b class="figure">{{ b.count }}<small>개</small></b></article>
     <article><span>사람을 언급한 글</span><b class="figure">{{ mentionedCount }}<small>개</small></b></article>

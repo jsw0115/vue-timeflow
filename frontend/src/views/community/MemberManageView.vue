@@ -44,7 +44,7 @@ function kick(m) {
 <template>
   <SubPageHeader title="멤버 관리" parent="운동 갓생방 커뮤니티" :meta="'전체 ' + members.length + '명'" fallback="/community" :tabs="COMMUNITY_TABS" />
 
-  <div class="metrics" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 16px">
+  <div class="metrics" style="--metric-cols: 3; margin-bottom: 16px">
     <article v-for="c in counts" :key="c.role"><span>{{ c.role }}</span><b class="figure">{{ c.n }}<small>명</small></b></article>
   </div>
 

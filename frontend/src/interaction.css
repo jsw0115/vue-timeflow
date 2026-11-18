@@ -8,6 +8,8 @@
 .workspace-options span { font-size: 0.8125rem; }
 .form-row { flex-wrap: wrap; }
 .form-row > label { flex: 1 1 160px; min-width: 0; }
+/* 라벨 글자와 같은 줄에 놓인 입력이 라벨 폭을 넘지 않게 한다(좁은 화면 가로 넘침 방지). */
+.form-row > label :is(input, select, textarea) { max-width: 100%; }
 .form-fieldset { margin: 16px 0 0; padding: 0; border: 0; min-width: 0; }
 .form-fieldset legend { font-size: 0.875rem; font-weight: 600; }
 .modal-card .form-fieldset .form-row label { margin-top: 0; }

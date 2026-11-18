@@ -4,7 +4,7 @@
   <div class="admin-page-head">
     <div><h2>서비스 지표</h2><p>가입·활성·리텐션 추이를 확인해요</p></div>
   </div>
-  <div class="metrics" style="grid-template-columns: repeat(4, 1fr); margin: 16px 0">
+  <div class="metrics" style="--metric-cols: 4; margin: 16px 0">
     <article><span>DAU</span><b style="font-size: 1.25rem">4,820</b></article>
     <article><span>MAU</span><b style="font-size: 1.25rem">18,204</b></article>
     <article><span>7일 리텐션</span><b style="font-size: 1.25rem; color: var(--color-accent)">62%</b></article>

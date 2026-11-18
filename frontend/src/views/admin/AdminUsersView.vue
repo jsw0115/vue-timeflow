@@ -63,7 +63,7 @@ function forceLogout(u) {
     <span class="badge" :class="counts.blocked ? 'warn' : 'ok'">정지 {{ counts.blocked }}명</span>
   </div>
 
-  <div class="metrics" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 16px">
+  <div class="metrics" style="--metric-cols: 4; margin-bottom: 16px">
     <article><span>전체 사용자</span><b class="figure">{{ counts.total }}</b></article>
     <article><span>활성</span><b class="figure">{{ counts.active }}</b></article>
     <article><span>정지</span><b class="figure">{{ counts.blocked }}</b></article>
