@@ -28,18 +28,19 @@ public class FeatureTestConfig {
         var jdbc = new JdbcTemplate(source);
         jdbc.execute("CREATE TABLE users(id VARCHAR(36) PRIMARY KEY)");
         jdbc.execute("CREATE TABLE planner_item(id BIGINT PRIMARY KEY,date DATE)");
-        new ResourceDatabasePopulator(new ClassPathResource("db/workspace/V6__frontend_feature_records.sql")).execute(source);
+        new ResourceDatabasePopulator(new ClassPathResource("db/workspace/V6__frontend_feature_records.sql"), new ClassPathResource("db/workspace/V9__idempotency_key.sql")).execute(source);
         return source;
     }
     @Bean DataSourceTransactionManager transactionManager(DataSource source) { return new DataSourceTransactionManager(source); }
     @Bean JdbcTemplate jdbc(DataSource source) { return new JdbcTemplate(source); }
     @Bean ObjectMapper mapper() { return new ObjectMapper().findAndRegisterModules(); }
     @Bean FeatureStore store(JdbcTemplate jdbc, ObjectMapper mapper) { return new FeatureStore(jdbc, mapper); }
-    @Bean RecordService records(FeatureStore store) { return new RecordService(store); }
+    @Bean kr.timebar.diary.common.IdempotencyKeys idempotency(JdbcTemplate jdbc, ObjectMapper mapper) { return new kr.timebar.diary.common.IdempotencyKeys(jdbc, mapper); }
+    @Bean RecordService records(FeatureStore store, kr.timebar.diary.common.IdempotencyKeys idempotency) { return new RecordService(store, idempotency); }
     @Bean ActualRecordingService actualRecordings(FeatureStore store, JdbcTemplate jdbc) { return new ActualRecordingService(store, jdbc); }
     @Bean BackupService backups(FeatureStore store, JdbcTemplate jdbc, ObjectMapper mapper) { return new BackupService(store, jdbc, mapper); }
     @Bean ScheduleService schedules(FeatureStore store) { return new ScheduleService(store); }
-    @Bean WorkService work(FeatureStore store) { return new WorkService(store); }
+    @Bean WorkService work(FeatureStore store, kr.timebar.diary.common.IdempotencyKeys idempotency) { return new WorkService(store, idempotency); }
     @Bean UserRepository users() { return mock(UserRepository.class); }
     @Bean RefreshTokenRepository tokens() { return mock(RefreshTokenRepository.class); }
     @Bean PasswordEncoder encoder() { return new BCryptPasswordEncoder(); }

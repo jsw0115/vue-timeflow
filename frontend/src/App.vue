@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { navGroups } from './router'
 import { composer, openPostComposer } from './store/appState'
 import PostComposer from './components/PostComposer.vue'
+import LocalMigrationPrompt from './components/LocalMigrationPrompt.vue'
 import './store/postIndex'
 import { storageWarning } from './store/localCollection'
 import { communityComposer } from './store/communities'
@@ -178,6 +179,7 @@ const todayLabel = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'full' }).forma
     <SidePanel />
     <ProfileModal />
     <PostComposer v-if="composer" />
+    <LocalMigrationPrompt />
     <CommunityCreateModal v-if="communityComposer" @close="communityComposer = false" />
   </div>
   <FloatingChat />

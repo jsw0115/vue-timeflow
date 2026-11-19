@@ -23,7 +23,7 @@ class FeaturePersistenceTest {
     @Test void persistedRecordsSurviveServiceRecreationAndDoNotLeakAcrossUsers() {
         var row = records.create(user, FeatureType.MEMO, Map.of("title", "테스트", "body", "#검증"));
         String id = row.get("id").toString();
-        assertEquals("테스트", new RecordService(store).get(user, FeatureType.MEMO, id).get("title"));
+        assertEquals("테스트", new RecordService(store, null).get(user, FeatureType.MEMO, id).get("title"));
         assertTrue(store.all("other", FeatureType.MEMO).stream().noneMatch(item -> id.equals(item.get("id"))));
         assertEquals(ErrorCode.NOT_FOUND, assertThrows(ApiException.class, () -> store.get("other", FeatureType.MEMO, id)).errorCode());
     }

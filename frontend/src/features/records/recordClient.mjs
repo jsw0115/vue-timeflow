@@ -13,6 +13,7 @@ export function errorKind(error) {
 /**
  * request는 features/auth/apiRequest.js처럼 성공 응답의 data를 돌려주고 실패면 status를 담아 던지는 함수다.
  * 기록 API 규칙은 PUT 본문 version, DELETE·상태 명령 ?version=이다. 생성 요청에는 version을 보내지 않는다.
+ * 생성에 idempotencyKey를 주면 Idempotency-Key 헤더로 보내, 같은 키로 다시 보내도 서버가 처음 만든 기록을 돌려준다(Q-13).
  */
 export function createRecordClient({ request, path }) {
   const item = (id) => `${path}/${encodeURIComponent(id)}`
@@ -32,7 +33,7 @@ export function createRecordClient({ request, path }) {
   return {
     list: () => call(() => request(path)),
     get: (id) => call(() => request(item(id))),
-    create: ({ version, ...body }) => call(() => request(path, { method: 'POST', body: JSON.stringify(body) })),
+    create: ({ version, ...body }, { idempotencyKey } = {}) => call(() => request(path, { method: 'POST', body: JSON.stringify(body), ...(idempotencyKey ? { headers: { 'Idempotency-Key': idempotencyKey } } : {}) })),
     update: (record, body) => call(() => request(item(record.id), { method: 'PUT', body: JSON.stringify({ ...body, version: record.version }) }), record.id),
     remove: (record) => call(() => request(versioned(item(record.id), record), { method: 'DELETE' }), record.id),
     command: (record, action, method = 'PATCH') => call(() => request(versioned(`${item(record.id)}/${action}`, record), { method }), record.id),

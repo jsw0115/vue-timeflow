@@ -1190,7 +1190,7 @@
     "route": "/api/chat/events",
     "parameters": [
       {
-        "name": "authorization",
+        "name": "Authorization",
         "type": "String",
         "location": "header",
         "required": true
@@ -3057,6 +3057,12 @@
     "route": "/api/ddays",
     "parameters": [
       {
+        "name": "Idempotency-Key",
+        "type": "String",
+        "location": "header",
+        "required": false
+      },
+      {
         "name": "body",
         "type": "Map<String,Object>",
         "location": "body",
@@ -3243,6 +3249,12 @@
     "method": "POST",
     "route": "/api/diaries",
     "parameters": [
+      {
+        "name": "Idempotency-Key",
+        "type": "String",
+        "location": "header",
+        "required": false
+      },
       {
         "name": "body",
         "type": "Map<String,Object>",
@@ -4367,6 +4379,12 @@
     "route": "/api/memos",
     "parameters": [
       {
+        "name": "Idempotency-Key",
+        "type": "String",
+        "location": "header",
+        "required": false
+      },
+      {
         "name": "body",
         "type": "Map<String,Object>",
         "location": "body",
@@ -4626,6 +4644,12 @@
     "method": "POST",
     "route": "/api/money/entries",
     "parameters": [
+      {
+        "name": "Idempotency-Key",
+        "type": "String",
+        "location": "header",
+        "required": false
+      },
       {
         "name": "body",
         "type": "Map<String,Object>",
@@ -6063,6 +6087,12 @@
     "route": "/api/routine-records",
     "parameters": [
       {
+        "name": "Idempotency-Key",
+        "type": "String",
+        "location": "header",
+        "required": false
+      },
+      {
         "name": "body",
         "type": "Map<String,Object>",
         "location": "body",
@@ -6531,6 +6561,12 @@
     "method": "POST",
     "route": "/api/schedules",
     "parameters": [
+      {
+        "name": "Idempotency-Key",
+        "type": "String",
+        "location": "header",
+        "required": false
+      },
       {
         "name": "body",
         "type": "Map<String,Object>",
@@ -7871,6 +7907,12 @@
     "route": "/api/tasks",
     "parameters": [
       {
+        "name": "Idempotency-Key",
+        "type": "String",
+        "location": "header",
+        "required": false
+      },
+      {
         "name": "request",
         "type": "TaskRequest",
         "location": "body",
@@ -8690,6 +8732,12 @@
     "method": "POST",
     "route": "/api/work/career/projects",
     "parameters": [
+      {
+        "name": "Idempotency-Key",
+        "type": "String",
+        "location": "header",
+        "required": false
+      },
       {
         "name": "body",
         "type": "Map<String,Object>",

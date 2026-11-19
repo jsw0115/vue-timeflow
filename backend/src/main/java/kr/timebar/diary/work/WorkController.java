@@ -65,7 +65,7 @@ public class WorkController {
     public ApiResponse<?> careerGet(@PathVariable String id) { return ApiResponse.ok(records.get(CurrentUser.id(), FeatureType.CAREER, id)); }
     @PostMapping("/work/career/projects")
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<?> careerCreate(@RequestBody Map<String,Object> body) { return ApiResponse.ok(work.create(CurrentUser.id(), FeatureType.CAREER, body)); }
+    public ApiResponse<?> careerCreate(@RequestHeader(value="Idempotency-Key", required=false) String key, @RequestBody Map<String,Object> body) { return ApiResponse.ok(work.create(CurrentUser.id(), FeatureType.CAREER, body, key)); }
     @PutMapping("/work/career/projects/{id}")
     public ApiResponse<?> careerUpdate(@PathVariable String id, @RequestBody Map<String,Object> body) { return ApiResponse.ok(work.update(CurrentUser.id(), FeatureType.CAREER, id, body)); }
     @DeleteMapping("/work/career/projects/{id}")

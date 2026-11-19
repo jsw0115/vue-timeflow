@@ -64,7 +64,7 @@ class TaskVersionTest {
             factory.setJpaPropertyMap(Map.of("hibernate.hbm2ddl.auto", "create-drop")); return factory;
         }
         @Bean JpaTransactionManager transactionManager(EntityManagerFactory factory) { return new JpaTransactionManager(factory); }
-        @Bean TaskService taskService(TaskRepository repository) { return new TaskService(repository); }
+        @Bean TaskService taskService(TaskRepository repository, DataSource source) { return new TaskService(repository, new kr.timebar.diary.common.IdempotencyKeys(new JdbcTemplate(source), new com.fasterxml.jackson.databind.ObjectMapper())); }
     }
 
     @Autowired TaskService tasks;
@@ -163,6 +163,22 @@ class TaskVersionTest {
             assertEquals(1, successes);
             assertEquals(2L, tasks.list(owner).get(0).version());
         } finally { executor.shutdownNow(); }
+    }
+
+    /** 로컬 자료 이전처럼 같은 멱등 키로 다시 만들면 처음 할 일을 돌려주고, 다른 내용이면 409다(PR-07 3단계, Q-13). */
+    @Test void createWithTheSameIdempotencyKeyReturnsTheFirstTask(@Autowired DataSource source) throws Exception {
+        // 이 설정의 H2는 MySQL 모드가 아니어서 V9의 ENGINE 절 없이 같은 표를 만든다(V9 자체는 IdempotencyHttpTest가 MySQL 모드로 적용한다)
+        new JdbcTemplate(source).execute("CREATE TABLE IF NOT EXISTS idempotency_key (owner_id VARCHAR(36) NOT NULL, idem_key VARCHAR(100) NOT NULL, request_hash CHAR(64) NOT NULL, status_code INT NOT NULL, resource_id VARCHAR(100) NOT NULL, created_at TIMESTAMP(6) NOT NULL, PRIMARY KEY (owner_id, idem_key))");
+        String body = "{\"title\":\"로컬 할 일\"}";
+        String first = mvc.perform(post("/api/tasks").header("Idempotency-Key", "local:task:4").contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        String again = mvc.perform(post("/api/tasks").header("Idempotency-Key", "local:task:4").contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        assertEquals(first, again);
+        assertEquals(1, tasks.list(owner).size());
+        mvc.perform(post("/api/tasks").header("Idempotency-Key", "local:task:4").contentType(MediaType.APPLICATION_JSON).content("{\"title\":\"다른 할 일\"}"))
+                .andExpect(status().isConflict());
+        assertEquals(1, tasks.list(owner).size());
     }
 
     /** V8은 기존 할 일 내용을 그대로 두고 version 0(공개 1)으로 시작한다. NULL은 넣을 수 없다. */

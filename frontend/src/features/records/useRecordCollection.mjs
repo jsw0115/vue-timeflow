@@ -71,8 +71,10 @@ export function useRecordCollection(client, { owner = () => session.userId, toLo
   return {
     state,
     load,
-    async create(body) {
-      const row = toLocal(await guarded(() => client.create(body)))
+    async create(body, options) {
+      const row = toLocal(await guarded(() => client.create(body, options)))
+      // 멱등 키로 다시 보낸 생성은 이미 목록에 있는 기록을 돌려줄 수 있다
+      if (state.items.some((item) => item.id === row.id)) return place(row)
       state.items.unshift(row)
       return row
     },

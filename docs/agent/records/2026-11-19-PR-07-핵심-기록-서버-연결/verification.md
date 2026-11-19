@@ -33,3 +33,17 @@
 - 보안: 다른 계정 할 일 안 보임(브라우저), 계정 전환 중 남은 체크리스트 요청 중단(`scoped` 요청), 담당자는 계정 ID만 보냄(Q-21), 오래된 version 저장은 비교 화면으로만 덮어씀. PASS(변경 범위 한정)
 - 웹 접근성(변경 범위): 상태 문구 `role="status"`, 400 입력란 `aria-invalid`·`aria-describedby`, 요청 중 `aria-busy`와 진행형 라벨, 비교 화면 제목에 초점, 320px 비교 화면 넘침 없음. 키보드 전체·화면낭독기 실사용은 하지 않았다. REVIEW
 - 남은 위험: 2·3단계 함께 배포. 홈·캘린더의 서버 목록 갱신 시점은 할 일 목록 화면 진입.
+
+# 검증 기록(3단계)
+
+- 실행 일시/환경: 2026-11-19, 2단계와 같은 환경. 백엔드는 V9·서버 변경 뒤 재시작해 격리 MySQL에 V9를 적용했다.
+- 명령/버전/종료코드
+  - 수정 전: HEAD 사본에서 `gradlew.bat test --tests ...IdempotencyHttpTest --tests ...TaskVersionTest` 컴파일 실패, `node --test tests/local-migration.test.mjs` 모듈 없음. 의도한 실패. FAIL(07 RUN-74·RUN-75)
+  - 수정 후: 백엔드 task·feature 묶음 통과(IdempotencyHttpTest 6, TaskVersionTest 6), local-migration 7개 통과. PASS(07 RUN-76)
+  - 브라우저: 3단계 7/7, 2단계 회귀 17/17. PASS(07 RUN-77)
+  - 격리 MySQL V9 확인, 현재 DB 문서 재캡처와 `build_current_database.py --check` 종료 0. PASS(07 RUN-78)
+  - Node 전체 130개, 빌드, 계약 생성·검사(286개 작업), 경로 검사, 백엔드 전체 `--rerun` 28개 클래스 230개, 문서·키트 검사: 종료 0. PASS(07 RUN-79)
+  - `audit-api-docs.mjs`: 종료 1, 변경 전과 같은 기존 실패. REVIEW
+- 보안: 키는 계정 범위(다른 계정의 같은 키는 별도 기록), 같은 키에 다른 본문은 409, 키 형식 400, 지운 기록은 다시 만들지 않음(404), 동시 요청 하나만 생성, 계정 전환 시 남은 이전 중단. PASS(변경 범위 한정)
+- 웹 접근성: 이전 안내는 기존 Modal(대화상자) 안에 있고 결과 문구는 `role="status"`, 진행 중 버튼 `aria-busy`, 320px 넘침 없음. 화면낭독기 실사용은 하지 않았다. REVIEW
+- 남은 위험: V9 운영 적용 대기(PR-13).

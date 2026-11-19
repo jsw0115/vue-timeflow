@@ -2,6 +2,7 @@ package kr.timebar.diary.task;
 
 import kr.timebar.diary.common.ApiException;
 import kr.timebar.diary.common.ErrorCode;
+import kr.timebar.diary.common.IdempotencyKeys;
 import kr.timebar.diary.task.dto.TaskRequest;
 import kr.timebar.diary.task.dto.TaskResponse;
 import org.springframework.stereotype.Service;
@@ -12,9 +13,11 @@ import java.util.List;
 @Service
 public class TaskService {
     private final TaskRepository taskRepository;
+    private final IdempotencyKeys idempotency;
 
-    public TaskService(TaskRepository taskRepository) {
+    public TaskService(TaskRepository taskRepository, IdempotencyKeys idempotency) {
         this.taskRepository = taskRepository;
+        this.idempotency = idempotency;
     }
 
     @Transactional(readOnly = true)
@@ -38,6 +41,12 @@ public class TaskService {
                 request.energyLevel(), request.durationMin() == null ? 30 : request.durationMin(), request.due(),
                 request.categoryId(), request.categoryName(), request.categoryColor(), request.categoryIcon());
         return TaskResponse.from(taskRepository.saveAndFlush(entity));
+    }
+
+    /** 멱등 키가 있으면 같은 키로 다시 온 요청에 처음 만든 할 일을 돌려준다(로컬 자료 이전, Q-13). */
+    @Transactional
+    public TaskResponse create(String userId, TaskRequest request, String idempotencyKey) {
+        return idempotency.create(userId, idempotencyKey, request, () -> create(userId, request), TaskResponse::id, id -> detail(userId, id));
     }
 
     @Transactional

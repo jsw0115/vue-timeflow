@@ -124,9 +124,45 @@ export function createTaskStore({ local, request = apiRequest, owner = () => ses
     }
   }
 
+  /**
+   * 로그인 전에 만든 로컬 할 일 하나를 계정으로 옮긴다(UF-86). 멱등 키 local:task:{id}로 보내 다시 시도해도 하나만 생긴다.
+   * 체크리스트는 이미 서버에 같은 제목이 있으면 옮긴 것으로 본다(앞선 시도가 체크리스트 중간에 끊긴 경우).
+   * 주소록 연락처 담당자는 계정이 아니라 담당자 없이 옮긴다(Q-21). 모두 성공해야 로컬 목록에서 뺀다.
+   */
+  async function adoptLocal(item) {
+    const expected = generation
+    let task = await synced.create(fields({ ...item, title: item.title ?? '' }), { idempotencyKey: `local:task:${item.id}` })
+    const subtasks = item.subtasks ?? []
+    if (subtasks.length) {
+      const existing = await fetchChecklist({ request: scoped(expected), taskId: task.id, me: owner() })
+      const unmatched = [...existing]
+      const draft = subtasks.map((entry) => {
+        const at = unmatched.findIndex((row) => row.title === entry.title.trim())
+        const match = at >= 0 ? unmatched.splice(at, 1)[0] : null
+        return { id: match?.id ?? `local-${entry.id}`, title: entry.title, done: Boolean(entry.done), assigneeId: entry.assigneeId === 'self' ? 'self' : null }
+      })
+      const result = await syncChecklist({ request: scoped(expected), taskId: task.id, baseline: existing, draft: [...draft, ...unmatched], me: owner() })
+      if (expected !== generation) throw staleError()
+      setItems(task.id, result.baseline)
+      if (result.error) throw result.error
+    }
+    if (item.done && task.status !== 'DONE') task = await synced.command(task, 'status')
+    if (expected !== generation) throw staleError()
+    synced.forgetLocal(item)
+    return task
+  }
+  /** 로컬 자료 이전 목록에 넣을 할 일 항목. seeds는 시연 기본 할 일이다(Q-11: ID와 제목·마감일이 같으면 시연). */
+  function migrationEntry({ label, seeds }) {
+    return {
+      kind: 'task', label, local: synced.local, seeds, fields: ['title', 'date'], adopt: adoptLocal,
+      notes: (items) => ({ droppedAssignees: items.flatMap((task) => task.subtasks ?? []).filter((entry) => entry.assigneeId && entry.assigneeId !== 'self').length }),
+    }
+  }
+
   return {
     ...synced,
     notice,
+    migrationEntry,
     checklist,
     loadChecklist,
     saveDetail,

@@ -29,6 +29,7 @@ PURPOSES = {
     'feature_friend': '친구 요청과 정규화한 사용자 쌍',
     'feature_block': '사용자별 차단 관계',
     'feature_file': '첨부 파일의 실제 바이트·소유권·보관 기한',
+    'idempotency_key': '계정별 생성 요청 멱등 키와 처음 만든 기록 ID(7일 보관)',
     'chat_user': '통합 계정과 연결되는 채팅 사용자 표시 정보',
     'chat_room': 'DM·그룹 대화방과 방별 순번',
     'chat_member': '대화방 참여·탈퇴와 읽음 위치',

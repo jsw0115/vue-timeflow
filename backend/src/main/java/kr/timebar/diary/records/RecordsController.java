@@ -22,7 +22,7 @@ public class RecordsController {
     public ApiResponse<?> diaryGet(@PathVariable String id) { return ApiResponse.ok(records.get(CurrentUser.id(), FeatureType.DIARY, id)); }
     @PostMapping("/diaries")
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<?> diaryCreate(@RequestBody Map<String,Object> body) { return ApiResponse.ok(records.create(CurrentUser.id(), FeatureType.DIARY, body)); }
+    public ApiResponse<?> diaryCreate(@RequestHeader(value="Idempotency-Key", required=false) String key, @RequestBody Map<String,Object> body) { return ApiResponse.ok(records.create(CurrentUser.id(), FeatureType.DIARY, body, key)); }
     @PutMapping("/diaries/{id}")
     public ApiResponse<?> diaryUpdate(@PathVariable String id, @RequestBody Map<String,Object> body) { return ApiResponse.ok(records.update(CurrentUser.id(), FeatureType.DIARY, id, body)); }
     @DeleteMapping("/diaries/{id}")
@@ -36,7 +36,7 @@ public class RecordsController {
     public ApiResponse<?> memoGet(@PathVariable String id) { return ApiResponse.ok(records.get(CurrentUser.id(), FeatureType.MEMO, id)); }
     @PostMapping("/memos")
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<?> memoCreate(@RequestBody Map<String,Object> body) { return ApiResponse.ok(records.create(CurrentUser.id(), FeatureType.MEMO, body)); }
+    public ApiResponse<?> memoCreate(@RequestHeader(value="Idempotency-Key", required=false) String key, @RequestBody Map<String,Object> body) { return ApiResponse.ok(records.create(CurrentUser.id(), FeatureType.MEMO, body, key)); }
     @PutMapping("/memos/{id}")
     public ApiResponse<?> memoUpdate(@PathVariable String id, @RequestBody Map<String,Object> body) { return ApiResponse.ok(records.update(CurrentUser.id(), FeatureType.MEMO, id, body)); }
     @DeleteMapping("/memos/{id}")
@@ -50,7 +50,7 @@ public class RecordsController {
     public ApiResponse<?> ddayGet(@PathVariable String id) { return ApiResponse.ok(records.get(CurrentUser.id(), FeatureType.DDAY, id)); }
     @PostMapping("/ddays")
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<?> ddayCreate(@RequestBody Map<String,Object> body) { return ApiResponse.ok(records.create(CurrentUser.id(), FeatureType.DDAY, body)); }
+    public ApiResponse<?> ddayCreate(@RequestHeader(value="Idempotency-Key", required=false) String key, @RequestBody Map<String,Object> body) { return ApiResponse.ok(records.create(CurrentUser.id(), FeatureType.DDAY, body, key)); }
     @PutMapping("/ddays/{id}")
     public ApiResponse<?> ddayUpdate(@PathVariable String id, @RequestBody Map<String,Object> body) { return ApiResponse.ok(records.update(CurrentUser.id(), FeatureType.DDAY, id, body)); }
     @DeleteMapping("/ddays/{id}")
@@ -64,7 +64,7 @@ public class RecordsController {
     public ApiResponse<?> moneyGet(@PathVariable String id) { return ApiResponse.ok(records.get(CurrentUser.id(), FeatureType.MONEY, id)); }
     @PostMapping("/money/entries")
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<?> moneyCreate(@RequestBody Map<String,Object> body) { return ApiResponse.ok(records.create(CurrentUser.id(), FeatureType.MONEY, body)); }
+    public ApiResponse<?> moneyCreate(@RequestHeader(value="Idempotency-Key", required=false) String key, @RequestBody Map<String,Object> body) { return ApiResponse.ok(records.create(CurrentUser.id(), FeatureType.MONEY, body, key)); }
     @PutMapping("/money/entries/{id}")
     public ApiResponse<?> moneyUpdate(@PathVariable String id, @RequestBody Map<String,Object> body) { return ApiResponse.ok(records.update(CurrentUser.id(), FeatureType.MONEY, id, body)); }
     @DeleteMapping("/money/entries/{id}")

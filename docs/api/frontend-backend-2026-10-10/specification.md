@@ -439,7 +439,7 @@ file을 multipart/form-data로 전달한다. boundary는 HTTP 클라이언트가
 
 | 위치 | 이름 | 타입 | 필수 | 기본값 |
 |---|---|---|---|---|
-| header | authorization | String | 예 | 없음 |
+| header | Authorization | String | 예 | 없음 |
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 
@@ -1068,6 +1068,10 @@ file을 multipart/form-data로 전달한다. boundary는 HTTP 클라이언트가
 
 인증은 JWT이며 소스는 RecordsController.java다. 성공 HTTP는 201다.
 
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| header | Idempotency-Key | String | 아니오 | 없음 |
+
 | 본문 필드 | 타입 | 필수 | 제약 |
 |---|---|---|---|
 | title | string | 예 | 길이 ≤ 200 |
@@ -1138,6 +1142,10 @@ file을 multipart/form-data로 전달한다. boundary는 HTTP 클라이언트가
 ## POST /api/diaries
 
 인증은 JWT이며 소스는 RecordsController.java다. 성공 HTTP는 201다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| header | Idempotency-Key | String | 아니오 | 없음 |
 
 | 본문 필드 | 타입 | 필수 | 제약 |
 |---|---|---|---|
@@ -1557,6 +1565,10 @@ file을 multipart/form-data로 전달한다. boundary는 HTTP 클라이언트가
 
 인증은 JWT이며 소스는 RecordsController.java다. 성공 HTTP는 201다.
 
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| header | Idempotency-Key | String | 아니오 | 없음 |
+
 | 본문 필드 | 타입 | 필수 | 제약 |
 |---|---|---|---|
 | title | string | 예 | 길이 ≤ 200 |
@@ -1651,6 +1663,10 @@ file을 multipart/form-data로 전달한다. boundary는 HTTP 클라이언트가
 ## POST /api/money/entries
 
 인증은 JWT이며 소스는 RecordsController.java다. 성공 HTTP는 201다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| header | Idempotency-Key | String | 아니오 | 없음 |
 
 | 본문 필드 | 타입 | 필수 | 제약 |
 |---|---|---|---|
@@ -2183,6 +2199,10 @@ KRW 정수. type=in은 양수, out은 음수. 0은 거부한다.
 
 인증은 JWT이며 소스는 ScheduleController.java다. 성공 HTTP는 201다.
 
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| header | Idempotency-Key | String | 아니오 | 없음 |
+
 | 본문 필드 | 타입 | 필수 | 제약 |
 |---|---|---|---|
 | title | string | 예 | 길이 ≤ 200 |
@@ -2398,6 +2418,10 @@ KRW 정수. type=in은 양수, out은 음수. 0은 거부한다.
 ## POST /api/schedules
 
 인증은 JWT이며 소스는 ScheduleController.java다. 성공 HTTP는 201다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| header | Idempotency-Key | String | 아니오 | 없음 |
 
 | 본문 필드 | 타입 | 필수 | 제약 |
 |---|---|---|---|
@@ -2816,6 +2840,10 @@ JSON 최대 깊이 8, 객체 100필드, 배열 500항목, 저장 크기 128 KiB.
 
 인증은 JWT이며 소스는 TaskController.java다. 성공 HTTP는 201다.
 
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| header | Idempotency-Key | String | 아니오 | 없음 |
+
 | 본문 필드 | 타입 | 필수 | 제약 |
 |---|---|---|---|
 | title | string | 예 | 기능 규약 참조 |
@@ -3124,6 +3152,10 @@ file을 multipart/form-data로 전달한다. boundary는 HTTP 클라이언트가
 ## POST /api/work/career/projects
 
 인증은 JWT이며 소스는 WorkController.java다. 성공 HTTP는 201다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| header | Idempotency-Key | String | 아니오 | 없음 |
 
 | 본문 필드 | 타입 | 필수 | 제약 |
 |---|---|---|---|

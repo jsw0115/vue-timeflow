@@ -38,3 +38,9 @@ See [actual recovery verification](../../../../../../docs/development/database-r
 `V8__task_version.sql`은 기존 행을 유지하고 `task.version BIGINT NOT NULL DEFAULT 0`을 추가한다(PR-07 1단계). 기본·chat-local 모두 같은 workspace 경로를 사용한다. 공개 버전은 내부 값+1이며, 할 일의 수정(본문 `version`)·상태 변경·삭제(쿼리 `version`)에 조회한 버전이 필요하다. 체크리스트 변경은 할 일 행을 잠그지만 할 일 버전은 바꾸지 않는다.
 
 운영 적용 조건은 V7과 같다. 백업·별도 복원을 확인하고 구버전 쓰기를 중지한 뒤 V8과 새 서버·클라이언트를 함께 적용한다. 구버전 서버는 version을 검사하지 않는다. 이 작업에서 운영 DB와 격리 MySQL에는 적용하지 않았고, H2 테스트(`TaskVersionTest`)로만 확인했다.
+
+## 멱등 키 추가 V9
+
+`V9__idempotency_key.sql`은 새 표 `idempotency_key(owner_id, idem_key, request_hash, status_code, resource_id, created_at)`를 만든다(PR-07 3단계, Q-13). 기본 키 `(owner_id, idem_key)`가 같은 계정의 같은 키를 하나로 묶고, `created_at` 색인으로 7일 지난 키를 매일 04:30 지운다. 기존 표는 바꾸지 않는다.
+
+생성 API(할 일·일정·루틴·다이어리·메모·D-Day·머니로그·경력)는 `Idempotency-Key` 헤더가 있으면 생성과 키 기록을 같은 트랜잭션에서 한다. 같은 키·같은 본문이면 처음 만든 기록을 돌려주고, 본문이 다르면 409, 처음 기록을 지웠으면 404다. 같은 키가 동시에 오면 늦은 요청은 기본 키 충돌로 409가 되고 그 생성도 되돌린다. 로컬 자료 이전은 `local:{kind}:{id}`, PR-12 재전송은 UUID v4를 쓴다. 격리 MySQL에 2026-11-19 적용했고 운영에는 적용하지 않았다. 운영 적용 조건은 V7과 같다.

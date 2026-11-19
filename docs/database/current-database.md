@@ -1,8 +1,8 @@
 # 현재 데이터베이스 ERD와 테이블 정의서
 
-작성일 2026-10-31. 수정일 2026-10-31. 상태는 현재 격리 개발 설치의 물리 스키마입니다.
+작성일 2026-11-19. 수정일 2026-11-19. 상태는 현재 격리 개발 설치의 물리 스키마입니다.
 
-MySQL 8.4.11의 `timeflow_chat_dev`에서 메타데이터만 읽었습니다. 사용자 데이터와 비밀값은 포함하지 않습니다. 총 28개 테이블 중 Flyway 이력 2개를 제외한 애플리케이션 테이블은 26개이며, 컬럼 205개와 물리 FK 15개를 확인했습니다.
+MySQL 8.4.11의 `timeflow_chat_dev`에서 메타데이터만 읽었습니다. 사용자 데이터와 비밀값은 포함하지 않습니다. 총 29개 테이블 중 Flyway 이력 2개를 제외한 애플리케이션 테이블은 27개이며, 컬럼 213개와 물리 FK 16개를 확인했습니다.
 
 운영 DB가 동일하다는 보장은 아닙니다. 기존 DB는 실제 Flyway 이력과 별도 비교합니다. 과거 V1의 37개 `tbl_*`와 40개 목표 설계는 이 문서의 현재 설치와 다릅니다. 현재 앱은 신규 기록 다수를 `feature_record`의 종류별 JSON으로 저장합니다.
 
@@ -77,6 +77,10 @@ erDiagram
         varchar kind PK
         varchar record_id PK
     }
+    idempotency_key {
+        varchar owner_id PK
+        varchar idem_key PK
+    }
     login_throttle {
         varchar id PK
     }
@@ -118,6 +122,7 @@ erDiagram
     chat_user ||--o{ chat_room : fk_chat_room_owner
     chat_message ||--o| chat_search_document : chat_search_document_ibfk_1
     chat_search_document ||--o{ chat_search_gram : chat_search_gram_ibfk_1
+    users ||--o{ events : fk_events_user
     users ||--o{ refresh_token : fk_refresh_token_user
     users ||--o{ routine : fk_routine_user
     routine ||--o{ routine_log : fk_routine_log_routine
@@ -155,6 +160,7 @@ erDiagram
 | [feature_record](#feature-record) | 허용된 종류별 개인·공용 기능 JSON 기록 |
 | [flyway_chat_history](#flyway-chat-history) | 채팅 전용 마이그레이션 이력 |
 | [flyway_schema_history](#flyway-schema-history) | Core·workspace 마이그레이션 이력 |
+| [idempotency_key](#idempotency-key) | 계정별 생성 요청 멱등 키와 처음 만든 기록 ID(7일 보관) |
 | [login_throttle](#login-throttle) | 로그인 시도 제한과 잠금 상태 |
 | [planner_item](#planner-item) | 사용자 소유의 구형 수동 플래너 항목 |
 | [planner_preference](#planner-preference) | 사용자별 기본 플래너 보기 |
@@ -403,7 +409,7 @@ DM·그룹 대화방과 방별 순번.
 | `end_time` | time | YES | NULL | 없음 | 현지 종료 시각 |
 | `location` | varchar(255) | YES | NULL | 없음 | 장소 |
 | `visibility` | varchar(20) | YES | NULL | 없음 | 공개 범위 |
-| `note` | varchar(1000) | YES | NULL | 없음 | 비고·설명 |
+| `note` | varchar(255) | YES | NULL | 없음 | 비고·설명 |
 | `series_id` | bigint | YES | NULL | MUL | 구형 반복 시리즈 식별자 |
 | `created_at` | datetime(6) | NO | NULL | 없음 | 생성 시각. 실제 저장 타입·API 시간대 규칙 확인 |
 | `updated_at` | datetime(6) | NO | NULL | 없음 | 수정 시각. 실제 저장 타입·API 시간대 규칙 확인 |
@@ -413,6 +419,7 @@ DM·그룹 대화방과 방별 순번.
 - `ix_events_series_date`. 일반 인덱스 `(series_id, date)`.
 - `ix_events_user_date`. 일반 인덱스 `(user_id, date)`.
 - `PRIMARY`. 고유 인덱스 `(id)`.
+- `fk_events_user`. `(user_id)` → `users(id)`. DELETE `RESTRICT`, UPDATE `RESTRICT`.
 
 <a id="feature-block"></a>
 ### `feature_block`
@@ -569,6 +576,27 @@ Core·workspace 마이그레이션 이력.
 - `flyway_schema_history_s_idx`. 일반 인덱스 `(success)`.
 - `PRIMARY`. 고유 인덱스 `(installed_rank)`.
 
+<a id="idempotency-key"></a>
+### `idempotency_key`
+
+계정별 생성 요청 멱등 키와 처음 만든 기록 ID(7일 보관).
+
+엔진 `InnoDB`, 비교 규칙 `utf8mb4_0900_ai_ci`입니다.
+
+| 컬럼 | DB 타입 | NULL 허용 | 기본값 | 키·추가 속성 | 의미 |
+| --- | --- | --- | --- | --- | --- |
+| `owner_id` | varchar(36) | NO | NULL | PRI | 소유자 식별자 |
+| `idem_key` | varchar(100) | NO | NULL | PRI | 해당 도메인의 저장 필드. 아래 소스와 API 계약 참조 |
+| `request_hash` | char(64) | NO | NULL | 없음 | 해당 도메인의 저장 필드. 아래 소스와 API 계약 참조 |
+| `status_code` | int | NO | NULL | 없음 | 해당 도메인의 저장 필드. 아래 소스와 API 계약 참조 |
+| `resource_id` | varchar(100) | NO | NULL | 없음 | 해당 도메인의 저장 필드. 아래 소스와 API 계약 참조 |
+| `created_at` | datetime(6) | NO | NULL | MUL | 생성 시각. 실제 저장 타입·API 시간대 규칙 확인 |
+
+인덱스와 제약은 다음과 같습니다.
+
+- `ix_idempotency_key_created`. 일반 인덱스 `(created_at)`.
+- `PRIMARY`. 고유 인덱스 `(owner_id, idem_key)`.
+
 <a id="login-throttle"></a>
 ### `login_throttle`
 
@@ -582,12 +610,13 @@ Core·workspace 마이그레이션 이력.
 | `key_type` | varchar(10) | NO | NULL | MUL | 로그인 제한 키의 종류 |
 | `key_val` | varchar(255) | NO | NULL | 없음 | 로그인 제한 키 값 |
 | `fail_cnt` | int | NO | 0 | 없음 | 실패 횟수 |
-| `lock_utc` | datetime(6) | YES | NULL | 없음 | 잠금 종료 UTC 시각 |
+| `lock_utc` | datetime(6) | YES | NULL | MUL | 잠금 종료 UTC 시각 |
 | `last_fail_utc` | datetime(6) | YES | NULL | 없음 | 마지막 실패 UTC 시각 |
 | `u_at` | datetime(6) | NO | NULL | 없음 | 수정 UTC 시각 |
 
 인덱스와 제약은 다음과 같습니다.
 
+- `ix_login_throttle_lock`. 일반 인덱스 `(lock_utc)`.
 - `PRIMARY`. 고유 인덱스 `(id)`.
 - `uk_login_throttle_key`. 고유 인덱스 `(key_type, key_val)`.
 
@@ -613,6 +642,7 @@ Core·workspace 마이그레이션 이력.
 | `created_at` | datetime(6) | NO | NULL | 없음 | 생성 시각. 실제 저장 타입·API 시간대 규칙 확인 |
 | `updated_at` | datetime(6) | NO | NULL | 없음 | 수정 시각. 실제 저장 타입·API 시간대 규칙 확인 |
 | `user_id` | varchar(36) | YES | NULL | MUL | 사용자 식별자 |
+| `version` | bigint | NO | 0 | 없음 | 수정 충돌 검사 버전 |
 
 인덱스와 제약은 다음과 같습니다.
 
@@ -663,7 +693,7 @@ Core·workspace 마이그레이션 이력.
 - `ix_refresh_token_user`. 일반 인덱스 `(user_id, rev_utc, exp_utc)`.
 - `PRIMARY`. 고유 인덱스 `(id)`.
 - `uk_refresh_token_hash`. 고유 인덱스 `(tok_hash)`.
-- `fk_refresh_token_user`. `(user_id)` → `users(id)`. DELETE `NO ACTION`, UPDATE `NO ACTION`.
+- `fk_refresh_token_user`. `(user_id)` → `users(id)`. DELETE `RESTRICT`, UPDATE `RESTRICT`.
 
 <a id="routine"></a>
 ### `routine`
@@ -695,7 +725,7 @@ Core·workspace 마이그레이션 이력.
 
 - `ix_routine_user_time`. 일반 인덱스 `(user_id, onoff, at_time)`.
 - `PRIMARY`. 고유 인덱스 `(id)`.
-- `fk_routine_user`. `(user_id)` → `users(id)`. DELETE `NO ACTION`, UPDATE `NO ACTION`.
+- `fk_routine_user`. `(user_id)` → `users(id)`. DELETE `RESTRICT`, UPDATE `RESTRICT`.
 
 <a id="routine-log"></a>
 ### `routine_log`
@@ -708,12 +738,13 @@ Core·workspace 마이그레이션 이력.
 | --- | --- | --- | --- | --- | --- |
 | `id` | varchar(26) | NO | NULL | PRI | 행 식별자 |
 | `routine_id` | varchar(26) | NO | NULL | MUL | 루틴 식별자 |
-| `dt` | date | NO | NULL | 없음 | 수행 날짜 |
+| `dt` | date | NO | NULL | MUL | 수행 날짜 |
 | `st` | varchar(10) | NO | NULL | 없음 | 도메인 상태 |
 | `u_at` | datetime(6) | NO | NULL | 없음 | 수정 UTC 시각 |
 
 인덱스와 제약은 다음과 같습니다.
 
+- `ix_routine_log_date`. 일반 인덱스 `(dt)`.
 - `PRIMARY`. 고유 인덱스 `(id)`.
 - `uk_routine_log_date`. 고유 인덱스 `(routine_id, dt)`.
 - `fk_routine_log_routine`. `(routine_id)` → `routine(id)`. DELETE `NO ACTION`, UPDATE `NO ACTION`.
@@ -745,13 +776,14 @@ Core·workspace 마이그레이션 이력.
 | `c_at` | datetime(6) | NO | NULL | 없음 | 생성 UTC 시각 |
 | `u_at` | datetime(6) | NO | NULL | 없음 | 수정 UTC 시각 |
 | `d_at` | datetime(6) | YES | NULL | 없음 | 소프트 삭제 UTC 시각 |
+| `version` | bigint | NO | 0 | 없음 | 수정 충돌 검사 버전 |
 
 인덱스와 제약은 다음과 같습니다.
 
 - `ix_task_user_due`. 일반 인덱스 `(user_id, due, c_at)`.
 - `ix_task_user_status`. 일반 인덱스 `(user_id, st, d_at)`.
 - `PRIMARY`. 고유 인덱스 `(id)`.
-- `fk_task_user`. `(user_id)` → `users(id)`. DELETE `NO ACTION`, UPDATE `NO ACTION`.
+- `fk_task_user`. `(user_id)` → `users(id)`. DELETE `RESTRICT`, UPDATE `RESTRICT`.
 
 <a id="task-assignee"></a>
 ### `task_assignee`
@@ -809,7 +841,7 @@ Core·workspace 마이그레이션 이력.
 | `pw_hash` | varchar(255) | NO | NULL | 없음 | 비밀번호 해시 |
 | `nick` | varchar(80) | NO | NULL | 없음 | 닉네임 |
 | `role` | varchar(20) | NO | NULL | 없음 | 권한 또는 참여 역할 |
-| `st` | varchar(20) | NO | NULL | 없음 | 도메인 상태 |
+| `st` | varchar(20) | NO | NULL | MUL | 도메인 상태 |
 | `tz` | varchar(64) | NO | Asia/Seoul | 없음 | 사용자 시간대 |
 | `email_vfy` | tinyint(1) | NO | 0 | 없음 | 이메일 확인 상태 |
 | `last_login_utc` | datetime(6) | YES | NULL | 없음 | 마지막 로그인 UTC 시각 |
@@ -822,6 +854,7 @@ Core·workspace 마이그레이션 이력.
 
 인덱스와 제약은 다음과 같습니다.
 
+- `ix_users_status`. 일반 인덱스 `(st, d_at)`.
 - `PRIMARY`. 고유 인덱스 `(id)`.
 - `uk_users_email`. 고유 인덱스 `(email)`.
 
@@ -829,11 +862,15 @@ Core·workspace 마이그레이션 이력.
 
 | 이력 | 버전 | 설명 | 성공 |
 | --- | --- | --- | --- |
-| core | 2 | << Flyway Baseline >> | 1 |
+| core | 1 | isolated local core | 1 |
+| core | 2 | align local jpa types | 1 |
 | core | 3 | safe core schema | 1 |
 | core | 4 | task checklist and planner preferences | 1 |
 | core | 5 | account identifier width | 1 |
 | core | 6 | frontend feature records | 1 |
+| core | 7 | planner item version | 1 |
+| core | 8 | task version | 1 |
+| core | 9 | idempotency key | 1 |
 | chat | 0 | << Flyway Baseline >> | 1 |
 | chat | 1 | chat schema | 1 |
 | chat | 2 | mentions and tags | 1 |

@@ -1,5 +1,6 @@
 {
-  "capturedOn": "2026-10-31",
+  "capturedOn": "2026-11-19",
+  "sourceHashNormalization": "UTF8_LF",
   "scope": "격리 개발 DB 메타데이터만 조회. 사용자 데이터 미조회.",
   "sourceHashes": {
     "backend/src/main/java/db/core/V5__account_identifier_width.java": "9bd43be3e76c6b873ae125246066ec7154bf5f3e4954e7768cb28f46578b9224",
@@ -15,7 +16,10 @@
     "backend/src/main/resources/db/migration/V1__initial_schema.sql": "6f70f353bb20a4e19085db5d05cfe88690fcd6723d0ebaf043c29a0bc0a21d74",
     "backend/src/main/resources/db/timeflow_events.sql": "ca7a51a5f85b7a427047f83234ed504f1de615342ad45e54e3da0ef79239fbf7",
     "backend/src/main/resources/db/workspace/V4__task_checklist_and_planner_preferences.sql": "998dd947cc422c2f06af163cc52ba7067bb19b6d8572e6cd38e5df7c03c26b29",
-    "backend/src/main/resources/db/workspace/V6__frontend_feature_records.sql": "e96b710e4a0f790f2671ac5d8392d575a69e18fcefd07a4bf8e94828643ea197"
+    "backend/src/main/resources/db/workspace/V6__frontend_feature_records.sql": "e96b710e4a0f790f2671ac5d8392d575a69e18fcefd07a4bf8e94828643ea197",
+    "backend/src/main/resources/db/workspace/V7__planner_item_version.sql": "8d407b2109b1f1a5327b2997b18fdf3ed499380bb9c2b2f5f01c781067d069ef",
+    "backend/src/main/resources/db/workspace/V8__task_version.sql": "6557b18538a705c080787b1c3b08e707f801af83f2f964a1746413d1b3a30998",
+    "backend/src/main/resources/db/workspace/V9__idempotency_key.sql": "c92430b92ce44d2f64a95e6fb73a3f160ccc48541832e9a92088b1b92fe614a5"
   },
   "rows": [
     {
@@ -127,6 +131,12 @@
     },
     {
       "name": "flyway_schema_history",
+      "engine": "InnoDB",
+      "section": "table",
+      "collation": "utf8mb4_0900_ai_ci"
+    },
+    {
+      "name": "idempotency_key",
       "engine": "InnoDB",
       "section": "table",
       "collation": "utf8mb4_0900_ai_ci"
@@ -818,7 +828,7 @@
     {
       "key": "",
       "name": "note",
-      "type": "varchar(1000)",
+      "type": "varchar(255)",
       "extra": "",
       "table": "events",
       "comment": "",
@@ -1465,6 +1475,78 @@
     },
     {
       "key": "PRI",
+      "name": "owner_id",
+      "type": "varchar(36)",
+      "extra": "",
+      "table": "idempotency_key",
+      "comment": "",
+      "default": null,
+      "ordinal": 1,
+      "section": "column",
+      "nullable": "NO"
+    },
+    {
+      "key": "PRI",
+      "name": "idem_key",
+      "type": "varchar(100)",
+      "extra": "",
+      "table": "idempotency_key",
+      "comment": "",
+      "default": null,
+      "ordinal": 2,
+      "section": "column",
+      "nullable": "NO"
+    },
+    {
+      "key": "",
+      "name": "request_hash",
+      "type": "char(64)",
+      "extra": "",
+      "table": "idempotency_key",
+      "comment": "",
+      "default": null,
+      "ordinal": 3,
+      "section": "column",
+      "nullable": "NO"
+    },
+    {
+      "key": "",
+      "name": "status_code",
+      "type": "int",
+      "extra": "",
+      "table": "idempotency_key",
+      "comment": "",
+      "default": null,
+      "ordinal": 4,
+      "section": "column",
+      "nullable": "NO"
+    },
+    {
+      "key": "",
+      "name": "resource_id",
+      "type": "varchar(100)",
+      "extra": "",
+      "table": "idempotency_key",
+      "comment": "",
+      "default": null,
+      "ordinal": 5,
+      "section": "column",
+      "nullable": "NO"
+    },
+    {
+      "key": "MUL",
+      "name": "created_at",
+      "type": "datetime(6)",
+      "extra": "",
+      "table": "idempotency_key",
+      "comment": "",
+      "default": null,
+      "ordinal": 6,
+      "section": "column",
+      "nullable": "NO"
+    },
+    {
+      "key": "PRI",
       "name": "id",
       "type": "varchar(26)",
       "extra": "",
@@ -1512,7 +1594,7 @@
       "nullable": "NO"
     },
     {
-      "key": "",
+      "key": "MUL",
       "name": "lock_utc",
       "type": "datetime(6)",
       "extra": "",
@@ -1702,6 +1784,18 @@
       "ordinal": 13,
       "section": "column",
       "nullable": "YES"
+    },
+    {
+      "key": "",
+      "name": "version",
+      "type": "bigint",
+      "extra": "",
+      "table": "planner_item",
+      "comment": "",
+      "default": "0",
+      "ordinal": 14,
+      "section": "column",
+      "nullable": "NO"
     },
     {
       "key": "PRI",
@@ -2088,7 +2182,7 @@
       "nullable": "NO"
     },
     {
-      "key": "",
+      "key": "MUL",
       "name": "dt",
       "type": "date",
       "extra": "",
@@ -2340,6 +2434,18 @@
       "nullable": "YES"
     },
     {
+      "key": "",
+      "name": "version",
+      "type": "bigint",
+      "extra": "",
+      "table": "task",
+      "comment": "",
+      "default": "0",
+      "ordinal": 19,
+      "section": "column",
+      "nullable": "NO"
+    },
+    {
       "key": "PRI",
       "name": "id",
       "type": "varchar(26)",
@@ -2532,7 +2638,7 @@
       "nullable": "NO"
     },
     {
-      "key": "",
+      "key": "MUL",
       "name": "st",
       "type": "varchar(20)",
       "extra": "",
@@ -3204,6 +3310,38 @@
       "nonUnique": 0
     },
     {
+      "name": "ix_idempotency_key_created",
+      "table": "idempotency_key",
+      "column": "created_at",
+      "section": "index",
+      "position": 1,
+      "nonUnique": 1
+    },
+    {
+      "name": "PRIMARY",
+      "table": "idempotency_key",
+      "column": "owner_id",
+      "section": "index",
+      "position": 1,
+      "nonUnique": 0
+    },
+    {
+      "name": "PRIMARY",
+      "table": "idempotency_key",
+      "column": "idem_key",
+      "section": "index",
+      "position": 2,
+      "nonUnique": 0
+    },
+    {
+      "name": "ix_login_throttle_lock",
+      "table": "login_throttle",
+      "column": "lock_utc",
+      "section": "index",
+      "position": 1,
+      "nonUnique": 1
+    },
+    {
       "name": "PRIMARY",
       "table": "login_throttle",
       "column": "id",
@@ -3346,6 +3484,14 @@
       "section": "index",
       "position": 1,
       "nonUnique": 0
+    },
+    {
+      "name": "ix_routine_log_date",
+      "table": "routine_log",
+      "column": "dt",
+      "section": "index",
+      "position": 1,
+      "nonUnique": 1
     },
     {
       "name": "PRIMARY",
@@ -3498,6 +3644,22 @@
       "section": "index",
       "position": 1,
       "nonUnique": 0
+    },
+    {
+      "name": "ix_users_status",
+      "table": "users",
+      "column": "st",
+      "section": "index",
+      "position": 1,
+      "nonUnique": 1
+    },
+    {
+      "name": "ix_users_status",
+      "table": "users",
+      "column": "d_at",
+      "section": "index",
+      "position": 2,
+      "nonUnique": 1
     },
     {
       "name": "PRIMARY",
@@ -3670,14 +3832,25 @@
       "parentColumn": "message_id"
     },
     {
+      "name": "fk_events_user",
+      "table": "events",
+      "column": "user_id",
+      "parent": "users",
+      "section": "fk",
+      "position": 1,
+      "deleteRule": "RESTRICT",
+      "updateRule": "RESTRICT",
+      "parentColumn": "id"
+    },
+    {
       "name": "fk_refresh_token_user",
       "table": "refresh_token",
       "column": "user_id",
       "parent": "users",
       "section": "fk",
       "position": 1,
-      "deleteRule": "NO ACTION",
-      "updateRule": "NO ACTION",
+      "deleteRule": "RESTRICT",
+      "updateRule": "RESTRICT",
       "parentColumn": "id"
     },
     {
@@ -3687,8 +3860,8 @@
       "parent": "users",
       "section": "fk",
       "position": 1,
-      "deleteRule": "NO ACTION",
-      "updateRule": "NO ACTION",
+      "deleteRule": "RESTRICT",
+      "updateRule": "RESTRICT",
       "parentColumn": "id"
     },
     {
@@ -3709,8 +3882,8 @@
       "parent": "users",
       "section": "fk",
       "position": 1,
-      "deleteRule": "NO ACTION",
-      "updateRule": "NO ACTION",
+      "deleteRule": "RESTRICT",
+      "updateRule": "RESTRICT",
       "parentColumn": "id"
     },
     {
@@ -3759,8 +3932,15 @@
       "history": "core",
       "section": "migration",
       "success": 1,
+      "version": "1",
+      "description": "isolated local core"
+    },
+    {
+      "history": "core",
+      "section": "migration",
+      "success": 1,
       "version": "2",
-      "description": "<< Flyway Baseline >>"
+      "description": "align local jpa types"
     },
     {
       "history": "core",
@@ -3789,6 +3969,27 @@
       "success": 1,
       "version": "6",
       "description": "frontend feature records"
+    },
+    {
+      "history": "core",
+      "section": "migration",
+      "success": 1,
+      "version": "7",
+      "description": "planner item version"
+    },
+    {
+      "history": "core",
+      "section": "migration",
+      "success": 1,
+      "version": "8",
+      "description": "task version"
+    },
+    {
+      "history": "core",
+      "section": "migration",
+      "success": 1,
+      "version": "9",
+      "description": "idempotency key"
     },
     {
       "history": "chat",
@@ -3825,6 +4026,5 @@
       "version": "4",
       "description": "legacy account ids"
     }
-  ],
-  "sourceHashNormalization": "UTF8_LF"
+  ]
 }

@@ -18,7 +18,7 @@ public class ScheduleController {
     public ApiResponse<?> scheduleGet(@PathVariable String id) { return ApiResponse.ok(records.get(CurrentUser.id(), FeatureType.SCHEDULE, id)); }
     @PostMapping("/schedules")
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<?> scheduleCreate(@RequestBody Map<String,Object> body) { return ApiResponse.ok(records.create(CurrentUser.id(), FeatureType.SCHEDULE, body)); }
+    public ApiResponse<?> scheduleCreate(@RequestHeader(value="Idempotency-Key", required=false) String key, @RequestBody Map<String,Object> body) { return ApiResponse.ok(records.create(CurrentUser.id(), FeatureType.SCHEDULE, body, key)); }
     @PutMapping("/schedules/{id}")
     public ApiResponse<?> scheduleUpdate(@PathVariable String id, @RequestBody Map<String,Object> body) { return ApiResponse.ok(records.update(CurrentUser.id(), FeatureType.SCHEDULE, id, body)); }
     @DeleteMapping("/schedules/{id}")
@@ -30,7 +30,7 @@ public class ScheduleController {
     public ApiResponse<?> routinerecordGet(@PathVariable String id) { return ApiResponse.ok(records.get(CurrentUser.id(), FeatureType.ROUTINE_RECORD, id)); }
     @PostMapping("/routine-records")
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<?> routinerecordCreate(@RequestBody Map<String,Object> body) { return ApiResponse.ok(records.create(CurrentUser.id(), FeatureType.ROUTINE_RECORD, body)); }
+    public ApiResponse<?> routinerecordCreate(@RequestHeader(value="Idempotency-Key", required=false) String key, @RequestBody Map<String,Object> body) { return ApiResponse.ok(records.create(CurrentUser.id(), FeatureType.ROUTINE_RECORD, body, key)); }
     @PutMapping("/routine-records/{id}")
     public ApiResponse<?> routinerecordUpdate(@PathVariable String id, @RequestBody Map<String,Object> body) { return ApiResponse.ok(records.update(CurrentUser.id(), FeatureType.ROUTINE_RECORD, id, body)); }
     @DeleteMapping("/routine-records/{id}")

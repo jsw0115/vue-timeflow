@@ -31,8 +31,9 @@ public class TaskController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<TaskResponse> create(@Valid @RequestBody TaskRequest request) {
-        return ApiResponse.ok(taskService.create(CurrentUser.id(), request), "할 일을 만들었어요.");
+    public ApiResponse<TaskResponse> create(@RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
+            @Valid @RequestBody TaskRequest request) {
+        return ApiResponse.ok(taskService.create(CurrentUser.id(), request, idempotencyKey), "할 일을 만들었어요.");
     }
 
     @PutMapping("/{taskId}")

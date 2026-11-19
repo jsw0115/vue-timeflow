@@ -73,7 +73,7 @@ export function generateCurrent(root,output) {
       const signature=segment.match(/public\s+(.+?)\s+(\w+)\s*\(/)
       if(!signature)throw Error('Unparsed controller method '+controller)
       const [args]=parens(segment,signature.index+signature[0].length-1)
-      const parameters=splitTop(args).map(raw=>{const match=stripAnnotations(raw).match(/^(.+?)\s+(\w+)$/);if(!match)throw Error('Unknown parameter '+raw);const location=raw.includes('@RequestBody')?'body':raw.includes('@RequestPart')?'multipart':raw.includes('@PathVariable')?'path':raw.includes('@RequestHeader')?'header':'query';return {name:match[2],type:match[1],location,required:location==='path'||!(/required\s*=\s*false|defaultValue\s*=/.test(raw)),default:raw.match(/defaultValue\s*=\s*"([^"]+)"/)?.[1]}})
+      const parameters=splitTop(args).map(raw=>{const match=stripAnnotations(raw).match(/^(.+?)\s+(\w+)$/);if(!match)throw Error('Unknown parameter '+raw);const location=raw.includes('@RequestBody')?'body':raw.includes('@RequestPart')?'multipart':raw.includes('@PathVariable')?'path':raw.includes('@RequestHeader')?'header':'query';const header=location==='header'?raw.match(/@RequestHeader\(\s*(?:value\s*=\s*)?"([^"]+)"/)?.[1]:null;return {name:header??match[2],type:match[1],location,required:location==='path'||!(/required\s*=\s*false|defaultValue\s*=/.test(raw)),default:raw.match(/defaultValue\s*=\s*"([^"]+)"/)?.[1]}})
       const route=basePath+(m[2]?.match(/"([^"]*)"/)?.[1]??'')
       const status=segment.includes('HttpStatus.CREATED')?201:segment.includes('HttpStatus.NO_CONTENT')||segment.includes('ResponseEntity.noContent()')?204:200
       const stub=segment.match(/ContractResponses.stub\("([^"]+)"\)/)?.[1]

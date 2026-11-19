@@ -33,8 +33,8 @@ export function createSyncedCollection({ local, client, toLocal = (row) => row, 
     onServer,
     isPending: (record) => pending.has(record?.id),
     reload: () => server.load(),
-    async create(fields) {
-      if (onServer()) return server.create(toBody(fields))
+    async create(fields, options) {
+      if (onServer()) return server.create(toBody(fields), options)
       local.value.unshift({ id: nextId(), ...fields })
       return local.value[0]
     },
@@ -52,6 +52,11 @@ export function createSyncedCollection({ local, client, toLocal = (row) => row, 
       if (onServer()) return track(record, () => server.remove(record))
       local.value = local.value.filter((item) => item.id !== record.id)
     },
+    /** 계정으로 옮긴 로컬 기록을 이 브라우저 목록에서 뺀다(PR-07 3단계). */
+    forgetLocal(record) {
+      local.value = local.value.filter((item) => item.id !== record.id)
+    },
+    local,
     stop: () => scope.stop(),
   }
 }

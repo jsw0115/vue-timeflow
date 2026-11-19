@@ -6,11 +6,13 @@ import { createTaskStore } from '../features/records/taskStore.mjs'
 
 export const composer = ref(false)
 
-const localTasks = localCollection('tasks', [
-  { id: 1, title: '서비스 API 명세 검토', category: '업무', done: false },
-  { id: 2, title: 'Spring Security 인증 흐름 설계', category: '공부', done: false },
-  { id: 3, title: '헬스장 예약하기', category: '건강', done: true },
-])
+// 시연 기본 할 일. origin: 'demo'로 표시해 로그인할 때 계정으로 옮기지 않는다(Q-11)
+export const TASK_SEEDS = [
+  { id: 1, title: '서비스 API 명세 검토', category: '업무', done: false, origin: 'demo' },
+  { id: 2, title: 'Spring Security 인증 흐름 설계', category: '공부', done: false, origin: 'demo' },
+  { id: 3, title: '헬스장 예약하기', category: '건강', done: true, origin: 'demo' },
+]
+const localTasks = localCollection('tasks', TASK_SEEDS.map(task => ({ ...task })))
 /** 할 일. 로그인하면 계정의 서버 목록, 로그아웃이면 이 브라우저의 목록이다. 저장은 taskStore로 한다(PR-07). */
 export const taskStore = createTaskStore({ local: localTasks })
 export const tasks = taskStore.list

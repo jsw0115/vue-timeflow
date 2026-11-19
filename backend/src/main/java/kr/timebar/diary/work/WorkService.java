@@ -4,6 +4,7 @@ package kr.timebar.diary.work;
 import kr.timebar.diary.feature.*;
 import kr.timebar.diary.common.ApiException;
 import kr.timebar.diary.common.ErrorCode;
+import kr.timebar.diary.common.IdempotencyKeys;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
@@ -12,12 +13,18 @@ import java.util.*;
 @Transactional
 public class WorkService {
     private final FeatureStore store;
-    public WorkService(FeatureStore store) { this.store = store; }
+    private final IdempotencyKeys idempotency;
+    public WorkService(FeatureStore store, IdempotencyKeys idempotency) { this.store = store; this.idempotency = idempotency; }
 
     public Map<String, Object> create(String user, FeatureType type, Map<String, Object> body) {
         var data = FeatureInput.validate(type, body);
         parent(user, type, null, data);
         return store.create(user, type, data);
+    }
+
+    /** 멱등 키가 있으면 같은 키로 다시 온 요청에 처음 만든 기록을 돌려준다(로컬 자료 이전, Q-13). */
+    public Map<String, Object> create(String user, FeatureType type, Map<String, Object> body, String idempotencyKey) {
+        return idempotency.create(user, idempotencyKey, body, () -> create(user, type, body), row -> row.get("id").toString(), id -> store.get(user, type, id));
     }
 
     public Map<String, Object> update(String user, FeatureType type, String id, Map<String, Object> body) {
