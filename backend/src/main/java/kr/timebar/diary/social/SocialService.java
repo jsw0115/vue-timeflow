@@ -19,7 +19,13 @@ public class SocialService {
     public SocialService(FeatureStore store, JdbcTemplate jdbc, UserRepository users) { this.store = store; this.jdbc = jdbc; this.users = users; }
 
     public List<Map<String,Object>> friends(String user) {
-        return jdbc.queryForList("SELECT id,sender_id AS senderId,recipient_id AS recipientId,status,created_at AS createdAt FROM feature_friend WHERE sender_id=? OR recipient_id=? ORDER BY created_at DESC", user, user).stream().map(row -> SqlResponses.fields(row, "id", "senderId", "recipientId", "status", "createdAt")).toList();
+        // 화면이 이름을 보일 수 있게 상대방 ID와 이름을 더한다(PR-10 2단계)
+        return jdbc.queryForList("SELECT id,sender_id AS senderId,recipient_id AS recipientId,status,created_at AS createdAt FROM feature_friend WHERE sender_id=? OR recipient_id=? ORDER BY created_at DESC", user, user).stream().map(row -> {
+            var result = SqlResponses.fields(row, "id", "senderId", "recipientId", "status", "createdAt");
+            String other = user.equals(result.get("senderId")) ? result.get("recipientId").toString() : result.get("senderId").toString();
+            result.put("friendId", other); result.put("friendName", nickname(other));
+            return result;
+        }).toList();
     }
     public Map<String,Object> invite(String user, Map<String,Object> body) {
         FeatureInput.keys(body, Set.of("userId")); String target = FeatureInput.requiredText(body, "userId"); available(user, target);
@@ -41,7 +47,7 @@ public class SocialService {
         if (action.equals("accept")) jdbc.update("UPDATE feature_friend SET status='ACCEPTED' WHERE id=?", id);
         else jdbc.update("DELETE FROM feature_friend WHERE id=?", id);
     }
-    public List<Map<String,Object>> blocks(String user) { return jdbc.queryForList("SELECT target_id AS userId FROM feature_block WHERE user_id=?", user).stream().map(row -> SqlResponses.fields(row, "userId")).toList(); }
+    public List<Map<String,Object>> blocks(String user) { return named(jdbc.queryForList("SELECT target_id AS userId FROM feature_block WHERE user_id=?", user).stream().map(row -> SqlResponses.fields(row, "userId")).toList()); }
     public void block(String user, String target) {
         account(target); if (user.equals(target)) FeatureInput.fail("자신은 차단할 수 없습니다.");
         if (Boolean.TRUE.equals(jdbc.queryForObject("SELECT COUNT(*)>0 FROM feature_block WHERE user_id=? AND target_id=?", Boolean.class, user, target))) return;
@@ -93,7 +99,15 @@ public class SocialService {
     }
     public List<Map<String,Object>> members(String user, FeatureType type, String id, boolean pending) {
         require(user, type, id, pending);
-        return jdbc.queryForList("SELECT user_id AS userId,role,status,message FROM feature_member WHERE space_type=? AND space_id=? AND status=? ORDER BY user_id", type.name(), id, pending ? "PENDING" : "ACTIVE").stream().map(row -> SqlResponses.fields(row, "userId", "role", "status", "message")).toList();
+        return memberRows(type, id, pending ? "PENDING" : "ACTIVE");
+    }
+    /** 아직 수락하지 않은 초대. 방장만 본다(PR-10 2단계). */
+    public List<Map<String,Object>> invited(String user, FeatureType type, String id) {
+        require(user, type, id, true);
+        return memberRows(type, id, "INVITED");
+    }
+    private List<Map<String,Object>> memberRows(FeatureType type, String id, String status) {
+        return named(jdbc.queryForList("SELECT user_id AS userId,role,status,message FROM feature_member WHERE space_type=? AND space_id=? AND status=? ORDER BY user_id", type.name(), id, status).stream().map(row -> SqlResponses.fields(row, "userId", "role", "status", "message")).toList());
     }
     public void addMember(String user, FeatureType type, String id, Map<String,Object> body) {
         FeatureInput.keys(body, Set.of("userId", "role"));
@@ -106,7 +120,9 @@ public class SocialService {
     }
     public void removeMember(String user, FeatureType type, String id, String target) {
         store.lock(FeatureStore.SYSTEM, type, id);
-        if (!target.equals(user)) require(user, type, id, true); else require(user, type, id, false);
+        // 초대받은 사람은 수락하지 않고 스스로 거절(삭제)할 수 있다(PR-10 2단계)
+        boolean declining = target.equals(user) && member(type, id, user).map(m -> "INVITED".equals(m.get("status"))).orElse(false);
+        if (!target.equals(user)) require(user, type, id, true); else if (!declining) require(user, type, id, false);
         var member = member(type, id, target).orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND));
         if ("owner".equals(member.get("role"))) throw new ApiException(ErrorCode.CONFLICT, "소유자는 그룹 삭제로만 탈퇴할 수 있습니다.");
         jdbc.update("DELETE FROM feature_member WHERE space_type=? AND space_id=? AND user_id=?", type.name(), id, target);
@@ -218,6 +234,10 @@ public class SocialService {
         return Boolean.TRUE.equals(jdbc.queryForObject("SELECT COUNT(*)>0 FROM feature_block WHERE (user_id=? AND target_id=?) OR (user_id=? AND target_id=?)", Boolean.class, user, target, target, user));
     }
     private void available(String user, String target) { if (user.equals(target)) FeatureInput.fail("자신을 초대할 수 없습니다."); account(target); if (blocked(user, target)) throw new ApiException(ErrorCode.FORBIDDEN); }
+    private String nickname(String user) { return users.findById(user).map(UserEntity::getNickname).orElse(""); }
+    private List<Map<String,Object>> named(List<Map<String,Object>> rows) {
+        return rows.stream().map(row -> { var result = new LinkedHashMap<>(row); result.put("nickname", nickname(row.get("userId").toString())); return (Map<String,Object>) result; }).toList();
+    }
     private UserEntity account(String user) { return users.findById(user).filter(UserEntity::isActive).orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND)); }
     private Optional<Map<String,Object>> member(FeatureType type, String id, String user) { return member(type.name(), id, user); }
     private Optional<Map<String,Object>> member(String type, String id, String user) { return jdbc.queryForList("SELECT * FROM feature_member WHERE space_type=? AND space_id=? AND user_id=?", type, id, user).stream().findFirst(); }

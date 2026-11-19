@@ -54,7 +54,11 @@ public class ShareController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteGroup(@PathVariable String id, @RequestParam long version) { service.deleteSpace(CurrentUser.id(), FeatureType.GROUP, id, version); }
     @GetMapping("/groups/{id}/members")
-    public ApiResponse<?> members(@PathVariable String id) { return ApiResponse.ok(service.members(CurrentUser.id(), FeatureType.GROUP, id, false)); }
+    public ApiResponse<?> members(@PathVariable String id, @RequestParam(required = false) String status) {
+        // status=invited면 아직 수락하지 않은 초대(방장만)
+        if ("invited".equals(status)) return ApiResponse.ok(service.invited(CurrentUser.id(), FeatureType.GROUP, id));
+        return ApiResponse.ok(service.members(CurrentUser.id(), FeatureType.GROUP, id, false));
+    }
     @PostMapping("/groups/{id}/members")
     public ApiResponse<?> addMember(@PathVariable String id, @RequestBody Map<String,Object> body) { service.addMember(CurrentUser.id(), FeatureType.GROUP, id, body); return ApiResponse.ok(null); }
     @DeleteMapping("/groups/{id}/members/{memberId}")

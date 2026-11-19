@@ -9,8 +9,8 @@ const src = fileURLToPath(new URL('../src/', import.meta.url))
 const walk = dir => readdirSync(dir, { withFileTypes: true }).flatMap(e => e.isDirectory() ? walk(path.join(dir, e.name)) : [path.join(dir, e.name)])
 const vues = walk(src).filter(file => file.endsWith('.vue')).map(file => ({ name: path.relative(src, file).split(path.sep).join('/'), source: readFileSync(file, 'utf8') }))
 const EMPTY_WORDS = /(없어요|없습니다|비어 있)/
-// 멤버 칩 줄 안의 인라인 글자라 블록 여백을 주지 않는다.
-const INLINE_ALLOWED = new Set(['views/share/ShareGroupsView.vue'])
+// 블록 여백 없이 줄 안에 두는 예외 문구. 공유 그룹 멤버 칩 줄의 문구는 2026-11-20 서버 연결로 없어졌다(PR-10 2단계).
+const INLINE_ALLOWED = new Set()
 
 test('빈 목록 문구는 form-note가 아니라 empty-state로 쓴다', () => {
   const leftovers = []

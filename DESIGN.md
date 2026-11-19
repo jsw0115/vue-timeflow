@@ -243,7 +243,7 @@ surface 위 본문 크기 텍스트에는 color.muted 대신 color.foreground를
 | segmented-tab | `.segmented-tab` | `.tabs`, `.filter`, `.compose-tabs`(별칭. 선택은 기존 `.selected` 클래스도 인정) |
 | surface-card | `.card` | 같음 |
 | status-badge | `.tag` | `.state`, `.ok`, `.warn`, `.danger`, `.info` |
-| empty-state | `.empty-state` | 같음. 2026-11-18 빈 목록 문구 44곳을 옮겼다. 멤버 칩 줄 안의 인라인 문구 1곳만 `.form-note` |
+| empty-state | `.empty-state` | 같음. 2026-11-18 빈 목록 문구 44곳을 옮겼다. 예외였던 멤버 칩 줄 안의 인라인 문구는 2026-11-20 공유 그룹 화면을 서버에 연결하면서 없어졌다 |
 
 ### button-primary (계약)
 
@@ -640,6 +640,7 @@ LNB 내비게이션 항목이다. 활성 상태는 surface 배경과 foreground 
 | 2026-11-18 | `.icon`·`.tabs`·`.filter`·`.compose-tabs`·`.modal-secondary`를 공통 컴포넌트 별칭으로 묶고, 기존 입력에 hover·disabled 공통 상태 적용. 이름 없던 아이콘 버튼 9곳에 `aria-label`. 부록 B 컨트롤 형태 3항목 해소 |
 | 2026-11-18 | 2장 테마 추가. 표면 4종 × 색상 테마 5종 + 사용자 지정, 대비 맞추기 규칙, 프리셋 데이터 색 |
 | 2026-11-18 | 5·8장 보완. 지표 열 수 변수, 헤더 액션 줄바꿈, 주간 표 가로 스크롤, 320px 점검 방법 |
+| 2026-11-20 | 4장 코드 클래스 표의 empty-state 예외(공유 그룹 멤버 칩 줄의 `.form-note`)가 공유 그룹 화면 서버 연결로 없어진 것을 표에 반영 |
 
 ### omd 시스템 그래프 상태
 

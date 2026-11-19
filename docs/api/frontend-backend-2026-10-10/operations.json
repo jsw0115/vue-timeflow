@@ -7291,8 +7291,26 @@
     "implementationStatus": "서비스 연결 · 검증 범위 별도",
     "public": false,
     "responseSchema": {
-      "type": "object",
-      "additionalProperties": true
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "maxLength": 36
+          },
+          "nickname": {
+            "type": "string",
+            "maxLength": 80
+          }
+        },
+        "required": [
+          "userId",
+          "nickname"
+        ],
+        "additionalProperties": false
+      },
+      "maxItems": 500
     },
     "externalBoundary": false
   },
@@ -7350,8 +7368,54 @@
     "implementationStatus": "서비스 연결 · 검증 범위 별도",
     "public": false,
     "responseSchema": {
-      "type": "object",
-      "additionalProperties": true
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "senderId": {
+            "type": "string",
+            "maxLength": 36
+          },
+          "recipientId": {
+            "type": "string",
+            "maxLength": 36
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "ACCEPTED"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "friendId": {
+            "type": "string",
+            "maxLength": 36
+          },
+          "friendName": {
+            "type": "string",
+            "maxLength": 80
+          }
+        },
+        "required": [
+          "id",
+          "senderId",
+          "recipientId",
+          "status",
+          "createdAt",
+          "friendId",
+          "friendName"
+        ],
+        "additionalProperties": false
+      },
+      "maxItems": 500
     },
     "externalBoundary": false
   },
@@ -7637,6 +7701,12 @@
         "type": "String",
         "location": "path",
         "required": true
+      },
+      {
+        "name": "status",
+        "type": "String",
+        "location": "query",
+        "required": false
       }
     ],
     "status": 200,
@@ -7646,8 +7716,48 @@
     "implementationStatus": "서비스 연결 · 검증 범위 별도",
     "public": false,
     "responseSchema": {
-      "type": "object",
-      "additionalProperties": true
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "maxLength": 36
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "owner",
+              "editor",
+              "viewer"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "INVITED"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "nickname": {
+            "type": "string",
+            "maxLength": 80
+          }
+        },
+        "required": [
+          "userId",
+          "role",
+          "status",
+          "nickname"
+        ],
+        "additionalProperties": false
+      },
+      "maxItems": 500,
+      "description": "기본은 활성 멤버. status=invited면 아직 수락하지 않은 초대이고 방장만 부를 수 있다."
     },
     "externalBoundary": false
   },

@@ -2732,6 +2732,7 @@ JSON 최대 깊이 8, 객체 100필드, 배열 500항목, 저장 크기 128 KiB.
 | 위치 | 이름 | 타입 | 필수 | 기본값 |
 |---|---|---|---|---|
 | path | id | String | 예 | 없음 |
+| query | status | String | 아니오 | 없음 |
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 

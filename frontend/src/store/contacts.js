@@ -35,16 +35,8 @@ export function toggleBlock(id) {
 export function contactById(id) {
   return contacts.value.find((c) => c.id === id)
 }
-export function groupById(id) {
-  return groups.value.find((g) => String(g.id) === String(id))
-}
 export function membersOf(group) {
   return group.memberIds.map(contactById).filter(Boolean)
-}
-export function addGroup({ title, description }) {
-  const id = Math.max(0, ...groups.value.map((g) => g.id)) + 1
-  groups.value.push({ id, title, description: description ?? '', role: '방장', memberIds: [] })
-  return id
 }
 export function toggleMember(group, contactId) {
   if (isBlocked(contactId)) return
