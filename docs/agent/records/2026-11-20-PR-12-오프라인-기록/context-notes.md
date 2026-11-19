@@ -5,4 +5,7 @@
 - `IdempotencyKeys.create`는 그대로 두고 `apply(…, statusCode, …)`를 더했다. `create`는 `apply(…, 201, …)`를 부른다.
 - 메모 수정 화면이 없어 UT-185(메모 충돌)의 브라우저 점검은 할 일로 대신할 수 있다. 메모 쪽은 Node·HTTP로 확인한다. 3단계에서 정한다.
 - 로그아웃 안내(UF-105)는 실제 로그아웃이 있는 채팅 화면 `signOut`에 붙인다. 앱 기본 레이아웃에는 로그아웃 버튼이 없다.
-- 다음 작업: 2단계. `frontend/src/features/offline/outbox.mjs`(새 파일)와 `frontend/tests/outbox.test.mjs`.
+- 2단계: 보낼 때마다 저장소를 다시 읽는다. 생성이 끝나면 뒤 항목(같은 대상)의 대상을 서버 ID로 바꾸고 첫 뒤 항목에만 기준 version을 넣은 다음, 보낸 항목을 지운다. 그 사이 멈춰도 다시 보내면 멱등 키가 같은 결과를 준다.
+- 연결 실패(`network`)와 5xx·401(`server`)은 멈춘다. 409·400·404는 확인 필요로 두고 그 대상만 막는다.
+- 반응형 객체를 IndexedDB·`structuredClone`이 복제하지 못해 저장 전에 JSON으로 복사한다.
+- 다음 작업: 3단계. 메모·할 일 저장소(`createSyncedCollection`, `taskStore`)가 연결 실패 때 대기열에 넣고 목록에 대기 항목을 겹쳐 보이게 한다. 대기 목록·충돌 비교는 전역 컴포넌트(App.vue의 `LocalMigrationPrompt` 옆), 로그아웃 안내는 채팅 화면 `signOut`.
