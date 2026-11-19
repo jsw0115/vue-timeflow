@@ -2,7 +2,7 @@
 
 기준 2026-10-10. 생성 명령: frontend에서 npm run docs:api. 현재 컨트롤러의 단일 문자열 매핑 형식에 한정된 생성기입니다.
 
-총 288개. 기존 지정 계약 검증 10, 서비스 연결 265, 외부 제공자 경계 13, 미구현 stub 0, 공용 메모리 시연 0.
+총 292개. 기존 지정 계약 검증 10, 서비스 연결 269, 외부 제공자 경계 13, 미구현 stub 0, 공용 메모리 시연 0.
 
 | 상태 | 의미 |
 |---|---|
@@ -81,6 +81,10 @@ ChatController의 18개 경로는 CHAT_ENABLED=true일 때 등록됩니다. [채
 | POST | /api/settings | 서비스 연결 · 검증 범위 별도 | JWT | SettingsController |
 | GET | /api/settings/{section} | 서비스 연결 · 검증 범위 별도 | JWT | SettingsController |
 | POST | /api/settings/{section} | 서비스 연결 · 검증 범위 별도 | JWT | SettingsController |
+| GET | /api/share/people | 서비스 연결 · 검증 범위 별도 | JWT | ShareController |
+| PUT | /api/share/groups/{id}/share-level | 서비스 연결 · 검증 범위 별도 | JWT | ShareController |
+| GET | /api/share/groups/{id}/schedules | 서비스 연결 · 검증 범위 별도 | JWT | ShareController |
+| GET | /api/share/groups/{id}/preview | 서비스 연결 · 검증 범위 별도 | JWT | ShareController |
 | GET | /api/share/friends | 서비스 연결 · 검증 범위 별도 | JWT | ShareController |
 | POST | /api/share/friends/invite | 서비스 연결 · 검증 범위 별도 | JWT | ShareController |
 | POST | /api/share/friends/{id}/accept | 서비스 연결 · 검증 범위 별도 | JWT | ShareController |

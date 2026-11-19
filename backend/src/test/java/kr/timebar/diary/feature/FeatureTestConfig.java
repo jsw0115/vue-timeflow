@@ -30,7 +30,7 @@ public class FeatureTestConfig {
         jdbc.execute("CREATE TABLE planner_item(id BIGINT PRIMARY KEY,date DATE)");
         // 기록 연결(PR-08)이 소유자·삭제 여부를 확인하는 할 일 열만 둔다
         jdbc.execute("CREATE TABLE task(id VARCHAR(26) PRIMARY KEY,user_id VARCHAR(36) NOT NULL,title VARCHAR(200) NOT NULL,d_at TIMESTAMP(6) NULL)");
-        new ResourceDatabasePopulator(new ClassPathResource("db/workspace/V6__frontend_feature_records.sql"), new ClassPathResource("db/workspace/V9__idempotency_key.sql"), new ClassPathResource("db/workspace/V10__record_link.sql")).execute(source);
+        new ResourceDatabasePopulator(new ClassPathResource("db/workspace/V6__frontend_feature_records.sql"), new ClassPathResource("db/workspace/V9__idempotency_key.sql"), new ClassPathResource("db/workspace/V10__record_link.sql"), new ClassPathResource("db/workspace/V11__group_share_level.sql")).execute(source);
         return source;
     }
     @Bean DataSourceTransactionManager transactionManager(DataSource source) { return new DataSourceTransactionManager(source); }
@@ -50,6 +50,8 @@ public class FeatureTestConfig {
     @Bean PasswordEncoder encoder() { return new BCryptPasswordEncoder(); }
     @Bean PasswordPolicy passwords() { return new PasswordPolicy(); }
     @Bean SocialService social(FeatureStore store, JdbcTemplate jdbc, UserRepository users) { return new SocialService(store, jdbc, users); }
+    @Bean kr.timebar.diary.social.ShareCalendar shareCalendar(SocialService social, ScheduleService schedules, JdbcTemplate jdbc, UserRepository users) { return new kr.timebar.diary.social.ShareCalendar(social, schedules, jdbc, users); }
+    @Bean kr.timebar.diary.social.PeopleFinder peopleFinder(UserRepository users, SocialService social) { return new kr.timebar.diary.social.PeopleFinder(users, social); }
     @Bean AdminService admin(UserRepository users, FeatureStore store, RefreshTokenRepository tokens, PasswordEncoder encoder, PasswordPolicy passwords) { return new AdminService(users, store, tokens, encoder, passwords); }
     @Bean SettingsService settings(FeatureStore store, UserRepository users, PasswordEncoder encoder, PasswordPolicy passwords, RefreshTokenRepository tokens) { return new SettingsService(store, users, encoder, passwords, tokens); }
 }

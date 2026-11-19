@@ -132,6 +132,7 @@ const custom = {
   'POST /api/work/portfolio-links': ref('PORTFOLIO_LINKCreate'),
   'POST /api/share/friends/invite': object({ userId: string(36) }, ['userId']),
   'POST /api/share/groups/{id}/members': object({ userId: string(36), role: choice('viewer', 'editor') }, ['userId']),
+  'PUT /api/share/groups/{id}/share-level': { ...object({ level: choice('none', 'busy', 'title', 'detail') }, ['level']), description: '이 그룹에 내 일정을 보이는 범위. none 공유 안 함(철회), busy 바쁜 시간만, title 제목 포함, detail 상세 포함(내용·분류·색). 활성 멤버만 바꾼다. 처음 값은 none이다.' },
   'POST /api/communities/{id}/members': object({ userId: string(36), role: choice('viewer', 'editor') }, ['userId']),
   'POST /api/communities/{id}/join': object({ message: string(2000) }),
   'PUT /api/communities/{id}/join-requests/{userId}': object({ approved: boolean, reason: string(2000) }, ['approved']),
@@ -178,7 +179,12 @@ schemas.RoutineHistory = object({ routineId: string(), items: array(object({ dat
 schemas.RoutineHistory.description = 'total은 done과 missed 회차 수다. 쉬는 날(skipped)과 오늘·미래의 미완료 회차(pending)는 rate 분모에 넣지 않고 연속 기록을 끊지 않는다. 지난 미완료 회차(missed)만 연속 기록을 끊는다.'
 schemas.POSTResponse.properties = { ...schemas.POSTResponse.properties, authorId: string(), name: string(), likes: integer(0), comments: integer(0), liked: boolean }
 schemas.Profile = object({ id: string(), nickname: string(80), email: { type: 'string', format: 'email' }, timeZone: string(64), extra: flexible({ intro: string(), mode: choice('J', 'P', 'B'), dayStartHour: integer(0, 6) }) }, ['id', 'nickname', 'email', 'timeZone', 'extra'])
+schemas.SharedOccurrence = { ...object({ ownerId: string(36), ownerName: string(80), level: choice('busy', 'title', 'detail'), startDate: date, endDate: date, startTime: string(5), endTime: string(5), title: string(200), body: string(20000), category: string(200), color: string(200) }, ['ownerId', 'ownerName', 'level', 'startDate', 'endDate', 'startTime', 'endTime']), description: '그룹 멤버가 고른 범위만큼만 담는다. busy는 시간만, title은 제목까지, detail은 내용·분류·색까지. 일정 ID는 어느 범위에도 없다.' }
 const responseOverrides = {
+  'PUT /api/share/groups/{id}/share-level': object({ groupId: string(100), level: choice('none', 'busy', 'title', 'detail') }, ['groupId', 'level']),
+  'GET /api/share/groups/{id}/schedules': array(ref('SharedOccurrence')),
+  'GET /api/share/groups/{id}/preview': array(ref('SharedOccurrence')),
+  'GET /api/share/people': object({ id: string(36), nickname: string(80) }, ['id', 'nickname']),
   'GET /api/record-links': array(object({ kind: choice('task', 'schedule', 'actual'), id: string(100), title: string(200), direction: choice('source', 'target') }, ['kind', 'id', 'title', 'direction'])),
   'POST /api/tasks/{taskId}/schedules': ref('SCHEDULEResponse'),
   'GET /api/planner/recordings': { type: 'array', items: ref('ActualRecording') },

@@ -11,7 +11,17 @@ import java.util.Map;
 @RequestMapping("/api/share")
 public class ShareController {
     private final SocialService service;
-    public ShareController(SocialService service) { this.service = service; }
+    private final kr.timebar.diary.social.ShareCalendar calendar;
+    private final kr.timebar.diary.social.PeopleFinder people;
+    public ShareController(SocialService service, kr.timebar.diary.social.ShareCalendar calendar, kr.timebar.diary.social.PeopleFinder people) { this.service = service; this.calendar = calendar; this.people = people; }
+    @GetMapping("/people")
+    public ApiResponse<?> person(@RequestParam String email) { return ApiResponse.ok(people.find(CurrentUser.id(), email)); }
+    @PutMapping("/groups/{id}/share-level")
+    public ApiResponse<?> shareLevel(@PathVariable String id, @RequestBody Map<String,Object> body) { return ApiResponse.ok(calendar.setLevel(CurrentUser.id(), id, body)); }
+    @GetMapping("/groups/{id}/schedules")
+    public ApiResponse<?> groupSchedules(@PathVariable String id, @RequestParam String from, @RequestParam String to) { return ApiResponse.ok(calendar.schedules(CurrentUser.id(), id, from, to)); }
+    @GetMapping("/groups/{id}/preview")
+    public ApiResponse<?> preview(@PathVariable String id, @RequestParam String viewerId, @RequestParam String from, @RequestParam String to) { return ApiResponse.ok(calendar.preview(CurrentUser.id(), id, viewerId, from, to)); }
     @GetMapping("/friends")
     public ApiResponse<?> friends() { return ApiResponse.ok(service.friends(CurrentUser.id())); }
     @PostMapping("/friends/invite")

@@ -1,6 +1,6 @@
 # API 목록
 
-기준 2026-10-10. 총 288개 매핑이며 wildcard 경로는 허용된 값을 선택한다. 채팅은 CHAT_ENABLED=true 조건부 등록이다. 구현·검증 범위는 [검증 기록](verification.md)을 확인한다.
+기준 2026-10-10. 총 292개 매핑이며 wildcard 경로는 허용된 값을 선택한다. 채팅은 CHAT_ENABLED=true 조건부 등록이다. 구현·검증 범위는 [검증 기록](verification.md)을 확인한다.
 
 | 메서드 | 경로 | 인증 | 처리 | 소스 |
 |---|---|---|---|---|
@@ -224,6 +224,10 @@
 | GET | `/api/share/groups/{id}/members` | JWT | 실제 처리 소스 있음 | ShareController |
 | POST | `/api/share/groups/{id}/members` | JWT | 실제 처리 소스 있음 | ShareController |
 | DELETE | `/api/share/groups/{id}/members/{memberId}` | JWT | 실제 처리 소스 있음 | ShareController |
+| GET | `/api/share/groups/{id}/preview` | JWT | 실제 처리 소스 있음 | ShareController |
+| GET | `/api/share/groups/{id}/schedules` | JWT | 실제 처리 소스 있음 | ShareController |
+| PUT | `/api/share/groups/{id}/share-level` | JWT | 실제 처리 소스 있음 | ShareController |
+| GET | `/api/share/people` | JWT | 실제 처리 소스 있음 | ShareController |
 | GET | `/api/stat/category` | JWT | 실제 처리 소스 있음 | InsightController |
 | GET | `/api/stat/dashboard` | JWT | 실제 처리 소스 있음 | InsightController |
 | GET | `/api/stat/focus` | JWT | 실제 처리 소스 있음 | InsightController |

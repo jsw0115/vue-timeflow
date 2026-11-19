@@ -2761,6 +2761,57 @@ JSON 최대 깊이 8, 객체 100필드, 배열 500항목, 저장 크기 128 KiB.
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 
+## GET /api/share/groups/{id}/preview
+
+인증은 JWT이며 소스는 ShareController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | id | String | 예 | 없음 |
+| query | viewerId | String | 예 | 없음 |
+| query | from | String | 예 | 없음 |
+| query | to | String | 예 | 없음 |
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## GET /api/share/groups/{id}/schedules
+
+인증은 JWT이며 소스는 ShareController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | id | String | 예 | 없음 |
+| query | from | String | 예 | 없음 |
+| query | to | String | 예 | 없음 |
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## PUT /api/share/groups/{id}/share-level
+
+인증은 JWT이며 소스는 ShareController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | id | String | 예 | 없음 |
+
+| 본문 필드 | 타입 | 필수 | 제약 |
+|---|---|---|---|
+| level | string | 예 | none/busy/title/detail |
+
+이 그룹에 내 일정을 보이는 범위. none 공유 안 함(철회), busy 바쁜 시간만, title 제목 포함, detail 상세 포함(내용·분류·색). 활성 멤버만 바꾼다. 처음 값은 none이다.
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## GET /api/share/people
+
+인증은 JWT이며 소스는 ShareController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| query | email | String | 예 | 없음 |
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
 ## GET /api/stat/category
 
 인증은 JWT이며 소스는 InsightController.java다. 성공 HTTP는 200다.

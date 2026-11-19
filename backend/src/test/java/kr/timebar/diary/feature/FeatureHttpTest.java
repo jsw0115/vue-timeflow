@@ -37,6 +37,8 @@ class FeatureHttpTest {
     @Autowired RecordService records;
     @Autowired WorkService work;
     @Autowired SocialService social;
+    @Autowired kr.timebar.diary.social.ShareCalendar shareCalendar;
+    @Autowired kr.timebar.diary.social.PeopleFinder peopleFinder;
     @Autowired AdminService admin;
     @Autowired SettingsService settings;
     @Autowired ScheduleService schedules;
@@ -52,7 +54,7 @@ class FeatureHttpTest {
         authenticate(owner, "USER");
         var actions = new RecordActionsController(records, store, mock(TaskService.class), mock(kr.timebar.diary.planner.PlannerService.class), work);
         mvc = MockMvcBuilders.standaloneSetup(new RecordsController(records), new ContactsController(records), new WorkController(records, work), actions,
-                new EventDiaryMemoController(records), new SettingsController(settings), new UserProfileController(settings), new ShareController(social),
+                new EventDiaryMemoController(records), new SettingsController(settings), new UserProfileController(settings), new ShareController(social, shareCalendar, peopleFinder),
                 new CommunityController(social), new AdminController(admin), new SupportController(records, store), new IntegrationController(admin), new AttachmentController(jdbc, social), new ScheduleController(records, schedules, links), new PortfolioLinkController(store, users))
                 .setControllerAdvice(new ApiExceptionHandler()).build();
     }

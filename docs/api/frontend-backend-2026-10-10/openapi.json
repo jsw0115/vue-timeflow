@@ -26276,6 +26276,555 @@
         "x-test-evidence": "verification.md"
       }
     },
+    "/api/share/groups/{id}/preview": {
+      "get": {
+        "operationId": "ShareController_get__api_share_groups__id__preview",
+        "tags": [
+          "ShareController"
+        ],
+        "summary": "GET /api/share/groups/{id}/preview",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "viewerId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "성공. 세부 정책은 README와 기능 규약을 따른다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/SharedOccurrence"
+                      },
+                      "maxItems": 500
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 검증 오류.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 필요 또는 폐기된 토큰.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "역할·회원 권한 부족.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "없음·타인 리소스·만료.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "버전·현재 상태 충돌.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-implementation-status": "서비스 연결 · 검증 범위 별도",
+        "x-source": "ShareController.java",
+        "x-admin-required": false,
+        "x-test-evidence": "verification.md"
+      }
+    },
+    "/api/share/groups/{id}/schedules": {
+      "get": {
+        "operationId": "ShareController_get__api_share_groups__id__schedules",
+        "tags": [
+          "ShareController"
+        ],
+        "summary": "GET /api/share/groups/{id}/schedules",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "성공. 세부 정책은 README와 기능 규약을 따른다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/SharedOccurrence"
+                      },
+                      "maxItems": 500
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 검증 오류.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 필요 또는 폐기된 토큰.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "역할·회원 권한 부족.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "없음·타인 리소스·만료.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "버전·현재 상태 충돌.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-implementation-status": "서비스 연결 · 검증 범위 별도",
+        "x-source": "ShareController.java",
+        "x-admin-required": false,
+        "x-test-evidence": "verification.md"
+      }
+    },
+    "/api/share/groups/{id}/share-level": {
+      "put": {
+        "operationId": "ShareController_put__api_share_groups__id__share_level",
+        "tags": [
+          "ShareController"
+        ],
+        "summary": "PUT /api/share/groups/{id}/share-level",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "level": {
+                    "type": "string",
+                    "enum": [
+                      "none",
+                      "busy",
+                      "title",
+                      "detail"
+                    ]
+                  }
+                },
+                "required": [
+                  "level"
+                ],
+                "additionalProperties": false,
+                "description": "이 그룹에 내 일정을 보이는 범위. none 공유 안 함(철회), busy 바쁜 시간만, title 제목 포함, detail 상세 포함(내용·분류·색). 활성 멤버만 바꾼다. 처음 값은 none이다."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "성공. 세부 정책은 README와 기능 규약을 따른다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "groupId": {
+                          "type": "string",
+                          "maxLength": 100
+                        },
+                        "level": {
+                          "type": "string",
+                          "enum": [
+                            "none",
+                            "busy",
+                            "title",
+                            "detail"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "groupId",
+                        "level"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 검증 오류.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 필요 또는 폐기된 토큰.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "역할·회원 권한 부족.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "없음·타인 리소스·만료.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "버전·현재 상태 충돌.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-implementation-status": "서비스 연결 · 검증 범위 별도",
+        "x-source": "ShareController.java",
+        "x-admin-required": false,
+        "x-test-evidence": "verification.md"
+      }
+    },
+    "/api/share/people": {
+      "get": {
+        "operationId": "ShareController_get__api_share_people",
+        "tags": [
+          "ShareController"
+        ],
+        "summary": "GET /api/share/people",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "email",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "성공. 세부 정책은 README와 기능 규약을 따른다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "maxLength": 36
+                        },
+                        "nickname": {
+                          "type": "string",
+                          "maxLength": 80
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "nickname"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 검증 오류.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 필요 또는 폐기된 토큰.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "역할·회원 권한 부족.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "없음·타인 리소스·만료.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "버전·현재 상태 충돌.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-implementation-status": "서비스 연결 · 검증 범위 별도",
+        "x-source": "ShareController.java",
+        "x-admin-required": false,
+        "x-test-evidence": "verification.md"
+      }
+    },
     "/api/stat/category": {
       "get": {
         "operationId": "InsightController_get__api_stat_category",
@@ -45624,6 +46173,70 @@
           "extra"
         ],
         "additionalProperties": false
+      },
+      "SharedOccurrence": {
+        "type": "object",
+        "properties": {
+          "ownerId": {
+            "type": "string",
+            "maxLength": 36
+          },
+          "ownerName": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "busy",
+              "title",
+              "detail"
+            ]
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "startTime": {
+            "type": "string",
+            "maxLength": 5
+          },
+          "endTime": {
+            "type": "string",
+            "maxLength": 5
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "body": {
+            "type": "string",
+            "maxLength": 20000
+          },
+          "category": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "color": {
+            "type": "string",
+            "maxLength": 200
+          }
+        },
+        "required": [
+          "ownerId",
+          "ownerName",
+          "level",
+          "startDate",
+          "endDate",
+          "startTime",
+          "endTime"
+        ],
+        "additionalProperties": false,
+        "description": "그룹 멤버가 고른 범위만큼만 담는다. busy는 시간만, title은 제목까지, detail은 내용·분류·색까지. 일정 ID는 어느 범위에도 없다."
       },
       "Error": {
         "type": "object",

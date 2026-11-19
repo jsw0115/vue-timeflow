@@ -230,6 +230,8 @@ public class SocialService {
     private Map<String,Object> describe(String user, FeatureType type, Map<String,Object> row) {
         var result = new LinkedHashMap<>(row); String id = row.get("id").toString(); var membership = member(type, id, user);
         result.put("members", activeCount(type, id)); result.put("membership", membership.map(m -> m.get("status")).orElse("NONE")); result.put("role", membership.map(m -> m.get("role")).orElse("none"));
+        // 공유 그룹이면 내가 이 그룹에 내 일정을 보이는 범위(PR-10)
+        if (type == FeatureType.GROUP) result.put("shareLevel", membership.map(m -> m.get("share_level")).orElse("none"));
         return result;
     }
     private void notify(String user, String kind, String title, String link) { store.create(user, FeatureType.NOTIFICATION, Map.of("title", title, "kind", kind, "link", link, "read", false)); }
