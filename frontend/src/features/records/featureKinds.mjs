@@ -27,3 +27,18 @@ export const ddayKind = {
 export const moneyKind = {
   kind: 'money', path: '/api/money/entries', fields: ['title', 'body', 'date', 'amount', 'type', 'category'], demoFields: ['title', 'date', 'amount'],
 }
+
+/** 경력기술서 성과는 입력란에서 한 줄에 하나씩 쓴다. */
+export const achievementsFromText = (text) => String(text ?? '').split('\n').map((line) => line.trim()).filter(Boolean)
+
+/** 경력 프로젝트(PR-07 7단계). 서버 필수 값은 title·role이다. */
+export const careerKind = {
+  kind: 'career', path: '/api/work/career/projects', fields: ['title', 'period', 'role', 'company', 'stack', 'achievements'], demoFields: ['title'],
+  toLocal: (row) => ({ ...row, achievements: row.achievements ?? [] }),
+}
+
+/** 포트폴리오 항목. 화면의 수정일은 서버 수정 시각의 날짜다. */
+export const portfolioKind = {
+  kind: 'portfolio', path: '/api/work/portfolio', fields: ['title', 'body', 'kind'], demoFields: ['title'],
+  toLocal: (row) => ({ ...row, updated: String(row.updatedAt ?? '').slice(0, 10).replaceAll('-', '.') }),
+}

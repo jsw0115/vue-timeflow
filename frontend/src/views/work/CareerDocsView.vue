@@ -1,6 +1,11 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import Modal from '../../components/Modal.vue'
+import SaveStatus from '../../components/SaveStatus.vue'
+import ConflictCompare from '../../components/ConflictCompare.vue'
+import { careerStore, portfolioStore, resumeStore } from '../../store/career'
+import { achievementsFromText } from '../../features/records/featureKinds.mjs'
+import { createSaveState, saveFailureMessage } from '../../features/records/saveState.mjs'
 import {
   workPrivacy, VISIBILITY, isPortfolioShared, togglePortfolioShared, logAccess,
 } from '../../store/workPrivacy'
@@ -21,7 +26,7 @@ const TABS = [
   { id: 'privacy', label: '보안 설정' },
 ]
 
-const projects = ref([
+const demoProjects = ref([
   {
     id: 1,
     title: '타임바 다이어리 리뉴얼',
@@ -42,7 +47,7 @@ const projects = ref([
   },
 ])
 
-const resume = ref({
+const demoResume = ref({
   name: '김지수',
   headline: '기록으로 팀의 리듬을 만드는 프로덕트 엔지니어',
   years: 6,
@@ -50,11 +55,120 @@ const resume = ref({
   education: '한국대학교 컴퓨터공학 학사 (2020)',
 })
 
-const portfolio = ref([
+const demoPortfolio = ref([
   { id: 1, title: '타임바 리뉴얼 케이스 스터디', kind: '케이스 스터디', updated: '2026.09.02' },
   { id: 2, title: '디자인 토큰 시스템 문서', kind: '문서', updated: '2026.08.18' },
   { id: 3, title: '근태 자동화 회고', kind: '회고', updated: '2025.12.20' },
 ])
+
+/* 로그인 상태는 계정의 서버 기록(PR-07 7단계), 로그아웃 상태는 위 예시를 보인다 */
+const careerMode = careerStore.mode
+const onServer = computed(() => careerMode.value === 'server')
+const projects = computed(() => (onServer.value ? careerStore.list.value : demoProjects.value))
+const portfolio = computed(() => (onServer.value ? portfolioStore.list.value : demoPortfolio.value))
+const resumeDraft = ref({ ...resumeStore.state.value })
+const resume = computed(() => (onServer.value ? resumeDraft.value : demoResume.value))
+watch(careerMode, async (mode) => {
+  if (mode !== 'server') return
+  await resumeStore.load()
+  resumeDraft.value = { ...resumeStore.state.value }
+}, { immediate: true })
+const listMessage = ref('')
+
+/* 경력 프로젝트 추가·수정(로그인 상태) */
+const projectEditor = ref(null)
+const projectSaving = createSaveState({ fields: { title: ['title', '제목'], role: ['role', '역할'] } })
+const projectConflict = ref(null)
+const projectCanSave = computed(() => !!projectEditor.value?.draft.title.trim() && !!projectEditor.value?.draft.role.trim())
+function openProject(p = null) {
+  projectSaving.reset()
+  projectConflict.value = null
+  projectEditor.value = {
+    base: p ? { ...p } : null,
+    draft: { title: p?.title ?? '', period: p?.period ?? '', role: p?.role ?? '', company: p?.company ?? '', stack: p?.stack ?? '', achievementsText: (p?.achievements ?? []).join('\n') },
+  }
+}
+async function saveProject() {
+  const { base, draft } = projectEditor.value
+  if (!projectCanSave.value) return
+  const values = { title: draft.title.trim(), period: draft.period, role: draft.role.trim(), company: draft.company, stack: draft.stack, achievements: achievementsFromText(draft.achievementsText) }
+  projectConflict.value = null
+  const result = await projectSaving.run(() => (base ? careerStore.update(base, values) : careerStore.create(values)))
+  if (result.ok) { projectEditor.value = null; return }
+  if (result.error.kind === 'conflict') projectConflict.value = { latest: { ...(result.error.latest ?? base) } }
+}
+const projectCompareRows = computed(() => {
+  if (!projectConflict.value) return []
+  const latest = projectConflict.value.latest, mine = projectEditor.value.draft
+  return [
+    { label: '프로젝트', mine: mine.title.trim(), latest: latest.title },
+    { label: '기간 · 역할', mine: mine.period + ' · ' + mine.role, latest: (latest.period ?? '') + ' · ' + latest.role },
+    { label: '회사', mine: mine.company, latest: latest.company ?? '' },
+    { label: '성과', mine: achievementsFromText(mine.achievementsText).join('\n'), latest: (latest.achievements ?? []).join('\n') },
+  ]
+})
+function keepMyProject() {
+  projectEditor.value.base = { ...projectConflict.value.latest }
+  projectConflict.value = null
+  saveProject()
+}
+function useLatestProject() {
+  openProject(projectConflict.value.latest)
+}
+async function removeProject(p) {
+  if (!window.confirm('‘' + p.title + '’ 프로젝트를 삭제할까요?')) return
+  listMessage.value = ''
+  try { await careerStore.remove(p) } catch (error) {
+    if (error.kind !== 'stale' && error.kind !== 'notFound') listMessage.value = error.kind === 'conflict' ? '다른 곳에서 먼저 고쳐서 삭제하지 않았어요. 최신 내용을 확인한 뒤 다시 삭제해 주세요.' : saveFailureMessage(error).replace('저장하지', '삭제하지')
+  }
+}
+
+/* 이력서 저장(로그인 상태). 처음 저장은 version 없이, 그 뒤에는 받은 version으로 보낸다 */
+const resumeSaving = createSaveState({ fields: { name: ['name', '이름'], years: ['years', '경력'] } })
+const resumeConflict = ref(null)
+async function saveResume() {
+  resumeConflict.value = null
+  const result = await resumeSaving.run(() => resumeStore.save(resumeDraft.value))
+  if (result.ok) { resumeDraft.value = { ...result.value }; return }
+  if (result.error.kind === 'conflict' && result.error.latest) resumeConflict.value = { latest: result.error.latest, version: result.error.latestVersion }
+}
+const resumeCompareRows = computed(() => {
+  if (!resumeConflict.value) return []
+  const latest = resumeConflict.value.latest, mine = resumeDraft.value
+  return ['name', 'headline', 'years', 'skills', 'education'].map((key) => ({ label: { name: '이름', headline: '한 줄 소개', years: '경력', skills: '보유 기술', education: '학력' }[key], mine: String(mine[key] ?? ''), latest: String(latest[key] ?? '') }))
+})
+function keepMyResume() {
+  resumeStore.adopt(resumeConflict.value.latest, resumeConflict.value.version)
+  resumeConflict.value = null
+  saveResume()
+}
+function useLatestResume() {
+  resumeStore.adopt(resumeConflict.value.latest, resumeConflict.value.version)
+  resumeDraft.value = { ...resumeConflict.value.latest }
+  resumeConflict.value = null
+  resumeSaving.reset()
+}
+
+/* 포트폴리오 항목 추가·삭제(로그인 상태) */
+const PORTFOLIO_KINDS = ['케이스 스터디', '문서', '회고', '기타']
+const portfolioEditor = ref(null)
+const portfolioSaving = createSaveState({ fields: { title: ['title', '제목'], kind: ['kind', '종류'] } })
+function openPortfolio() {
+  portfolioSaving.reset()
+  portfolioEditor.value = { title: '', kind: PORTFOLIO_KINDS[0], body: '' }
+}
+async function savePortfolio() {
+  if (!portfolioEditor.value.title.trim()) return
+  const result = await portfolioSaving.run(() => portfolioStore.create({ ...portfolioEditor.value, title: portfolioEditor.value.title.trim() }))
+  if (result.ok) portfolioEditor.value = null
+}
+async function removePortfolio(p) {
+  if (!window.confirm('‘' + p.title + '’ 항목을 삭제할까요?')) return
+  listMessage.value = ''
+  try { await portfolioStore.remove(p) } catch (error) {
+    if (error.kind !== 'stale' && error.kind !== 'notFound') listMessage.value = error.kind === 'conflict' ? '다른 곳에서 먼저 고쳐서 삭제하지 않았어요. 최신 내용을 확인한 뒤 다시 삭제해 주세요.' : saveFailureMessage(error).replace('저장하지', '삭제하지')
+  }
+}
 
 function mask(v) {
   return workPrivacy.maskCompanyNames ? v.replace(/./g, '•') : v
@@ -192,14 +306,26 @@ function onVisibilityChange(v) {
   </div>
 
   <!-- 경력기술서 -->
+  <p v-if="!onServer" class="input-field-help career-note">지금 보이는 경력·이력서·포트폴리오는 예시예요. 로그인하면 계정에 저장하고 고칠 수 있어요.</p>
+  <p v-if="listMessage" class="input-field-help" data-state="error" role="status">{{ listMessage }}</p>
   <template v-if="tab === 'career'">
+    <p v-if="onServer && careerStore.state.loading && !careerStore.state.loaded" class="input-field-help" role="status">경력을 불러오는 중이에요.</p>
+    <div v-else-if="onServer && careerStore.state.error && !careerStore.state.loaded" class="empty-state" role="status"><p>경력을 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요.</p><button type="button" class="button-secondary" @click="careerStore.reload()">다시 시도</button></div>
+    <div v-else-if="onServer && !projects.length" class="empty-state" role="status"><p>아직 남긴 경력 프로젝트가 없어요. 프로젝트를 추가해 보세요.</p></div>
+    <button v-if="onServer" type="button" class="button-secondary" style="margin-bottom: 12px" @click="openProject()">프로젝트 추가</button>
     <section class="card" v-for="p in projects" :key="p.id" style="margin-bottom: 12px">
       <div class="head">
         <div>
           <h3 style="margin: 0">{{ p.title }}</h3>
-          <p style="margin: 4px 0 0">{{ p.period }} · {{ p.role }} · {{ workPrivacy.maskCompanyNames ? mask(p.company) : p.company }}</p>
+          <p style="margin: 4px 0 0">{{ p.period }} · {{ p.role }} · {{ workPrivacy.maskCompanyNames ? mask(p.company ?? '') : p.company }}</p>
         </div>
-        <button class="review" style="margin: 0" @click="generateStatement(p)">문장 만들기</button>
+        <span style="display: flex; flex-wrap: wrap; gap: 6px">
+          <button class="review" style="margin: 0" @click="generateStatement(p)">문장 만들기</button>
+          <template v-if="onServer">
+            <button class="review" style="margin: 0" @click="openProject(p)">수정</button>
+            <button class="review" style="margin: 0" @click="removeProject(p)">삭제</button>
+          </template>
+        </span>
       </div>
       <ul class="career-list">
         <li v-for="a in p.achievements" :key="a">{{ a }}</li>
@@ -226,6 +352,12 @@ function onVisibilityChange(v) {
       <label>보유 기술<input v-model="resume.skills" /></label>
       <label>학력<input v-model="resume.education" /></label>
       <p class="form-note">이력서는 어떤 경우에도 커뮤니티·랭킹·공유 화면에 나타나지 않아요.</p>
+      <template v-if="onServer">
+        <ConflictCompare v-if="resumeConflict" :rows="resumeCompareRows" :busy="resumeSaving.state.status === 'saving'" @keep-mine="keepMyResume" @use-latest="useLatestResume" />
+        <SaveStatus :state="resumeSaving.state" mode="server" @retry="saveResume" />
+        <button type="button" class="button-secondary" style="margin-top: 12px" :disabled="!resume.name.trim() || !!resumeConflict || !resumeStore.state.loaded" :aria-busy="resumeSaving.state.status === 'saving' ? 'true' : undefined" @click="saveResume">{{ resumeSaving.state.status === 'saving' ? '저장하는 중' : '이력서 저장' }}</button>
+        <p v-if="resumeStore.state.error" class="input-field-help" data-state="error" role="status">이력서를 불러오지 못했어요. 새로고침한 뒤 다시 시도해 주세요.</p>
+      </template>
     </section>
   </template>
 
@@ -243,8 +375,11 @@ function onVisibilityChange(v) {
           {{ v.label }}
         </button>
       </div>
-      <p class="form-note">링크 공개를 켜도, 아래에서 직접 고른 항목만 열립니다. 지금 공개중인 항목 {{ sharedCount }}개.</p>
+      <p v-if="onServer" class="input-field-help">계정의 포트폴리오를 링크로 공개하는 기능은 아직 준비 중이에요. 지금은 아무 항목도 공개되지 않아요.</p>
+      <p v-else class="form-note">링크 공개를 켜도, 아래에서 직접 고른 항목만 열립니다. 지금 공개중인 항목 {{ sharedCount }}개.</p>
     </section>
+    <button v-if="onServer" type="button" class="button-secondary" style="margin-bottom: 12px" @click="openPortfolio">항목 추가</button>
+    <div v-if="onServer && portfolioStore.state.loaded && !portfolio.length" class="empty-state" role="status"><p>아직 포트폴리오 항목이 없어요. 항목을 추가해 보세요.</p></div>
 
     <section class="card list">
       <div class="list-head" style="grid-template-columns: 2fr 1fr 1fr 1fr"><span>항목</span><span>종류</span><span>수정일</span><span>링크 공개</span></div>
@@ -252,7 +387,8 @@ function onVisibilityChange(v) {
         <label>{{ p.title }}</label>
         <span class="tag">{{ p.kind }}</span>
         <span class="figure">{{ p.updated }}</span>
-        <span>
+        <span v-if="onServer" style="display: flex; align-items: center; gap: 6px"><small>준비 중</small><button class="review" style="margin: 0" @click="removePortfolio(p)">삭제</button></span>
+        <span v-else>
           <button
             type="button"
             role="switch"
@@ -314,4 +450,32 @@ function onVisibilityChange(v) {
       <button class="primary" @click="generating = null">닫기</button>
     </template>
   </Modal>
+  <Modal v-if="projectEditor" :title="projectEditor.base ? '경력 프로젝트 수정' : '경력 프로젝트 추가'" @close="projectEditor = null">
+    <label>프로젝트<input v-model="projectEditor.draft.title" maxlength="200" /></label>
+    <div class="form-row"><label style="flex: 1">기간<input v-model="projectEditor.draft.period" maxlength="200" placeholder="예: 2026.03 ~ 2026.09" /></label><label style="flex: 1">역할<input v-model="projectEditor.draft.role" maxlength="200" /></label></div>
+    <div class="form-row"><label style="flex: 1">회사<input v-model="projectEditor.draft.company" maxlength="200" /></label><label style="flex: 1">기술<input v-model="projectEditor.draft.stack" maxlength="200" /></label></div>
+    <label>성과 (한 줄에 하나)<textarea v-model="projectEditor.draft.achievementsText" rows="5"></textarea></label>
+    <p v-if="!projectCanSave" class="form-note">프로젝트와 역할을 입력해주세요.</p>
+    <p v-if="projectSaving.state.fieldMessage" class="input-field-help" data-state="error" role="alert">{{ projectSaving.state.fieldMessage }}</p>
+    <ConflictCompare v-if="projectConflict" :rows="projectCompareRows" :busy="projectSaving.state.status === 'saving'" @keep-mine="keepMyProject" @use-latest="useLatestProject" />
+    <SaveStatus :state="projectSaving.state" mode="server" @retry="saveProject" />
+    <template #footer>
+      <button type="button" class="modal-secondary" @click="projectEditor = null">취소</button>
+      <button class="primary" :disabled="!projectCanSave || !!projectConflict" :aria-busy="projectSaving.state.status === 'saving' ? 'true' : undefined" @click="saveProject">{{ projectSaving.state.status === 'saving' ? '저장하는 중' : '저장하기' }}</button>
+    </template>
+  </Modal>
+  <Modal v-if="portfolioEditor" title="포트폴리오 항목 추가" @close="portfolioEditor = null">
+    <label>항목<input v-model="portfolioEditor.title" maxlength="200" /></label>
+    <label>종류<select v-model="portfolioEditor.kind"><option v-for="kind in PORTFOLIO_KINDS" :key="kind">{{ kind }}</option></select></label>
+    <label>내용<textarea v-model="portfolioEditor.body" rows="4"></textarea></label>
+    <SaveStatus :state="portfolioSaving.state" mode="server" @retry="savePortfolio" />
+    <template #footer>
+      <button type="button" class="modal-secondary" @click="portfolioEditor = null">취소</button>
+      <button class="primary" :disabled="!portfolioEditor.title.trim()" :aria-busy="portfolioSaving.state.status === 'saving' ? 'true' : undefined" @click="savePortfolio">{{ portfolioSaving.state.status === 'saving' ? '저장하는 중' : '항목 추가' }}</button>
+    </template>
+  </Modal>
 </template>
+
+<style>
+.career-note { display: block; margin: 0 0 var(--space-md); }
+</style>
