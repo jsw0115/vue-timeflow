@@ -6,7 +6,7 @@ import Modal from '../../components/Modal.vue'
 import RichText from '../../components/RichText.vue'
 import ListFilterBar from '../../components/ListFilterBar.vue'
 import { memos } from '../../store/writing'
-import { tasks, openPostComposer } from '../../store/appState'
+import { taskStore, openPostComposer } from '../../store/appState'
 
 const route = useRoute()
 const router = useRouter()
@@ -45,6 +45,7 @@ const candidates = ref([])
 const convertedCount = ref(0)
 function openConvert(memo) {
   convertSource.value = memo
+  convertError.value = ''
   // 문장 단위로 쪼개 실행 가능한 후보를 만든다
   candidates.value = memo.body
     .split(/[.!?\n]/)
@@ -54,15 +55,31 @@ function openConvert(memo) {
   if (!candidates.value.length) candidates.value = [{ id: 0, title: memo.title, checked: true }]
   showConvert.value = true
 }
-function convertToTasks() {
+// 로그인 상태에서는 고른 문장마다 서버에 할 일을 만든다. 일부가 실패하면 저장한 것은 빼고 남은 문장으로 다시 시도할 수 있게 둔다(PR-07)
+const converting = ref(false)
+const convertError = ref('')
+async function convertToTasks() {
   const picked = candidates.value.filter((c) => c.checked)
-  if (!picked.length) return
-  let nextId = Math.max(0, ...tasks.value.map((t) => t.id)) + 1
-  picked.forEach((c) => {
-    tasks.value.push({ id: nextId++, title: c.title, category: '업무', done: false })
-  })
+  if (!picked.length || converting.value) return
+  converting.value = true
+  convertError.value = ''
+  let saved = 0
+  for (const c of picked) {
+    try {
+      await taskStore.createWithChecklist({ title: c.title, body: '', date: '', category: '업무', priority: '보통' }, [])
+      candidates.value = candidates.value.filter((entry) => entry !== c)
+      saved++
+    } catch {
+      // 저장하지 못한 문장은 후보에 남긴다
+    }
+  }
+  converting.value = false
+  convertedCount.value = saved
+  if (saved < picked.length) {
+    convertError.value = (saved ? saved + '건은 할 일로 옮겼어요. ' : '') + (picked.length - saved) + '건을 저장하지 못했어요. 연결을 확인하고 다시 시도해 주세요.'
+    return
+  }
   showConvert.value = false
-  convertedCount.value = picked.length
   router.push('/tasks')
 }
 </script>
@@ -110,11 +127,12 @@ function convertToTasks() {
       <span style="flex: 1"><b>{{ c.title }}</b></span>
     </label>
     <p v-if="candidates.length === 0">변환할 만한 문장을 찾지 못했어요.</p>
+    <p v-if="convertError" class="input-field-help" data-state="error" role="status">{{ convertError }}</p>
 
     <template #footer>
       <button type="button" class="modal-secondary" @click="showConvert = false">취소</button>
-      <button class="primary" :disabled="!candidates.some((c) => c.checked)" @click="convertToTasks">
-      선택한 {{ candidates.filter((c) => c.checked).length }}건 할 일로 변환
+      <button class="primary" :disabled="!candidates.some((c) => c.checked)" :aria-busy="converting ? 'true' : undefined" @click="convertToTasks">
+      {{ converting ? '할 일로 옮기는 중' : '선택한 ' + candidates.filter((c) => c.checked).length + '건 할 일로 변환' }}
           </button>
     </template>
   </Modal>

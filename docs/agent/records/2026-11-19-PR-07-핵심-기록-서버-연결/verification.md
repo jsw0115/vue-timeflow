@@ -17,3 +17,19 @@
 - 웹 접근성: 화면 변경 없음. N/A
 - 오탐 제외: 없음.
 - 남은 위험과 승인 필요: V8은 H2로만 확인했다. 격리 MySQL 적용·현재 DB 문서 재캡처, 운영 적용(새 서버·클라이언트와 함께)은 별도다. 화면은 아직 로컬 저장이다.
+
+# 검증 기록(2단계)
+
+- 실행 일시/환경: 2026-11-19, Windows 11, Node 20.18.0(요구 버전 미달은 PR-06), Python 3.12.4, Docker 격리 MySQL 8.4·Redis 7.4(`infra/chat/compose.yml`), 백엔드 `bootRun` chat-local(포트 18080, 8080은 다른 컨테이너 사용 중), Vite 개발 서버(포트 15173, chat-local CORS 허용 출처), 헤드리스 Chrome(CDP, 작업 폴더 밖 임시 스크립트).
+- 명령/버전/종료코드
+  - 수정 전 `frontend`에서 `node --test tests/task-store.test.mjs`: 실패(모듈 없음). 의도한 실패. FAIL(07 RUN-70)
+  - 수정 후 같은 명령: 8개 통과. 첫 실행 1개 실패는 테스트 데이터 ID 겹침이라 테스트만 고침. PASS(07 RUN-71)
+  - 브라우저 점검: 17/17 통과. 첫 실행은 Vite 5174 포트가 CORS 허용 출처에 없어 POST 403이라 무효, 15173으로 재실행. PASS(07 RUN-72)
+  - Node 테스트 전체(`--test-concurrency=1`): 123개 실패 0. PASS
+  - `npm run build:web`: 종료 0(500 kB 청크 경고는 기존, PR-18). PASS
+  - `node scripts/frontend-api-contract.mjs --check`: 종료 0(286개 작업·198개 스키마). `node scripts/api-inventory.mjs --check`: 종료 0. PASS
+  - 백엔드: 바꾸지 않아 다시 실행하지 않았다. N/A
+  - `verify_documentation.py`, `verify_agent_kit.py`, `git diff --check`: 07 RUN-73.
+- 보안: 다른 계정 할 일 안 보임(브라우저), 계정 전환 중 남은 체크리스트 요청 중단(`scoped` 요청), 담당자는 계정 ID만 보냄(Q-21), 오래된 version 저장은 비교 화면으로만 덮어씀. PASS(변경 범위 한정)
+- 웹 접근성(변경 범위): 상태 문구 `role="status"`, 400 입력란 `aria-invalid`·`aria-describedby`, 요청 중 `aria-busy`와 진행형 라벨, 비교 화면 제목에 초점, 320px 비교 화면 넘침 없음. 키보드 전체·화면낭독기 실사용은 하지 않았다. REVIEW
+- 남은 위험: 2·3단계 함께 배포. 홈·캘린더의 서버 목록 갱신 시점은 할 일 목록 화면 진입.

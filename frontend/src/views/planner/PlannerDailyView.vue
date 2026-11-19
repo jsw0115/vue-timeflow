@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { tasks, events, toggle, openPostComposer } from '../../store/appState'
+import { tasks, events, taskStore, openPostComposer } from '../../store/appState'
 import { eventOccurrences } from '../../utils/recurrence.mjs'
 import { modeState, modeContent } from '../../store/modeProfiles'
 import { dayLabel, cursor, shift, goToday } from '../../store/plannerDate'
@@ -94,7 +94,8 @@ watch(() => [reviewDate.value, plannerReviews.value.find(item => item.id === rev
         <div><h3>오늘의 할 일</h3><p>완료하면 리듬이 기록돼요</p></div>
         <button @click="router.push({ path: '/tasks', query: { new: String(Date.now()) } })">＋</button>
       </div>
-      <label class="task" v-for="task in tasks" :key="task.id"><input type="checkbox" :checked="task.done" @change="toggle(task)" /><span><b :class="{ done: task.done }">{{ task.title }}</b><small>{{ task.category }}</small></span></label>
+      <label class="task" v-for="task in tasks" :key="task.id"><input type="checkbox" :checked="task.done" :aria-busy="taskStore.isPending(task) ? 'true' : undefined" @click.prevent="taskStore.toggle(task)" /><span><b :class="{ done: task.done }">{{ task.title }}</b><small>{{ task.category }}</small></span></label>
+      <p v-if="taskStore.notice.message" class="input-field-help" data-state="error" role="status">{{ taskStore.notice.message }}</p>
       <div class="review">
         <span class="pill">DAILY REVIEW</span>
         <h3>오늘을 짧게 돌아볼까요?</h3>

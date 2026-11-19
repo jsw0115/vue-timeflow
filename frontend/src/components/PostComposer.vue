@@ -6,8 +6,11 @@ import EventDateFields from './EventDateFields.vue'
 import RepeatSettings from './RepeatSettings.vue'
 import ChecklistEditor from './ChecklistEditor.vue'
 import TagMentionInput from './TagMentionInput.vue'
+import SaveStatus from './SaveStatus.vue'
+import StorageNote from './StorageNote.vue'
 import { composer, composerKind, composerSeed, composerContext, ROUTINE_DAYS } from '../store/appState'
-import { postKinds as kinds, makePostDraft, postDraftError, savePostDraft } from '../store/postComposer'
+import { postKinds as kinds, makePostDraft, postDraftError, savePostDraft, postStorageMode } from '../store/postComposer'
+import { createSaveState } from '../features/records/saveState.mjs'
 import { NOTIFY_OPTIONS } from '../store/ddays'
 import { contacts, isBlocked } from '../store/contacts'
 import { modeState, modeMeta, isFieldOn } from '../store/modeProfiles'
@@ -26,15 +29,26 @@ const attendees = computed(() => contacts.value.filter(contact => !isBlocked(con
 const categories = computed(() => kind.value === '머니로그' ? ['식비', '여가', '건강', '교통', '주거', '수입', '기타'] : ['개인', '업무', '공부', '건강', '휴식', '가족'])
 const workTypes = ['연차', '반차', '외근', '출장', '이직', '기타']
 watch(composerKind, value => { if (kinds.includes(value)) kind.value = value })
-watch(kind, async () => { await nextTick(); formRoot.value?.closest('.modal-body')?.scrollTo({ top: 0 }) })
+watch(kind, async () => { saving.reset(); await nextTick(); formRoot.value?.closest('.modal-body')?.scrollTo({ top: 0 }) })
 function on(section, field) { return isFieldOn(modeState.activeMode, section, field) }
 function toggleValue(list, value) { const index = list.indexOf(value); if (index < 0) list.push(value); else list.splice(index, 1) }
 function setHalf() {
   if (draft.value.type !== '반차') return
   Object.assign(draft.value, { endDate: draft.value.startDate, startTime: draft.value.half === '오전' ? '09:00' : '14:00', endTime: draft.value.half === '오전' ? '13:00' : '18:00', leaveDays: 0.5 })
 }
-function save() {
-  if (!savePostDraft(kind.value, draft.value)) return
+// 서버 저장은 성공 응답 뒤에만 창을 닫는다. 실패하면 입력을 그대로 두고, 할 일을 만든 뒤 체크리스트만 실패했으면 이어서 저장한다(PR-07)
+const saving = createSaveState({ fields: { title: ['제목'], date: ['마감', '날짜'] } })
+const storageMode = computed(() => postStorageMode(kind.value))
+const progress = {}
+async function save() {
+  const result = await saving.run(() => savePostDraft(kind.value, draft.value, progress[kind.value]))
+  if (!result.ok) {
+    const partial = result.error?.progress
+    if (partial) { progress[kind.value] = partial; draft.value.subtasks = partial.subtasks }
+    return
+  }
+  if (!result.value) { saving.reset(); return }
+  delete progress[kind.value]
   composer.value = false
   const paths = { '일정': '/events', '할 일': '/tasks', '루틴': '/routines', '다이어리': '/diary', '메모': '/memos', 'D-Day': '/dday', '머니로그': '/money', '회고': '/planner/daily', '커뮤니티 글': '/community/board', '업무 기록': '/work/wbs', '업무 위키': '/work/wiki' }
   const query = kind.value === '다이어리' || kind.value === '머니로그' ? { month: draft.value.date.slice(0, 7) } : kind.value === '회고' ? { date: draft.value.date } : {}
@@ -48,10 +62,10 @@ function save() {
     </template>
     <form ref="formRoot" :id="formId" :aria-label="kind + ' 작성'" @submit.prevent="save">
       <p class="form-note">{{ modeMeta(modeState.activeMode).name }} 글양식 · 종류를 바꿔도 작성 중인 내용이 유지돼요.</p>
-      <label v-if="!['커뮤니티 글', '회고'].includes(kind)">제목<input v-model="draft.title" required maxlength="200" placeholder="무엇을 남기고 싶으세요?" /></label>
+      <label v-if="!['커뮤니티 글', '회고'].includes(kind)">제목<input v-model="draft.title" required maxlength="200" placeholder="무엇을 남기고 싶으세요?" :aria-invalid="saving.state.field === 'title' ? 'true' : undefined" :aria-describedby="saving.state.field === 'title' ? formId + '-title-error' : undefined" /><span v-if="saving.state.field === 'title'" :id="formId + '-title-error'" class="input-field-help" data-state="error">{{ saving.state.fieldMessage }}</span></label>
       <EventDateFields v-if="kind === '일정'" :draft="draft" />
       <RepeatSettings v-if="kind === '일정'" v-model="draft.recurrence" :start-date="draft.startDate" />
-      <ChecklistEditor v-if="kind === '할 일'" v-model="draft.subtasks" />
+      <ChecklistEditor v-if="kind === '할 일'" v-model="draft.subtasks" :account-only="storageMode === 'server'" />
       <div v-if="['할 일', '다이어리', 'D-Day', '머니로그', '회고'].includes(kind)" class="form-row">
         <label>{{ kind === '할 일' ? '마감일 (선택)' : '기록 날짜' }}<input v-model="draft.date" type="date" :required="kind !== '할 일'" /></label>
         <label v-if="kind === '할 일'">우선순위<select v-model="draft.priority"><option>높음</option><option>보통</option><option>낮음</option></select></label>
@@ -86,8 +100,10 @@ function save() {
       <div v-if="kind === '업무 위키'" class="form-row"><label>공간<select v-model="draft.space"><option v-for="space in WIKI_SPACES" :key="space">{{ space }}</option></select></label><label>상위 문서<select v-model="draft.parentId"><option :value="null">최상위 문서</option><option v-for="doc in wiki.docs" :key="doc.id" :value="doc.id">{{ doc.title }}</option></select></label></div>
       <label>내용 · 태그 · 멘션<TagMentionInput v-model="draft.body" :rows="kind === '다이어리' || kind === '회고' ? 8 : 4" /></label>
       <p v-if="error" class="form-note" role="status">{{ error }}</p>
+      <StorageNote v-if="storageMode" :mode="storageMode" />
+      <SaveStatus :state="saving.state" :mode="storageMode ?? 'local'" @retry="save" />
     </form>
-    <template #footer><button type="button" class="modal-secondary" @click="composer = false">취소</button><button type="submit" :form="formId" class="primary" :disabled="!!error">{{ kind }} 저장</button></template>
+    <template #footer><button type="button" class="modal-secondary" @click="composer = false">취소</button><button type="submit" :form="formId" class="primary" :disabled="!!error" :aria-busy="saving.state.status === 'saving' ? 'true' : undefined">{{ saving.state.status === 'saving' ? '저장하는 중' : kind + ' 저장' }}</button></template>
   </Modal>
 </template>
 <style>

@@ -2,14 +2,18 @@ import { ref } from 'vue'
 import { localCollection } from './localCollection'
 import { localDate } from '../utils/postValidation.mjs'
 import { occurrenceDates, skipDates, datesBetween, makeRecurrence } from '../utils/recurrence.mjs'
+import { createTaskStore } from '../features/records/taskStore.mjs'
 
 export const composer = ref(false)
 
-export const tasks = localCollection('tasks', [
+const localTasks = localCollection('tasks', [
   { id: 1, title: '서비스 API 명세 검토', category: '업무', done: false },
   { id: 2, title: 'Spring Security 인증 흐름 설계', category: '공부', done: false },
   { id: 3, title: '헬스장 예약하기', category: '건강', done: true },
 ])
+/** 할 일. 로그인하면 계정의 서버 목록, 로그아웃이면 이 브라우저의 목록이다. 저장은 taskStore로 한다(PR-07). */
+export const taskStore = createTaskStore({ local: localTasks })
+export const tasks = taskStore.list
 
 /**
  * 루틴 — 반복 주기(days), 목표(goal), 연속 기록(streak), 최근 7일 이력(history)을 함께 관리한다.

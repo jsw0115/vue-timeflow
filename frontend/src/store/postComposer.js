@@ -1,4 +1,4 @@
-import { events, tasks, routines } from './appState'
+import { events, taskStore, routines } from './appState'
 import { diaries, memos } from './writing'
 import { moneyEntries } from './money'
 import { communityPosts } from './communityPosts'
@@ -36,12 +36,19 @@ export function postDraftError(kind, draft) {
   if (kind === '머니로그' && (!Number.isFinite(draft.amount) || draft.amount <= 0)) return '금액을 0보다 크게 입력해주세요.'
   return ''
 }
-export function savePostDraft(kind, draft) {
+/**
+ * 검증한 초안을 저장한다. 서버에 저장하는 종류는 서버 성공 응답 뒤에 true가 되고, 실패하면 오류를 던져 화면이 입력을 남기게 한다.
+ * progress는 할 일을 만든 뒤 체크리스트 일부가 실패했을 때 이어서 저장할 진행 상태다(PR-07).
+ */
+export async function savePostDraft(kind, draft, progress = null) {
   if (postDraftError(kind, draft)) return false
   const title = draft.title.trim(), body = draft.body.trim()
   const insert = (list, data) => list.value.unshift({ id: list.value.reduce((max, item) => Math.max(max, Number(item.id) || 0), 0) + 1, ...data })
+  if (kind === '할 일') {
+    await taskStore.createWithChecklist({ title, body, date: draft.date, category: draft.category, priority: draft.priority }, draft.subtasks ?? [], progress)
+    return true
+  }
   if (kind === '일정') insert(events, { title, body, startDate: draft.startDate, endDate: draft.endDate, startTime: draft.startTime, endTime: draft.endTime, date: draft.startDate + ' ' + draft.startTime, time: draft.startTime, category: draft.category, tag: draft.category, state: '예정', color: draft.color, attendeeIds: [...draft.attendeeIds], recurrence: makeRecurrence(draft.recurrence) })
-  if (kind === '할 일') insert(tasks, { title, body, date: draft.date, category: draft.category, priority: draft.priority, done: false, subtasks: (draft.subtasks ?? []).map(item => ({ ...item, title: item.title.trim() })) })
   if (kind === '루틴') insert(routines, { title, body, category: draft.category, startDate: draft.startDate, recurrence: makeRecurrence(draft.recurrence), time: draft.time, duration: draft.duration, days: [...draft.days].sort(), goal: { count: draft.goalCount, unit: draft.goalUnit }, notify: draft.notify, reminderMinutes: draft.reminderMinutes, done: false, streak: 0, best: 0, history: [0, 0, 0, 0, 0, 0, 0], paused: false })
   if (kind === '다이어리') insert(diaries, { title, body, date: draft.date, mood: draft.mood })
   if (kind === '메모') insert(memos, { title, body, time: localDate(), color: '', actionable: false })
@@ -58,4 +65,9 @@ export function savePostDraft(kind, draft) {
     insert(workRecords, data)
   }
   return true
+}
+
+/** 계정 저장을 지원하는 종류의 지금 저장 방식('server' 또는 'local'). 아직 이 브라우저에만 저장하는 종류는 null이다(PR-07). */
+export function postStorageMode(kind) {
+  return ({ '할 일': taskStore })[kind]?.mode.value ?? null
 }

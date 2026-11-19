@@ -179,16 +179,16 @@ test('통합 작성: 종류별 검증·저장과 다른 종류 초안의 독립�
     for (const kind of postKinds) {
       const invalid = makePostDraft(kind), before = counts()
       assert.notEqual(postDraftError(kind, invalid), '', kind)
-      assert.equal(savePostDraft(kind, invalid), false, kind)
+      assert.equal(await savePostDraft(kind, invalid), false, kind)
       assert.deepEqual(counts(), before, kind + ' invalid draft must not save')
       const valid = { ...makePostDraft(kind), title: '통합 작성 검증', body: '내용 #통합검증', amount: 12000 }
       assert.equal(postDraftError(kind, valid), '', kind)
-      assert.equal(savePostDraft(kind, valid), true, kind)
+      assert.equal(await savePostDraft(kind, valid), true, kind)
     }
     assert.equal(moneyEntries.value[0].amount, -12000)
     assert.deepEqual(state.routines.value[0].goal, { count: 1, unit: '회' })
     assert.equal(workRecords.value[0].type, '연차')
-    assert.equal(savePostDraft('잘못된 종류', makePostDraft('일정')), false)
+    assert.equal(await savePostDraft('잘못된 종류', makePostDraft('일정')), false)
     assert.notEqual(postDraftError('머니로그', { ...makePostDraft('머니로그'), title: '금액', amount: NaN }), '')
     assert.notEqual(postDraftError('D-Day', { ...makePostDraft('D-Day'), title: '날짜', date: '2026-02-30' }), '')
     const first = makePostDraft('루틴'), second = makePostDraft('루틴')
