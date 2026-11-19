@@ -8,8 +8,12 @@ function restore() {
 export const session = reactive(restore())
 let refreshing
 function save(value) {
-  for (const field of Object.keys(session)) delete session[field]
-  Object.assign(session, value)
+  // 기록 저장소는 userId를 동기로 감시해 바로 목록을 부른다. 토큰을 먼저 넣고 userId를 마지막에 넣어야 첫 요청에 토큰이 실린다.
+  // 같은 계정의 토큰 갱신은 userId를 지웠다 다시 넣지 않아 목록을 비우고 다시 부르지 않는다(BUG-003)
+  for (const field of Object.keys(session)) if (!(field in value)) delete session[field]
+  const { userId, ...rest } = value
+  Object.assign(session, rest)
+  if ('userId' in value) session.userId = userId
   sessionStorage.setItem(key, JSON.stringify(value))
 }
 export function clearSession() { save({}) }
