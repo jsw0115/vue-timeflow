@@ -1,7 +1,11 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { events, openPostComposer } from '../../store/appState'
+import { events, eventStore, openPostComposer } from '../../store/appState'
+import { createSaveState } from '../../features/records/saveState.mjs'
+import SaveStatus from '../../components/SaveStatus.vue'
+import ConflictCompare from '../../components/ConflictCompare.vue'
+import StorageNote from '../../components/StorageNote.vue'
 import { localDate, rangeError } from '../../utils/postValidation.mjs'
 import EventDateFields from '../../components/EventDateFields.vue'
 import RepeatSettings from '../../components/RepeatSettings.vue'
@@ -87,8 +91,17 @@ function attendeeNames(ids) {
   return (ids ?? []).map((id) => contactById(id)?.name).filter(Boolean)
 }
 
-const activeId = ref(1)
+const activeId = ref(events.value[0]?.id ?? 1)
 const active = computed(() => events.value.find((e) => e.id === activeId.value))
+// 로그인해 서버 목록으로 바뀌면 고른 일정이 없을 수 있어 첫 일정을 고른다
+watch(() => events.value.length, () => { if (!active.value && events.value.length) activeId.value = events.value[0].id })
+const eventMode = eventStore.mode
+// 상세를 연 때의 일정. 저장은 이 version으로 보내 다른 곳의 변경을 모르고 덮어쓰지 않는다(UF-84)
+const base = ref(null)
+const saving = createSaveState({ fields: { title: ['제목'], end: ['종료'], recurrence: ['반복', '회차', '예외'] } })
+const removing = createSaveState()
+const conflict = ref(null)
+const splitNotice = ref('')
 
 function openModal() { openPostComposer('일정') }
 // 기존 query.new 링크는 상세 일정 작성 모달로 연결합니다.
@@ -105,7 +118,7 @@ const occurrenceDate = ref('')
 const scope = ref('all')
 const occurrenceDraft = ref({ title: '', startTime: '', endTime: '' })
 const isRepeating = (e) => !!e?.recurrence && e.recurrence.frequency !== 'none'
-const followingSplit = computed(() => (scope.value === 'following' && active.value ? splitRecurrence(active.value, occurrenceDate.value) : null))
+const followingSplit = computed(() => (scope.value === 'following' && active.value ? splitRecurrence(base.value ?? active.value, occurrenceDate.value) : null))
 const occurrenceEnd = computed(() => eventOccurrences(active.value ? [active.value] : [], occurrenceDate.value, occurrenceDate.value).find((o) => o.startDate === occurrenceDate.value)?.endDate ?? '')
 const currentOverride = computed(() => (active.value ? overrideFor(active.value.recurrence, occurrenceDate.value) : null))
 const occurrenceError = computed(() => {
@@ -144,6 +157,11 @@ function selectScope(id) {
 }
 function openDetail(date = '') {
   if (!active.value) return
+  base.value = { ...active.value }
+  conflict.value = null
+  splitNotice.value = ''
+  saving.reset()
+  removing.reset()
   occurrenceDate.value = isRepeating(active.value) && date ? date : ''
   scope.value = occurrenceDate.value ? 'this' : 'all'
   resetDrafts()
@@ -159,47 +177,95 @@ function closeDetail() {
     void router.replace({ query: rest })
   }
 }
+// 저장은 서버 성공 응답 뒤에만 창을 닫는다. 실패하면 입력을 남기고, 충돌이면 비교 화면을 보인다(UF-82~UF-84)
+let retryAction = null
+async function run(action, retry) {
+  retryAction = retry
+  conflict.value = null
+  splitNotice.value = ''
+  const result = await saving.run(action)
+  if (result.ok) {
+    if (result.value?.created) activeId.value = result.value.created.id
+    closeDetail()
+    return
+  }
+  const error = result.error
+  if (error.orphan) splitNotice.value = '이 회차부터 나눈 새 일정을 지우지 못해 회차가 겹칠 수 있어요. 목록에서 확인해 주세요.'
+  if (error.kind === 'conflict') conflict.value = { latest: { ...(error.latest ?? active.value ?? base.value) } }
+}
 function saveDetail() {
   if (!active.value || eventError(detailDraft.value)) return
   const d = detailDraft.value
   const values = { ...d, title: d.title.trim(), date: d.startDate + ' ' + d.startTime, time: d.startTime, tag: d.category, attendeeIds: [...d.attendeeIds], recurrence: makeRecurrence(d.recurrence) }
   const split = followingSplit.value
-  if (split) {
-    // 원래 반복은 회차 전날 끝내고, 이 회차부터는 새 일정으로 잇는다
-    active.value.recurrence = split.head
-    const id = events.value.reduce((max, item) => Math.max(max, Number(item.id) || 0), 0) + 1
-    events.value.unshift({ ...values, id })
-    activeId.value = id
-  } else Object.assign(active.value, values)
-  closeDetail()
+  // 원래 반복은 회차 전날 끝내고, 이 회차부터는 새 일정으로 잇는다
+  run(async () => (split ? { created: await eventStore.split(base.value, split.head, values) } : eventStore.update(base.value, values)), saveDetail)
 }
 function saveOccurrence() {
   if (!active.value || occurrenceError.value) return
-  active.value.recurrence = setOverride(active.value.recurrence, occurrenceDate.value, changedFields(active.value, occurrenceDraft.value))
-  closeDetail()
+  run(() => eventStore.update(base.value, { recurrence: setOverride(base.value.recurrence, occurrenceDate.value, changedFields(base.value, occurrenceDraft.value)) }), saveOccurrence)
 }
 function skipOccurrence() {
   if (!active.value) return
-  active.value.recurrence = addSkipDates(active.value.recurrence, [occurrenceDate.value])
-  closeDetail()
+  run(() => eventStore.update(base.value, { recurrence: addSkipDates(base.value.recurrence, [occurrenceDate.value]) }), skipOccurrence)
 }
 function revertOccurrence() {
   if (!active.value) return
-  active.value.recurrence = removeException(active.value.recurrence, occurrenceDate.value)
-  closeDetail()
+  run(() => eventStore.update(base.value, { recurrence: removeException(base.value.recurrence, occurrenceDate.value) }), revertOccurrence)
 }
-function removeActive() {
+const shownOccurrence = (event) => ({ ...event, ...(overrideFor(event.recurrence, occurrenceDate.value) ?? {}) })
+const compareRows = computed(() => {
+  if (!conflict.value) return []
+  const latest = conflict.value.latest
+  if (scope.value === 'this') {
+    const mine = occurrenceDraft.value, theirs = shownOccurrence(latest)
+    return [
+      { label: '이 회차 제목', mine: mine.title.trim(), latest: theirs.title },
+      { label: '이 회차 시간', mine: mine.startTime + '~' + mine.endTime, latest: theirs.startTime + '~' + theirs.endTime },
+    ]
+  }
+  const mine = detailDraft.value
+  return [
+    { label: '제목', mine: mine.title.trim(), latest: latest.title },
+    { label: '시작', mine: mine.startDate + ' ' + mine.startTime, latest: latest.startDate + ' ' + latest.startTime },
+    { label: '종료', mine: mine.endDate + ' ' + mine.endTime, latest: latest.endDate + ' ' + latest.endTime },
+    { label: '카테고리', mine: mine.category, latest: latest.category },
+    { label: '내용', mine: mine.body, latest: latest.body },
+  ]
+})
+// 내 내용으로 다시 저장: 최신 일정을 기준으로 같은 동작을 다시 계산해 보낸다(UT-126)
+function keepMine() {
+  base.value = { ...conflict.value.latest }
+  conflict.value = null
+  retryAction?.()
+}
+function useLatest() {
+  base.value = { ...conflict.value.latest }
+  conflict.value = null
+  saving.reset()
+  resetDrafts()
+}
+const removeMessage = computed(() => {
+  const kind = ['failed', 'conflict'].includes(removing.state.status) ? removing.state.error?.kind : ''
+  if (!kind) return ''
+  if (kind === 'conflict') return '다른 곳에서 먼저 고쳐서 삭제하지 않았어요. 최신 내용을 확인한 뒤 다시 삭제해 주세요.'
+  if (kind === 'network') return '삭제하지 못했어요. 연결을 확인하고 다시 시도해 주세요.'
+  return '삭제하지 못했어요. 잠시 뒤 다시 시도해 주세요.'
+})
+async function removeActive() {
   if (!active.value) return
   if (!confirm('이 일정을 삭제할까요?')) return
-  events.value = events.value.filter((e) => e.id !== active.value.id)
+  const result = await removing.run(() => eventStore.remove(base.value ?? active.value))
+  if (!result.ok && result.error?.kind !== 'notFound') return
   closeDetail()
   activeId.value = events.value[0]?.id
 }
 // 캘린더에서 /events?id=…&occurrence=YYYY-MM-DD로 오면 그 일정(반복이면 그 회차)을 연다. 실제 회차가 아닌 날짜는 반복 전체로 연다
-watch(() => [route.query.id, route.query.occurrence], ([id, occurrence]) => {
+// 로그인 상태에서는 목록을 불러온 뒤에 열 수 있어 목록 길이도 본다. 이미 연 일정이면 다시 열지 않는다
+watch(() => [route.query.id, route.query.occurrence, events.value.length], ([id, occurrence]) => {
   if (id == null) return
   const target = events.value.find((e) => String(e.id) === String(id))
-  if (!target) return
+  if (!target || (showDetailModal.value && activeId.value === target.id)) return
   activeId.value = target.id
   const real = typeof occurrence === 'string' && eventOccurrences([target], occurrence, occurrence).some((o) => o.startDate === occurrence)
   openDetail(real ? occurrence : '')
@@ -213,6 +279,7 @@ watch(() => [route.query.id, route.query.occurrence], ([id, occurrence]) => {
     <button class="primary" @click="openModal">+ 새 일정</button>
   </div>
 
+  <StorageNote :mode="eventMode" />
   <ListFilterBar
     v-model:query="query"
     v-model:filters="filters"
@@ -231,18 +298,22 @@ watch(() => [route.query.id, route.query.occurrence], ([id, occurrence]) => {
         <span class="tag">{{ e.category }}</span>
         <span class="badge" :class="{ ok: e.state === '예정', info: e.state === '공유받음' }">{{ e.state }}</span>
       </div>
-      <p v-if="!visibleEvents.length" class="empty-state" role="status">조건에 맞는 일정이 없어요. 검색어나 필터를 바꾸거나 '+ 새 일정'으로 추가해 보세요.</p>
+      <p v-if="eventMode === 'server' && eventStore.state.loading && !eventStore.state.loaded" class="input-field-help" role="status">일정을 불러오는 중이에요.</p>
+      <div v-else-if="eventMode === 'server' && eventStore.state.error && !eventStore.state.loaded" class="empty-state" role="status"><p>일정을 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요.</p><button type="button" class="button-secondary" @click="eventStore.reload()">다시 시도</button></div>
+      <p v-else-if="!visibleEvents.length" class="empty-state" role="status">조건에 맞는 일정이 없어요. 검색어나 필터를 바꾸거나 '+ 새 일정'으로 추가해 보세요.</p>
     </section>
     <aside class="card detail">
       <h3>{{ active?.title }}</h3>
       <p>{{ active?.startDate }} {{ active?.startTime }}<br />~ {{ active?.endDate }} {{ active?.endTime }}</p><RichText :text="active?.body ?? ''" />
       <label>카테고리</label>
       <p><span class="tag">{{ active?.category }}</span></p>
+      <template v-if="eventMode === 'local'">
       <label>참석자 ({{ attendeeNames(active?.attendeeIds).length }}명)</label>
       <p v-if="attendeeNames(active?.attendeeIds).length" class="attendee-chips">
         <PersonTag v-for="n in attendeeNames(active?.attendeeIds)" :key="n" :name="n" />
       </p>
       <p v-else class="empty-state">아직 참석자가 없어요. '상세 보기'에서 주소록의 사람을 추가해 보세요.</p>
+      </template>
       <button class="primary" @click="openDetail()">상세 보기</button>
     </aside>
   </div>
@@ -297,6 +368,8 @@ watch(() => [route.query.id, route.query.occurrence], ([id, occurrence]) => {
       ></button>
     </div>
 
+    <p v-if="eventMode === 'server'" class="input-field-help">로그인 상태에서는 참석자를 고를 수 없어요. 주소록은 아직 이 브라우저에만 있어서 계정에 참석자로 저장할 수 없어요.</p>
+    <template v-else>
     <div class="section-label">참석자 ({{ detailDraft.attendeeIds.length }}명)</div>
     <input v-model="attendeeKeyword" placeholder="주소록에서 이름 검색" />
     <div class="picker-list invite-list" style="margin-top: 10px; max-height: 180px">
@@ -307,20 +380,26 @@ watch(() => [route.query.id, route.query.occurrence], ([id, occurrence]) => {
         <button type="button" class="person-info" @click.prevent="openProfile(c.name)">ⓘ</button>
       </label>
     </div>
+    </template>
     <p class="form-note" role="status">{{ eventError(detailDraft) }}</p>
     </template>
+    <p v-if="saving.state.field" id="event-field-error" class="input-field-help" data-state="error" role="alert">{{ { title: '제목', end: '종료 시간', recurrence: '반복' }[saving.state.field] }}: {{ saving.state.fieldMessage }}</p>
+    <ConflictCompare v-if="conflict" :rows="compareRows" :busy="saving.state.status === 'saving'" @keep-mine="keepMine" @use-latest="useLatest" />
+    <p v-if="splitNotice" class="input-field-help" data-state="error" role="alert">{{ splitNotice }}</p>
+    <SaveStatus :state="saving.state" :mode="eventMode" @retry="retryAction?.()" />
+    <p v-if="removeMessage" class="input-field-help" data-state="error" role="status">{{ removeMessage }}</p>
 
     <template #footer>
       <template v-if="scope === 'this'">
         <button type="button" class="modal-secondary" @click="closeDetail">취소</button>
-        <button type="button" class="button-secondary" @click="skipOccurrence">이 회차 건너뛰기</button>
-        <button v-if="currentOverride" type="button" class="button-secondary" @click="revertOccurrence">변경 되돌리기</button>
-        <button class="primary" :disabled="!!occurrenceError" @click="saveOccurrence">저장하기</button>
+        <button type="button" class="button-secondary" :disabled="saving.state.status === 'saving'" @click="skipOccurrence">이 회차 건너뛰기</button>
+        <button v-if="currentOverride" type="button" class="button-secondary" :disabled="saving.state.status === 'saving'" @click="revertOccurrence">변경 되돌리기</button>
+        <button class="primary" :disabled="!!occurrenceError || !!conflict" :aria-busy="saving.state.status === 'saving' ? 'true' : undefined" @click="saveOccurrence">{{ saving.state.status === 'saving' ? '저장하는 중' : '저장하기' }}</button>
       </template>
       <template v-else>
         <button type="button" class="modal-secondary" @click="closeDetail">취소</button>
-        <button class="primary" :disabled="!!eventError(detailDraft)" @click="saveDetail">저장하기</button>
-        <button v-if="scope === 'all'" style="width: 100%; margin-top: 8px; color: var(--color-status-danger); font-weight: 700; padding: 10px" @click="removeActive">{{ isRepeating(active) ? '반복 전체 삭제하기' : '삭제하기' }}</button>
+        <button class="primary" :disabled="!!eventError(detailDraft) || !!conflict" :aria-busy="saving.state.status === 'saving' ? 'true' : undefined" @click="saveDetail">{{ saving.state.status === 'saving' ? '저장하는 중' : '저장하기' }}</button>
+        <button v-if="scope === 'all'" style="width: 100%; margin-top: 8px; color: var(--color-status-danger); font-weight: 700; padding: 10px" :aria-busy="removing.state.status === 'saving' ? 'true' : undefined" @click="removeActive">{{ removing.state.status === 'saving' ? '삭제하는 중' : isRepeating(active) ? '반복 전체 삭제하기' : '삭제하기' }}</button>
       </template>
     </template>
   </Modal>

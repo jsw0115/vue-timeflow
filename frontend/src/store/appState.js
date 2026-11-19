@@ -3,6 +3,7 @@ import { localCollection } from './localCollection'
 import { localDate } from '../utils/postValidation.mjs'
 import { occurrenceDates, skipDates, datesBetween, makeRecurrence } from '../utils/recurrence.mjs'
 import { createTaskStore } from '../features/records/taskStore.mjs'
+import { createScheduleStore } from '../features/records/scheduleStore.mjs'
 
 export const composer = ref(false)
 
@@ -79,10 +80,15 @@ export function toggleRoutine(routine) {
   }
 }
 
-export const events = localCollection('events', [
-  { id: 1, title: '디자인 싱크 미팅', startDate: localDate(), endDate: localDate(), startTime: '11:00', endTime: '12:00', time: '11:00', date: localDate() + ' 11:00', category: '업무', tag: '업무', state: '예정', color: '#2f5d46', body: '', attendeeIds: [] },
-  { id: 2, title: '저녁 운동', startDate: localDate(), endDate: localDate(), startTime: '19:00', endTime: '20:00', time: '19:00', date: localDate() + ' 19:00', category: '건강', tag: '건강', state: '예정', color: '#2f5d46', body: '', attendeeIds: [] },
-])
+// 시연 기본 일정. origin: 'demo'로 표시해 로그인할 때 계정으로 옮기지 않는다(Q-11)
+export const EVENT_SEEDS = [
+  { id: 1, title: '디자인 싱크 미팅', startDate: localDate(), endDate: localDate(), startTime: '11:00', endTime: '12:00', time: '11:00', date: localDate() + ' 11:00', category: '업무', tag: '업무', state: '예정', color: '#2f5d46', body: '', attendeeIds: [], origin: 'demo' },
+  { id: 2, title: '저녁 운동', startDate: localDate(), endDate: localDate(), startTime: '19:00', endTime: '20:00', time: '19:00', date: localDate() + ' 19:00', category: '건강', tag: '건강', state: '예정', color: '#2f5d46', body: '', attendeeIds: [], origin: 'demo' },
+]
+const localEvents = localCollection('events', EVENT_SEEDS.map(event => ({ ...event })))
+/** 일정. 로그인하면 계정의 서버 목록(/api/schedules), 로그아웃이면 이 브라우저의 목록이다. 저장은 eventStore로 한다(PR-07 4단계). */
+export const eventStore = createScheduleStore({ local: localEvents })
+export const events = eventStore.list
 export const composerKind = ref('일정')
 export const composerSeed = ref('')
 export const composerContext = ref({})

@@ -8,6 +8,7 @@ const visible = migration.visible
 const candidates = migration.candidates
 const state = migration.state
 const droppedAssignees = computed(() => candidates.value.reduce((sum, group) => sum + (group.droppedAssignees ?? 0), 0))
+const droppedAttendees = computed(() => candidates.value.reduce((sum, group) => sum + (group.droppedAttendees ?? 0), 0))
 const done = computed(() => state.finished && !state.failed)
 const statusText = computed(() => {
   if (state.running) return `옮기는 중이에요. ${state.moved + state.failed}/${state.total}건`
@@ -30,6 +31,7 @@ function close() {
       </ul>
       <p class="input-field-help migration-note">시연용 기본 기록은 옮기지 않아요. 옮긴 기록은 계정에 저장되고 이 브라우저 목록에서는 빠져요.</p>
       <p v-if="droppedAssignees" class="input-field-help migration-note">주소록 연락처를 담당자로 정한 체크리스트 항목 <span class="migration-figure">{{ droppedAssignees }}</span>개는 담당자 없이 옮겨요. 주소록은 아직 이 브라우저에만 있어요.</p>
+      <p v-if="droppedAttendees" class="input-field-help migration-note">일정 참석자 <span class="migration-figure">{{ droppedAttendees }}</span>명은 주소록 연락처라 빼고 옮겨요.</p>
     </template>
     <p class="migration-status" role="status" :data-state="state.finished && state.failed ? 'error' : undefined">{{ statusText }}</p>
     <template #footer>

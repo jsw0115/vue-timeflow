@@ -13,9 +13,10 @@ export function errorKind(error) {
 /**
  * request는 features/auth/apiRequest.js처럼 성공 응답의 data를 돌려주고 실패면 status를 담아 던지는 함수다.
  * 기록 API 규칙은 PUT 본문 version, DELETE·상태 명령 ?version=이다. 생성 요청에는 version을 보내지 않는다.
+ * paged는 목록이 { items, total } 페이지로 오는 API(feature_record 계열, 한 번에 최대 100건)다. 끝까지 모아 배열로 돌려준다.
  * 생성에 idempotencyKey를 주면 Idempotency-Key 헤더로 보내, 같은 키로 다시 보내도 서버가 처음 만든 기록을 돌려준다(Q-13).
  */
-export function createRecordClient({ request, path }) {
+export function createRecordClient({ request, path, paged = false }) {
   const item = (id) => `${path}/${encodeURIComponent(id)}`
   const versioned = (url, record) => `${url}?version=${encodeURIComponent(record.version)}`
   async function call(run, id) {
@@ -30,8 +31,17 @@ export function createRecordClient({ request, path }) {
       throw error
     }
   }
+  async function listPages() {
+    const rows = []
+    for (let page = 0; ; page++) {
+      const result = await request(`${path}?page=${page}&size=100`)
+      const items = result?.items ?? []
+      rows.push(...items)
+      if (!items.length || rows.length >= (result?.total ?? 0)) return rows
+    }
+  }
   return {
-    list: () => call(() => request(path)),
+    list: () => call(() => (paged ? listPages() : request(path))),
     get: (id) => call(() => request(item(id))),
     create: ({ version, ...body }, { idempotencyKey } = {}) => call(() => request(path, { method: 'POST', body: JSON.stringify(body), ...(idempotencyKey ? { headers: { 'Idempotency-Key': idempotencyKey } } : {}) })),
     update: (record, body) => call(() => request(item(record.id), { method: 'PUT', body: JSON.stringify({ ...body, version: record.version }) }), record.id),

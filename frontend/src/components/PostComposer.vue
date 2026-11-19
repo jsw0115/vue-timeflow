@@ -74,7 +74,8 @@ async function save() {
       <label v-if="['할 일', 'D-Day', '머니로그'].includes(kind) || kind === '일정' && on('event', 'category') || kind === '루틴' && on('routine', 'category')">분류<select v-model="draft.category" :disabled="kind === '머니로그' && draft.type === 'in'"><option v-for="category in categories" :key="category">{{ category }}</option></select></label>
       <template v-if="kind === '일정'">
         <label>일정 색상<input v-model="draft.color" type="color" /></label>
-        <fieldset class="composer-attendees"><legend>참석자 ({{ draft.attendeeIds.length }}명)</legend><input v-model="attendeeQuery" type="search" placeholder="주소록에서 이름 검색" /><label v-for="person in attendees" :key="person.id" class="check-field"><input type="checkbox" :checked="draft.attendeeIds.includes(person.id)" @change="toggleValue(draft.attendeeIds, person.id)" />{{ person.name }}</label></fieldset>
+        <p v-if="storageMode === 'server'" class="input-field-help">로그인 상태에서는 참석자를 고를 수 없어요. 주소록은 아직 이 브라우저에만 있어서 계정에 참석자로 저장할 수 없어요.</p>
+        <fieldset v-else class="composer-attendees"><legend>참석자 ({{ draft.attendeeIds.length }}명)</legend><input v-model="attendeeQuery" type="search" placeholder="주소록에서 이름 검색" /><label v-for="person in attendees" :key="person.id" class="check-field"><input type="checkbox" :checked="draft.attendeeIds.includes(person.id)" @change="toggleValue(draft.attendeeIds, person.id)" />{{ person.name }}</label></fieldset>
       </template>
       <template v-if="kind === '루틴'">
         <div class="form-row"><label>시작 시간<input v-model="draft.time" type="time" /></label><label>진행 시간 (분)<input v-model.number="draft.duration" type="number" min="1" max="1440" /></label></div>
