@@ -6765,6 +6765,9 @@
           "occurrenceKey": {
             "type": "string",
             "maxLength": 200
+          },
+          "overridden": {
+            "type": "boolean"
           }
         },
         "additionalProperties": true

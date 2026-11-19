@@ -82,6 +82,20 @@ class InsightServiceTest {
         assertEquals(180L, stats.get("plannedMinutes"));
     }
 
+    /** UT-252: 회차 하나만 시간을 바꾸면 계획 시간은 바뀐 시간으로, 건너뛴 회차는 빼고 센다(PR-22 2단계). */
+    @Test
+    void plannedMinutesFollowOccurrenceOverridesAndSkips() {
+        when(aggregation.range(eq(user), any(), any())).thenReturn(new PlannerViewResponse(List.of(), List.of(), List.of()));
+        // 월·수·금 10:00~11:00. 수요일(11-18)은 10:00~12:30으로, 금요일(11-20)은 건너뛴다 → 60 + 150 = 210분.
+        createSchedule("주간 운동", "2026-11-16", Map.of("frequency", "weekly", "interval", 1, "weekdays", List.of(1, 3, 5), "endMode", "never",
+                "exceptions", List.of(Map.of("date", "2026-11-18", "action", "override", "endTime", "12:30"),
+                        Map.of("date", "2026-11-20", "action", "skip"))));
+
+        var stats = insight.stats(user, "2026-11-16", "2026-11-22");
+
+        assertEquals(210L, stats.get("plannedMinutes"));
+    }
+
     /** UT-102: 홈 요약의 루틴은 신형 한 출처만 나오고, 구형 일정·루틴은 빠진다. */
     @Test
     void homeSummaryListsRoutinesFromTheNewModelOnly() {

@@ -59,7 +59,8 @@ public final class FeatureInput {
                 LocalDateTime end = date(text(body, "endDate")).atTime(time(text(body, "endTime")));
                 if (!end.isAfter(start) || java.time.temporal.ChronoUnit.DAYS.between(start, end) > 366) fail("일정 종료는 시작 이후, 최대 366일입니다.");
                 if (body.get("attendeeIds") instanceof List<?> list && list.stream().anyMatch(v -> !(v instanceof String s) || s.length() > 36 || s.isBlank())) fail("참석자는 계정 ID 문자열 배열입니다.");
-                RecurrenceRule.validate(body.get("recurrence"), text(body, "startDate"));
+                RecurrenceRule.validate(body.get("recurrence"), text(body, "startDate"), true);
+                RecurrenceRule.checkOverrideTimes(body.get("recurrence"), text(body, "startDate"), text(body, "endDate"), text(body, "startTime"), text(body, "endTime"));
             }
             case ROUTINE_RECORD -> {
                 time(requiredText(body, "time")); number(body, "duration", 1, 1440, true);

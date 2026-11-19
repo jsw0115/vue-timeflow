@@ -20,9 +20,14 @@ public class ScheduleService {
         List<Map<String,Object>> result = new ArrayList<>();
         for (var event : store.all(user, FeatureType.SCHEDULE)) {
             long span = ChronoUnit.DAYS.between(FeatureInput.date(event.get("startDate").toString()), FeatureInput.date(event.get("endDate").toString()));
+            var overrides = RecurrenceRule.overrides(event.get("recurrence"));
             for (LocalDate day : RecurrenceRule.dates(event.get("startDate").toString(), event.get("recurrence"), start.minusDays(span), end)) {
                 var row = new LinkedHashMap<>(event); row.put("sourceId", event.get("id")); row.put("occurrenceKey", event.get("id") + ":" + day);
-                row.put("startDate", day.toString()); row.put("endDate", day.plusDays(span).toString()); result.add(row);
+                row.put("startDate", day.toString()); row.put("endDate", day.plusDays(span).toString());
+                // 회차 하나만 바꾼 제목·시각은 그 회차에만 적용한다. 통계도 이 값으로 계획 시간을 센다
+                var changed = overrides.get(day);
+                if (changed != null) { row.putAll(changed); row.put("overridden", true); }
+                result.add(row);
             }
         }
         return result;
@@ -31,7 +36,7 @@ public class ScheduleService {
         FeatureInput.keys(body, Set.of("completed", "version")); if (!(body.get("completed") instanceof Boolean)) FeatureInput.fail("completed는 boolean입니다.");
         var routine = store.lock(user, FeatureType.ROUTINE_RECORD, id); LocalDate day = FeatureInput.date(date);
         if (day.isAfter(LocalDate.now(ZoneId.of("Asia/Seoul"))) || !planned(routine, day)) FeatureInput.fail("루틴 회차 날짜를 확인해주세요.");
-        if (RecurrenceRule.exceptionDates(routine.get("recurrence")).contains(day)) FeatureInput.fail("쉬는 날로 정한 날짜입니다. 쉬는 날을 해제한 뒤 기록해주세요.");
+        if (RecurrenceRule.skipDates(routine.get("recurrence")).contains(day)) FeatureInput.fail("쉬는 날로 정한 날짜입니다. 쉬는 날을 해제한 뒤 기록해주세요.");
         var data = Map.of("routineId", id, "date", date, "completed", body.get("completed")); String key = id + "@" + date;
         var previous = store.optional(user, FeatureType.ROUTINE_COMPLETION, key);
         if (previous.isEmpty()) return store.create(user, FeatureType.ROUTINE_COMPLETION, key, data);
@@ -43,7 +48,7 @@ public class ScheduleService {
         var routine = store.get(user, FeatureType.ROUTINE_RECORD, id); LocalDate start = FeatureInput.date(from), end = FeatureInput.date(to);
         if (end.isBefore(start) || ChronoUnit.DAYS.between(start, end) > 366) FeatureInput.fail("조회 기간은 최대 367일입니다.");
         Map<String,Boolean> logs = new HashMap<>(); for (var row : store.all(user, FeatureType.ROUTINE_COMPLETION)) if (id.equals(row.get("routineId"))) logs.put(row.get("date").toString(), Boolean.TRUE.equals(row.get("completed")));
-        Set<LocalDate> skipped = RecurrenceRule.exceptionDates(routine.get("recurrence"));
+        Set<LocalDate> skipped = RecurrenceRule.skipDates(routine.get("recurrence"));
         // Q-05: 쉬는 날과 반복에 없는 날은 계산에서 빼고, 지난 미완료 회차만 연속 기록을 끊는다. 오늘·미래의 미완료 회차는 아직 놓친 날이 아니다.
         List<Map<String,Object>> rows = new ArrayList<>(); int done = 0, total = 0, rest = 0, streak = 0, best = 0;
         for (LocalDate day = start; !day.isAfter(end); day = day.plusDays(1)) {

@@ -23121,6 +23121,9 @@
                           "occurrenceKey": {
                             "type": "string",
                             "maxLength": 200
+                          },
+                          "overridden": {
+                            "type": "boolean"
                           }
                         },
                         "additionalProperties": true
@@ -36266,15 +36269,29 @@
           "action": {
             "type": "string",
             "enum": [
-              "skip"
+              "skip",
+              "override"
             ]
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "startTime": {
+            "type": "string",
+            "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$"
+          },
+          "endTime": {
+            "type": "string",
+            "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$"
           }
         },
         "required": [
           "date",
           "action"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "skip은 그 날짜의 회차를 뺀다. override는 일정에서만 쓰며 그 회차의 title·startTime·endTime 중 바꾼 필드만 담는다(하나 이상 필수, 날짜는 바꾸지 않는다). 종료는 시작 이후여야 하고 종료 시각은 회차 종료일에 적용된다. 루틴은 skip만 받는다."
       },
       "Recurrence": {
         "type": "object",
@@ -36332,7 +36349,7 @@
           "frequency"
         ],
         "additionalProperties": false,
-        "description": "frequency=none 외에는 interval/endMode가 필수. weekly는 weekdays 최소 1개. until 종료는 시작일 이상. count 종료는 count 필수. 존재하지 않는 월말·윤년 회차는 건너뛴다. exceptions는 쉬는 날 목록(최대 366개, 날짜 중복 불가)이며 그 날짜의 회차를 뺀다. 쉬는 날도 count 종료의 회차 수에는 포함된다."
+        "description": "frequency=none 외에는 interval/endMode가 필수. weekly는 weekdays 최소 1개. until 종료는 시작일 이상. count 종료는 count 필수. 존재하지 않는 월말·윤년 회차는 건너뛴다. exceptions는 회차 예외 목록(쉬는 날·회차 변경, 최대 366개, 한 날짜에 하나)이다. 쉬는 날은 그 날짜의 회차를 빼지만 count 종료의 회차 수에는 포함된다. 회차 변경은 그 회차의 제목·시각만 바꾼다."
       },
       "Goal": {
         "type": "object",

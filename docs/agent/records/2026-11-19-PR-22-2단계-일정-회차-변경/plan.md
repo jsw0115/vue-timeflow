@@ -1,0 +1,22 @@
+# 작업 계획
+
+- 요청: 2026-11-19 "PR-22 2단계 진행해줘." 06 IM-14 2단계(Q-03 나머지). 일정에서 회차 하나 건너뛰기, `override`로 회차 하나만 바꾸기(시간·제목), "이 회차부터 수정"을 기존 반복 종료와 새 반복 생성으로 나누기.
+- 현재 확인한 사실
+  - 예외 구조 `recurrence.exceptions: [{date, action}]`는 1단계에서 만들었고 action은 `skip`만 허용한다. 서버 `RecurrenceRule`(검증·회차 계산)과 프런트 `utils/recurrence.mjs`가 같은 규칙을 쓴다.
+  - 일정 화면은 브라우저 저장(`localCollection('events')`)이다. 캘린더·홈·일간 플래너는 `eventOccurrences()`로 회차를 계산한다. 목록은 반복 묶음 단위이고, 캘린더 항목을 누르면 `/events`로만 이동해 회차 단위로 손댈 곳이 없다.
+  - 서버 `/api/schedules/occurrences`는 통계(`InsightService.stats` 계획 시간)가 쓴다. 회차의 `startTime`·`endTime`으로 분을 센다.
+  - `FeatureInput`의 SCHEDULE·ROUTINE_RECORD가 같은 `RecurrenceRule.validate`를 부른다. 서버 시각은 `HH:mm`, 제목은 공백 제외 1~200자다.
+  - 프런트 `addSkipDates()`는 쉬는 날만으로 예외 목록을 다시 만들어, override가 생기면 지워 버린다.
+- 범위
+  - 서버: override 검증(일정만 허용, 루틴은 기존처럼 거부), 회차 응답에 override 적용, 통계가 바뀐 시간을 따름. 새 테이블·Flyway 없음(반복 규칙 JSON 안).
+  - 프런트: `recurrence.mjs` override 검증·적용·설정·분할 도우미, `addSkipDates()`가 다른 예외를 보존. 캘린더 회차 → 일정 상세를 "이 회차만 / 이 회차부터 / 전체 반복" 범위로 열기. 회차 예외 목록과 되돌리기.
+  - 테스트: 서버 `OccurrenceOverrideTest`(신규)와 `InsightServiceTest` 1개, 프런트 `occurrence-edit.test.mjs`(신규)와 화면 렌더 1개. UT는 09에 UT-250부터 먼저 추가한다.
+  - 문서: 09(UF-139~UF-141, UT-250~), 06 IM-14, 01·07·10·03, API 안내(`docs/api/frontend-backend-2026-10-10/README.md`).
+- 결정(근거는 context-notes)
+  - override 필드는 `title`·`startTime`·`endTime`만. 날짜는 바꾸지 않는다(IM-14). 바뀐 필드만 저장해 나중에 반복 전체 제목을 바꿔도 따로 바꾸지 않은 필드는 따라간다.
+  - 분할 시 원래 반복은 `endMode: until`, `until = 회차 전날`로 끝낸다. 새 반복은 회차 날짜에서 시작하고, 횟수 종료면 남은 횟수(쉬는 날 포함 앞선 회차 수를 뺀 값)를 쓴다. 회차 날짜 이후의 예외(쉬는 날·변경)는 새 반복으로 옮긴다. 앞선 회차가 없으면(첫 회차) 전체 수정과 같다.
+- 제외: 회차 날짜 옮기기, 일정 서버 연결(PR-07), 루틴 override, "이 회차부터 삭제".
+- 성공 기준: 새 UT가 수정 전 실패·수정 후 통과, 기존 1단계 테스트 유지, 백엔드 전체·프런트 전체·계약 검사·빌드 통과, 브라우저에서 캘린더 → 회차 편집 흐름 확인.
+- 보안 관련 ID/검증: 입력 검증(override 키 허용 목록·시각 형식·제목 길이·시간 범위·예외 개수 366·날짜 중복), 소유권은 기존 `RecordService.update`(version 필수) 경로 그대로. 화면 출력은 텍스트 보간만.
+- 접근성 대상/검증: 범위 선택 `segmented-tab` + `aria-pressed`, 입력 라벨, 회차 예외 목록 버튼의 `aria-label`, 상태 문구 `role="status"`.
+- 사용자 요청으로 허용된 작업: 구현·테스트·문서·의미 단위 커밋. 푸시·배포·운영 DB 변경은 하지 않는다.

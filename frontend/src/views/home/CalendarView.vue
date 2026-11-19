@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { localDate } from '../../utils/postValidation.mjs'
-import { eventOccurrences } from '../../utils/recurrence.mjs'
+import { eventOccurrences, occurrenceLink } from '../../utils/recurrence.mjs'
 import { events, tasks } from '../../store/appState'
 import { ddays, isPast } from '../../store/ddays'
 import { posts, ME } from '../../store/tagging'
@@ -56,7 +56,8 @@ const itemsByDate = computed(() => {
     for (const event of eventOccurrences(events.value, from, to)) {
       const date = new Date((event.startDate < from ? from : event.startDate) + 'T12:00:00')
       while (iso(date) <= event.endDate && iso(date) <= to) {
-        add(iso(date), { kind: 'event', title: event.title, meta: event.category ?? event.tag ?? '', link: '/events' })
+        // 반복 일정은 그 회차를 연 상태로 일정 화면에 연결한다(PR-22 2단계). 회차만 바꾼 일정은 그 사실을 함께 보인다
+        add(iso(date), { kind: 'event', title: event.title, meta: (event.category ?? event.tag ?? '') + (event.overridden ? ' · 이 회차만 변경' : ''), link: occurrenceLink(event) })
         date.setDate(date.getDate() + 1)
       }
     }

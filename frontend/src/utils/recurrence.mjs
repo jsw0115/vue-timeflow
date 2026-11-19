@@ -2,18 +2,32 @@ const DAY = 86400000
 const stamp = value => Date.parse(value + 'T00:00:00Z')
 const iso = value => new Date(value).toISOString().slice(0, 10)
 const validDate = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && Number.isFinite(stamp(value)) && iso(stamp(value)) === value
-// 쉬는 날 예외는 반복 규칙 JSON 안에 두므로 반복마다 개수를 묶는다. 서버 RecurrenceRule.MAX_EXCEPTIONS와 같다(Q-03).
+// 회차 예외(쉬는 날·회차 변경)는 반복 규칙 JSON 안에 두므로 반복마다 개수를 묶는다. 서버 RecurrenceRule.MAX_EXCEPTIONS와 같다(Q-03).
 export const MAX_EXCEPTIONS = 366
+// 회차 하나만 바꿀 때 바꿀 수 있는 필드. 서버 RecurrenceRule.OVERRIDE_FIELDS와 같다. 날짜는 바꾸지 않는다(IM-14 2단계).
+export const OVERRIDE_FIELDS = ['title', 'startTime', 'endTime']
+const validTime = value => typeof value === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(value)
+const byDate = (a, b) => a.date.localeCompare(b.date)
 export function makeRecurrence(value = {}, fallbackDays = []) {
   return { frequency: 'none', interval: 1, weekdays: [...fallbackDays], endMode: 'never', until: '', count: 10, ...value, weekdays: [...(value.weekdays ?? fallbackDays)] }
 }
+function overrideError(item) {
+  const fields = Object.keys(item).filter(key => key !== 'date' && key !== 'action')
+  if (!fields.length || fields.some(key => !OVERRIDE_FIELDS.includes(key))) return '회차 변경에는 제목이나 시각만 바꿀 수 있어요.'
+  if ('title' in item && (typeof item.title !== 'string' || !item.title.trim() || item.title.trim().length > 200)) return '회차 제목은 1~200자로 입력해주세요.'
+  if (['startTime', 'endTime'].some(key => key in item && !validTime(item[key]))) return '회차 시각은 HH:mm 형식으로 입력해주세요.'
+  return ''
+}
 function exceptionsError(exceptions) {
   if (exceptions === undefined) return ''
-  if (!Array.isArray(exceptions) || exceptions.length > MAX_EXCEPTIONS) return `쉬는 날은 반복마다 최대 ${MAX_EXCEPTIONS}일까지 정할 수 있어요.`
+  if (!Array.isArray(exceptions) || exceptions.length > MAX_EXCEPTIONS) return `쉬는 날·회차 변경은 반복마다 최대 ${MAX_EXCEPTIONS}개까지 정할 수 있어요.`
   const seen = new Set()
   for (const item of exceptions) {
-    if (!item || typeof item !== 'object' || Object.keys(item).some(key => key !== 'date' && key !== 'action') || item.action !== 'skip' || !validDate(item.date)) return '쉬는 날 형식을 확인해주세요.'
-    if (seen.has(item.date)) return '같은 날짜를 쉬는 날로 두 번 정할 수 없어요.'
+    if (!item || typeof item !== 'object' || !validDate(item.date)) return '쉬는 날 형식을 확인해주세요.'
+    if (item.action === 'skip') { if (Object.keys(item).some(key => key !== 'date' && key !== 'action')) return '쉬는 날 형식을 확인해주세요.' }
+    else if (item.action === 'override') { const error = overrideError(item); if (error) return error }
+    else return '쉬는 날 형식을 확인해주세요.'
+    if (seen.has(item.date)) return '한 날짜에는 쉬는 날이나 회차 변경을 하나만 정할 수 있어요.'
     seen.add(item.date)
   }
   return ''
@@ -22,13 +36,45 @@ function exceptionsError(exceptions) {
 export function skipDates(rule) {
   return new Set(Array.isArray(rule?.exceptions) ? rule.exceptions.filter(item => item?.action === 'skip').map(item => item.date) : [])
 }
-/** 쉬는 날을 더한 새 규칙. 같은 날짜는 한 번만 두고 날짜순으로 정렬한다. 원래 규칙은 바꾸지 않는다. */
+/** 쉬는 날을 더한 새 규칙. 같은 날짜의 회차 변경은 쉬는 날로 바뀌고, 다른 예외는 남는다. 날짜순으로 정렬하고 원래 규칙은 바꾸지 않는다. */
 export function addSkipDates(rule, dates) {
-  const merged = [...new Set([...skipDates(rule), ...dates])].sort()
-  return { ...(rule ?? { frequency: 'none' }), exceptions: merged.map(date => ({ date, action: 'skip' })) }
+  const merged = [...new Set([...skipDates(rule), ...dates])]
+  const others = (rule?.exceptions ?? []).filter(item => item?.action !== 'skip' && !merged.includes(item.date))
+  return { ...(rule ?? { frequency: 'none' }), exceptions: [...others, ...merged.map(date => ({ date, action: 'skip' }))].sort(byDate) }
 }
-export function removeSkipDate(rule, date) {
+/** 그 날짜의 예외(쉬는 날이든 회차 변경이든)를 지운 새 규칙. 회차가 원래대로 돌아온다. */
+export function removeException(rule, date) {
   return { ...rule, exceptions: (rule?.exceptions ?? []).filter(item => item.date !== date) }
+}
+export const removeSkipDate = removeException
+/** 그 날짜의 회차 변경. 없거나 쉬는 날이면 null이다. */
+export function overrideFor(rule, date) {
+  return (Array.isArray(rule?.exceptions) ? rule.exceptions : []).find(item => item?.action === 'override' && item.date === date) ?? null
+}
+/** 회차 하나의 변경을 바꾼 새 규칙. patch가 비면 그 날짜의 예외를 지운다(원래 회차로 되돌림). */
+export function setOverride(rule, date, patch) {
+  const rest = removeException(rule, date)
+  const fields = Object.fromEntries(OVERRIDE_FIELDS.filter(key => patch?.[key] !== undefined).map(key => [key, patch[key]]))
+  if (!Object.keys(fields).length) return rest
+  return { ...rest, exceptions: [...rest.exceptions, { date, action: 'override', ...fields }].sort(byDate) }
+}
+/** 원본과 다른 필드만 고른다. 원본과 같은 값은 저장하지 않아, 나중에 반복 전체를 바꾸면 그 필드는 따라간다. */
+export function changedFields(event, values) {
+  const result = {}
+  const title = (values.title ?? '').trim()
+  if (title !== event.title) result.title = title
+  for (const key of ['startTime', 'endTime']) if (values[key] !== event[key]) result[key] = values[key]
+  return result
+}
+/** 일정의 회차 변경이 원본 시간과 합쳐 성립하는지 본다. 종료 시각은 회차 종료일(시작일 + 일정 기간)에 적용된다. */
+export function overridesError(event) {
+  const span = validDate(event.startDate) && validDate(event.endDate) ? (stamp(event.endDate) - stamp(event.startDate)) / DAY : 0
+  for (const item of Array.isArray(event.recurrence?.exceptions) ? event.recurrence.exceptions : []) {
+    if (item?.action !== 'override') continue
+    const start = item.startTime ?? event.startTime, end = item.endTime ?? event.endTime
+    if (span === 0 && end <= start) return `${item.date} 회차의 종료 시각은 시작 이후로 정해주세요.`
+  }
+  return ''
 }
 /** 양 끝을 포함한 날짜 목록. 잘못된 기간이나 MAX_EXCEPTIONS일을 넘는 기간은 빈 목록이다. */
 export function datesBetween(from, to) {
@@ -94,6 +140,33 @@ export function eventOccurrences(events, from, to) {
     if (!validDate(startDate) || !validDate(endDate)) return []
     const duration = Math.max(0, (stamp(endDate) - stamp(startDate)) / DAY)
     const dates = occurrenceDates(startDate, event.recurrence, iso(stamp(from) - duration * DAY), to)
-    return dates.map(date => ({ ...event, occurrenceKey: `${event.id}:${date}`, startDate: date, endDate: iso(stamp(date) + duration * DAY), date: date + ' ' + (event.startTime ?? event.time ?? ''), sourceId: event.id }))
+    return dates.map(date => {
+      // 회차 하나만 바꾼 제목·시각은 그 회차에만 적용한다. 서버 /api/schedules/occurrences와 같다
+      const changed = overrideFor(event.recurrence, date)
+      const fields = changed ? Object.fromEntries(OVERRIDE_FIELDS.filter(key => key in changed).map(key => [key, changed[key]])) : {}
+      const startTime = fields.startTime ?? event.startTime ?? event.time ?? ''
+      return { ...event, ...fields, ...(fields.startTime ? { time: fields.startTime } : {}), overridden: Boolean(changed), occurrenceKey: `${event.id}:${date}`, startDate: date, endDate: iso(stamp(date) + duration * DAY), date: date + ' ' + startTime, sourceId: event.id }
+    })
   })
+}
+/** 반복 일정이면 그 회차를 연 상태로, 아니면 일정만 연 상태로 일정 화면에 연결한다. */
+export function occurrenceLink(occurrence) {
+  const repeating = occurrence.recurrence && occurrence.recurrence.frequency !== 'none'
+  return `/events?id=${encodeURIComponent(occurrence.sourceId)}` + (repeating ? `&occurrence=${occurrence.startDate}` : '')
+}
+/**
+ * "이 회차부터" 수정. 원래 반복은 회차 전날에 끝내고(head), 그 회차부터는 새 반복(tail)으로 잇는다.
+ * 횟수 종료는 쉬는 날을 포함한 앞선 회차 수를 빼고 남은 횟수를 쓴다. 회차 날짜 이후의 예외는 새 반복으로 옮긴다.
+ * 앞선 회차가 없거나(첫 회차) 반복에 없는 날짜면 나눌 필요가 없으므로 null을 돌려준다.
+ */
+export function splitRecurrence(event, date) {
+  const rule = event.recurrence
+  if (!rule || rule.frequency === 'none' || !validDate(date) || !plannedDates(event.startDate, rule, date, date).length) return null
+  const before = plannedDates(event.startDate, rule, event.startDate, iso(stamp(date) - DAY))
+  if (!before.length) return null
+  const exceptions = Array.isArray(rule.exceptions) ? rule.exceptions : []
+  const span = Math.max(0, (stamp(event.endDate ?? event.startDate) - stamp(event.startDate)) / DAY)
+  const head = { ...rule, endMode: 'until', until: iso(stamp(date) - DAY), exceptions: exceptions.filter(item => item.date < date) }
+  const tailRule = { ...rule, exceptions: exceptions.filter(item => item.date >= date), ...(rule.endMode === 'count' ? { count: rule.count - before.length } : {}) }
+  return { head, tail: { startDate: date, endDate: iso(stamp(date) + span * DAY), recurrence: tailRule } }
 }

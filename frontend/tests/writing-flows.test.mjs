@@ -243,6 +243,25 @@ test('메신저: 대화 목록과 말풍선·참여자·전송 입력창을 같�
   } finally { chat.selectedId = selected }
 })
 
+test('일정 회차 편집: 캘린더에서 고른 회차는 "이 회차만" 범위로 열리고, 목록에서 열면 회차 예외를 되돌릴 수 있다(UT-256)', async () => {
+  const { events } = await load('store/appState.js')
+  const backup = events.value
+  try {
+    events.value = [{ id: 41, title: '주간 회의', startDate: '2026-11-23', endDate: '2026-11-23', startTime: '10:00', endTime: '11:00', time: '10:00', date: '2026-11-23 10:00', category: '업무', tag: '업무', state: '예정', color: '#2f5d46', body: '', attendeeIds: [],
+      recurrence: { frequency: 'weekly', interval: 1, weekdays: [1, 3], endMode: 'never', until: '', count: 10, exceptions: [{ date: '2026-11-30', action: 'skip' }, { date: '2026-12-02', action: 'override', title: '특별 회의' }] } }]
+    const one = await render('views/events/EventListView.vue', {}, '/events?id=41&occurrence=2026-11-25')
+    assert.match(one, /aria-pressed="true"[^>]*>이 회차만</)
+    assert.match(one, /aria-pressed="false"[^>]*>이 회차부터</)
+    assert.match(one, /aria-pressed="false"[^>]*>전체 반복</)
+    assert.match(one, /이 회차 건너뛰기/)
+    assert.match(one, /2026-11-25/)
+    const whole = await render('views/events/EventListView.vue', {}, '/events?id=41')
+    assert.doesNotMatch(whole, />이 회차만</, '목록에서 열면 회차를 고르지 않았으므로 전체 반복 수정이다')
+    assert.match(whole, /aria-label="2026-11-30 건너뛴 회차 되돌리기"/)
+    assert.match(whole, /aria-label="2026-12-02 회차 변경 되돌리기"/)
+  } finally { events.value = backup }
+})
+
 test('루틴 쉬는 날: 오늘을 쉬면 오늘 목록·홈에서 빠지고, 예전 루틴도 요일로 규칙을 만들어 쉰다(UF-134)', async () => {
   const { routines, isRoutineToday, isRestToday, routineRule, routinePlannedDates } = await load('store/appState.js')
   const { addSkipDates } = await import('../src/utils/recurrence.mjs')

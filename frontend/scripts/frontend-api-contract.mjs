@@ -79,9 +79,11 @@ schemas.PlannerItem.properties.version = integer(1)
 schemas.PlannerItem.required.push('version')
 schemas.PlannerItemCreate = object({ ...schemas.PlannerItem.properties, version: integer(0, 0) }, schemas.PlannerItem.required.filter(field => field !== 'version'))
 schemas.PlannerItemUpdate = object({ ...schemas.PlannerItem.properties }, [...schemas.PlannerItem.required])
-schemas.RecurrenceException = object({ date, action: choice('skip') }, ['date', 'action'])
+const clock = { type: 'string', pattern: '^(?:[01][0-9]|2[0-3]):[0-5][0-9]$' }
+schemas.RecurrenceException = object({ date, action: choice('skip', 'override'), title: string(), startTime: clock, endTime: clock }, ['date', 'action'])
+schemas.RecurrenceException.description = 'skip은 그 날짜의 회차를 뺀다. override는 일정에서만 쓰며 그 회차의 title·startTime·endTime 중 바꾼 필드만 담는다(하나 이상 필수, 날짜는 바꾸지 않는다). 종료는 시작 이후여야 하고 종료 시각은 회차 종료일에 적용된다. 루틴은 skip만 받는다.'
 schemas.Recurrence = object({ frequency: choice('none', 'daily', 'weekly', 'monthly', 'yearly'), interval: integer(1, 99), weekdays: array(integer(0, 6)), endMode: choice('never', 'until', 'count'), until: { type: 'string', description: 'endMode=until이면 유효한 YYYY-MM-DD. 그 외 빈 문자열 허용.' }, count: integer(1, 999), exceptions: { type: 'array', maxItems: 366, items: ref('RecurrenceException') } }, ['frequency'])
-schemas.Recurrence.description = 'frequency=none 외에는 interval/endMode가 필수. weekly는 weekdays 최소 1개. until 종료는 시작일 이상. count 종료는 count 필수. 존재하지 않는 월말·윤년 회차는 건너뛴다. exceptions는 쉬는 날 목록(최대 366개, 날짜 중복 불가)이며 그 날짜의 회차를 뺀다. 쉬는 날도 count 종료의 회차 수에는 포함된다.'
+schemas.Recurrence.description = 'frequency=none 외에는 interval/endMode가 필수. weekly는 weekdays 최소 1개. until 종료는 시작일 이상. count 종료는 count 필수. 존재하지 않는 월말·윤년 회차는 건너뛴다. exceptions는 회차 예외 목록(쉬는 날·회차 변경, 최대 366개, 한 날짜에 하나)이다. 쉬는 날은 그 날짜의 회차를 빼지만 count 종료의 회차 수에는 포함된다. 회차 변경은 그 회차의 제목·시각만 바꾼다.'
 schemas.Goal = object({ count: integer(1, 9999), unit: string() }, ['count', 'unit'])
 schemas.TemplateBlock = object({ time: { type: 'string', pattern: '^(?:[01][0-9]|2[0-3]):[0-5][0-9]$' }, title: string(), duration: integer(1, 1440) }, ['time', 'title'])
 schemas.BoardColumn = object({ id: string(), title: string(), wip: integer(0, 500) }, ['id', 'title', 'wip'])
@@ -184,7 +186,7 @@ const responseOverrides = {
   'POST /api/user/data/backup/preview': ref('BackupJob'), 'POST /api/user/data/backup/{jobId}/restore': ref('BackupJob'),
   'GET /api/diary/calendar': array(object({ date, count: integer(0) }, ['date', 'count'])),
   'GET /api/diary/{date}': pageOf(ref('DIARYResponse')), 'POST /api/diary/{date}': ref('DIARYResponse'),
-  'GET /api/schedules/occurrences': array(flexible({ ...schemas.SCHEDULEResponse.properties, sourceId: string(), occurrenceKey: string() })),
+  'GET /api/schedules/occurrences': array(flexible({ ...schemas.SCHEDULEResponse.properties, sourceId: string(), occurrenceKey: string(), overridden: boolean })),
   'GET /api/routine-records/{id}/history': ref('RoutineHistory'), 'PUT /api/routine-records/{id}/history/{date}': ref('ROUTINE_COMPLETIONResponse'),
   'GET /api/money/summary': object({ income: integer(0), expense: integer(0), balance: integer(), categories: { type: 'object', additionalProperties: integer(0) }, count: integer(0) }, ['income', 'expense', 'balance', 'categories', 'count']),
   'GET /api/stat/dashboard': ref('Stats'), 'GET /api/stat/plan-actual': ref('Stats'), 'GET /api/stat/focus': ref('Stats'), 'GET /api/stat/category': array(ref('CategoryStats')),

@@ -1,0 +1,33 @@
+# 결정·근거·인수인계 메모
+
+- 현재 확인된 구현/설정
+  - 1단계 예외 구조(`exceptions: [{date, action:'skip'}]`)를 서버 `RecurrenceRule`과 프런트 `recurrence.mjs`가 같은 규칙으로 쓴다.
+  - 일정 화면은 브라우저 저장이다. 캘린더·홈·일간 플래너는 `eventOccurrences()`, 서버 통계는 `ScheduleService.occurrences()`로 회차를 만든다.
+  - 수정 전 프런트 `addSkipDates()`는 쉬는 날만으로 예외 목록을 다시 만들었다. override가 생기면 쉬는 날을 추가할 때 지워지는 결함이 되므로 함께 고쳤다.
+- 선택한 대안/이유
+  - override 필드는 `title`·`startTime`·`endTime`만(IM-14 계획). 날짜 옮기기는 회차 키(`id:날짜`)와 쉬는 날·count 계산을 함께 바꿔야 해서 범위 밖으로 두었다.
+  - 원본과 다른 필드만 저장한다. 나중에 반복 전체의 제목을 바꾸면 따로 바꾸지 않은 필드는 따라간다. 원본과 같은 값으로 돌리면 그 날짜의 예외를 지워, 빈 변경이 쌓이지 않는다.
+  - 서버 검증: `validate(value, startDate)`(루틴)는 기존처럼 `skip`만 받고, SCHEDULE은 `validate(..., true)`로 override를 받는다. 저장된 값은 쓸 때 검증했으므로 회차 계산(`plannedDates`)과 읽기(`skipDates`·`overrides`)는 override를 허용한다. 이름이 맞지 않게 된 `exceptionDates`는 `skipDates`로 바꿨다(호출부 2곳).
+  - 시간 검사는 `RecurrenceRule.checkOverrideTimes`에서 원본 시각과 합쳐 한다. 반복 전체의 시간을 바꿔 기존 변경이 성립하지 않으면 그 수정도 400이다(UT-253). 프런트 `overridesError`가 같은 검사를 한다.
+  - 분할은 예외가 아니라 반복 두 개로 나눈다(Q-03). 원래 반복은 `endMode: until`, `until = 회차 전날`. 횟수 종료는 쉬는 날을 포함한 앞선 회차 수를 빼서 남은 횟수를 쓴다(쉬는 날도 count에 포함되는 1단계 규칙과 맞춤). 회차 날짜 이후의 예외는 쉬는 날과 변경 모두 새 반복으로 옮긴다. 사용자가 하나씩 정한 결정을 지우지 않고, 변경은 필드 단위라 새 반복 값도 바꾸지 않은 필드에는 적용된다. 첫 회차나 반복에 없는 날짜는 나누지 않는다(`null`).
+  - 화면 진입: 캘린더의 반복 일정 회차는 `/events?id=…&occurrence=날짜`로 연결한다. 목록에서 열면 회차를 고르지 않았으므로 전체 반복 수정이다. 실제 회차가 아닌 날짜로 오면 전체 반복으로 연다. 모달을 닫으면 주소의 `id`·`occurrence`를 지워 같은 회차를 다시 눌러도 열린다.
+  - 범위 선택은 `segmented-tab` + `aria-pressed`(DESIGN.md 4장). "이 회차만"은 제목·시간만 보이고, 삭제 대신 "이 회차 건너뛰기"를 둔다. 반복 일정의 삭제 버튼은 "반복 전체 삭제하기"로 이름을 바꾸고 "전체 반복" 범위에서만 보인다.
+  - 회차 예외 목록의 되돌리기는 다른 입력처럼 저장할 때 반영한다. 취소하면 그대로다.
+  - 시간 입력 두 칸은 `.modal-card label:first-child`가 첫 라벨의 위 여백만 없애 높이가 어긋났다. 새 CSS 대신 `EventDateFields`와 같은 `.form-fieldset`으로 감쌌다.
+  - 새 문장은 기본 문단(canvas 위 muted, 4.83:1)으로 썼다. 기존 오류 문구 `.form-note`는 그대로 두었다(부록 B, PR-11 6단계).
+- 발견·수정
+  - 목록 상세 패널의 "상세 보기" 버튼이 `@click="openDetail"`이라 클릭 이벤트가 회차 날짜 인자로 들어갈 수 있었다. `openDetail()`로 고쳤다.
+  - API 카탈로그의 `REPEAT-02`(`PATCH /events/{id}/occurrences/...`)는 폐지 예정 구형 `/events` 설계라 고치지 않았다.
+- 보안 점검(변경 범위)
+  - 입력 검증(SW 입력 데이터 검증, OWASP A03·A04): override 키 허용 목록, 필드 하나 이상, 제목 공백 제외 1~200자·문자열, 시각 `HH:mm`, 원본과 합친 종료가 시작 이후, 한 날짜에 예외 하나, 반복당 366개. 루틴의 override 거부. 서버·프런트 같은 규칙(UT-253).
+  - 소유권(OWASP A01): 예외는 기존 `RecordService.create/update`(본인 자료, version 필수)로만 바뀐다. 회차 조회도 기존 `store.all(user, …)`. 새 접근 경로 없음.
+  - 화면 출력(웹 XSS): 회차 제목·날짜는 Vue 텍스트 보간으로만 출력한다. 주소의 `id`·`occurrence`는 일정 목록에서 찾은 값과 실제 회차 날짜만 쓰고 그 밖의 값은 무시한다.
+  - 해당 없음: 인증·세션, 비밀값, 파일, SQL, 스키마 변경 없음(반복 규칙 JSON 안).
+- 접근성 점검(KWCAG 2.2, 변경 범위)
+  - 범위 선택은 `role="group"`·`aria-label="수정 범위"`·`aria-pressed`. 시간 입력은 `fieldset`·`legend`·라벨. 회차 예외 되돌리기 버튼은 날짜가 들어간 `aria-label`. 안내·오류 문구는 `role="status"`.
+  - 320px에서 회차 모달이 가로로 넘치지 않음(브라우저 측정). 키보드만으로의 조작·화면낭독기 실기기 점검은 NOT_RUN.
+- 다음 작업·미확인
+  - PR-07에서 일정을 서버에 연결할 때 분할은 두 요청(새 일정 생성, 원래 일정 수정)이다. 새 일정을 먼저 만들고 원래 일정을 나중에 고치며, 뒤 요청이 실패하면 만든 일정을 지운다(06 IM-14 위험 표).
+  - 회차 날짜 옮기기, "이 회차부터 삭제"는 범위 밖. 결정 Q-19·Q-20은 그대로 대기.
+- 마지막 실행 명령·종료 코드·증거 경로: verification.md와 07 RUN-62~RUN-66. 브라우저 점검 스크립트·캡처는 세션 scratchpad(저장소 밖).
+- 사용자 변경과 자체 변경 구분: 사용자 미커밋 `frontend/src/components/Modal.vue`, `backend/.../PlannerItemQueryRepositoryImpl.java`, `docs/output/`는 손대지 않았다. PR-05 점검 때 남은 Vite 개발 서버(PID 37188, 이번 세션에서 띄운 것)는 명령줄을 확인한 뒤 종료했다.
