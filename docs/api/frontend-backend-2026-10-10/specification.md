@@ -3132,6 +3132,7 @@ file을 multipart/form-data로 전달한다. boundary는 HTTP 클라이언트가
 | timeZone | string | 아니오 | 길이 ≤ 64 |
 | intro | string | 아니오 | 길이 ≤ 200 |
 | mode | string | 아니오 | J/P/B |
+| dayStartHour | integer | 아니오 | 최소 0 · 최대 6 · 하루 경계 시각(정시). 기본 0. 통계·오늘의 날짜 배정에만 쓰고 저장된 시각은 바꾸지 않는다. intro·mode처럼 보내지 않으면 저장값에서 빠진다. |
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 

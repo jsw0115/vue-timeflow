@@ -43,6 +43,7 @@ class RecordLinkTest {
     @Autowired FeatureStore store;
     @Autowired JdbcTemplate jdbc;
     @Autowired ObjectMapper mapper;
+    @Autowired DayPolicy days;
     String user, other;
     MockMvc mvc;
 
@@ -148,7 +149,7 @@ class RecordLinkTest {
         links.link(user, "schedule", scheduleId, "actual", actual.get("id").toString());
         var aggregation = mock(PlannerAggregationService.class);
         when(aggregation.range(eq(user), any(), any())).thenReturn(new PlannerViewResponse(List.of(), List.of(), List.of()));
-        var stats = new InsightService(store, aggregation, mock(PlannerService.class), schedules).stats(user, "2026-11-19", "2026-11-19");
+        var stats = new InsightService(store, aggregation, mock(PlannerService.class), schedules, days).stats(user, "2026-11-19", "2026-11-19");
         assertEquals(60L, stats.get("plannedMinutes"));
         assertEquals(45L, stats.get("actualMinutes"));
     }

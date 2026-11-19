@@ -14,27 +14,33 @@ public class InsightService {
     private final PlannerAggregationService aggregation;
     private final PlannerService planner;
     private final ScheduleService schedules;
-    public InsightService(FeatureStore store, PlannerAggregationService aggregation, PlannerService planner, ScheduleService schedules) { this.store = store; this.aggregation = aggregation; this.planner = planner; this.schedules = schedules; }
+    private final DayPolicy days;
+    public InsightService(FeatureStore store, PlannerAggregationService aggregation, PlannerService planner, ScheduleService schedules, DayPolicy days) { this.store = store; this.aggregation = aggregation; this.planner = planner; this.schedules = schedules; this.days = days; }
+    /** 사용자 시간대와 하루 경계로 정한 오늘(Q-06·Q-12). */
+    public LocalDate today(String user) { return days.of(user).today(); }
     public Map<String,Object> summary(String user, String date) {
-        LocalDate day = date == null ? LocalDate.now(ZoneId.of("Asia/Seoul")) : FeatureInput.date(date);
+        LocalDate day = date == null ? today(user) : FeatureInput.date(date);
         // 일정·루틴의 기준은 신형(schedules·routineRecords)이다. 구형 일정·루틴은 중복이므로 빼고 할 일만 남긴다(IM-03).
         var planned = new PlannerViewResponse(List.of(), aggregation.daily(user, day).tasks(), List.of());
         return Map.of("date", day.toString(), "planner", planned, "items", planner.find(user, day, null, null, null), "stats", stats(user, day.toString(), day.toString()),
                 "unreadNotifications", store.all(user, FeatureType.NOTIFICATION).stream().filter(row -> !Boolean.TRUE.equals(row.get("read"))).count(), "schedules", schedules.occurrences(user, day.toString(), day.toString()), "routineRecords", store.all(user, FeatureType.ROUTINE_RECORD));
     }
     public Map<String,Object> stats(String user, String from, String to) {
-        LocalDate start = from == null ? LocalDate.now(ZoneId.of("Asia/Seoul")).withDayOfMonth(1) : FeatureInput.date(from);
+        var clock = days.of(user);
+        LocalDate start = from == null ? clock.today().withDayOfMonth(1) : FeatureInput.date(from);
         LocalDate end = to == null ? start.plusMonths(1).minusDays(1) : FeatureInput.date(to);
         if (end.isBefore(start) || java.time.temporal.ChronoUnit.DAYS.between(start, end) > 366) FeatureInput.fail("통계 기간은 최대 367일입니다.");
         // 구형 일정(view.events())은 신형 일정 회차와 중복되므로 계획 시간에 더하지 않는다(IM-03). view는 할 일 집계에만 쓴다.
         var view = aggregation.range(user, start, end);
         long planned = 0, actual = 0, focused = 0;
         Map<String,long[]> categories = new TreeMap<>();
-        for (var event : schedules.occurrences(user, start.toString(), end.toString())) {
-            LocalDateTime eventStart = FeatureInput.date(event.get("startDate").toString()).atTime(FeatureInput.time(event.get("startTime").toString()));
-            LocalDateTime eventEnd = FeatureInput.date(event.get("endDate").toString()).atTime(FeatureInput.time(event.get("endTime").toString()));
-            if (eventStart.isBefore(start.atStartOfDay())) eventStart = start.atStartOfDay();
-            if (eventEnd.isAfter(end.plusDays(1).atStartOfDay())) eventEnd = end.plusDays(1).atStartOfDay();
+        // 일정 시각은 사용자 시간대의 벽시계 시각이다. 기간은 첫날 경계부터 마지막 날 다음 경계까지이고, 경계가 0시가 아니면 다음 날 새벽 회차도 들어온다
+        Instant rangeStart = clock.start(start), rangeEnd = clock.end(end);
+        for (var event : schedules.occurrences(user, start.toString(), end.plusDays(1).toString())) {
+            Instant eventStart = FeatureInput.date(event.get("startDate").toString()).atTime(FeatureInput.time(event.get("startTime").toString())).atZone(clock.zone()).toInstant();
+            Instant eventEnd = FeatureInput.date(event.get("endDate").toString()).atTime(FeatureInput.time(event.get("endTime").toString())).atZone(clock.zone()).toInstant();
+            if (eventStart.isBefore(rangeStart)) eventStart = rangeStart;
+            if (eventEnd.isAfter(rangeEnd)) eventEnd = rangeEnd;
             long minutes = Math.max(0, Duration.between(eventStart, eventEnd).toMinutes()); planned += minutes;
             categories.computeIfAbsent(FeatureInput.text(event, "category"), key -> new long[2])[0] += minutes;
         }
@@ -50,7 +56,7 @@ public class InsightService {
         List<Map<String,Object>> focus = store.all(user, FeatureType.FOCUS).stream().filter(row -> {
             LocalDate date = FeatureInput.date(row.get("date").toString()); return !date.isBefore(start) && !date.isAfter(end);
         }).toList();
-        for (var block : actualBlocks(user, start, end)) {
+        for (var block : actualBlocks(user, clock, start, end)) {
             long minutes = ((Number)block.get("minutes")).longValue();
             actual += minutes;
             categories.computeIfAbsent("미분류", key -> new long[2])[1] += minutes;
@@ -65,17 +71,17 @@ public class InsightService {
     public List<Map<String,Object>> timeBlocks(String user, String date, String category) {
         LocalDate day = FeatureInput.date(date);
         var result = new ArrayList<>(planner.find(user, day, null, category, null).stream().map(item -> Map.<String,Object>of("id", item.id(), "title", item.title(), "date", day.toString(), "minutes", minutes(item.startTime(), item.endTime()), "type", item.type().name())).toList());
-        if (category == null || category.equals("미분류")) result.addAll(actualBlocks(user, day, day));
+        if (category == null || category.equals("미분류")) result.addAll(actualBlocks(user, days.of(user), day, day));
         return result;
     }
-    private List<Map<String,Object>> actualBlocks(String user, LocalDate from, LocalDate to) {
+    /** 실제 기록을 날짜별로 나눈다. 기록에 저장한 시간대가 아니라 사용자 시간대와 하루 경계를 쓴다(Q-06). 저장된 시작·종료 시각은 바꾸지 않는다. */
+    private List<Map<String,Object>> actualBlocks(String user, DayPolicy.Day clock, LocalDate from, LocalDate to) {
         var result = new ArrayList<Map<String,Object>>();
         for (var row : store.all(user, FeatureType.ACTUAL_SESSION)) {
             if (!"COMPLETED".equals(row.get("state"))) continue;
             Instant start = Instant.parse(row.get("startedAt").toString()), end = Instant.parse(row.get("endedAt").toString());
-            ZoneId zone = ZoneId.of(row.get("timeZone").toString());
             for (LocalDate day = from; !day.isAfter(to); day = day.plusDays(1)) {
-                Instant dayStart = day.atStartOfDay(zone).toInstant(), dayEnd = day.plusDays(1).atStartOfDay(zone).toInstant();
+                Instant dayStart = clock.start(day), dayEnd = clock.end(day);
                 if (start.isBefore(dayEnd) && end.isAfter(dayStart)) {
                     Instant clippedStart = start.isBefore(dayStart) ? dayStart : start, clippedEnd = end.isAfter(dayEnd) ? dayEnd : end;
                     result.add(Map.of("id", row.get("id"), "title", row.get("title"), "date", day.toString(), "minutes", Duration.between(clippedStart, clippedEnd).toMinutes(), "type", "ACTUAL"));

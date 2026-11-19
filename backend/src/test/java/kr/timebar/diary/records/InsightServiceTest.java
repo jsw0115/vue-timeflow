@@ -39,6 +39,7 @@ class InsightServiceTest {
     @Autowired ScheduleService schedules;
     @Autowired kr.timebar.diary.feature.FeatureStore store;
     @Autowired JdbcTemplate jdbc;
+    @Autowired DayPolicy days;
 
     private final PlannerAggregationService aggregation = mock(PlannerAggregationService.class);
     private final PlannerService planner = mock(PlannerService.class);
@@ -49,7 +50,7 @@ class InsightServiceTest {
     void setup() {
         user = UUID.randomUUID().toString();
         jdbc.update("INSERT INTO users(id) VALUES (?)", user);
-        insight = new InsightService(store, aggregation, planner, schedules);
+        insight = new InsightService(store, aggregation, planner, schedules, days);
     }
 
     /** UT-100: 같은 시간대의 구형 일정 60분·신형 일정 60분·계획 블록 30분이면 계획 시간은 90분이다. */

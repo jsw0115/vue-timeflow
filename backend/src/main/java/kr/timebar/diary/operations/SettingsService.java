@@ -40,7 +40,7 @@ public class SettingsService {
         return Map.of("id", account.getId(), "nickname", account.getNickname(), "email", account.getEmail(), "timeZone", account.getTimeZone(), "extra", extra);
     }
     public Map<String,Object> profile(String user, Map<String,Object> body) {
-        FeatureInput.keys(body, Set.of("nickname", "timeZone", "intro", "mode"));
+        FeatureInput.keys(body, Set.of("nickname", "timeZone", "intro", "mode", "dayStartHour"));
         String nickname = FeatureInput.requiredText(body, "nickname");
         if (nickname.length() > 80) FeatureInput.fail("닉네임은 최대 80자입니다.");
         String zone = FeatureInput.text(body, "timeZone");
@@ -48,9 +48,11 @@ public class SettingsService {
         try { ZoneId.of(zone); } catch (DateTimeException e) { FeatureInput.fail("유효한 IANA 시간대가 필요합니다."); }
         if (body.get("intro") != null) FeatureInput.requiredText(body, "intro");
         if (body.get("mode") != null) FeatureInput.choice(body, "mode", "J", "P", "B");
+        // 하루 경계는 0~6시 정시 하나다. 날짜 배정에만 쓰고 저장된 시각은 바꾸지 않는다(Q-12)
+        if (body.get("dayStartHour") != null) FeatureInput.number(body, "dayStartHour", 0, kr.timebar.diary.records.DayPolicy.MAX_START_HOUR, true);
         account(user).changeProfile(nickname); account(user).changeTimeZone(zone);
         Map<String,Object> extra = new LinkedHashMap<>();
-        for (String key : List.of("intro", "mode")) if (body.containsKey(key)) extra.put(key, body.get(key));
+        for (String key : List.of("intro", "mode", "dayStartHour")) if (body.containsKey(key)) extra.put(key, body.get(key));
         var previous = store.optional(user, FeatureType.SETTING, "profile");
         if (previous.isEmpty()) store.create(user, FeatureType.SETTING, "profile", Map.of("value", extra));
         else store.replace(user, FeatureType.SETTING, "profile", ((Number) previous.get().get("version")).longValue(), Map.of("value", extra));

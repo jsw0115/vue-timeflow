@@ -24,6 +24,7 @@ class ActualRecordingTest {
     @Autowired JdbcTemplate jdbc;
     @Autowired ObjectMapper mapper;
     @Autowired RecordLinks links;
+    @Autowired DayPolicy days;
     String user;
     @BeforeEach void setup() { user = UUID.randomUUID().toString(); jdbc.update("INSERT INTO users(id) VALUES (?)", user); }
     @AfterEach void clear() { org.springframework.security.core.context.SecurityContextHolder.clearContext(); }
@@ -88,7 +89,7 @@ class ActualRecordingTest {
         org.mockito.Mockito.when(aggregation.range(org.mockito.ArgumentMatchers.eq(user), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
                 .thenReturn(new kr.timebar.diary.planner.PlannerViewResponse(List.of(), List.of(), List.of()));
         store.create(user, FeatureType.ACTUAL_SESSION, Map.of("title", "자정 기록", "state", "COMPLETED", "timeZone", "Asia/Seoul", "startedAt", "2026-11-14T14:55:00Z", "endedAt", "2026-11-14T15:08:00Z", "elapsedSeconds", 780));
-        var insight = new InsightService(store, aggregation, planner, schedules);
+        var insight = new InsightService(store, aggregation, planner, schedules, days);
         assertEquals(5L, insight.stats(user, "2026-11-14", "2026-11-14").get("actualMinutes"));
         assertEquals(8L, insight.stats(user, "2026-11-15", "2026-11-15").get("actualMinutes"));
         assertEquals(13L, insight.stats(user, "2026-11-14", "2026-11-15").get("actualMinutes"));

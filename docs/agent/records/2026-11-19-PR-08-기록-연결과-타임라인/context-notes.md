@@ -10,4 +10,9 @@
 - 현재 DB 문서: 이 환경에서 새로 띄운 격리 MySQL은 Flyway가 V2 기준선으로 시작해 `db/chat-local-core` V1·V2를 적용하지 않았다. 기존 캡처(오래 쓴 개발 DB)와 FK·색인·열 길이가 달라 그 결과로 `current-database.md`를 덮어쓰지 않았다. 사용자 격리 DB에서 `python scripts/docs/build_current_database.py --capture-container timeflow-chat-mysql-1 --as-of <날짜>`로 재캡처해야 한다. 생성기에 `record_link` 설명은 더해 두었다. 기준선이 생긴 이유는 확인하지 않았다.
 - 테스트 환경: JDK 17은 apt로 설치했다(툴체인 17 필요). Maven Central·Docker Hub가 429를 돌려 재시도했다. `frontend/tests/device-preview.test.mjs`의 Vite 개발 서버 테스트는 이 환경에서 끝나지 않는다(수정 전 코드도 같음).
 - 문서 검사: `verify_documentation.py`는 01의 기존 깨진 링크(`../output/Timebar-Diary-검토보고서.md`) 1건으로 수정 전부터 실패한다. 이 작업에서 고치지 않았다.
-- 다음 작업: 2단계(날짜 기준). 첫 명령은 `InsightService`·`SettingsService.profile`·`InsightController` 대조다.
+- 2단계 날짜 기준: 경계 값은 새 테이블 없이 프로필 추가 정보(SETTING `profile`의 `value.dayStartHour`)에 둔다. 시간대는 기존 `users.tz`. `DayPolicy.of(user)`가 둘을 한 번 읽어 요청 안에서 같은 기준을 쓴다.
+- 실제 기록 날짜 분할은 기록에 저장한 시간대 대신 사용자 시간대를 쓴다(Q-06). 일정 계획 시간은 벽시계 시각을 사용자 시간대 시점으로 바꿔 같은 범위로 자른다. 경계가 0시가 아니면 다음 날 새벽 회차까지 읽으려고 회차 조회를 하루 늘렸다.
+- `DayPolicy.Day`는 패키지 안에만 둔다. API 계약 생성기가 `public record`를 모두 스키마로 읽어서 공개하면 `ZoneId`·`Clock` 스키마가 없다는 오류가 난다.
+- 프로필 추가 정보는 `PUT` 때 보낸 키로 통째로 바뀐다(기존 동작). 4단계 설정 화면은 `dayStartHour`를 함께 보내야 한다.
+- 범위 밖으로 남긴 것: 루틴 이력의 오늘(`ScheduleService`)과 메모 기본 날짜는 여전히 `Asia/Seoul`.
+- 다음 작업: 3단계(연결 화면). 첫 명령은 `frontend/src/views/tasks/TaskDetailView.vue`, 일정 상세(`views/events` 또는 캘린더), `PlannerDailyView.vue`, `views/diary/DiaryEntryView.vue`와 `features/records/taskStore.mjs`·`scheduleStore.mjs`·`features/recording/useRecording.js` 대조다. DESIGN.md를 먼저 읽는다.

@@ -9,7 +9,14 @@
   - `npm run build:web`: PASS. `frontend-api-contract.mjs --check`: PASS(288 operation, 198 schema). `api-inventory.mjs --check`: PASS(288 경로).
   - `verify_agent_kit.py`: PASS. `git diff --check`: PASS. `verify_documentation.py`: FAIL(01의 기존 깨진 링크 1건, 수정 전과 같음).
   - 실제 백엔드(chat-local, 새 격리 MySQL): 12개 점검 PASS, V10 적용 확인.
-- 보안: 소유권(SW 49의 권한 검사, OWASP A01) — 연결·배치·기록 시작 모두 양쪽 기록의 소유자 확인, 다른 계정은 404. 입력 검증(A03) — 종류 허용 목록, ID 100자, 원본 두 필드 함께, 일정 본문은 기존 `FeatureInput.validate`. 동시성·멱등 — 배치는 할 일 행 잠금과 `Idempotency-Key`, 기록 시작은 같은 요청 ID에 원본이 다르면 409. 직접 SQL은 모두 매개변수 바인딩.
-- 웹 접근성: 1단계 화면 변경 없음(N/A).
+- 2단계 명령과 결과(상세는 07 RUN-100~RUN-104)
+  - 1단계 커밋 코드에서 `DayBoundaryTest`: FAIL(의도, `DayPolicy` 없음).
+  - 수정 후 관련 테스트: PASS, 134개.
+  - `gradlew test --rerun`: 첫 실행 FAIL 1개(`ApplicationStartupTest`, `DayPolicy` 생성자 두 개). `@Autowired`로 고친 뒤 PASS, 30개 클래스 245개.
+  - 프런트 Node 테스트 150개(`device-preview.test.mjs` 제외), `npm run build:web`, 계약·목록 검사, `verify_agent_kit.py`, `git diff --check`: PASS. `verify_documentation.py`: 기존 깨진 링크 1건 FAIL(수정 전과 같음).
+  - 실제 백엔드: 2단계 7개, 1단계 12개 다시 실행 PASS.
+- 보안(2단계): 경계 값은 0~6 정수만 받고(문자열·소수·범위 밖 400), 시간대는 기존 `ZoneId.of` 검증을 쓴다. 날짜 계산은 요청 계정의 값만 읽는다.
+- 보안(1단계): 소유권(SW 49의 권한 검사, OWASP A01) — 연결·배치·기록 시작 모두 양쪽 기록의 소유자 확인, 다른 계정은 404. 입력 검증(A03) — 종류 허용 목록, ID 100자, 원본 두 필드 함께, 일정 본문은 기존 `FeatureInput.validate`. 동시성·멱등 — 배치는 할 일 행 잠금과 `Idempotency-Key`, 기록 시작은 같은 요청 ID에 원본이 다르면 409. 직접 SQL은 모두 매개변수 바인딩.
+- 웹 접근성: 1·2단계 화면 변경 없음(N/A).
 - 오탐 제외: 없음.
 - 남은 위험과 승인 필요: 현재 DB 문서 재캡처(사용자 격리 DB), V10 운영 적용(PR-13), 새 격리 DB의 기준선 원인 미확인.

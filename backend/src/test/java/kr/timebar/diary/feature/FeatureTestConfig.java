@@ -43,6 +43,7 @@ public class FeatureTestConfig {
     @Bean ActualRecordingService actualRecordings(FeatureStore store, JdbcTemplate jdbc, RecordLinks links) { return new ActualRecordingService(store, jdbc, links); }
     @Bean BackupService backups(FeatureStore store, JdbcTemplate jdbc, ObjectMapper mapper) { return new BackupService(store, jdbc, mapper); }
     @Bean ScheduleService schedules(FeatureStore store) { return new ScheduleService(store); }
+    @Bean DayPolicy days(UserRepository users, FeatureStore store) { return new DayPolicy(users, store); }
     @Bean WorkService work(FeatureStore store, kr.timebar.diary.common.IdempotencyKeys idempotency) { return new WorkService(store, idempotency); }
     @Bean UserRepository users() { return mock(UserRepository.class); }
     @Bean RefreshTokenRepository tokens() { return mock(RefreshTokenRepository.class); }

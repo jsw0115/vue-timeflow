@@ -15,7 +15,7 @@ public class InsightController {
     public ApiResponse<?> home(@RequestParam(required=false) String date) { return ApiResponse.ok(service.summary(CurrentUser.id(), date)); }
     @GetMapping("/stat/dashboard")
     public ApiResponse<?> dashboard(@RequestParam(defaultValue="month") String range, @RequestParam(required=false) String date) {
-        LocalDate day = date == null ? LocalDate.now(ZoneId.of("Asia/Seoul")) : FeatureInput.date(date);
+        LocalDate day = date == null ? service.today(CurrentUser.id()) : FeatureInput.date(date);
         LocalDate start = switch (range) {
             case "day" -> day;
             case "week" -> day.minusDays(day.getDayOfWeek().getValue()-1);

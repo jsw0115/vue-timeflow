@@ -143,7 +143,7 @@ const custom = {
   'PUT /api/admin/moderation/{id}': object({ userId: string(36), version: integer(1), action: choice('REMOVE', 'IGNORE') }, ['userId', 'version', 'action']),
   'PUT /api/routine-records/{id}/history/{date}': object({ completed: boolean, version: integer(1) }, ['completed']),
   'POST /api/settings': ref('SETTINGUpsert'), 'POST /api/settings/{section}': ref('SETTINGUpsert'), 'PUT /api/admin/settings': ref('SETTINGUpsert'),
-  'PUT /api/user/profile': object({ nickname: string(80), timeZone: string(64), intro: string(), mode: choice('J', 'P', 'B') }, ['nickname']),
+  'PUT /api/user/profile': object({ nickname: string(80), timeZone: string(64), intro: string(), mode: choice('J', 'P', 'B'), dayStartHour: { ...integer(0, 6), description: '하루 경계 시각(정시). 기본 0. 통계·오늘의 날짜 배정에만 쓰고 저장된 시각은 바꾸지 않는다. intro·mode처럼 보내지 않으면 저장값에서 빠진다.' } }, ['nickname']),
   'PUT /api/user/password': object({ currentPassword: string(72), newPassword: { ...string(72), minLength: 8 } }, ['currentPassword', 'newPassword']),
   'POST /api/admin/users': object({ email: { type: 'string', format: 'email', maxLength: 200 }, nickname: string(80), password: { ...string(72), minLength: 8 }, role: choice('USER', 'ADMIN') }, ['email', 'nickname', 'password']),
   'PUT /api/admin/users/{id}': object({ nickname: string(80), role: choice('USER', 'ADMIN'), status: choice('ACTIVE', 'SUSPENDED', 'DELETED') }),
@@ -177,7 +177,7 @@ schemas.Attachment = object({ id: string(), ownerId: string(), groupId: { type: 
 schemas.RoutineHistory = object({ routineId: string(), items: array(object({ date, completed: boolean, status: choice('done', 'missed', 'skipped', 'pending') }, ['date', 'completed', 'status'])), done: integer(0), total: integer(0), skipped: integer(0), rate: integer(0, 100), streak: integer(0), best: integer(0) }, ['routineId', 'items', 'done', 'total', 'skipped', 'rate', 'streak', 'best'])
 schemas.RoutineHistory.description = 'total은 done과 missed 회차 수다. 쉬는 날(skipped)과 오늘·미래의 미완료 회차(pending)는 rate 분모에 넣지 않고 연속 기록을 끊지 않는다. 지난 미완료 회차(missed)만 연속 기록을 끊는다.'
 schemas.POSTResponse.properties = { ...schemas.POSTResponse.properties, authorId: string(), name: string(), likes: integer(0), comments: integer(0), liked: boolean }
-schemas.Profile = object({ id: string(), nickname: string(80), email: { type: 'string', format: 'email' }, timeZone: string(64), extra: flexible({ intro: string(), mode: choice('J', 'P', 'B') }) }, ['id', 'nickname', 'email', 'timeZone', 'extra'])
+schemas.Profile = object({ id: string(), nickname: string(80), email: { type: 'string', format: 'email' }, timeZone: string(64), extra: flexible({ intro: string(), mode: choice('J', 'P', 'B'), dayStartHour: integer(0, 6) }) }, ['id', 'nickname', 'email', 'timeZone', 'extra'])
 const responseOverrides = {
   'GET /api/record-links': array(object({ kind: choice('task', 'schedule', 'actual'), id: string(100), title: string(200), direction: choice('source', 'target') }, ['kind', 'id', 'title', 'direction'])),
   'POST /api/tasks/{taskId}/schedules': ref('SCHEDULEResponse'),

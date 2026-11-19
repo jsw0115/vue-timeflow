@@ -8750,6 +8750,12 @@
             "P",
             "B"
           ]
+        },
+        "dayStartHour": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 6,
+          "description": "하루 경계 시각(정시). 기본 0. 통계·오늘의 날짜 배정에만 쓰고 저장된 시각은 바꾸지 않는다. intro·mode처럼 보내지 않으면 저장값에서 빠진다."
         }
       },
       "required": [
