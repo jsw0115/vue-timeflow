@@ -28,6 +28,6 @@
   - `frontend`에서 Node 테스트 전체 종료 0(102개), `npm run build:web` 종료 0, `node scripts/frontend-api-contract.mjs --check` 종료 0.
   - `python scripts/docs/verify_documentation.py` 종료 0, `python -B scripts/verify_agent_kit.py` 종료 0.
   - 브라우저 점검 스크립트와 화면 캡처는 세션 scratchpad(작업 폴더 밖)에 두었고 저장소에 넣지 않았다. 절차는 07 TS-08에 적었다.
-- 완료한 체크리스트 항목과 남은 작업: checklist.md 전부 완료. 커밋 해시는 다음 문서 커밋에서 01 최근 완료 항목과 작업 원장에 적는다.
+- 완료한 체크리스트 항목과 남은 작업: checklist.md 전부 완료. 기능 커밋은 816c833이고, 이어지는 문서 커밋에서 01 최근 완료 항목과 작업 원장에 해시를 적었다.
 - 중단 원인과 재개 시 첫 명령: 중단 없음.
 - 사용자 변경과 자체 변경 구분: 사용자 미커밋 `frontend/src/components/Modal.vue`, `backend/.../PlannerItemQueryRepositoryImpl.java`, `docs/output/`는 손대지 않았다. `git diff --check` 전체 실패(종료 2)는 `Modal.vue` 51·53행 줄 끝 공백 때문이며 자체 변경 파일은 통과.
