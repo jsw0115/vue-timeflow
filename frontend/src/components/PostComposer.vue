@@ -11,6 +11,7 @@ import StorageNote from './StorageNote.vue'
 import { composer, composerKind, composerSeed, composerContext, ROUTINE_DAYS } from '../store/appState'
 import { postKinds as kinds, makePostDraft, postDraftError, savePostDraft, postStorageMode } from '../store/postComposer'
 import { createSaveState } from '../features/records/saveState.mjs'
+import { MOODS } from '../utils/mood.mjs'
 import { NOTIFY_OPTIONS } from '../store/ddays'
 import { contacts, isBlocked } from '../store/contacts'
 import { modeState, modeMeta, isFieldOn } from '../store/modeProfiles'
@@ -69,7 +70,7 @@ async function save() {
       <div v-if="['할 일', '다이어리', 'D-Day', '머니로그', '회고'].includes(kind)" class="form-row">
         <label>{{ kind === '할 일' ? '마감일 (선택)' : '기록 날짜' }}<input v-model="draft.date" type="date" :required="kind !== '할 일'" /></label>
         <label v-if="kind === '할 일'">우선순위<select v-model="draft.priority"><option>높음</option><option>보통</option><option>낮음</option></select></label>
-        <label v-if="kind === '다이어리'">기분<select v-model="draft.mood"><option>좋음</option><option>평온</option><option>피곤</option><option>속상함</option><option>뿌듯함</option></select></label>
+        <label v-if="kind === '다이어리'">기분<select v-model="draft.mood"><option v-for="mood in MOODS" :key="mood.code" :value="mood.code">{{ mood.label }}</option></select></label>
       </div>
       <label v-if="['할 일', 'D-Day', '머니로그'].includes(kind) || kind === '일정' && on('event', 'category') || kind === '루틴' && on('routine', 'category')">분류<select v-model="draft.category" :disabled="kind === '머니로그' && draft.type === 'in'"><option v-for="category in categories" :key="category">{{ category }}</option></select></label>
       <template v-if="kind === '일정'">

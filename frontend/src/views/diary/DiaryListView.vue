@@ -2,6 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { diaries } from '../../store/writing'
+import { moodLabel } from '../../utils/mood.mjs'
 import { openPostComposer } from '../../store/appState'
 import { localDate } from '../../utils/postValidation.mjs'
 import RichText from '../../components/RichText.vue'
@@ -30,7 +31,7 @@ const dayEntries = day => visible.value.filter(d => Number(d.date.slice(-2)) ===
   </section>
   <div class="diary-list">
     <article v-for="entry in visible" :key="entry.id" class="card">
-      <div class="head"><div><span class="tag">{{ entry.date }} · {{ entry.mood }}</span><h3>{{ entry.title }}</h3></div>
+      <div class="head"><div><span class="tag">{{ entry.date }}<template v-if="moodLabel(entry.mood)"> · {{ moodLabel(entry.mood) }}</template></span><h3>{{ entry.title }}</h3></div>
         <button @click="router.push({ path: '/diary/entry', query: { id: entry.id } })">열기 →</button></div>
       <p><RichText :text="entry.body" /></p>
     </article>

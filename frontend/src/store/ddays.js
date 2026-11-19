@@ -1,25 +1,41 @@
+import { reactive } from 'vue'
 import { localCollection } from './localCollection'
+import { createFeatureStore } from '../features/records/featureStore.mjs'
+import { ddayKind } from '../features/records/featureKinds.mjs'
+import { saveFailureMessage } from '../features/records/saveState.mjs'
+import { dDayLabel, ddayDateLabel } from '../utils/dday.mjs'
 
-export const ddays = localCollection('ddays', [
-  { id: 1, title: '엄마 생신', category: '가족', date: '8월 31일 · 저녁 식사', dday: 'D-7', pinned: true, notifyDays: [7, 1] },
-  { id: 2, title: '분기 보고서 제출', category: '업무', date: '9월 5일 · 마감', dday: 'D-12', pinned: true, notifyDays: [3, 1, 0] },
-  { id: 3, title: '건강검진 예약일', category: '건강', date: '9월 12일 · 오전 10시', dday: 'D-19', pinned: false, notifyDays: [1] },
-  { id: 4, title: '자격증 시험', category: '공부', date: '10월 2일', dday: 'D-39', pinned: false, notifyDays: [30, 7, 1] },
-  { id: 5, title: '여행 출발일', category: '개인', date: '10월 18일', dday: 'D-55', pinned: false, notifyDays: [] },
-])
+// 남은 날 계산은 utils/dday.mjs에 있다. 예전 계산은 ISO 날짜를 UTC로 읽어 한국 시간에서 오늘을 D-1로 보였다(PR-07 6단계에서 바로잡음)
+export { dDayLabel }
 
-export function dDayLabel(dateStr) {
-  if (!dateStr) return 'D-Day'
-  const diff = Math.ceil((new Date(dateStr) - new Date(new Date().toDateString())) / (1000 * 60 * 60 * 24))
-  return diff === 0 ? 'D-Day' : diff > 0 ? `D-${diff}` : `D+${-diff}`
-}
+// 시연 기본 D-Day. origin: 'demo'로 표시해 로그인할 때 계정으로 옮기지 않는다(Q-11)
+export const DDAY_SEEDS = [
+  { id: 1, title: '엄마 생신', category: '가족', date: '8월 31일 · 저녁 식사', dday: 'D-7', pinned: true, notifyDays: [7, 1], origin: 'demo' },
+  { id: 2, title: '분기 보고서 제출', category: '업무', date: '9월 5일 · 마감', dday: 'D-12', pinned: true, notifyDays: [3, 1, 0], origin: 'demo' },
+  { id: 3, title: '건강검진 예약일', category: '건강', date: '9월 12일 · 오전 10시', dday: 'D-19', pinned: false, notifyDays: [1], origin: 'demo' },
+  { id: 4, title: '자격증 시험', category: '공부', date: '10월 2일', dday: 'D-39', pinned: false, notifyDays: [30, 7, 1], origin: 'demo' },
+  { id: 5, title: '여행 출발일', category: '개인', date: '10월 18일', dday: 'D-55', pinned: false, notifyDays: [], origin: 'demo' },
+]
+/** D-Day. 로그인하면 계정의 서버 목록(/api/ddays), 로그아웃이면 이 브라우저의 목록이다(PR-07 6단계). */
+export const ddayStore = createFeatureStore({ local: localCollection('ddays', DDAY_SEEDS.map(item => ({ ...item, notifyDays: [...item.notifyDays] }))), ...ddayKind })
+export const ddays = ddayStore.list
+/** 목록에서 바로 저장하는 동작(고정)의 실패 안내 */
+export const ddayNotice = reactive({ message: '' })
 
 export function isPast(dday) {
   return typeof dday === 'string' && dday.startsWith('D+')
 }
 
-export function togglePin(item) {
-  item.pinned = !item.pinned
+/** 고정 토글. 저장한 D-Day를 돌려주고, 실패하면 안내만 하고 null을 돌려준다. */
+export async function togglePin(item) {
+  ddayNotice.message = ''
+  try {
+    return await ddayStore.update(item, { pinned: !item.pinned })
+  } catch (error) {
+    if (error.kind === 'stale') return null
+    ddayNotice.message = error.kind === 'conflict' ? '다른 곳에서 먼저 바뀌어 최신 내용으로 바꿨어요. 확인한 뒤 다시 눌러 주세요.' : saveFailureMessage(error)
+    return null
+  }
 }
 
 export function findDday(id) {
@@ -51,34 +67,32 @@ export function toggleNotifyDay(item, days) {
   else item.notifyDays.push(days)
 }
 
-export function addDday({ title, category, date, notifyDays, body = '' }) {
-  const id = Math.max(0, ...ddays.value.map((d) => d.id)) + 1
-  ddays.value.push({
-    id,
+/** 새 D-Day. 로그아웃 상태에서도 ISO 날짜(isoDate)를 함께 남겨, 로그인할 때 연도까지 옮길 수 있게 한다. */
+export async function addDday({ title, category, date, notifyDays, body = '' }) {
+  const created = await ddayStore.create({
     title,
     body,
     category,
-    date: date ? new Date(date).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' }) : '날짜 미정',
+    isoDate: date || undefined,
+    date: date ? ddayDateLabel(date) : '날짜 미정',
     dday: dDayLabel(date),
     pinned: false,
     notifyDays: notifyDays ?? [1],
   })
-  return id
+  return created.id
 }
 
-export function updateDday(id, { title, category, date, body }) {
-  const item = findDday(id)
-  if (!item) return
-  item.title = title
-  if (body !== undefined) item.body = body
-  item.category = category
-  if (date) {
-    item.date = new Date(date).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })
-    item.dday = dDayLabel(date)
-  }
+/** base는 상세를 연 때의 D-Day다. 그 version으로 보내 다른 곳의 변경을 모르고 덮어쓰지 않는다. */
+export async function updateDday(id, { title, category, date, body }, base = findDday(id)) {
+  if (!base) return null
+  return ddayStore.update(base, {
+    title,
+    category,
+    ...(body !== undefined ? { body } : {}),
+    ...(date ? { isoDate: date, date: ddayDateLabel(date), dday: dDayLabel(date) } : {}),
+  })
 }
 
-export function removeDday(id) {
-  const index = ddays.value.findIndex((d) => String(d.id) === String(id))
-  if (index >= 0) ddays.value.splice(index, 1)
+export async function removeDday(id, base = findDday(id)) {
+  if (base) await ddayStore.remove(base)
 }

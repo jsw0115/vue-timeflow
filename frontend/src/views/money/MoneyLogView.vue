@@ -1,7 +1,11 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { moneyEntries as entries } from '../../store/money'
+import { moneyEntries as entries, moneyStore } from '../../store/money'
+import { saveFailureMessage } from '../../features/records/saveState.mjs'
+import StorageNote from '../../components/StorageNote.vue'
+const moneyMode = moneyStore.mode
+const moneyMessage = ref('')
 import { localDate } from '../../utils/postValidation.mjs'
 import { openPostComposer } from '../../store/appState'
 import Modal from '../../components/Modal.vue'
@@ -57,9 +61,12 @@ const byCategory = computed(() => {
 })
 
 function openAdd() { openPostComposer('머니로그') }
-function removeEntry(e) {
+async function removeEntry(e) {
   if (!window.confirm('‘' + e.title + '’ 내역을 삭제할까요?')) return
-  entries.value = entries.value.filter((x) => x.id !== e.id)
+  moneyMessage.value = ''
+  try { await moneyStore.remove(e) } catch (error) {
+    if (error.kind !== 'stale' && error.kind !== 'notFound') moneyMessage.value = error.kind === 'conflict' ? '다른 곳에서 먼저 고쳐서 삭제하지 않았어요. 최신 내용을 확인한 뒤 다시 삭제해 주세요.' : saveFailureMessage(error).replace('저장하지', '삭제하지')
+  }
 }
 
 /* 외부 연동 검토 결과 */
@@ -96,26 +103,23 @@ function importCsv(event) {
   const file = event.target.files?.[0]
   if (!file) return
   const reader = new FileReader()
-  reader.onload = () => {
-    // 날짜,내용,금액 형식의 단순 CSV를 읽는다(헤더 한 줄 건너뜀)
+  reader.onload = async () => {
+    // 날짜,내용,금액 형식의 단순 CSV를 읽는다(헤더 한 줄 건너뜀). 로그인 상태에서는 행마다 서버에 저장하고, 저장하지 못한 행 수를 알린다
     const lines = String(reader.result).split(/\r?\n/).filter(Boolean).slice(1)
-    let added = 0
-    lines.forEach((line) => {
+    let added = 0, failed = 0
+    for (const line of lines) {
       const [date, title, amount] = line.split(',').map((s) => s?.trim().replace(/^"|"$/g, ''))
       const value = Number(String(amount).replace(/[^0-9-]/g, ''))
-      if (!date || !title || !value) return
-      entries.value.unshift({
-        id: Math.max(0, ...entries.value.map((e) => e.id)) + 1 + added,
-        title,
-        date,
-        amount: value,
-        type: value < 0 ? 'out' : 'in',
-        category: value < 0 ? '기타' : '수입',
-      })
-      added += 1
-    })
-    importNotice.value = added ? added + '건을 가져왔어요.' : '읽을 수 있는 행이 없어요. 날짜,내용,금액 형식인지 확인해주세요.'
-    setTimeout(() => (importNotice.value = ''), 4000)
+      if (!date || !title || !value) continue
+      try {
+        await moneyStore.create({ title, date, amount: value, type: value < 0 ? 'out' : 'in', category: value < 0 ? '기타' : '수입' })
+        added += 1
+      } catch {
+        failed += 1
+      }
+    }
+    importNotice.value = added || failed ? added + '건을 가져왔어요.' + (failed ? ' ' + failed + '건은 저장하지 못했어요. 날짜 형식(YYYY-MM-DD)과 연결을 확인해 주세요.' : '') : '읽을 수 있는 행이 없어요. 날짜,내용,금액 형식인지 확인해주세요.'
+    setTimeout(() => (importNotice.value = ''), failed ? 8000 : 4000)
   }
   reader.readAsText(file)
   event.target.value = ''
@@ -131,6 +135,8 @@ function importCsv(event) {
     <button class="review" style="margin: 0" @click="showIntegration = true">외부 연동</button>
     <button class="primary" @click="openAdd">+ 내역 추가</button>
   </div>
+  <StorageNote :mode="moneyMode" />
+  <p v-if="moneyMessage" class="input-field-help" data-state="error" role="status">{{ moneyMessage }}</p>
 
   <div class="money-summary">
     <article><span>이번 달 수입</span><b class="in figure">{{ won(income) }}</b></article>

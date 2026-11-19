@@ -1,6 +1,8 @@
 import { eventStore, taskStore, routineStore } from './appState'
-import { diaries, memos } from './writing'
-import { moneyEntries } from './money'
+import { diaryStore, memoStore } from './writing'
+import { moneyStore } from './money'
+import { ddayStore } from './ddays'
+import { moodCode } from '../utils/mood.mjs'
 import { communityPosts } from './communityPosts'
 import { workRecords } from './workRecords'
 import { addDday } from './ddays'
@@ -13,7 +15,7 @@ export const postKinds = ['일정', '할 일', '루틴', '다이어리', '메모
 export function makePostDraft(kind) {
   const today = localDate()
   return { title: '', body: '', category: kind === '머니로그' ? '식비' : '개인', date: today, startDate: today, endDate: today,
-    startTime: '09:00', endTime: kind === '업무 기록' ? '18:00' : '10:00', priority: '보통', mood: '평온',
+    startTime: '09:00', endTime: kind === '업무 기록' ? '18:00' : '10:00', priority: '보통', mood: 'calm',
     color: '#2f5d46', attendeeIds: [], time: '19:00', duration: 30, days: [0, 1, 2, 3, 4, 5, 6],
     recurrence: makeRecurrence(kind === '루틴' ? { frequency: 'weekly', weekdays: [0,1,2,3,4,5,6] } : {}), subtasks: [],
     goalCount: 1, goalUnit: '회', notify: true, reminderMinutes: 10, notifyDays: [1],
@@ -56,10 +58,10 @@ export async function savePostDraft(kind, draft, progress = null) {
     await routineStore.create({ title, body, category: draft.category, startDate: draft.startDate, recurrence: makeRecurrence(draft.recurrence), time: draft.time, duration: draft.duration, days: [...draft.days].sort(), goal: { count: draft.goalCount, unit: draft.goalUnit }, notify: draft.notify, reminderMinutes: draft.reminderMinutes, done: false, streak: 0, best: 0, history: [0, 0, 0, 0, 0, 0, 0], paused: false })
     return true
   }
-  if (kind === '다이어리') insert(diaries, { title, body, date: draft.date, mood: draft.mood })
-  if (kind === '메모') insert(memos, { title, body, time: localDate(), color: '', actionable: false })
-  if (kind === 'D-Day') addDday({ title, body, category: draft.category, date: draft.date, notifyDays: [...draft.notifyDays] })
-  if (kind === '머니로그') insert(moneyEntries, { title, body, date: draft.date, amount: draft.type === 'out' ? -draft.amount : draft.amount, type: draft.type, category: draft.type === 'in' ? '수입' : draft.category })
+  if (kind === '다이어리') { await diaryStore.create({ title, body, date: draft.date, mood: moodCode(draft.mood) ?? undefined }); return true }
+  if (kind === '메모') { await memoStore.create({ title, body, time: localDate(), color: '', actionable: false }); return true }
+  if (kind === 'D-Day') { await addDday({ title, body, category: draft.category, date: draft.date, notifyDays: [...draft.notifyDays] }); return true }
+  if (kind === '머니로그') { await moneyStore.create({ title, body, date: draft.date, amount: draft.type === 'out' ? -draft.amount : draft.amount, type: draft.type, category: draft.type === 'in' ? '수입' : draft.category }); return true }
   if (kind === '회고') savePlannerReview(draft.date, body)
   if (kind === '커뮤니티 글') insert(communityPosts, { title, body, name: '김지수', time: '방금', auto: false, likes: 0, comments: 0, liked: false })
   if (kind === '업무 위키') addDoc({ title, body, space: draft.space, parentId: draft.parentId })
@@ -75,5 +77,5 @@ export async function savePostDraft(kind, draft, progress = null) {
 
 /** 계정 저장을 지원하는 종류의 지금 저장 방식('server' 또는 'local'). 아직 이 브라우저에만 저장하는 종류는 null이다(PR-07). */
 export function postStorageMode(kind) {
-  return ({ '할 일': taskStore, '일정': eventStore, '루틴': routineStore })[kind]?.mode.value ?? null
+  return ({ '할 일': taskStore, '일정': eventStore, '루틴': routineStore, '다이어리': diaryStore, '메모': memoStore, 'D-Day': ddayStore, '머니로그': moneyStore })[kind]?.mode.value ?? null
 }

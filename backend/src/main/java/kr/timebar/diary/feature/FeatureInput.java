@@ -70,6 +70,8 @@ public final class FeatureInput {
                 if (body.get("reminderMinutes") != null) number(body, "reminderMinutes", 0, 1440, true);
                 RecurrenceRule.validate(body.get("recurrence"), text(body, "startDate"));
             }
+            // Q-07: 기분은 코드 5개만 받는다. 화면 문구는 좋음·평온·피곤·속상함·뿌듯함이고, 예전 이모지·한국어 값은 화면이 읽을 때 코드로 바꾼다
+            case DIARY -> { if (body.get("mood") != null) choice(body, "mood", "good", "calm", "tired", "upset", "proud"); }
             case MONEY -> {
                 choice(body, "type", "in", "out");
                 double amount = number(body, "amount", -1000000000000d, 1000000000000d, true);

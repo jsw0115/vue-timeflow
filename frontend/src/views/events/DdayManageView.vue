@@ -3,7 +3,10 @@ import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { openPostComposer } from '../../store/appState'
 import ListFilterBar from '../../components/ListFilterBar.vue'
-import { ddays, isPast, togglePin, removeDday, notifyLabel } from '../../store/ddays'
+import { ddays, isPast, togglePin, removeDday, notifyLabel, ddayNotice, ddayStore } from '../../store/ddays'
+import { saveFailureMessage } from '../../features/records/saveState.mjs'
+import StorageNote from '../../components/StorageNote.vue'
+const ddayMode = ddayStore.mode
 
 /**
  * D-Day 관리 — 목록 화면(/dday)과 같은 ddays 스토어를 쓴다.
@@ -43,9 +46,12 @@ const visible = computed(() => {
 })
 
 function openModal() { openPostComposer('D-Day') }
-function remove(d) {
+async function remove(d) {
   if (!window.confirm('‘' + d.title + '’ D-Day를 삭제할까요?')) return
-  removeDday(d.id)
+  ddayNotice.message = ''
+  try { await removeDday(d.id) } catch (error) {
+    if (error.kind !== 'stale' && error.kind !== 'notFound') ddayNotice.message = error.kind === 'conflict' ? '다른 곳에서 먼저 고쳐서 삭제하지 않았어요. 최신 내용을 확인한 뒤 다시 삭제해 주세요.' : saveFailureMessage(error).replace('저장하지', '삭제하지')
+  }
 }
 </script>
 
@@ -56,6 +62,8 @@ function remove(d) {
     <span></span>
     <button class="primary" @click="openModal">+ 새 D-Day</button>
   </div>
+  <StorageNote :mode="ddayMode" />
+  <p v-if="ddayNotice.message" class="input-field-help" data-state="error" role="status">{{ ddayNotice.message }}</p>
 
   <ListFilterBar
     v-model:query="query"

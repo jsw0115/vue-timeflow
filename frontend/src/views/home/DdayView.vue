@@ -2,7 +2,9 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { openPostComposer } from '../../store/appState'
-import { ddays, isPast, togglePin, notifyLabel } from '../../store/ddays'
+import { ddays, isPast, togglePin, notifyLabel, ddayNotice, ddayStore } from '../../store/ddays'
+import StorageNote from '../../components/StorageNote.vue'
+const ddayMode = ddayStore.mode
 
 const router = useRouter()
 const route = useRoute()
@@ -26,6 +28,8 @@ watch(() => route.query.new, value => { if (value) openPostComposer('D-Day') }, 
     <span></span>
     <button class="primary" @click="openPostComposer('D-Day')">+ D-Day 추가</button>
   </div>
+  <StorageNote :mode="ddayMode" />
+  <p v-if="ddayNotice.message" class="input-field-help" data-state="error" role="status">{{ ddayNotice.message }}</p>
   <div class="metrics">
     <article v-for="d in filteredDdays" :key="d.id" class="dday-card" style="cursor: pointer" @click="router.push(`/dday/${d.id}`)">
       <div class="head">

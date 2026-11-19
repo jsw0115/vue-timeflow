@@ -81,6 +81,16 @@ class FeaturePersistenceTest {
         var weekly = Map.of("frequency", "weekly", "interval", 2, "endMode", "count", "count", 3, "weekdays", List.of(1,3));
         assertEquals(List.of(java.time.LocalDate.parse("2026-10-05"), java.time.LocalDate.parse("2026-10-07"), java.time.LocalDate.parse("2026-10-19")), RecurrenceRule.dates("2026-10-05", weekly, java.time.LocalDate.parse("2026-10-01"), java.time.LocalDate.parse("2026-11-01")));
     }
+    /** 다이어리 기분은 코드 5개만 받는다(Q-07). 이모지·한국어 값은 화면이 읽을 때 코드로 바꾸고, 서버는 그 밖의 값을 400으로 막는다(PR-07 6단계). */
+    @Test void diaryMoodAcceptsOnlyTheFiveCodes() {
+        for (String code : List.of("good", "calm", "tired", "upset", "proud")) records.create(user, FeatureType.DIARY, Map.of("title", "일기 " + code, "date", "2026-11-19", "mood", code));
+        records.create(user, FeatureType.DIARY, Map.of("title", "기분 없음", "date", "2026-11-19"));
+        for (String legacy : List.of("😌", "평온", "happy")) {
+            var error = assertThrows(ApiException.class, () -> records.create(user, FeatureType.DIARY, Map.of("title", "옛 값", "date", "2026-11-19", "mood", legacy)));
+            assertEquals(ErrorCode.VALIDATION_FAILED, error.errorCode());
+        }
+        assertEquals(6, store.all(user, FeatureType.DIARY).size());
+    }
     /** 이력 항목은 그날 수행 기록의 version을 준다(없으면 0). 새로고침한 화면도 이 version으로 완료를 취소할 수 있다(PR-07 5단계). */
     @Test void routineHistoryItemsCarryTheCompletionVersionForLaterChanges() {
         String today = java.time.LocalDate.now(java.time.ZoneId.of("Asia/Seoul")).toString();
