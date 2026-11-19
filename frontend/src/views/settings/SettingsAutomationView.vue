@@ -1,13 +1,21 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { automationsByDomain, isAutomationOn, toggleAutomation, automationParam, setAutomationParam } from '../../store/automations'
 import {
   AI_PROVIDERS, AI_FEATURES, AI_SCOPES, aiSettings, isAiReady, isFeatureOn, toggleFeature, setAllowSensitive,
+  aiStatusBadge, takeClearedKeyNotice,
 } from '../../store/aiSettings'
+import { useCapabilityStatus } from '../../features/integrations/useCapabilityStatus.mjs'
+import { session } from '../../features/auth/session.js'
 
 const groups = automationsByDomain()
 const tab = ref('rules')
 const blockedNotice = ref('')
+// AI 준비 여부는 서버 제공 상태로만 정한다. 로컬 설정만으로 "연동됨"을 보이지 않는다(BUG-002)
+const { state: aiStatus, refresh: refreshAiStatus } = useCapabilityStatus(() => 'ai')
+const aiBadge = computed(() => aiStatusBadge(aiStatus))
+const aiReady = computed(() => isAiReady(aiStatus.available))
+const clearedKeyNotice = takeClearedKeyNotice()
 
 function onToggleFeature(f) {
   if (!toggleFeature(f.id)) {
@@ -24,8 +32,11 @@ function onToggleFeature(f) {
         <h2>자동화</h2>
         <p>이미 있는 기능들을 트리거→액션으로 묶어서, 켜두기만 하면 알아서 동작하게 해요.</p>
       </div>
-      <span class="badge" :class="isAiReady() ? 'ok' : ''">{{ isAiReady() ? 'AI 연동됨' : 'AI 미연동' }}</span>
+      <span class="badge" :class="{ ok: aiBadge.ok }" role="status">{{ aiBadge.text }}</span>
     </div>
+    <p v-if="clearedKeyNotice" role="status">보안을 위해 이 브라우저에 저장된 API 키를 지웠어요. 키를 발급한 서비스에서도 그 키를 폐기해 주세요.</p>
+    <p v-if="aiStatus.error" role="alert">{{ aiStatus.error }}</p>
+    <button v-if="aiStatus.error && session.userId" type="button" class="button-secondary" style="align-self: flex-start" @click="refreshAiStatus">제공 상태 다시 확인</button>
 
     <div class="tabs" style="width: fit-content; margin: 16px 0">
       <button :class="{ selected: tab === 'rules' }" @click="tab = 'rules'">자동화 규칙</button>
@@ -43,14 +54,10 @@ function onToggleFeature(f) {
 
       <div class="section-label">연동 방식</div>
       <div class="ai-providers">
-        <button v-for="p in AI_PROVIDERS" :key="p.id" :class="{ selected: aiSettings.provider === p.id }" @click="aiSettings.provider = p.id">
+        <button v-for="p in AI_PROVIDERS" :key="p.id" type="button" :class="{ selected: aiSettings.provider === p.id }" :disabled="p.disabled" :aria-disabled="p.disabled ? 'true' : undefined" :aria-pressed="aiSettings.provider === p.id" @click="aiSettings.provider = p.id">
           <b>{{ p.label }}</b><small>{{ p.note }}</small>
         </button>
       </div>
-      <label v-if="aiSettings.provider === 'byok'">API 키
-        <input type="password" v-model="aiSettings.apiKey" placeholder="sk-..." autocomplete="off" />
-      </label>
-      <p v-if="aiSettings.provider === 'byok'" class="form-note">키는 이 브라우저에만 저장되고 서버로 보내지 않아요.</p>
 
       <div class="section-label" style="margin-top: 20px">보낼 데이터 범위</div>
       <div class="filter" style="width: fit-content; margin: 8px 0">
@@ -79,9 +86,9 @@ function onToggleFeature(f) {
           <small>{{ f.desc }}</small>
           <small style="display: block; margin-top: 4px; color: var(--color-muted)">입력: {{ f.needs.join(' · ') }}</small>
         </span>
-        <button type="button" role="switch" class="toggle" :aria-checked="isFeatureOn(f.id)" :class="{ on: isFeatureOn(f.id) }" style="flex: none" @click="onToggleFeature(f)"><em></em></button>
+        <button type="button" role="switch" class="toggle" :aria-checked="isFeatureOn(f.id, aiStatus.available)" :class="{ on: isFeatureOn(f.id, aiStatus.available) }" :disabled="!aiReady" aria-describedby="ai-feature-note" style="flex: none" @click="onToggleFeature(f)"><em></em></button>
       </div>
-      <p class="form-note">연동 방식이 ‘사용 안 함’이거나 키가 없으면 켜도 동작하지 않아요.</p>
+      <p id="ai-feature-note" class="form-note">{{ aiReady ? '켠 산출물만 고른 범위 안의 데이터로 만들어요.' : aiStatus.available === false ? 'AI 기능은 준비 중이라 지금은 켤 수 없어요.' : aiStatus.available === true ? '연동 방식을 ‘기본 제공(서버)’로 고르면 켤 수 있어요.' : '서버의 AI 제공 상태를 확인한 뒤 켤 수 있어요.' }}</p>
     </template>
 
     <template v-for="(items, domain) in groups" v-else :key="domain">

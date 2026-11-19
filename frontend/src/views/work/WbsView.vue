@@ -7,6 +7,10 @@ import { syncPostCollection } from '../../store/tagging'
 import Modal from '../../components/Modal.vue'
 import HelpPopover from '../../components/HelpPopover.vue'
 import { isFeatureOn } from '../../store/aiSettings'
+import { useCapabilityStatus } from '../../features/integrations/useCapabilityStatus.mjs'
+
+// AI 안내는 서버 제공 상태 기준이다. 확인 중·확인 실패에는 아무 안내도 하지 않는다
+const { state: aiStatus } = useCapabilityStatus(() => 'ai')
 
 /**
  * WBS — 작업을 계층으로 쪼개고 공수와 진척을 굴린다.
@@ -182,8 +186,9 @@ function addNode() {
 
   <p class="form-note" style="margin-top: 12px">
     상위 작업의 공수와 진척은 하위 작업에서 자동으로 합산돼요(진척은 공수 가중 평균).
-    <template v-if="isFeatureOn('wbs-draft')"> AI 초안 생성이 켜져 있어 새 프로젝트를 만들 때 작업 분해를 제안받을 수 있어요.</template>
-    <template v-else> 설정 &gt; 자동화 &gt; AI 연동에서 ‘WBS 초안 생성’을 켜면 작업 분해를 제안받을 수 있어요.</template>
+    <template v-if="isFeatureOn('wbs-draft', aiStatus.available)"> AI 초안 생성이 켜져 있어 새 프로젝트를 만들 때 작업 분해를 제안받을 수 있어요.</template>
+    <template v-else-if="aiStatus.available === false"> AI 기능은 준비 중이에요. 지금은 작업을 직접 나눠 주세요.</template>
+    <template v-else-if="aiStatus.available === true"> 설정 &gt; 자동화 &gt; AI 연동에서 ‘WBS 초안 생성’을 켜면 작업 분해를 제안받을 수 있어요.</template>
   </p>
 
   <WorkRecords :projects="nodes" />

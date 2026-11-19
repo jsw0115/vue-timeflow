@@ -1,0 +1,33 @@
+# 결정·근거·인수인계 메모
+
+- 현재 확인된 구현/설정
+  - 수정 전 `aiSettings.js`는 `apiKey`를 포함한 상태 전체를 `timeflow.ai.v1`에 저장했다. 키를 쓰는 코드는 빈 값 검사뿐이었다.
+  - 세 화면 모두 라우터가 바로 불러온다. 그래서 모듈 정리가 앱 시작 때 실행되고, `main.js`를 고칠 필요가 없었다.
+  - 수동 백업은 서버 `feature_record` 기준이라 키가 백업 파일에 들어가지 않는다(06 IM-05 확인 사실 3).
+- 선택한 대안/이유
+  - A안(저장 제거, BYOK "준비 중")과 BUG-002 동시 처리. 09 Q-10 결정을 따랐다.
+  - 읽기와 저장에 같은 `sanitize()`를 쓴다. 허용 필드 6개만 남기고, 목록에 없는 provider·scope는 기본값으로 바꾼다. 목록에 없는 scope가 남으면 설정 화면의 `AI_SCOPES.find(...).desc`가 오류를 내므로 값 검사도 함께 했다.
+  - 깨진 JSON도 기본값으로 덮어쓴다. 읽을 수 없는 값이라 잃는 설정이 없고, 키 문자열이 남지 않는다.
+  - 계획의 `clearedLegacyKey`(값) 대신 `takeClearedKeyNotice()`(한 번만 true)로 했다. 같은 실행 안에서 설정 화면을 다시 열어도 안내가 반복되지 않는다.
+  - 빈 문자열 `apiKey`는 예전 기본값이 저장한 값이라 "키를 지웠다"고 안내하지 않는다. 필드만 지운다.
+  - `isAiReady(available)`는 서버 true + provider `builtin`일 때만 참이다. BYOK는 호출 경로가 없어 준비로 보지 않는다.
+  - 서버가 준비되지 않으면 산출물 스위치를 비활성으로 했다. 전에는 눌러도 화면이 그대로라 동작하지 않는 것처럼 보였다. 이유 문구는 `aria-describedby`로 연결했다(DESIGN.md 4장 disabled 원칙).
+  - 키 삭제 안내와 조회 실패 안내는 `.form-note`(surface 위 muted, 4.36:1)가 아니라 기본 문단(canvas 위 muted, 4.83:1)으로 썼다. 다시 확인 버튼은 `button-secondary`. `.review`는 구획용 클래스라 버튼에 붙이면 위 여백만 생긴다(`CapabilityStatusPanel.vue`도 같은 문제가 있으나 이번 범위가 아니라 두었다).
+  - `.toggle:disabled`, `.ai-providers button:disabled`에 `--opacity-disabled`·`not-allowed`를 더했다. 새 값은 없다.
+- 오탐/예외와 근거·승인 상태: 없음.
+- 보안 점검(변경 범위만)
+  - 중요정보 평문 저장(SW 49, OWASP A02/A04 관련): 브라우저 저장소에서 키 제거, 재저장 차단, 허용 필드 목록 저장. PASS(테스트 UT-110·UT-112·UT-113, 브라우저 RUN-60).
+  - 사실과 다른 상태 표시(UF-C5): 서버 값으로만 판단. PASS(UT-115·UT-116).
+  - 입력 검증: 저장소 값 형식 검사 추가. 서버 API·권한 변경 없음(N/A).
+- 다음 작업·미확인
+  - 남은 한계: 경력 문장 생성은 규칙 기반이다. 서버 `ai=true`가 되면 "AI 다듬기가 켜져 있어요"가 나오지만 AI 호출 경로가 없다. PR-15에서 호출을 만들 때 문구와 함께 고친다.
+  - 기존 `.form-note`·`.badge`의 surface 위 muted 대비 미달은 DESIGN.md 부록 B 항목(PR-11 6단계). 이번에 텍스트만 바꾼 `#ai-feature-note`도 해당한다.
+  - 320px·200% 확대·키보드·화면낭독기 실점검은 NOT_RUN. 화면에 넓은 요소를 더하지 않았다(문단 1~2개와 버튼 1개).
+  - 다음 우선순위는 PR-22 2단계와 PR-07(10 통합표).
+- 마지막 실행 명령·종료 코드·증거 경로
+  - `frontend`에서 Node 테스트 전체 종료 0(102개), `npm run build:web` 종료 0, `node scripts/frontend-api-contract.mjs --check` 종료 0.
+  - `python scripts/docs/verify_documentation.py` 종료 0, `python -B scripts/verify_agent_kit.py` 종료 0.
+  - 브라우저 점검 스크립트와 화면 캡처는 세션 scratchpad(작업 폴더 밖)에 두었고 저장소에 넣지 않았다. 절차는 07 TS-08에 적었다.
+- 완료한 체크리스트 항목과 남은 작업: checklist.md 전부 완료. 커밋 해시는 다음 문서 커밋에서 01 최근 완료 항목과 작업 원장에 적는다.
+- 중단 원인과 재개 시 첫 명령: 중단 없음.
+- 사용자 변경과 자체 변경 구분: 사용자 미커밋 `frontend/src/components/Modal.vue`, `backend/.../PlannerItemQueryRepositoryImpl.java`, `docs/output/`는 손대지 않았다. `git diff --check` 전체 실패(종료 2)는 `Modal.vue` 51·53행 줄 끝 공백 때문이며 자체 변경 파일은 통과.

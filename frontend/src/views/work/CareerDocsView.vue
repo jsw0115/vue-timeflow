@@ -5,6 +5,7 @@ import {
   workPrivacy, VISIBILITY, isPortfolioShared, togglePortfolioShared, logAccess,
 } from '../../store/workPrivacy'
 import { aiSettings, isFeatureOn } from '../../store/aiSettings'
+import { useCapabilityStatus } from '../../features/integrations/useCapabilityStatus.mjs'
 import HelpPopover from '../../components/HelpPopover.vue'
 import { exportPdf, exportWord, sectionsToHtml } from '../../store/docExport'
 
@@ -60,6 +61,9 @@ function mask(v) {
 }
 
 /* 경력기술서 문장 생성 — AI 연동이 꺼져 있으면 규칙 기반으로 만든다 */
+// AI 다듬기 안내는 서버 제공 상태 기준이다. 확인 중·확인 실패에는 아무 안내도 하지 않는다
+const { state: aiStatus } = useCapabilityStatus(() => 'ai')
+const careerAiOn = computed(() => isFeatureOn('career-doc', aiStatus.available))
 const generating = ref(null)
 const generated = ref('')
 function generateStatement(p) {
@@ -204,8 +208,9 @@ function onVisibilityChange(v) {
     </section>
     <p class="form-note">
       프로젝트 단위로 계속 갱신할 수 있어요.
-      <template v-if="isFeatureOn('career-doc')">AI 문장 다듬기가 켜져 있어요.</template>
-      <template v-else>AI 다듬기는 설정 &gt; 자동화 &gt; AI 연동에서 민감 데이터 사용에 동의해야 켜집니다.</template>
+      <template v-if="careerAiOn">AI 문장 다듬기가 켜져 있어요.</template>
+      <template v-else-if="aiStatus.available === false">AI 기능은 준비 중이에요. 지금은 규칙 기반으로 만들어요.</template>
+      <template v-else-if="aiStatus.available === true">AI 다듬기는 설정 &gt; 자동화 &gt; AI 연동에서 민감 데이터 사용에 동의해야 켜집니다.</template>
     </p>
   </template>
 
@@ -301,7 +306,7 @@ function onVisibilityChange(v) {
 
   <Modal v-if="generating" :title="generating.title + ' 경력기술서 문장'" wide @close="generating = null">
     <p class="form-note" style="margin-top: 0">
-      {{ isFeatureOn('career-doc') && !workPrivacy.excludeFromAi ? 'AI 다듬기가 켜져 있어요.' : '규칙 기반으로 만들었어요. AI 다듬기는 꺼져 있습니다.' }}
+      {{ careerAiOn && !workPrivacy.excludeFromAi ? 'AI 다듬기가 켜져 있어요.' : aiStatus.available === false ? '규칙 기반으로 만들었어요. AI 기능은 준비 중이에요.' : '규칙 기반으로 만들었어요. AI 다듬기는 꺼져 있습니다.' }}
     </p>
     <textarea class="report-draft" :value="generated" readonly rows="12"></textarea>
 
