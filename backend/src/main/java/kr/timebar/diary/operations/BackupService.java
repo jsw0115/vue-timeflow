@@ -37,6 +37,8 @@ public class BackupService {
         for (var type : TYPES) for (var row : store.all(user, type)) {
             if (type == FeatureType.ACTUAL_SESSION && !"COMPLETED".equals(row.get("state")) || type == FeatureType.FOCUS && row.get("endedAt") == null) continue;
             var data = FeatureStore.payload(row); data.remove("finishKey");
+            // 원본 할 일·일정은 백업 범위 밖이라 연결 정보는 담지 않는다(PR-08)
+            data.remove("sourceKind"); data.remove("sourceId");
             records.add(Map.of("kind", type.name(), "id", row.get("id"), "version", row.get("version"), "data", data));
         }
         if (records.size() > 500) FeatureInput.fail("수동 백업은 한 번에 최대 500개 기록을 지원합니다.");

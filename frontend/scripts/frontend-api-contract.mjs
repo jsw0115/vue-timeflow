@@ -122,7 +122,8 @@ const resources = { '/api/schedules': 'SCHEDULE', '/api/routine-records': 'ROUTI
 const custom = {
   'POST /api/planner/items': ref('PlannerItemCreate'),
   'PUT /api/planner/items/{id}': ref('PlannerItemUpdate'),
-  'POST /api/planner/recordings/start': object({ requestId: { ...string(80), minLength: 16, pattern: '^[A-Za-z0-9_-]+$' }, title: { ...string(200), minLength: 1 }, timeZone: string(200) }, ['requestId', 'title', 'timeZone']),
+  'POST /api/planner/recordings/start': object({ requestId: { ...string(80), minLength: 16, pattern: '^[A-Za-z0-9_-]+$' }, title: { ...string(200), minLength: 1 }, timeZone: string(200), sourceKind: { ...choice('task', 'schedule'), description: '할 일·일정에서 시작할 때 원본 종류. sourceId와 함께 보낸다. 다른 계정의 원본이면 404.' }, sourceId: string(100) }, ['requestId', 'title', 'timeZone']),
+  'POST /api/tasks/{taskId}/schedules': { ...object(schemas.SCHEDULECreate.properties, schemas.SCHEDULECreate.required.filter(field => field !== 'title')), description: '할 일을 일정으로 배치하고 할 일→일정 연결을 같은 트랜잭션에서 남긴다. title을 비우면 할 일 제목을 복사하며, 그 뒤 할 일 제목을 바꿔도 일정 제목은 바뀌지 않는다. Idempotency-Key를 받는다.' },
   'POST /api/planner/recordings/{id}/finish': object({ requestId: { ...string(80), minLength: 16, pattern: '^[A-Za-z0-9_-]+$' }, version: integer(1), endedAt: { type: 'string', format: 'date-time', description: '시작 이후·서버 현재 시각+5초 이내. 응답 유실 시 같은 식별자와 시각으로 재전송.' } }, ['requestId', 'version', 'endedAt']),
   'POST /api/memos/{id}/convert-to-task': object({ version: integer(1), due: date, category: string() }, ['version']),
   'POST /api/events/templates/{id}/apply': object({ date, startTime: string(5) }, ['date', 'startTime']),
@@ -158,7 +159,7 @@ const custom = {
 const pageOf = items => object({ items: array(items), page: integer(0), size: integer(1, 100), total: integer(0) }, ['items', 'page', 'size', 'total'])
 const flexible = properties => ({ type: 'object', properties, additionalProperties: true })
 const instant = { type: 'string', format: 'date-time' }
-const actualFields = { title: string(200), startedAt: instant, endedAt: instant, timeZone: string(200), state: choice('RUNNING', 'COMPLETED'), elapsedSeconds: integer(0), finishKey: string(80) }
+const actualFields = { title: string(200), startedAt: instant, endedAt: instant, timeZone: string(200), state: choice('RUNNING', 'COMPLETED'), elapsedSeconds: integer(0), finishKey: string(80), sourceKind: choice('task', 'schedule'), sourceId: string(100) }
 schemas.ActualRecording = object({ ...actualFields, id: string(100), version: integer(1), createdAt: instant, updatedAt: instant }, ['id', 'title', 'startedAt', 'timeZone', 'state', 'version', 'createdAt', 'updatedAt'])
 schemas.ActualRecording.description = '서버가 시작을 저장한다. 종료는 version·요청 식별자·시각으로 멱등 처리하며 초 단위로 집계한다. FOCUS나 planner_item에 같은 시간을 중복 생성하지 않는다.'
 const backupTypes = ['DIARY', 'MEMO', 'DDAY', 'MONEY', 'REVIEW', 'FOCUS', 'ACTUAL_SESSION']
@@ -178,6 +179,8 @@ schemas.RoutineHistory.description = 'total은 done과 missed 회차 수다. 쉬
 schemas.POSTResponse.properties = { ...schemas.POSTResponse.properties, authorId: string(), name: string(), likes: integer(0), comments: integer(0), liked: boolean }
 schemas.Profile = object({ id: string(), nickname: string(80), email: { type: 'string', format: 'email' }, timeZone: string(64), extra: flexible({ intro: string(), mode: choice('J', 'P', 'B') }) }, ['id', 'nickname', 'email', 'timeZone', 'extra'])
 const responseOverrides = {
+  'GET /api/record-links': array(object({ kind: choice('task', 'schedule', 'actual'), id: string(100), title: string(200), direction: choice('source', 'target') }, ['kind', 'id', 'title', 'direction'])),
+  'POST /api/tasks/{taskId}/schedules': ref('SCHEDULEResponse'),
   'GET /api/planner/recordings': { type: 'array', items: ref('ActualRecording') },
   'GET /api/planner/recordings/current': object({ active: { anyOf: [ref('ActualRecording'), { type: 'null' }] }, serverTime: instant }, ['active', 'serverTime']),
   'GET /api/planner/recordings/{id}': ref('ActualRecording'), 'POST /api/planner/recordings/start': ref('ActualRecording'), 'POST /api/planner/recordings/{id}/finish': ref('ActualRecording'),

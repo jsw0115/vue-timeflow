@@ -28,7 +28,9 @@ public class FeatureTestConfig {
         var jdbc = new JdbcTemplate(source);
         jdbc.execute("CREATE TABLE users(id VARCHAR(36) PRIMARY KEY)");
         jdbc.execute("CREATE TABLE planner_item(id BIGINT PRIMARY KEY,date DATE)");
-        new ResourceDatabasePopulator(new ClassPathResource("db/workspace/V6__frontend_feature_records.sql"), new ClassPathResource("db/workspace/V9__idempotency_key.sql")).execute(source);
+        // 기록 연결(PR-08)이 소유자·삭제 여부를 확인하는 할 일 열만 둔다
+        jdbc.execute("CREATE TABLE task(id VARCHAR(26) PRIMARY KEY,user_id VARCHAR(36) NOT NULL,title VARCHAR(200) NOT NULL,d_at TIMESTAMP(6) NULL)");
+        new ResourceDatabasePopulator(new ClassPathResource("db/workspace/V6__frontend_feature_records.sql"), new ClassPathResource("db/workspace/V9__idempotency_key.sql"), new ClassPathResource("db/workspace/V10__record_link.sql")).execute(source);
         return source;
     }
     @Bean DataSourceTransactionManager transactionManager(DataSource source) { return new DataSourceTransactionManager(source); }
@@ -37,7 +39,8 @@ public class FeatureTestConfig {
     @Bean FeatureStore store(JdbcTemplate jdbc, ObjectMapper mapper) { return new FeatureStore(jdbc, mapper); }
     @Bean kr.timebar.diary.common.IdempotencyKeys idempotency(JdbcTemplate jdbc, ObjectMapper mapper) { return new kr.timebar.diary.common.IdempotencyKeys(jdbc, mapper); }
     @Bean RecordService records(FeatureStore store, kr.timebar.diary.common.IdempotencyKeys idempotency) { return new RecordService(store, idempotency); }
-    @Bean ActualRecordingService actualRecordings(FeatureStore store, JdbcTemplate jdbc) { return new ActualRecordingService(store, jdbc); }
+    @Bean RecordLinks links(JdbcTemplate jdbc, FeatureStore store, kr.timebar.diary.common.IdempotencyKeys idempotency) { return new RecordLinks(jdbc, store, idempotency); }
+    @Bean ActualRecordingService actualRecordings(FeatureStore store, JdbcTemplate jdbc, RecordLinks links) { return new ActualRecordingService(store, jdbc, links); }
     @Bean BackupService backups(FeatureStore store, JdbcTemplate jdbc, ObjectMapper mapper) { return new BackupService(store, jdbc, mapper); }
     @Bean ScheduleService schedules(FeatureStore store) { return new ScheduleService(store); }
     @Bean WorkService work(FeatureStore store, kr.timebar.diary.common.IdempotencyKeys idempotency) { return new WorkService(store, idempotency); }

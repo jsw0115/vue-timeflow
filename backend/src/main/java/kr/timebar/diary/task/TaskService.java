@@ -3,6 +3,7 @@ package kr.timebar.diary.task;
 import kr.timebar.diary.common.ApiException;
 import kr.timebar.diary.common.ErrorCode;
 import kr.timebar.diary.common.IdempotencyKeys;
+import kr.timebar.diary.records.RecordLinks;
 import kr.timebar.diary.task.dto.TaskRequest;
 import kr.timebar.diary.task.dto.TaskResponse;
 import org.springframework.stereotype.Service;
@@ -14,10 +15,12 @@ import java.util.List;
 public class TaskService {
     private final TaskRepository taskRepository;
     private final IdempotencyKeys idempotency;
+    private final RecordLinks links;
 
-    public TaskService(TaskRepository taskRepository, IdempotencyKeys idempotency) {
+    public TaskService(TaskRepository taskRepository, IdempotencyKeys idempotency, RecordLinks links) {
         this.taskRepository = taskRepository;
         this.idempotency = idempotency;
+        this.links = links;
     }
 
     @Transactional(readOnly = true)
@@ -67,6 +70,8 @@ public class TaskService {
         requireVersion(version, entity);
         entity.softDelete();
         taskRepository.flush();
+        // 할 일을 지우면 연결만 끊고, 할 일에서 만든 일정·실제 기록은 남긴다(UF-93)
+        links.forget(userId, RecordLinks.TASK, taskId);
     }
 
     @Transactional

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.timebar.diary.common.ApiException;
 import kr.timebar.diary.common.ApiExceptionHandler;
 import kr.timebar.diary.common.IdempotencyKeys;
+import kr.timebar.diary.records.RecordLinks;
 import kr.timebar.diary.records.RecordService;
 import kr.timebar.diary.records.RecordsController;
 import kr.timebar.diary.records.ScheduleController;
@@ -49,6 +50,7 @@ class IdempotencyHttpTest {
     @Autowired RecordService records;
     @Autowired WorkService work;
     @Autowired ScheduleService schedules;
+    @Autowired RecordLinks links;
     @Autowired IdempotencyKeys idempotency;
     @Autowired FeatureStore store;
     @Autowired ObjectMapper mapper;
@@ -59,7 +61,7 @@ class IdempotencyHttpTest {
     @BeforeEach void setup() {
         owner = UUID.randomUUID().toString();
         authenticate(owner);
-        mvc = MockMvcBuilders.standaloneSetup(new RecordsController(records), new ScheduleController(records, schedules), new WorkController(records, work))
+        mvc = MockMvcBuilders.standaloneSetup(new RecordsController(records), new ScheduleController(records, schedules, links), new WorkController(records, work))
                 .setControllerAdvice(new ApiExceptionHandler()).build();
     }
     @AfterEach void clear() { SecurityContextHolder.clearContext(); }

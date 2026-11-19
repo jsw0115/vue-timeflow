@@ -20,7 +20,7 @@ class TaskMutationLockTest {
         TaskEntity task = new TaskEntity("owner", "title", null, null, null, 30, null,
                 null, null, null, null);
         when(repository.findOwnedForUpdate("task", "owner")).thenReturn(Optional.of(task));
-        TaskService service = new TaskService(repository, null);
+        TaskService service = new TaskService(repository, null, mock(kr.timebar.diary.records.RecordLinks.class));
         service.update("owner", "task", new TaskRequest("edited", null, null, null, null, null,
                 null, null, null, null, 1L));
         service.toggleStatus("owner", "task", 1L);

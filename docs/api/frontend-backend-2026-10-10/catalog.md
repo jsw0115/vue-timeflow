@@ -1,6 +1,6 @@
 # API 목록
 
-기준 2026-10-10. 총 286개 매핑이며 wildcard 경로는 허용된 값을 선택한다. 채팅은 CHAT_ENABLED=true 조건부 등록이다. 구현·검증 범위는 [검증 기록](verification.md)을 확인한다.
+기준 2026-10-10. 총 288개 매핑이며 wildcard 경로는 허용된 값을 선택한다. 채팅은 CHAT_ENABLED=true 조건부 등록이다. 구현·검증 범위는 [검증 기록](verification.md)을 확인한다.
 
 | 메서드 | 경로 | 인증 | 처리 | 소스 |
 |---|---|---|---|---|
@@ -173,6 +173,7 @@
 | GET | `/api/planner/weekly` | JWT | 실제 처리 소스 있음 | PlannerViewController |
 | GET | `/api/planner/yearly` | JWT | 실제 처리 소스 있음 | PlannerViewController |
 | GET | `/api/public/portfolios/{token}` | 공개 | 실제 처리 소스 있음 | PortfolioLinkController |
+| GET | `/api/record-links` | JWT | 실제 처리 소스 있음 | RecordLinkController |
 | GET | `/api/reports/{reportKey}` | JWT | 실제 처리 소스 있음 | ReportController |
 | POST | `/api/reports/{reportKey}` | JWT | 실제 처리 소스 있음 | ReportController |
 | GET | `/api/reports/{reportKey}/sub-reports` | JWT | 실제 처리 소스 있음 | ReportController |
@@ -245,6 +246,7 @@
 | PUT | `/api/tasks/{taskId}/checklist-items/{itemId}` | JWT | 실제 처리 소스 있음 | TaskChecklistController |
 | PUT | `/api/tasks/{taskId}/checklist-items/{itemId}/completion` | JWT | 실제 처리 소스 있음 | TaskChecklistController |
 | POST | `/api/tasks/{taskId}/duplicate` | JWT | 실제 처리 소스 있음 | TaskController |
+| POST | `/api/tasks/{taskId}/schedules` | JWT | 실제 처리 소스 있음 | RecordLinkController |
 | PATCH | `/api/tasks/{taskId}/status` | JWT | 실제 처리 소스 있음 | TaskController |
 | GET | `/api/user/data/backup` | JWT | 실제 처리 소스 있음 | BackupController |
 | POST | `/api/user/data/backup/{jobId}/restore` | JWT | 실제 처리 소스 있음 | BackupController |

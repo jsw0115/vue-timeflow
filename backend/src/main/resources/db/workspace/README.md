@@ -44,3 +44,11 @@ See [actual recovery verification](../../../../../../docs/development/database-r
 `V9__idempotency_key.sql`은 새 표 `idempotency_key(owner_id, idem_key, request_hash, status_code, resource_id, created_at)`를 만든다(PR-07 3단계, Q-13). 기본 키 `(owner_id, idem_key)`가 같은 계정의 같은 키를 하나로 묶고, `created_at` 색인으로 7일 지난 키를 매일 04:30 지운다. 기존 표는 바꾸지 않는다.
 
 생성 API(할 일·일정·루틴·다이어리·메모·D-Day·머니로그·경력)는 `Idempotency-Key` 헤더가 있으면 생성과 키 기록을 같은 트랜잭션에서 한다. 같은 키·같은 본문이면 처음 만든 기록을 돌려주고, 본문이 다르면 409, 처음 기록을 지웠으면 404다. 같은 키가 동시에 오면 늦은 요청은 기본 키 충돌로 409가 되고 그 생성도 되돌린다. 로컬 자료 이전은 `local:{kind}:{id}`, PR-12 재전송은 UUID v4를 쓴다. 격리 MySQL에 2026-11-19 적용했고 운영에는 적용하지 않았다. 운영 적용 조건은 V7과 같다.
+
+## 기록 연결 추가 V10
+
+`V10__record_link.sql`은 새 표 `record_link(owner_id, source_kind, source_id, target_kind, target_id, created_at)`를 만든다(PR-08 1단계, Q-12). 기본 키 다섯 열이 같은 연결을 하나로 묶고, `(owner_id, target_kind, target_id)` 색인으로 대상 쪽에서도 연결을 찾는다. 기존 표는 바꾸지 않는다.
+
+연결 종류는 `task`, `schedule`, `actual`이다. 할 일(`task` 표)과 일정·실제 기록(`feature_record`)이 다른 저장소라 FK를 두지 않는다. `RecordLinks`가 쓰기 전에 양쪽이 같은 계정의 기록인지 확인하고, 일정·할 일을 지울 때 그 기록의 연결 행을 같은 트랜잭션에서 지운다. 표를 직접 다루는 코드도 같은 검사를 해야 한다. 기존 `task.event_id`는 구형 `events`용 열이라 연결에 쓰지 않는다.
+
+2026-11-19 이 작업 환경에서 새로 만든 격리 MySQL 8.4에 적용했고 운영에는 적용하지 않았다. 운영 적용 조건은 V7과 같다.

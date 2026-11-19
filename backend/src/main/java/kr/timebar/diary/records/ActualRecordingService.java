@@ -15,8 +15,9 @@ import java.util.*;
 public class ActualRecordingService {
     private final FeatureStore store;
     private final JdbcTemplate jdbc;
+    private final RecordLinks links;
 
-    public ActualRecordingService(FeatureStore store, JdbcTemplate jdbc) { this.store = store; this.jdbc = jdbc; }
+    public ActualRecordingService(FeatureStore store, JdbcTemplate jdbc, RecordLinks links) { this.store = store; this.jdbc = jdbc; this.links = links; }
 
     public List<Map<String,Object>> list(String user) { return store.all(user, FeatureType.ACTUAL_SESSION); }
     public Map<String,Object> get(String user, String id) { return store.get(user, FeatureType.ACTUAL_SESSION, id); }
@@ -27,22 +28,33 @@ public class ActualRecordingService {
         return result;
     }
     public Map<String,Object> start(String user, Map<String,Object> body) {
-        FeatureInput.keys(body, Set.of("requestId", "title", "timeZone"));
+        FeatureInput.keys(body, Set.of("requestId", "title", "timeZone", "sourceKind", "sourceId"));
         String id = requestId(body, "requestId");
         String title = FeatureInput.requiredText(body, "title");
         if (title.length() > 200) FeatureInput.fail("기록 제목은 200자 이하입니다.");
         String zone = FeatureInput.requiredText(body, "timeZone");
         try { ZoneId.of(zone); } catch (DateTimeException e) { FeatureInput.fail("유효한 IANA 시간대가 필요합니다."); }
+        // 할 일·일정에서 시작한 기록은 원본 종류와 ID를 남긴다(UF-91). 둘 다 보내거나 둘 다 빼야 한다
+        String sourceKind = FeatureInput.text(body, "sourceKind"), sourceId = FeatureInput.text(body, "sourceId");
+        if (sourceKind.isEmpty() != sourceId.isEmpty()) FeatureInput.fail("sourceKind와 sourceId는 함께 보내야 합니다.");
+        if (!sourceKind.isEmpty() && !Set.of(RecordLinks.TASK, RecordLinks.SCHEDULE).contains(sourceKind)) FeatureInput.fail("sourceKind는 task 또는 schedule입니다.");
         lockAccount(user);
         var previous = store.optional(user, FeatureType.ACTUAL_SESSION, id);
         if (previous.isPresent()) {
-            if (!title.equals(previous.get().get("title")) || !zone.equals(previous.get().get("timeZone"))) conflict();
+            if (!title.equals(previous.get().get("title")) || !zone.equals(previous.get().get("timeZone"))
+                    || !sourceKind.equals(FeatureInput.text(previous.get(), "sourceKind")) || !sourceId.equals(FeatureInput.text(previous.get(), "sourceId"))) conflict();
             return previous.get();
         }
+        // 다른 계정의 할 일·일정이면 404이고 기록을 만들지 않는다(UT-145)
+        if (!sourceKind.isEmpty()) links.requireTitle(user, sourceKind, sourceId);
         if (list(user).stream().anyMatch(row -> "RUNNING".equals(row.get("state"))))
             throw new ApiException(ErrorCode.CONFLICT, "진행 중인 기록을 먼저 복구해 종료해주세요.");
-        return store.create(user, FeatureType.ACTUAL_SESSION, id, Map.of("title", title, "timeZone", zone,
-                "state", "RUNNING", "startedAt", Instant.now().toString()));
+        var data = new LinkedHashMap<String,Object>(Map.of("title", title, "timeZone", zone, "state", "RUNNING", "startedAt", Instant.now().toString()));
+        if (sourceKind.isEmpty()) return store.create(user, FeatureType.ACTUAL_SESSION, id, data);
+        data.put("sourceKind", sourceKind); data.put("sourceId", sourceId);
+        var created = store.create(user, FeatureType.ACTUAL_SESSION, id, data);
+        links.link(user, sourceKind, sourceId, RecordLinks.ACTUAL, id);
+        return created;
     }
     public Map<String,Object> finish(String user, String id, Map<String,Object> body) {
         FeatureInput.keys(body, Set.of("requestId", "version", "endedAt"));

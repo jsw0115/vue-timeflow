@@ -40,6 +40,7 @@ class FeatureHttpTest {
     @Autowired AdminService admin;
     @Autowired SettingsService settings;
     @Autowired ScheduleService schedules;
+    @Autowired RecordLinks links;
     @Autowired UserRepository users;
     @Autowired ObjectMapper mapper;
     @Autowired JdbcTemplate jdbc;
@@ -52,7 +53,7 @@ class FeatureHttpTest {
         var actions = new RecordActionsController(records, store, mock(TaskService.class), mock(kr.timebar.diary.planner.PlannerService.class), work);
         mvc = MockMvcBuilders.standaloneSetup(new RecordsController(records), new ContactsController(records), new WorkController(records, work), actions,
                 new EventDiaryMemoController(records), new SettingsController(settings), new UserProfileController(settings), new ShareController(social),
-                new CommunityController(social), new AdminController(admin), new SupportController(records, store), new IntegrationController(admin), new AttachmentController(jdbc, social), new ScheduleController(records, schedules), new PortfolioLinkController(store, users))
+                new CommunityController(social), new AdminController(admin), new SupportController(records, store), new IntegrationController(admin), new AttachmentController(jdbc, social), new ScheduleController(records, schedules, links), new PortfolioLinkController(store, users))
                 .setControllerAdvice(new ApiExceptionHandler()).build();
     }
     @AfterEach void clear() { SecurityContextHolder.clearContext(); }

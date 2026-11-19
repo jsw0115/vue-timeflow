@@ -64,7 +64,7 @@ class TaskVersionTest {
             factory.setJpaPropertyMap(Map.of("hibernate.hbm2ddl.auto", "create-drop")); return factory;
         }
         @Bean JpaTransactionManager transactionManager(EntityManagerFactory factory) { return new JpaTransactionManager(factory); }
-        @Bean TaskService taskService(TaskRepository repository, DataSource source) { return new TaskService(repository, new kr.timebar.diary.common.IdempotencyKeys(new JdbcTemplate(source), new com.fasterxml.jackson.databind.ObjectMapper())); }
+        @Bean TaskService taskService(TaskRepository repository, DataSource source) { return new TaskService(repository, new kr.timebar.diary.common.IdempotencyKeys(new JdbcTemplate(source), new com.fasterxml.jackson.databind.ObjectMapper()), org.mockito.Mockito.mock(kr.timebar.diary.records.RecordLinks.class)); }
     }
 
     @Autowired TaskService tasks;

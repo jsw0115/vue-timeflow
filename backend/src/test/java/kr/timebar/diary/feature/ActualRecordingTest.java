@@ -23,6 +23,7 @@ class ActualRecordingTest {
     @Autowired FeatureStore store;
     @Autowired JdbcTemplate jdbc;
     @Autowired ObjectMapper mapper;
+    @Autowired RecordLinks links;
     String user;
     @BeforeEach void setup() { user = UUID.randomUUID().toString(); jdbc.update("INSERT INTO users(id) VALUES (?)", user); }
     @AfterEach void clear() { org.springframework.security.core.context.SecurityContextHolder.clearContext(); }
@@ -32,7 +33,7 @@ class ActualRecordingTest {
         String key = UUID.randomUUID().toString();
         var first = service.start(user, startBody(key));
         assertEquals(first, service.start(user, startBody(key)));
-        assertEquals(first, new ActualRecordingService(store, jdbc).current(user).get("active"));
+        assertEquals(first, new ActualRecordingService(store, jdbc, links).current(user).get("active"));
         var finish = Map.<String,Object>of("requestId", UUID.randomUUID().toString(), "version", 1, "endedAt", Instant.now().toString());
         var completed = service.finish(user, key, finish);
         assertEquals(completed, service.finish(user, key, finish));

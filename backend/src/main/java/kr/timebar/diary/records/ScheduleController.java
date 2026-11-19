@@ -11,7 +11,8 @@ import java.util.Map;
 public class ScheduleController {
     private final RecordService records;
     private final ScheduleService schedules;
-    public ScheduleController(RecordService records, ScheduleService schedules) { this.records = records; this.schedules = schedules; }
+    private final RecordLinks links;
+    public ScheduleController(RecordService records, ScheduleService schedules, RecordLinks links) { this.records = records; this.schedules = schedules; this.links = links; }
     @GetMapping("/schedules")
     public ApiResponse<?> scheduleList(@RequestParam(defaultValue="0") int page, @RequestParam(defaultValue="20") int size, @RequestParam(required=false) String q) { return ApiResponse.ok(records.list(CurrentUser.id(), FeatureType.SCHEDULE, null, null, q, null, page, size)); }
     @GetMapping("/schedules/{id}")
@@ -23,7 +24,7 @@ public class ScheduleController {
     public ApiResponse<?> scheduleUpdate(@PathVariable String id, @RequestBody Map<String,Object> body) { return ApiResponse.ok(records.update(CurrentUser.id(), FeatureType.SCHEDULE, id, body)); }
     @DeleteMapping("/schedules/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void scheduleDelete(@PathVariable String id, @RequestParam long version) { records.delete(CurrentUser.id(), FeatureType.SCHEDULE, id, version); }
+    public void scheduleDelete(@PathVariable String id, @RequestParam long version) { links.deleteSchedule(CurrentUser.id(), id, version); }
     @GetMapping("/routine-records")
     public ApiResponse<?> routinerecordList(@RequestParam(defaultValue="0") int page, @RequestParam(defaultValue="20") int size, @RequestParam(required=false) String q) { return ApiResponse.ok(records.list(CurrentUser.id(), FeatureType.ROUTINE_RECORD, null, null, q, null, page, size)); }
     @GetMapping("/routine-records/{id}")

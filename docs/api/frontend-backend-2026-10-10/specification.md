@@ -1963,6 +1963,8 @@ KRW 정수. type=in은 양수, out은 음수. 0은 거부한다.
 | requestId | string | 예 | 길이 ≤ 80 |
 | title | string | 예 | 길이 ≤ 200 |
 | timeZone | string | 예 | 길이 ≤ 200 |
+| sourceKind | string | 아니오 | task/schedule · 할 일·일정에서 시작할 때 원본 종류. sourceId와 함께 보낸다. 다른 계정의 원본이면 404. |
+| sourceId | string | 아니오 | 길이 ≤ 100 |
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 
@@ -2119,6 +2121,17 @@ KRW 정수. type=in은 양수, out은 음수. 0은 거부한다.
 | 위치 | 이름 | 타입 | 필수 | 기본값 |
 |---|---|---|---|---|
 | path | token | String | 예 | 없음 |
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## GET /api/record-links
+
+인증은 JWT이며 소스는 RecordLinkController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| query | kind | String | 예 | 없음 |
+| query | id | String | 예 | 없음 |
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 
@@ -3014,6 +3027,32 @@ JSON 최대 깊이 8, 객체 100필드, 배열 500항목, 저장 크기 128 KiB.
 | 위치 | 이름 | 타입 | 필수 | 기본값 |
 |---|---|---|---|---|
 | path | taskId | String | 예 | 없음 |
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## POST /api/tasks/{taskId}/schedules
+
+인증은 JWT이며 소스는 RecordLinkController.java다. 성공 HTTP는 201다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | taskId | String | 예 | 없음 |
+| header | key | String | 아니오 | 없음 |
+
+| 본문 필드 | 타입 | 필수 | 제약 |
+|---|---|---|---|
+| title | string | 아니오 | 길이 ≤ 200 |
+| body | string 또는 null | 아니오 | 기능 규약 참조 |
+| category | string 또는 null | 아니오 | 기능 규약 참조 |
+| startDate | string | 예 | date |
+| endDate | string | 예 | date |
+| startTime | string | 예 | 길이 ≤ 200 |
+| endTime | string | 예 | 길이 ≤ 200 |
+| color | string 또는 null | 아니오 | 기능 규약 참조 |
+| attendeeIds | array 또는 null | 아니오 | 기능 규약 참조 |
+| recurrence | Recurrence 또는 null | 아니오 | 기능 규약 참조 |
+
+할 일을 일정으로 배치하고 할 일→일정 연결을 같은 트랜잭션에서 남긴다. title을 비우면 할 일 제목을 복사하며, 그 뒤 할 일 제목을 바꿔도 일정 제목은 바뀌지 않는다. Idempotency-Key를 받는다.
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 
