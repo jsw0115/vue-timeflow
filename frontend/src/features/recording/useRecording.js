@@ -51,3 +51,15 @@ export function useRecording() {
   const elapsed = computed(() => recordingSeconds(active.value, pending.value?.kind === 'finish' ? Date.parse(pending.value.body.endedAt) : now.value + offset.value))
   return { active, records, pending, error, busy, loaded, saved, elapsed, refresh, toggle }
 }
+
+/**
+ * 할 일·일정 화면에서 그 기록을 원본으로 실제 기록을 시작한다(PR-08 UF-91). 화면을 여는 것만으로 기록을 불러오거나 타이머를 돌리지 않는다.
+ * 진행 중인 기록이 있으면 새로 시작하지 않고 { started: false }를 돌려준다. 끝내지 못한 종료 요청이 남아 있으면 그 안내로 실패한다.
+ */
+export async function startRecordingFrom(title, source) {
+  if (!session.userId) throw new Error('실제 기록을 저장하려면 먼저 로그인해주세요.')
+  const client = createRecordingClient({ request: apiRequest, storage: localStorage, owner: session.userId })
+  const state = await client.recover()
+  if (state.active) return { started: false, active: state.active }
+  return { started: true, active: await client.start(title, Intl.DateTimeFormat().resolvedOptions().timeZone, source) }
+}

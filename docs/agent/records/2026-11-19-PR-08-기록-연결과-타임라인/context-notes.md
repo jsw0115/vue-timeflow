@@ -15,4 +15,10 @@
 - `DayPolicy.Day`는 패키지 안에만 둔다. API 계약 생성기가 `public record`를 모두 스키마로 읽어서 공개하면 `ZoneId`·`Clock` 스키마가 없다는 오류가 난다.
 - 프로필 추가 정보는 `PUT` 때 보낸 키로 통째로 바뀐다(기존 동작). 4단계 설정 화면은 `dayStartHour`를 함께 보내야 한다.
 - 범위 밖으로 남긴 것: 루틴 이력의 오늘(`ScheduleService`)과 메모 기본 날짜는 여전히 `Asia/Seoul`.
-- 다음 작업: 3단계(연결 화면). 첫 명령은 `frontend/src/views/tasks/TaskDetailView.vue`, 일정 상세(`views/events` 또는 캘린더), `PlannerDailyView.vue`, `views/diary/DiaryEntryView.vue`와 `features/records/taskStore.mjs`·`scheduleStore.mjs`·`features/recording/useRecording.js` 대조다. DESIGN.md를 먼저 읽는다.
+- 3단계 화면 배치: 할 일 상세 카드 아래 "일정과 실제 기록" 영역(로그인 상태), 일정 상세 모달의 저장 상태 아래, 플래너 실제 기록 상세 안, 다이어리 작성 카드 아래. 연결 목록은 공통 `LinkedRecords.vue` 하나로 그린다.
+- 기록 시작은 누를 때만 `/current`를 확인하는 `startRecordingFrom`을 쓴다. 처음에 쓴 `useRecording()`은 화면마다 1초 타이머와 목록 조회를 돌리고 서버 렌더 테스트를 멈추게 했다.
+- 반복 일정의 기록 시작은 반복 전체(원본 일정 ID)에 연결한다. 회차 단위 연결은 서버 종류에 없다.
+- 다이어리의 실제 기록 날짜는 이 브라우저 시간대의 0시 기준이다. 하루 경계 반영은 4단계에서 플래너와 함께 본다.
+- BUG-003: `session.save()`가 `userId`를 토큰보다 먼저 넣어 동기 감시 저장소의 첫 요청이 401이었다. PR-07 1단계 `d1b1ae0`에서 생긴 회귀. 별도 커밋으로 고쳤다.
+- 점검 환경: Docker 데몬이 세션 중 꺼져 다시 띄웠다. Vite 개발 서버는 `DEV_API_TARGET=http://127.0.0.1:18080`으로 띄웠다.
+- 다음 작업: 4단계(24시간 보기와 하루 경계 화면). 첫 명령은 `PlannerDailyView.vue`의 `actualStyle`·`planStyle`(08~23시 고정), `SettingsProfileView.vue`·`SettingsEnvView.vue` 대조다. 프로필 `PUT`은 보낸 키로 추가 정보를 통째로 바꾸므로 `intro`·`mode`·`dayStartHour`를 함께 보내야 한다.

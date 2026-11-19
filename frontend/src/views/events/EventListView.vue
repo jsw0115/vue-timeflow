@@ -19,9 +19,22 @@ import ListFilterBar from '../../components/ListFilterBar.vue'
 import { contacts, isBlocked, contactById } from '../../store/contacts'
 import { openProfile } from '../../store/people'
 import PersonTag from '../../components/PersonTag.vue'
+import LinkedRecords from '../../components/LinkedRecords.vue'
+import { startRecordingFrom } from '../../features/recording/useRecording.js'
 
 const route = useRoute()
 const router = useRouter()
+// 이 일정에서 실제 기록 시작(UF-91). 반복 일정은 반복 전체(원본 일정 ID)에 연결한다
+const recordStart = createSaveState()
+const recordRunning = ref(false)
+async function startRecord() {
+  if (!active.value) return
+  recordRunning.value = false
+  const result = await recordStart.run(() => startRecordingFrom(active.value.title, { kind: 'schedule', id: String(active.value.id) }))
+  if (!result.ok) return
+  if (result.value.started) router.push('/planner/daily')
+  else recordRunning.value = true
+}
 const query = ref('')
 const filters = ref({ category: '전체', state: '전체' })
 const FILTER_GROUPS = computed(() => [
@@ -387,6 +400,12 @@ watch(() => [route.query.id, route.query.occurrence, events.value.length], ([id,
     <ConflictCompare v-if="conflict" :rows="compareRows" :busy="saving.state.status === 'saving'" @keep-mine="keepMine" @use-latest="useLatest" />
     <p v-if="splitNotice" class="input-field-help" data-state="error" role="alert">{{ splitNotice }}</p>
     <SaveStatus :state="saving.state" :mode="eventMode" @retry="retryAction?.()" />
+    <template v-if="eventMode === 'server' && active">
+      <button type="button" class="button-secondary" style="margin-top: var(--space-lg)" :aria-busy="recordStart.state.status === 'saving' ? 'true' : undefined" @click="startRecord">{{ recordStart.state.status === 'saving' ? '기록을 시작하는 중' : '이 일정 기록 시작' }}</button>
+      <p v-if="recordRunning" role="status">진행 중인 기록이 있어 새로 시작하지 않았어요. <RouterLink to="/planner/daily">플래너에서 먼저 끝내기</RouterLink></p>
+      <p v-if="recordStart.state.status === 'failed'" class="input-field-help" data-state="error" role="status">{{ recordStart.state.error?.message }}</p>
+      <LinkedRecords kind="schedule" :id="String(active.id)" />
+    </template>
     <p v-if="removeMessage" class="input-field-help" data-state="error" role="status">{{ removeMessage }}</p>
 
     <template #footer>

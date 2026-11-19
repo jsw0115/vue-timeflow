@@ -15,8 +15,14 @@
   - `gradlew test --rerun`: 첫 실행 FAIL 1개(`ApplicationStartupTest`, `DayPolicy` 생성자 두 개). `@Autowired`로 고친 뒤 PASS, 30개 클래스 245개.
   - 프런트 Node 테스트 150개(`device-preview.test.mjs` 제외), `npm run build:web`, 계약·목록 검사, `verify_agent_kit.py`, `git diff --check`: PASS. `verify_documentation.py`: 기존 깨진 링크 1건 FAIL(수정 전과 같음).
   - 실제 백엔드: 2단계 7개, 1단계 12개 다시 실행 PASS.
+- 3단계 명령과 결과(상세는 07 RUN-105~RUN-111)
+  - 수정 전 기록 클라이언트로 `record-links.test.mjs`: FAIL 1개(의도, UT-142).
+  - 브라우저 첫 점검: FAIL. 로그인 직후 목록 요청 401(BUG-003). `session-order.test.mjs` 수정 전 FAIL, 수정 후 PASS.
+  - 프런트 Node 테스트 첫 전체 실행: FAIL(900초 제한, `writing-flows` 타이머·`empty-states` 문구). 고친 뒤 155개 PASS.
+  - `npm run build:web`, 계약·목록 검사, `verify_agent_kit.py`, `git diff --check`: PASS. 백엔드 변경 없음.
+  - 실제 백엔드·브라우저: 13개 PASS 두 번, `/chat` 토큰 갱신 요청 0회.
 - 보안(2단계): 경계 값은 0~6 정수만 받고(문자열·소수·범위 밖 400), 시간대는 기존 `ZoneId.of` 검증을 쓴다. 날짜 계산은 요청 계정의 값만 읽는다.
 - 보안(1단계): 소유권(SW 49의 권한 검사, OWASP A01) — 연결·배치·기록 시작 모두 양쪽 기록의 소유자 확인, 다른 계정은 404. 입력 검증(A03) — 종류 허용 목록, ID 100자, 원본 두 필드 함께, 일정 본문은 기존 `FeatureInput.validate`. 동시성·멱등 — 배치는 할 일 행 잠금과 `Idempotency-Key`, 기록 시작은 같은 요청 ID에 원본이 다르면 409. 직접 SQL은 모두 매개변수 바인딩.
-- 웹 접근성: 1·2단계 화면 변경 없음(N/A).
+- 웹 접근성: 1·2단계 화면 변경 없음(N/A). 3단계는 영역 `aria-label`, 상태 문구 `role="status"`, 요청 중 `aria-busy`, 글자 버튼 이름, 320px 넘침 없음(할 일·플래너·다이어리)을 확인했다. 키보드·화면낭독기 전체 점검은 하지 않았다(NOT_RUN).
 - 오탐 제외: 없음.
 - 남은 위험과 승인 필요: 현재 DB 문서 재캡처(사용자 격리 DB), V10 운영 적용(PR-13), 새 격리 DB의 기준선 원인 미확인.

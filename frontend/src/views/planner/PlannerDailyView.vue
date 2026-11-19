@@ -9,6 +9,7 @@ import { plannerReviews } from '../../store/plannerReviews'
 import { localDate } from '../../utils/postValidation.mjs'
 import { useRecording } from '../../features/recording/useRecording.js'
 import { recordingSeconds } from '../../features/recording/recordingClient.mjs'
+import LinkedRecords from '../../components/LinkedRecords.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -87,6 +88,7 @@ watch(() => [reviewDate.value, plannerReviews.value.find(item => item.id === rev
         <p>시작 {{ new Date(selectedRecord.startedAt).toLocaleString('ko-KR') }}</p>
         <p v-if="selectedRecord.endedAt">종료 {{ new Date(selectedRecord.endedAt).toLocaleString('ko-KR') }} · {{ clock(recordingSeconds(selectedRecord)) }}</p>
         <p>상태 {{ selectedRecord.state === 'COMPLETED' ? '서버 저장 완료' : '기록 중' }}</p>
+        <LinkedRecords kind="actual" :id="selectedRecord.id" :record="selectedRecord" />
       </section>
     </section>
     <section class="card" :style="{ order: order('tasks') }">

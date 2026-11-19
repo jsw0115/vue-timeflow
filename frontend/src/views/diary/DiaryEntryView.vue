@@ -11,6 +11,7 @@ import { localDate } from '../../utils/postValidation.mjs'
 import { events } from '../../store/appState'
 import TagMentionInput from '../../components/TagMentionInput.vue'
 import EditPresence from '../../components/EditPresence.vue'
+import DayRecords from '../../components/DayRecords.vue'
 
 const written = [1, 4, 6, 8, 9, 10, 12, 13, 14, 16, 17, 18, 20, 21, 24]
 
@@ -184,6 +185,7 @@ function linkPlannerItem(title) {
         <span class="tag" v-for="t in tags" :key="t">#{{ t }} <a style="cursor: pointer; font-weight: 700" @click="removeTag(t)">×</a></span>
         <input v-model="tagInput" @keydown.enter.prevent="addTag" placeholder="태그 입력 후 Enter" style="border: 1px solid var(--color-hairline); border-radius: var(--radius-sm); padding: 4px 8px; width: 140px; background: var(--color-canvas)" />
       </div>
+      <DayRecords :date="entryDate" />
     </section>
     <aside class="calendar card">
       <h3>이번 달</h3>

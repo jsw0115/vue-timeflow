@@ -24,10 +24,14 @@ export function createRecordingClient({ request, storage, owner, uuid = () => cr
       if (command?.kind === 'start' && command.body.requestId === result.active?.id) clear()
       return result
     },
-    async start(title, timeZone) {
+    /** source({ kind: 'task'|'schedule', id })를 주면 원본 종류·ID를 함께 보내 실제 기록에 남긴다(PR-08 UF-91). */
+    async start(title, timeZone, source) {
       let command = pending()
       if (command && command.kind !== 'start') throw new Error('저장하지 못한 종료 요청을 먼저 다시 전송해주세요.')
-      if (!command) { command = { kind: 'start', body: { requestId: uuid(), title: title.trim() || '실제 기록', timeZone } }; save(command) }
+      if (!command) {
+        command = { kind: 'start', body: { requestId: uuid(), title: title.trim() || '실제 기록', timeZone, ...(source ? { sourceKind: source.kind, sourceId: source.id } : {}) } }
+        save(command)
+      }
       const result = await post('/api/planner/recordings/start', command.body)
       clear()
       return result

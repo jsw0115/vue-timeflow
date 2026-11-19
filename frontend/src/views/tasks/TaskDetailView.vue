@@ -1,12 +1,16 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { tasks, taskStore } from '../../store/appState'
+import { tasks, taskStore, eventStore } from '../../store/appState'
 import { createSaveState } from '../../features/records/saveState.mjs'
+import { createLinkClient } from '../../features/records/recordLinks.mjs'
+import { startRecordingFrom } from '../../features/recording/useRecording.js'
+import { localDate } from '../../utils/postValidation.mjs'
 
 import ChecklistEditor from '../../components/ChecklistEditor.vue'
 import ConflictCompare from '../../components/ConflictCompare.vue'
 import EditPresence from '../../components/EditPresence.vue'
+import LinkedRecords from '../../components/LinkedRecords.vue'
 import SaveStatus from '../../components/SaveStatus.vue'
 import StorageNote from '../../components/StorageNote.vue'
 import TagMentionInput from '../../components/TagMentionInput.vue'
@@ -112,6 +116,40 @@ const removeMessage = computed(() => {
   if (kind === 'network') return '삭제하지 못했어요. 연결을 확인하고 다시 시도해 주세요.'
   return '삭제하지 못했어요. 잠시 뒤 다시 시도해 주세요.'
 })
+// 일정에 배치(UF-90)와 이 할 일에서 실제 기록 시작(UF-91). 로그인 상태에서만 쓴다
+const links = createLinkClient()
+const linkVersion = ref(0)
+const slot = ref({ date: localDate(), startTime: '09:00', endTime: '10:00' })
+watch(() => task.value?.id, () => { slot.value = { date: task.value?.date || localDate(), startTime: '09:00', endTime: '10:00' } }, { immediate: true })
+const slotError = computed(() => {
+  const { date, startTime, endTime } = slot.value
+  if (!date || !startTime || !endTime) return '날짜와 시작·종료 시간을 입력해 주세요.'
+  return endTime <= startTime ? '종료 시간은 시작 시간보다 늦어야 해요.' : ''
+})
+const placing = createSaveState()
+// 같은 배치를 다시 시도하면 같은 키를 보내 일정이 두 번 생기지 않게 한다. 날짜·시간을 바꾸면 새 배치다
+let placeKey = null
+watch(slot, () => { placeKey = null; if (placing.state.status !== 'saving') placing.reset() }, { deep: true })
+async function place() {
+  if (!task.value || slotError.value) return
+  placeKey ??= crypto.randomUUID()
+  const result = await placing.run(() => links.placeTask(task.value.id, slot.value, placeKey))
+  if (!result.ok) return
+  placeKey = null
+  linkVersion.value++
+  eventStore.reload()
+}
+const recordStart = createSaveState()
+const recordRunning = ref(false)
+async function startRecord() {
+  if (!task.value) return
+  recordRunning.value = false
+  const result = await recordStart.run(() => startRecordingFrom(task.value.title, { kind: 'task', id: String(task.value.id) }))
+  if (!result.ok) return
+  if (result.value.started) router.push('/planner/daily')
+  else recordRunning.value = true
+}
+
 async function remove() {
   if (!task.value) return
   if (!window.confirm('‘' + task.value.title + '’ 할 일을 삭제할까요? 하위 항목도 함께 사라져요.')) return
@@ -156,6 +194,28 @@ async function remove() {
     </div>
 
 
+    <section v-if="taskMode === 'server'" class="task-links" aria-labelledby="task-links-title">
+      <h3 id="task-links-title">일정과 실제 기록</h3>
+      <fieldset class="form-fieldset">
+        <legend>일정에 배치</legend>
+        <label>날짜<input v-model="slot.date" type="date" /></label>
+        <div class="form-row">
+          <label>시작 시간<input v-model="slot.startTime" type="time" /></label>
+          <label>종료 시간<input v-model="slot.endTime" type="time" /></label>
+        </div>
+      </fieldset>
+      <p v-if="slotError" class="form-note" role="status">{{ slotError }}</p>
+      <SaveStatus :state="placing.state" saved-text="일정에 넣었어요. 아래 연결된 기록에서 열 수 있어요." @retry="place" />
+      <div class="task-link-actions">
+        <button type="button" class="button-secondary" :disabled="!!slotError" :aria-busy="placing.state.status === 'saving' ? 'true' : undefined" @click="place">{{ placing.state.status === 'saving' ? '일정에 넣는 중' : '일정에 배치' }}</button>
+        <button type="button" class="button-secondary" :aria-busy="recordStart.state.status === 'saving' ? 'true' : undefined" @click="startRecord">{{ recordStart.state.status === 'saving' ? '기록을 시작하는 중' : '이 할 일 기록 시작' }}</button>
+      </div>
+      <p v-if="recordRunning" role="status">진행 중인 기록이 있어 새로 시작하지 않았어요. <RouterLink to="/planner/daily">플래너에서 먼저 끝내기</RouterLink></p>
+      <p v-if="recordStart.state.status === 'failed'" class="input-field-help" data-state="error" role="status">{{ recordStart.state.error?.message }}</p>
+      <LinkedRecords kind="task" :id="String(task.id)" :refresh-key="linkVersion" />
+    </section>
+    <p v-else class="form-note">로그인하면 이 할 일을 일정에 배치하고 실제 기록과 연결할 수 있어요.</p>
+
     <button style="width: 100%; margin-top: 20px; color: var(--color-status-danger); font-weight: 700; padding: 10px" :aria-busy="removing.state.status === 'saving' ? 'true' : undefined" @click="remove">{{ removing.state.status === 'saving' ? '삭제하는 중' : '삭제하기' }}</button>
     <p v-if="removeMessage" class="input-field-help" data-state="error" role="status">{{ removeMessage }}</p>
   </section>
@@ -163,3 +223,8 @@ async function remove() {
   <div v-else-if="taskMode === 'server' && taskStore.state.error" class="empty-state" role="status"><p>할 일을 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요.</p><button type="button" class="button-secondary" @click="taskStore.reload()">다시 시도</button></div>
   <p v-else>할 일을 찾을 수 없어요. <a @click="router.push('/tasks')" style="color: var(--color-accent); font-weight: 700; cursor: pointer">목록으로 돌아가기</a></p>
 </template>
+
+<style scoped>
+.task-links { margin-top: var(--space-xxl); padding-top: var(--space-xxl); border-top: 1px solid var(--color-hairline); }
+.task-link-actions { display: flex; flex-wrap: wrap; gap: var(--space-md); margin-top: var(--space-lg); }
+</style>
