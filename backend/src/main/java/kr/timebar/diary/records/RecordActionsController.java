@@ -55,7 +55,7 @@ public class RecordActionsController {
         String user = CurrentUser.id(); var memo = store.lock(user, FeatureType.MEMO, id);
         if (((Number)memo.get("version")).longValue() != FeatureInput.version(body)) throw new kr.timebar.diary.common.ApiException(kr.timebar.diary.common.ErrorCode.CONFLICT);
         LocalDate due = FeatureInput.text(body, "due").isEmpty() ? null : FeatureInput.date(FeatureInput.text(body, "due"));
-        var result = tasks.create(user, new TaskRequest(memo.get("title").toString(), FeatureInput.text(memo, "body"), null, null, 30, due, null, FeatureInput.text(body, "category"), null, null));
+        var result = tasks.create(user, new TaskRequest(memo.get("title").toString(), FeatureInput.text(memo, "body"), null, null, 30, due, null, FeatureInput.text(body, "category"), null, null, null));
         store.delete(user, FeatureType.MEMO, id, FeatureInput.version(body));
         return ApiResponse.ok(result);
     }

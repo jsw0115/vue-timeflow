@@ -1,0 +1,31 @@
+# 결정·근거·인수인계 메모
+
+- 현재 확인된 구현/설정(2026-11-19)
+  - 09 3절의 "이미 된 것: version"은 할 일에 맞지 않았다. `/api/tasks`(`TaskEntity`)는 행 잠금(`findOwnedForUpdate`)만 하고 마지막 저장이 덮어썼다. `feature_record` 기록과 체크리스트 항목에는 version이 있다.
+  - 기록 API 공통 규칙은 `PUT` 본문 version, `DELETE ?version=`. 프런트 `apiRequest`는 204를 실패로 던졌다(체크리스트·`feature_record` 삭제가 204).
+  - 할 일 로컬 목록은 8개 화면이 읽고 5곳이 쓴다. 체크리스트 담당자는 서버 계정만 받는다(로컬 주소록 시연 연락처는 계정이 아님). 2단계에서 다룬다.
+- 선택한 대안/이유
+  - 단계 나누기: UF-81의 연결 순서를 따르되 공통 기반(어댑터·계정 경계·서버 version)을 1단계로 먼저 뒀다. 할 일 화면 연결(2단계)이 version 없는 API 위에 올라가면 UF-84를 만족할 수 없고, 사용자가 단계마다 확인하기를 요청했다.
+  - 할 일 version: PR-01 플래너와 같은 방식이다(Flyway V8 `NOT NULL DEFAULT 0`, 공개 버전 = 저장 + 1, 수정은 본문·상태 변경과 삭제는 쿼리, 누락·1 미만 400, 불일치 409). 새 규칙을 만들지 않고 기존 선례를 따랐다. 기존 행 잠금은 그대로 두어 체크리스트 변경과의 직렬화도 유지된다.
+  - 저장 전 엔티티의 version은 null로 둔다(ID를 생성자에서 정하므로 Spring Data가 null version으로 새 엔티티를 판단). `getPublicVersion`은 null을 0으로 본다(단위 테스트의 저장 전 엔티티 대응).
+  - 같은 내용의 수정은 JPA가 쓰지 않아 버전이 오르지 않는다. 플래너와 같은 동작이며 API 안내에 적었다.
+  - 어댑터(`recordClient.mjs`)는 요청 함수를 주입받는 팩토리로 했다(`recordingClient.mjs`·`backupClient.mjs` 컨벤션). 오류를 `conflict`·`invalid`·`notFound`·`network`·`server`로 나누고, 409면 최신 값을 다시 조회해 `error.latest`에 담는다(UF-84 비교 화면용). 자동으로 덮어쓰지 않는다.
+  - 계정별 목록(`useRecordCollection.mjs`)은 `useCapabilityStatus.mjs`처럼 세대 번호로 계정 전환을 감지한다. 요청 중 계정이 바뀌면 결과를 버리고 `stale` 오류를 던진다(UT-127). 충돌이면 목록 항목을 최신 서버 값으로 바꾸고, 404면 목록에서 뺀 뒤 오류를 그대로 알린다(화면이 "다른 곳에서 삭제됨"을 말할 수 있게).
+  - `apiRequest`의 204를 성공(null)으로 바꿨다. 공용 모듈이지만 204를 실패로 기대하는 호출부가 없고, 어댑터 삭제(UF-80)에 필요하다.
+  - `TaskRequest` 레코드 구성요소 안에 주석을 넣었다가 계약 생성기(`design-docs/current.mjs`)가 쉼표로 구성요소를 나눠 파싱에 실패했다. 기존 레코드처럼 주석을 빼고, 규칙은 `TaskService.requireVersion` 주석과 API 안내에 적었다.
+- 범위 밖으로 남긴 것(실패가 아니라 기존 상태)
+  - `frontend/scripts/audit-api-docs.mjs`: 2026-10-04 이후 채팅 경로 변경으로 `docs/api-info/current-operations.json`이 오래됨. 변경 전 HEAD 사본에서도 같은 실패.
+  - `scripts/docs/build_current_database.py --check`: V7 추가 뒤 격리 MySQL 재캡처를 안 해 실패. 변경 전 HEAD 사본에서도 같은 실패. V7 선례대로 05 문서에 V8·DB-05를 적었다. 재캡처는 격리 MySQL 적용 때 한다.
+- 보안 점검(변경 범위)
+  - 소유권(OWASP A01): 다른 계정의 수정·상태 변경·삭제는 404(테스트). 기존 `findOwnedForUpdate`(소유자 조건) 그대로.
+  - 무결성·동시성(OWASP A04, SW 경쟁 조건): 낙관적 version과 기존 행 잠금으로 오래된 쓰기·동시 쓰기를 409로 막는다(동시 수정 테스트).
+  - 입력 검증: version 범위(생성 생략·0, 수정 1 이상). 그 밖의 입력 검증은 기존 그대로.
+  - 클라이언트: 계정 전환 뒤 이전 계정 응답을 화면 상태에 넣지 않는다(UT-127).
+  - 해당 없음: 인증·비밀값·파일·출력(화면 변경 없음).
+- 다음 작업(2단계: 할 일 화면 연결)
+  - `appState.tasks`를 로그인 여부에 따라 서버 목록(`useRecordCollection`)과 로컬 목록으로 나누고, 쓰는 곳 5곳(작성·상세 저장·완료 토글·삭제·메모에서 옮기기)을 어댑터로 바꾼다.
+  - 체크리스트는 별도 API(항목 version)로 저장한다. 서버 모드의 담당자는 계정만 고를 수 있어 로컬 연락처 선택을 어떻게 보일지 정해야 한다.
+  - 저장 상태 표시(UF-82), 실패 시 입력 보존(UF-83), 충돌 비교 화면(UF-84), 비로그인 "이 브라우저에만 저장돼요"(UF-87).
+  - 2단계 동안 로그인 사용자의 기존 로컬 할 일은 보이지 않는다(지우지 않음). 이전은 3단계다.
+- 마지막 실행 명령·종료 코드: verification.md, 07 RUN-67~RUN-69.
+- 사용자 변경과 자체 변경 구분: 사용자 미커밋 `frontend/src/components/Modal.vue`, `backend/.../PlannerItemQueryRepositoryImpl.java`, `docs/output/`는 손대지 않았다.

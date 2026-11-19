@@ -7900,6 +7900,12 @@
         "type": "String",
         "location": "path",
         "required": true
+      },
+      {
+        "name": "version",
+        "type": "Long",
+        "location": "query",
+        "required": false
       }
     ],
     "status": 200,
@@ -8240,6 +8246,12 @@
         "type": "String",
         "location": "path",
         "required": true
+      },
+      {
+        "name": "version",
+        "type": "Long",
+        "location": "query",
+        "required": false
       }
     ],
     "status": 200,

@@ -19,11 +19,13 @@ public record TaskResponse(
         String categoryId,
         String categoryName,
         String categoryColor,
-        String categoryIcon
+        String categoryIcon,
+        long version
 ) {
     public static TaskResponse from(TaskEntity entity) {
         return new TaskResponse(entity.getId(), entity.getTitle(), entity.getNote(), entity.getStatus(),
                 entity.getPriority(), entity.getEnergyLevel(), entity.getDurationMin(), entity.getDue(),
-                entity.getCategoryId(), entity.getCategoryName(), entity.getCategoryColor(), entity.getCategoryIcon());
+                entity.getCategoryId(), entity.getCategoryName(), entity.getCategoryColor(), entity.getCategoryIcon(),
+                entity.getPublicVersion());
     }
 }

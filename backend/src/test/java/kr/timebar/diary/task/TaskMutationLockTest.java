@@ -22,9 +22,9 @@ class TaskMutationLockTest {
         when(repository.findOwnedForUpdate("task", "owner")).thenReturn(Optional.of(task));
         TaskService service = new TaskService(repository);
         service.update("owner", "task", new TaskRequest("edited", null, null, null, null, null,
-                null, null, null, null));
-        service.toggleStatus("owner", "task");
-        service.delete("owner", "task");
+                null, null, null, null, 1L));
+        service.toggleStatus("owner", "task", 1L);
+        service.delete("owner", "task", 1L);
         assertNotNull(task.getDeletedAt());
         verify(repository, org.mockito.Mockito.times(3)).findOwnedForUpdate("task", "owner");
         verify(repository, never()).findByIdAndUserIdAndDeletedAtIsNull(any(), any());

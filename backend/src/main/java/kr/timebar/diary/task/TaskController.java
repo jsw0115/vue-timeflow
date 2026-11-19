@@ -41,14 +41,14 @@ public class TaskController {
     }
 
     @DeleteMapping("/{taskId}")
-    public ApiResponse<Void> delete(@PathVariable String taskId) {
-        taskService.delete(CurrentUser.id(), taskId);
+    public ApiResponse<Void> delete(@PathVariable String taskId, @RequestParam(required = false) Long version) {
+        taskService.delete(CurrentUser.id(), taskId, version);
         return ApiResponse.ok(null, "삭제했어요.");
     }
 
     @PatchMapping("/{taskId}/status")
-    public ApiResponse<TaskResponse> toggleStatus(@PathVariable String taskId) {
-        return ApiResponse.ok(taskService.toggleStatus(CurrentUser.id(), taskId));
+    public ApiResponse<TaskResponse> toggleStatus(@PathVariable String taskId, @RequestParam(required = false) Long version) {
+        return ApiResponse.ok(taskService.toggleStatus(CurrentUser.id(), taskId, version));
     }
 
     @PostMapping("/{taskId}/duplicate")

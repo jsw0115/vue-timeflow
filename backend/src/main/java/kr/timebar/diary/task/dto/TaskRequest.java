@@ -16,6 +16,7 @@ public record TaskRequest(
         String categoryId,
         String categoryName,
         String categoryColor,
-        String categoryIcon
+        String categoryIcon,
+        Long version
 ) {
 }

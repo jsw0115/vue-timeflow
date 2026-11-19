@@ -27218,6 +27218,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "version",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
           }
         ],
         "responses": {
@@ -28569,6 +28577,14 @@
             "required": true,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "version",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer"
             }
           }
         ],
@@ -35895,6 +35911,16 @@
                 "type": "null"
               }
             ]
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -36034,6 +36060,9 @@
                 "type": "null"
               }
             ]
+          },
+          "version": {
+            "type": "integer"
           }
         },
         "required": [],

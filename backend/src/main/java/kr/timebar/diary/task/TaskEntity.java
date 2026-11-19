@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import kr.timebar.diary.common.UlidGenerator;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -79,6 +80,11 @@ public class TaskEntity {
     @Column(name = "d_at")
     private LocalDateTime deletedAt;
 
+    /** 동시 수정 검사용 내부 버전(V8). 저장 전에는 null이라 새 할 일로 저장되고, 첫 저장 뒤 0이다. */
+    @Version
+    @Column(nullable = false)
+    private Long version;
+
     public TaskEntity(String userId, String title, String note, TaskPriority priority, EnergyLevel energyLevel,
             int durationMin, LocalDate due, String categoryId, String categoryName, String categoryColor, String categoryIcon) {
         this.id = UlidGenerator.newUlid();
@@ -120,6 +126,11 @@ public class TaskEntity {
 
     public boolean isOwnedBy(String userId) {
         return this.userId.equals(userId);
+    }
+
+    /** API에 보이는 버전. 저장 버전 + 1이라 V8 이전 행(0)도 1부터 시작한다(플래너 V7과 같은 규칙). */
+    public long getPublicVersion() {
+        return Math.addExact(version == null ? 0 : version, 1);
     }
 
     @PrePersist
