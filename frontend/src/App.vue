@@ -5,6 +5,7 @@ import { navGroups } from './router'
 import { composer, openPostComposer } from './store/appState'
 import PostComposer from './components/PostComposer.vue'
 import LocalMigrationPrompt from './components/LocalMigrationPrompt.vue'
+import OutboxPanel from './components/OutboxPanel.vue'
 import './store/postIndex'
 import { storageWarning } from './store/localCollection'
 import { communityComposer } from './store/communities'
@@ -171,6 +172,7 @@ const todayLabel = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'full' }).forma
         </div>
       </header>
       <p v-if="storageWarning" class="callout" role="alert">{{ storageWarning }}</p>
+      <OutboxPanel />
       <PlannerViewSettings v-if="['/planner/daily', '/planner/weekly', '/planner/monthly', '/planner/yearly'].includes(route.path)" />
       <p v-if="route.path === '/chat'" class="callout">채팅은 이동 가능한 대화 버튼에서 열 수 있어요.</p>
       <router-view v-else />

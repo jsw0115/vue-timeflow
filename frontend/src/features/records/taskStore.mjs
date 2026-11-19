@@ -3,19 +3,26 @@ import { effectScope, reactive, watch } from 'vue'
 import { session } from '../auth/session.js'
 import { apiRequest } from '../auth/apiRequest.js'
 import { createRecordClient, errorKind } from './recordClient.mjs'
-import { createSyncedCollection } from './syncedCollection.mjs'
+import { createSyncedCollection, offlineOnlyError } from './syncedCollection.mjs'
+import { isOfflineId } from '../offline/outbox.mjs'
 import { taskFromServer, taskBody, taskFieldsChanged, loadChecklist as fetchChecklist, syncChecklist, setChecklistDone } from './taskRecords.mjs'
 
+/** 체크리스트 항목의 이름·완료·담당자가 서버에서 불러온 것과 같은가. */
+const sameChecklist = (baseline, draft) => baseline.length === draft.length && draft.every((item, index) => {
+  const base = baseline[index]
+  return base && base.id === item.id && base.title === item.title.trim() && Boolean(base.done) === Boolean(item.done) && (base.assigneeId ?? null) === (item.assigneeId ?? null)
+})
 const PARTIAL = '할 일은 저장했지만 체크리스트 일부를 저장하지 못했어요.'
 const staleError = () => Object.assign(new Error('계정이 바뀌어 이전 요청의 결과를 반영하지 않았어요.'), { kind: 'stale' })
 const TOGGLE_FAILURE = {
   conflict: '다른 곳에서 먼저 바뀌어 최신 상태로 바꿨어요. 확인한 뒤 다시 눌러 주세요.',
   notFound: '다른 곳에서 삭제된 할 일이에요.',
   network: '완료 표시를 저장하지 못했어요. 연결을 확인하고 다시 눌러 주세요.',
+  offline: '아직 보내지 않은 변경이 있어 연결된 뒤에 완료 표시를 바꿀 수 있어요.',
 }
 
-export function createTaskStore({ local, request = apiRequest, owner = () => session.userId }) {
-  const synced = createSyncedCollection({ local, client: createRecordClient({ request, path: '/api/tasks' }), owner, toLocal: taskFromServer, toBody: taskBody })
+export function createTaskStore({ local, request = apiRequest, owner = () => session.userId, offline = null }) {
+  const synced = createSyncedCollection({ local, client: createRecordClient({ request, path: '/api/tasks' }), owner, toLocal: taskFromServer, toBody: taskBody, offline: offline && { kind: 'task', queue: offline } })
   // 서버 체크리스트는 할 일 목록 응답에 없어서 할 일별로 따로 불러 둔다. 키는 할 일 ID다
   const checklists = reactive(new Map())
   const busyItems = reactive(new Set())
@@ -44,6 +51,8 @@ export function createTaskStore({ local, request = apiRequest, owner = () => ses
   }
   async function loadChecklist(task) {
     if (!synced.onServer()) return checklist(task)
+    // 대기열에서 만든 할 일은 아직 서버에 없어 체크리스트가 비어 있다(PR-12)
+    if (isOfflineId(task.id)) return setItems(task.id, [])
     const expected = generation, previous = checklists.get(task.id)
     checklists.set(task.id, { status: 'loading', items: previous?.items ?? [], error: null })
     try {
@@ -74,7 +83,11 @@ export function createTaskStore({ local, request = apiRequest, owner = () => ses
       return { task: saved, baseline: saved.subtasks, subtasks: saved.subtasks }
     }
     const expected = generation
-    const current = taskFieldsChanged(task, draft) ? await synced.update(task, fields(draft)) : task
+    // 체크리스트가 그대로일 때만 연결 실패를 대기열에 넣는다. 체크리스트는 대기열 범위 밖이다(PR-12)
+    const checklistChanged = !sameChecklist(baseline, draft.subtasks ?? [])
+    const current = taskFieldsChanged(task, draft) ? await synced.update(task, fields(draft), { offline: !checklistChanged }) : task
+    if (current.offline) return { task: current, baseline, subtasks: draft.subtasks ?? [] }
+    if (isOfflineId(current.id)) throw offlineOnlyError()
     const result = await syncChecklist({ request: scoped(expected), taskId: current.id, baseline, draft: draft.subtasks ?? [], me: owner() })
     await finishChecklist(current, expected, result, current !== task ? '할 일 내용은 저장했지만 체크리스트 일부를 저장하지 못했어요.' : '')
     return { task: current, baseline: result.baseline, subtasks: result.draft }
@@ -84,7 +97,9 @@ export function createTaskStore({ local, request = apiRequest, owner = () => ses
   async function createWithChecklist(values, subtasks, previous = null) {
     if (!synced.onServer()) return { task: await synced.create({ ...fields(values), done: false, subtasks: trimmed(subtasks) }) }
     const expected = generation
-    const task = previous?.task ?? await synced.create(fields(values))
+    // 체크리스트가 없을 때만 연결 실패를 대기열에 넣는다(PR-12)
+    const task = previous?.task ?? await synced.create(fields(values), { offline: !(subtasks ?? []).length })
+    if (task.offline) return { task }
     const result = await syncChecklist({ request: scoped(expected), taskId: task.id, baseline: previous?.baseline ?? [], draft: subtasks ?? [], me: owner() })
     await finishChecklist(task, expected, result, PARTIAL)
     return { task }

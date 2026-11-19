@@ -10,7 +10,7 @@ import { createSyncedCollection } from './syncedCollection.mjs'
  * toLocal(row)은 서버 응답을 화면 모양으로, toBody(item, pick)은 화면 값을 요청 본문으로 바꾼다. 없으면 fields만 고른다.
  * prepare(item, today)는 로컬 기록을 옮기기 전에 서버 형식으로 맞추고, notes(items, today)는 이전 안내에 보일 수를 준다.
  */
-export function createFeatureStore({ local, path, kind, fields, demoFields, toLocal, toBody, prepare, notes, request = apiRequest, owner = () => session.userId }) {
+export function createFeatureStore({ local, path, kind, fields, demoFields, toLocal, toBody, prepare, notes, request = apiRequest, owner = () => session.userId, offline = null }) {
   const pick = (source) => Object.fromEntries(fields.filter((key) => source[key] !== undefined).map((key) => [key, source[key]]))
   const body = (item) => {
     const out = toBody ? toBody(item, pick) : pick(item)
@@ -18,7 +18,7 @@ export function createFeatureStore({ local, path, kind, fields, demoFields, toLo
     return out
   }
   const synced = createSyncedCollection({
-    local, owner, toBody: body,
+    local, owner, toBody: body, offline: offline && { kind, queue: offline },
     client: createRecordClient({ request, path, paged: true }),
     toLocal: (row) => ({ ...(toLocal ? toLocal(row) : row), id: row.id, version: row.version }),
   })

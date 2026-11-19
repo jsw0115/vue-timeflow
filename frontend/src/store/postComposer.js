@@ -59,7 +59,7 @@ export async function savePostDraft(kind, draft, progress = null) {
     return true
   }
   if (kind === '다이어리') { await diaryStore.create({ title, body, date: draft.date, mood: moodCode(draft.mood) ?? undefined }); return true }
-  if (kind === '메모') { await memoStore.create({ title, body, time: localDate(), color: '', actionable: false }); return true }
+  if (kind === '메모') { await memoStore.create({ title, body, time: localDate(), color: '', actionable: false }, { offline: true }); return true }
   if (kind === 'D-Day') { await addDday({ title, body, category: draft.category, date: draft.date, notifyDays: [...draft.notifyDays] }); return true }
   if (kind === '머니로그') { await moneyStore.create({ title, body, date: draft.date, amount: draft.type === 'out' ? -draft.amount : draft.amount, type: draft.type, category: draft.type === 'in' ? '수입' : draft.category }); return true }
   if (kind === '회고') savePlannerReview(draft.date, body)

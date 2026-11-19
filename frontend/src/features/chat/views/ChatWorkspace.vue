@@ -10,6 +10,8 @@ import { activeRoom, chat, loadOlder, loadRooms, markRead, reconcile, selectRoom
 import ChatComposer from '../components/ChatComposer.vue'
 import NewConversationDialog from '../components/NewConversationDialog.vue'
 import '../styles/chat.css'
+import OutboxLogoutDialog from '../../../components/OutboxLogoutDialog.vue'
+import { outbox } from '../../offline/offlineQueue.js'
 
 const props = defineProps({ embedded: Boolean, active: { type: Boolean, default: true } })
 const route = useRoute(), router = useRouter()
@@ -124,7 +126,10 @@ async function leave() {
     if (!props.embedded) await router.replace('/chat')
   } catch (error) { detailError.value = error.message }
 }
-async function signOut() { try { await logout() } finally { await router.push('/auth/login?redirect=/chat') } }
+// 보내지 않은 기록이 있으면 먼저 어떻게 할지 묻는다(PR-12, UF-105)
+const confirmSignOut = ref(false)
+function signOut() { if (outbox.state.items.length) confirmSignOut.value = true; else void finishSignOut() }
+async function finishSignOut() { confirmSignOut.value = false; try { await logout() } catch { /* 연결이 없어도 이 기기의 로그인 정보는 지웠다 */ } finally { await router.push('/auth/login?redirect=/chat') } }
 function backToList() {
   if (props.embedded) chat.selectedId = null
   else void router.replace('/chat')
@@ -238,5 +243,6 @@ onBeforeUnmount(() => { stopChat(); clearInterval(clock); clearTimeout(searchTim
       <p v-if="detailError" role="alert">{{ detailError }}</p>
       <template #footer><button class="modal-secondary" @click="showDetails = false">닫기</button><button v-if="activeRoom.kind === 'GROUP' && activeRoom.ownerId === chatUserId && activeRoom.members.length > 1" class="modal-secondary" :disabled="!nextOwner" @click="transfer">방장 넘기기</button><button v-if="activeRoom.kind === 'GROUP'" class="chat-leave" @click="leave">{{ confirmLeave ? '확인하고 대화 나가기' : '대화 나가기' }}</button></template>
     </Modal>
+    <OutboxLogoutDialog v-if="confirmSignOut" @logout="finishSignOut" @close="confirmSignOut = false" />
   </div>
 </template>

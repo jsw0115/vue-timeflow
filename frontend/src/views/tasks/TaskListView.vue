@@ -7,6 +7,7 @@ import StorageNote from '../../components/StorageNote.vue'
 import ListFilterBar from '../../components/ListFilterBar.vue'
 import { contactById } from '../../store/contacts'
 import { modeState, modeMeta, isFieldOn } from '../../store/modeProfiles'
+import { OFFLINE_LABEL } from '../../features/records/syncedCollection.mjs'
 
 const route = useRoute()
 const router = useRouter()
@@ -80,7 +81,7 @@ watch(() => route.query.new, (v) => { if (v) openModal() }, { immediate: true })
     <section class="card list">
       <div class="list-head"><span>할 일</span><span>카테고리</span><span>상태</span></div>
       <div class="row" style="grid-template-columns: 2.2fr 1fr 0.8fr; cursor: pointer" v-for="t in visible" :key="t.id" :class="{ picked: t.id === activeId }" @click="router.push(`/tasks/${t.id}`)">
-        <label @click.stop><input type="checkbox" :checked="t.done" :aria-busy="taskStore.isPending(t) ? 'true' : undefined" @click.prevent="taskStore.toggle(t)" /><b :class="{ done: t.done }">{{ t.title }}</b></label>
+        <label @click.stop><input type="checkbox" :checked="t.done" :aria-busy="taskStore.isPending(t) ? 'true' : undefined" @click.prevent="taskStore.toggle(t)" /><b :class="{ done: t.done }">{{ t.title }}</b><span v-if="t.offline" class="tag" :class="{ warn: t.offline === 'review' }" style="margin-left: var(--space-sm)">{{ OFFLINE_LABEL[t.offline] }}</span></label>
         <span class="tag">{{ t.category }}</span>
         <span class="badge" :class="{ ok: t.done }">{{ t.done ? '완료' : '진행중' }}</span>
       </div>

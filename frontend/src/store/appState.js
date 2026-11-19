@@ -3,6 +3,7 @@ import { localCollection } from './localCollection'
 import { localDate } from '../utils/postValidation.mjs'
 import { occurrenceDates, skipDates, datesBetween, makeRecurrence } from '../utils/recurrence.mjs'
 import { createTaskStore } from '../features/records/taskStore.mjs'
+import * as offlineQueue from '../features/offline/offlineQueue.js'
 import { createScheduleStore } from '../features/records/scheduleStore.mjs'
 import { createRoutineStore } from '../features/records/routineStore.mjs'
 
@@ -16,7 +17,8 @@ export const TASK_SEEDS = [
 ]
 const localTasks = localCollection('tasks', TASK_SEEDS.map(task => ({ ...task })))
 /** 할 일. 로그인하면 계정의 서버 목록, 로그아웃이면 이 브라우저의 목록이다. 저장은 taskStore로 한다(PR-07). */
-export const taskStore = createTaskStore({ local: localTasks })
+// 할 일은 연결이 없을 때 기기 대기열에 보관했다가 연결되면 보낸다(PR-12)
+export const taskStore = createTaskStore({ local: localTasks, offline: offlineQueue })
 export const tasks = taskStore.list
 
 /**

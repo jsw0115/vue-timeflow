@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue'
+import SignOutSection from '../../components/SignOutSection.vue'
 
 /** 보안/계정 — 소셜 연동·기기 로그아웃·보안 옵션이 실제로 동작한다. */
 const socials = ref([
@@ -59,6 +60,7 @@ function save() {
       <span v-if="notice" class="badge ok">{{ notice }}</span>
     </div>
 
+    <SignOutSection />
     <div class="section-label">연동된 소셜 계정 · {{ linkedCount }}개</div>
     <div class="trow" v-for="s in socials" :key="s.id">
       <span style="flex: 1">

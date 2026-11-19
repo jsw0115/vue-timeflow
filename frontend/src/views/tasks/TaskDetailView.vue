@@ -6,6 +6,7 @@ import { createSaveState } from '../../features/records/saveState.mjs'
 import { createLinkClient } from '../../features/records/recordLinks.mjs'
 import { startRecordingFrom } from '../../features/recording/useRecording.js'
 import { localDate } from '../../utils/postValidation.mjs'
+import { isOfflineId } from '../../features/offline/outbox.mjs'
 
 import ChecklistEditor from '../../components/ChecklistEditor.vue'
 import ConflictCompare from '../../components/ConflictCompare.vue'
@@ -189,12 +190,13 @@ async function remove() {
       <ChecklistEditor v-else v-model="draft.subtasks" :account-only="taskMode === 'server'" />
       <ConflictCompare v-if="conflict" :rows="compareRows" :busy="saving.state.status === 'saving'" @keep-mine="keepMine" @use-latest="useLatest" />
       <p v-if="!canSave && checklist.status === 'ready'" class="form-note" role="status">제목과 체크리스트 항목 이름을 입력해주세요.</p>
-      <SaveStatus :state="saving.state" :mode="taskMode" @retry="save" />
+      <SaveStatus :state="saving.state" :mode="taskMode" :saved-text="base?.offline ? '연결이 없어 이 기기에 보관했어요. 연결되면 자동으로 보내요.' : ''" @retry="save" />
       <button class="primary" :disabled="!canSave || !!conflict" :aria-busy="saving.state.status === 'saving' ? 'true' : undefined" style="width: 100%; margin-top: 14px" @click="save">{{ saving.state.status === 'saving' ? '저장하는 중' : '저장하기' }}</button>
     </div>
 
 
-    <section v-if="taskMode === 'server'" class="task-links" aria-labelledby="task-links-title">
+    <p v-if="taskMode === 'server' && isOfflineId(String(task.id))" class="form-note">아직 보내지 않은 할 일이에요. 보낸 뒤에 일정 배치와 실제 기록 연결을 쓸 수 있어요.</p>
+    <section v-else-if="taskMode === 'server'" class="task-links" aria-labelledby="task-links-title">
       <h3 id="task-links-title">일정과 실제 기록</h3>
       <fieldset class="form-fieldset">
         <legend>일정에 배치</legend>

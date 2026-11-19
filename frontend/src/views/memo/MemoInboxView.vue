@@ -7,6 +7,7 @@ import RichText from '../../components/RichText.vue'
 import ListFilterBar from '../../components/ListFilterBar.vue'
 import { memos } from '../../store/writing'
 import { taskStore, openPostComposer } from '../../store/appState'
+import { OFFLINE_LABEL } from '../../features/records/syncedCollection.mjs'
 
 const route = useRoute()
 const router = useRouter()
@@ -112,6 +113,7 @@ async function convertToTasks() {
       <p v-if="m.body"><RichText :text="m.body" /></p>
       <p v-else class="form-note" style="margin: 6px 0 0">내용 없음</p>
       <small>{{ m.time }}</small>
+      <span v-if="m.offline" class="tag" :class="{ warn: m.offline === 'review' }" style="margin-left: var(--space-sm)">{{ OFFLINE_LABEL[m.offline] }}</span>
     </section>
     <p v-if="visibleMemos.length === 0">조건에 맞는 메모가 없어요.</p>
   </div>
