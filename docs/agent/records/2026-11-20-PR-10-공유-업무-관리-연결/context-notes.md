@@ -12,4 +12,10 @@
 - 2단계: `.form-note`는 muted 글자에 surface 배경이라 DESIGN.md 대비 기준(4.36:1)에 못 미친다. 바꾼 공유 화면 5곳은 배경 없는 `.input-field-help`로 바꿨다. 다른 화면의 `.form-note`는 부록 B 항목이라 손대지 않았다.
 - 2단계: 주소록(`store/contacts.js`)은 주소록·할 일·일정 화면이 계속 쓴다. 공유 화면만 떼어 냈고, 쓰지 않게 된 `addGroup`·`groupById`만 지웠다. 주소록과 공유를 잇는 일은 Q-21 결정 뒤다.
 - 2단계 브라우저 점검 중 한글이 든 이메일은 브라우저 `type=email` 검사에 걸려 제출되지 않았다. 점검 스크립트의 계정 이메일을 ASCII로 바꿨다. 실제 가입 이메일 규칙과의 관계는 따로 보지 않았다.
-- 다음 작업: 3단계 커뮤니티 화면 연결. 첫 명령은 `grep -n "community" frontend/src/router/index.js`로 커뮤니티 화면 목록을 확인하는 것이다.
+- 3단계: 커뮤니티 화면이 넓어 목록·만들기·홈·가입·요청함·멤버·게시판만 연결하고, 챌린지·랭킹·채팅은 3b로 나눴다. 챌린지 화면은 챌린지 작성 창(`challengeError`, `joinedCommunities`)·검색 색인과 같은 로컬 store를 써서 함께 옮겨야 하기 때문이다. 커뮤니티 채팅은 서버 API가 없다.
+- 3단계: 서버에 값이 없는 화면 요소(오늘 인증 수, 신규 배지, 커버 이모지, 역할 변경, 공지 고정, 인증 목표·규칙 동의, 방장 자동 대화, 처리 이력 필터)는 지어내지 않고 뺐다.
+- 3단계: 비공개 커뮤니티는 초대받은 사람만 들어오므로, 방장이 초대할 수단이 없으면 쓸 수 없다. 서버 초대 API는 있어 멤버 화면에 이메일 초대를 두었다.
+- 3단계: 전역 작성 창의 "커뮤니티 글"은 로컬 store에만 쓰여 서버 게시판에 보이지 않으므로 종류에서 뺐다.
+- 3단계: 게시글 시각은 서버 UTC 값을 잘라 보이고 있어 한국 시간과 9시간 어긋났다. 기기 시간대로 바꿨다(`localTime`).
+- 새 컨테이너에서는 Docker 데몬·MySQL·백엔드·Vite가 꺼져 있다. 다시 띄우는 명령은 `dockerd &`, `docker compose -f infra/chat/compose.yml up -d --wait`, `sh ./gradlew bootRun --args="--spring.profiles.active=chat-local --server.port=18080"`, `DEV_API_TARGET=http://127.0.0.1:18080 npx vite --port 15173 --strictPort`다.
+- 다음 작업: 3b 또는 4단계(업무·WBS·위키). 첫 명령은 `grep -n "work" frontend/src/router/index.js`다.

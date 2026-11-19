@@ -102,7 +102,7 @@ function openAdmin(path) {
 const workspaceOpen = ref(false)
 function changeMode(mode) { modeState.activeMode = mode; workspaceOpen.value = false }
 function openComposer() {
-  const kind = route.path.startsWith('/tasks') ? '할 일' : route.path.startsWith('/diary') ? '다이어리' : route.path.startsWith('/memos') ? '메모' : route.path.startsWith('/routines') ? '루틴' : route.path.startsWith('/money') ? '머니로그' : route.path.startsWith('/dday') || route.path === '/events/dday' ? 'D-Day' : route.path === '/community/board' ? '커뮤니티 글' : route.path === '/work/wiki' ? '업무 위키' : route.path === '/work/wbs' ? '업무 기록' : '일정'
+  const kind = route.path.startsWith('/tasks') ? '할 일' : route.path.startsWith('/diary') ? '다이어리' : route.path.startsWith('/memos') ? '메모' : route.path.startsWith('/routines') ? '루틴' : route.path.startsWith('/money') ? '머니로그' : route.path.startsWith('/dday') || route.path === '/events/dday' ? 'D-Day' : route.path === '/work/wiki' ? '업무 위키' : route.path === '/work/wbs' ? '업무 기록' : '일정'
   openPostComposer(kind)
 }
 watch(() => route.path, () => { mobileNav.value = false; workspaceOpen.value = false })

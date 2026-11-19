@@ -1,64 +1,70 @@
+<!-- 승인제 커뮤니티에 가입을 신청한다. 신청 메시지는 방장의 가입 요청함에 그대로 보이고, 승인 전에는 신청을 취소할 수 있다(PR-10 3단계, UF-114). -->
 <script setup>
-import { computed, ref } from 'vue'
+import { ref, useId } from 'vue'
+import { useRouter } from 'vue-router'
 import SubPageHeader from '../../components/SubPageHeader.vue'
+import ShareSignIn from '../../components/share/ShareSignIn.vue'
+import { session } from '../../features/auth/session.js'
+import { communityClient } from '../../features/community/community.js'
+import { communityErrorText } from '../../features/community/communityClient.mjs'
+import { useCommunity } from '../../features/community/useCommunity.js'
 
-const COMMUNITY_TABS = [
-  { label: '커뮤니티 홈', path: '/community/home' },
-  { label: '게시판', path: '/community/board' },
-  { label: '챌린지', path: '/community/challenge' },
-  { label: '멤버', path: '/community/members' },
-  { label: '채팅', path: '/community/chat' },
-]
+const router = useRouter()
+const { id, community, status, tabs, load } = useCommunity()
+const message = ref('')
+const busy = ref(false)
+const error = ref('')
+const notice = ref('')
+const helpId = useId()
 
-/** 가입 신청 — 그룹이 요구하는 필수 항목을 모두 채워야 제출된다. */
-const message = ref('아침 러닝을 꾸준히 하고 싶어서 신청합니다! 잘 부탁드려요 :)')
-const goal = ref('')
-const agreeRules = ref(false)
-const sent = ref(false)
-const GOALS = ['주 2회', '주 3회', '주 5회', '매일']
-
-const canSubmit = computed(() => message.value.trim().length >= 10 && goal.value && agreeRules.value)
-function submit() {
-  if (!canSubmit.value) return
-  sent.value = true
+async function submit() {
+  if (busy.value) return
+  busy.value = true
+  error.value = ''
+  notice.value = ''
+  try {
+    const result = await communityClient.join(id.value, message.value.trim())
+    // 자유 가입이면 바로 회원이 된다
+    if (result?.membership === 'ACTIVE') { router.push({ path: '/community/home', query: { id: id.value } }); return }
+    notice.value = '가입을 신청했어요. 방장이 승인하면 알림으로 알려 드려요.'
+    await load()
+  } catch (e) { error.value = communityErrorText(e) } finally { busy.value = false }
+}
+async function cancel() {
+  if (busy.value || !window.confirm('가입 신청을 취소할까요?')) return
+  busy.value = true
+  error.value = ''
+  try { await communityClient.removeMember(id.value, session.userId); notice.value = '가입 신청을 취소했어요.'; await load() } catch (e) { error.value = communityErrorText(e) } finally { busy.value = false }
 }
 </script>
 
 <template>
-  <SubPageHeader title="가입 신청" parent="운동 갓생방 커뮤니티" fallback="/community/home" :tabs="COMMUNITY_TABS" />
-
-  <div class="form-pattern">
-    <section class="card form-card">
-      <h2>운동 갓생방 가입 신청</h2>
-      <p class="form-note" style="margin-top: 0">방장이 확인하는 항목이에요. 세 가지를 모두 채워야 신청할 수 있어요.</p>
-
-      <label>가입 신청 메시지 <small style="color: var(--color-muted)">(10자 이상)</small>
-        <textarea v-model="message" :disabled="sent"></textarea>
-      </label>
-
-      <label>인증 목표 <small style="color: var(--color-muted)">(필수)</small></label>
-      <div class="filter" style="width: fit-content; margin-bottom: 12px">
-        <button v-for="g in GOALS" :key="g" type="button" :class="{ selected: goal === g }" :disabled="sent" @click="goal = g">{{ g }}</button>
-      </div>
-
-      <label class="task" style="border: 0">
-        <input type="checkbox" v-model="agreeRules" :disabled="sent" />
-        <span style="flex: 1"><b>커뮤니티 규칙에 동의합니다</b><small>매일 인증 · 주 5회 이상 참여 · 응원 댓글 남기기</small></span>
-      </label>
-
-      <button class="primary" :disabled="!canSubmit || sent" @click="submit">{{ sent ? '신청 완료 · 승인 대기중' : '신청 보내기' }}</button>
-      <p v-if="!canSubmit && !sent" class="form-note">메시지 10자 이상, 인증 목표 선택, 규칙 동의가 모두 필요해요.</p>
-    </section>
-  </div>
-
-  <div style="display: flex; justify-content: center; margin-top: 16px">
-    <section class="card chat-pattern" style="width: min(480px, 100%); height: auto; flex-direction: column">
-      <div class="chat-room-head"><b>방장과의 대화 (자동 생성)</b></div>
-      <div class="chat-bubbles" style="overflow: visible">
-        <div class="bubble mine">{{ message }}</div>
-        <div class="bubble">환영해요! 승인 검토 중입니다 :)</div>
-        <span class="badge" :class="sent ? 'warn' : ''" style="align-self: center">{{ sent ? '대기중' : '아직 보내지 않음' }}</span>
-      </div>
-    </section>
-  </div>
+  <ShareSignIn v-if="!session.userId" message="커뮤니티는 로그인한 계정끼리 함께해요. 로그인하면 커뮤니티를 찾고 가입할 수 있어요." />
+  <p v-else-if="status === 'loading'" class="input-field-help" role="status">커뮤니티를 불러오는 중이에요.</p>
+  <section v-else-if="status === 'missing'" class="card">
+    <div class="empty-state" role="status"><p>커뮤니티를 찾을 수 없어요. 비공개이거나 없어진 커뮤니티일 수 있어요.</p><button type="button" class="button-secondary" @click="router.push('/community')">커뮤니티 목록으로</button></div>
+  </section>
+  <section v-else-if="status === 'error'" class="card">
+    <div class="empty-state" role="status"><p>커뮤니티를 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요.</p><button type="button" class="button-secondary" @click="load">다시 시도</button></div>
+  </section>
+  <template v-else-if="community">
+    <SubPageHeader title="가입 신청" :parent="community.title" :fallback="'/community/home?id=' + encodeURIComponent(id)" :tabs="tabs" />
+    <div class="form-pattern">
+      <section class="card form-card">
+        <h2>{{ community.title }} 가입 신청</h2>
+        <template v-if="community.membership === 'PENDING'">
+          <p class="input-field-help" data-state="success" role="status">{{ notice || '가입을 신청했어요. 방장이 승인하면 알림으로 알려 드려요.' }}</p>
+          <button type="button" class="button-secondary" :disabled="busy" :aria-busy="busy ? 'true' : undefined" @click="cancel">{{ busy ? '취소하는 중' : '신청 취소' }}</button>
+        </template>
+        <p v-else-if="community.membership === 'ACTIVE'" class="input-field-help" role="status">이미 이 커뮤니티 회원이에요. 게시판에서 인증 글을 남겨 보세요.</p>
+        <form v-else @submit.prevent="submit">
+          <p v-if="notice" class="input-field-help" data-state="success" role="status">{{ notice }}</p>
+          <p v-if="community.membership === 'REJECTED'" class="input-field-help" role="status">이전 신청은 승인되지 않았어요. 다시 신청할 수 있어요.</p>
+          <label class="input-field">방장에게 남길 말(선택)<textarea v-model="message" maxlength="2000" rows="4" placeholder="어떤 목표로 함께하고 싶은지 적어 주세요" :aria-describedby="helpId"></textarea><span :id="helpId" class="input-field-help">방장의 가입 요청함에 그대로 보여요. 최대 2,000자예요.</span></label>
+          <p v-if="error" class="input-field-help" data-state="error" role="alert">{{ error }}</p>
+          <button type="submit" class="primary" :disabled="busy" :aria-busy="busy ? 'true' : undefined">{{ busy ? '보내는 중' : community.joinPolicy === 'approval' ? '신청 보내기' : '가입하기' }}</button>
+        </form>
+      </section>
+    </div>
+  </template>
 </template>

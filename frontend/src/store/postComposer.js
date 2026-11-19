@@ -3,7 +3,6 @@ import { diaryStore, memoStore } from './writing'
 import { moneyStore } from './money'
 import { ddayStore } from './ddays'
 import { moodCode } from '../utils/mood.mjs'
-import { communityPosts } from './communityPosts'
 import { workRecords } from './workRecords'
 import { addDday } from './ddays'
 import { savePlannerReview } from './plannerReviews'
@@ -11,7 +10,8 @@ import { addDoc, WIKI_SPACES } from './wiki'
 import { localDate, rangeError, routineError, workRecordError } from '../utils/postValidation.mjs'
 import { makeRecurrence, recurrenceError } from '../utils/recurrence.mjs'
 
-export const postKinds = ['일정', '할 일', '루틴', '다이어리', '메모', 'D-Day', '머니로그', '회고', '커뮤니티 글', '업무 기록', '업무 위키']
+// 커뮤니티 글은 서버 게시판(커뮤니티마다 다름)에서 쓴다. 전역 작성 창에서는 뺐다(PR-10 3단계)
+export const postKinds = ['일정', '할 일', '루틴', '다이어리', '메모', 'D-Day', '머니로그', '회고', '업무 기록', '업무 위키']
 export function makePostDraft(kind) {
   const today = localDate()
   return { title: '', body: '', category: kind === '머니로그' ? '식비' : '개인', date: today, startDate: today, endDate: today,
@@ -26,7 +26,7 @@ export function makePostDraft(kind) {
 const validDate = date => typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date) && Number.isFinite(+new Date(date + 'T12:00:00')) && localDate(new Date(date + 'T12:00:00')) === date
 export function postDraftError(kind, draft) {
   if (!postKinds.includes(kind)) return '글 종류를 선택해주세요.'
-  if (['커뮤니티 글', '회고'].includes(kind)) {
+  if (kind === '회고') {
     if (!draft.body.trim()) return '내용을 입력해주세요.'
   } else if (!draft.title.trim()) return '제목을 입력해주세요.'
   if (kind === '일정') return rangeError(draft.startDate, draft.startTime, draft.endDate, draft.endTime) || recurrenceError(draft.recurrence, draft.startDate)
@@ -63,7 +63,6 @@ export async function savePostDraft(kind, draft, progress = null) {
   if (kind === 'D-Day') { await addDday({ title, body, category: draft.category, date: draft.date, notifyDays: [...draft.notifyDays] }); return true }
   if (kind === '머니로그') { await moneyStore.create({ title, body, date: draft.date, amount: draft.type === 'out' ? -draft.amount : draft.amount, type: draft.type, category: draft.type === 'in' ? '수입' : draft.category }); return true }
   if (kind === '회고') savePlannerReview(draft.date, body)
-  if (kind === '커뮤니티 글') insert(communityPosts, { title, body, name: '김지수', time: '방금', auto: false, likes: 0, comments: 0, liked: false })
   if (kind === '업무 위키') addDoc({ title, body, space: draft.space, parentId: draft.parentId })
   if (kind === '업무 기록') {
     const data = { title, body, type: draft.type, owner: draft.owner, projectId: draft.projectId, status: draft.status, startDate: draft.startDate, endDate: draft.endDate, startTime: draft.startTime, endTime: draft.endTime, half: draft.half, leaveDays: draft.type === '반차' ? 0.5 : draft.type === '연차' ? draft.leaveDays : 0 }

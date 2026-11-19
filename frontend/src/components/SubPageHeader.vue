@@ -22,7 +22,8 @@ function goBack() {
   else router.push(props.fallback)
 }
 function isActive(tab) {
-  return route.path === tab.path
+  // 커뮤니티 탭처럼 ?id=를 붙인 경로도 경로 부분으로 비교한다(PR-10 3단계)
+  return route.path === tab.path.split('?')[0]
 }
 </script>
 

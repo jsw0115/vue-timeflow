@@ -120,8 +120,8 @@ public class SocialService {
     }
     public void removeMember(String user, FeatureType type, String id, String target) {
         store.lock(FeatureStore.SYSTEM, type, id);
-        // 초대받은 사람은 수락하지 않고 스스로 거절(삭제)할 수 있다(PR-10 2단계)
-        boolean declining = target.equals(user) && member(type, id, user).map(m -> "INVITED".equals(m.get("status"))).orElse(false);
+        // 초대받은 사람은 수락하지 않고 거절하고(PR-10 2단계), 가입 신청자는 승인 전에 신청을 취소할 수 있다(PR-10 3단계)
+        boolean declining = target.equals(user) && member(type, id, user).map(m -> Set.of("INVITED", "PENDING").contains(m.get("status"))).orElse(false);
         if (!target.equals(user)) require(user, type, id, true); else if (!declining) require(user, type, id, false);
         var member = member(type, id, target).orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND));
         if ("owner".equals(member.get("role"))) throw new ApiException(ErrorCode.CONFLICT, "소유자는 그룹 삭제로만 탈퇴할 수 있습니다.");

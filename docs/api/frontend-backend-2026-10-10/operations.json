@@ -2277,8 +2277,42 @@
     "implementationStatus": "서비스 연결 · 검증 범위 별도",
     "public": false,
     "responseSchema": {
-      "type": "object",
-      "additionalProperties": true
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "maxLength": 36
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "viewer"
+            ]
+          },
+          "status": {
+            "const": "PENDING"
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "nickname": {
+            "type": "string",
+            "maxLength": 80
+          }
+        },
+        "required": [
+          "userId",
+          "role",
+          "status",
+          "nickname"
+        ],
+        "additionalProperties": false
+      },
+      "maxItems": 500,
+      "description": "승인을 기다리는 가입 신청. 방장만 부른다. 신청자는 DELETE /members/{자기 ID}로 승인 전에 신청을 취소할 수 있다."
     },
     "externalBoundary": false
   },
@@ -2351,8 +2385,43 @@
     "implementationStatus": "서비스 연결 · 검증 범위 별도",
     "public": false,
     "responseSchema": {
-      "type": "object",
-      "additionalProperties": true
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "maxLength": 36
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "owner",
+              "editor",
+              "viewer"
+            ]
+          },
+          "status": {
+            "const": "ACTIVE"
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "nickname": {
+            "type": "string",
+            "maxLength": 80
+          }
+        },
+        "required": [
+          "userId",
+          "role",
+          "status",
+          "nickname"
+        ],
+        "additionalProperties": false
+      },
+      "maxItems": 500
     },
     "externalBoundary": false
   },

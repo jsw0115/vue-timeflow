@@ -51,7 +51,7 @@ async function save() {
   if (!result.value) { saving.reset(); return }
   delete progress[kind.value]
   composer.value = false
-  const paths = { '일정': '/events', '할 일': '/tasks', '루틴': '/routines', '다이어리': '/diary', '메모': '/memos', 'D-Day': '/dday', '머니로그': '/money', '회고': '/planner/daily', '커뮤니티 글': '/community/board', '업무 기록': '/work/wbs', '업무 위키': '/work/wiki' }
+  const paths = { '일정': '/events', '할 일': '/tasks', '루틴': '/routines', '다이어리': '/diary', '메모': '/memos', 'D-Day': '/dday', '머니로그': '/money', '회고': '/planner/daily', '업무 기록': '/work/wbs', '업무 위키': '/work/wiki' }
   const query = kind.value === '다이어리' || kind.value === '머니로그' ? { month: draft.value.date.slice(0, 7) } : kind.value === '회고' ? { date: draft.value.date } : {}
   void router.push({ path: paths[kind.value], query })
 }
@@ -63,7 +63,7 @@ async function save() {
     </template>
     <form ref="formRoot" :id="formId" :aria-label="kind + ' 작성'" @submit.prevent="save">
       <p class="form-note">{{ modeMeta(modeState.activeMode).name }} 글양식 · 종류를 바꿔도 작성 중인 내용이 유지돼요.</p>
-      <label v-if="!['커뮤니티 글', '회고'].includes(kind)">제목<input v-model="draft.title" required maxlength="200" placeholder="무엇을 남기고 싶으세요?" :aria-invalid="saving.state.field === 'title' ? 'true' : undefined" :aria-describedby="saving.state.field === 'title' ? formId + '-title-error' : undefined" /><span v-if="saving.state.field === 'title'" :id="formId + '-title-error'" class="input-field-help" data-state="error">{{ saving.state.fieldMessage }}</span></label>
+      <label v-if="kind !== '회고'">제목<input v-model="draft.title" required maxlength="200" placeholder="무엇을 남기고 싶으세요?" :aria-invalid="saving.state.field === 'title' ? 'true' : undefined" :aria-describedby="saving.state.field === 'title' ? formId + '-title-error' : undefined" /><span v-if="saving.state.field === 'title'" :id="formId + '-title-error'" class="input-field-help" data-state="error">{{ saving.state.fieldMessage }}</span></label>
       <EventDateFields v-if="kind === '일정'" :draft="draft" />
       <RepeatSettings v-if="kind === '일정'" v-model="draft.recurrence" :start-date="draft.startDate" />
       <ChecklistEditor v-if="kind === '할 일'" v-model="draft.subtasks" :account-only="storageMode === 'server'" />

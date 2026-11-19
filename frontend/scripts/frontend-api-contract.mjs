@@ -186,6 +186,8 @@ const responseOverrides = {
   'GET /api/share/groups/{id}/preview': array(ref('SharedOccurrence')),
   'GET /api/share/people': object({ id: string(36), nickname: string(80) }, ['id', 'nickname']),
   'GET /api/share/friends': array(object({ id: string(100), senderId: string(36), recipientId: string(36), status: choice('PENDING', 'ACCEPTED'), createdAt: instant, friendId: string(36), friendName: string(80) }, ['id', 'senderId', 'recipientId', 'status', 'createdAt', 'friendId', 'friendName'])),
+  'GET /api/communities/{id}/members': array(object({ userId: string(36), role: choice('owner', 'editor', 'viewer'), status: { const: 'ACTIVE' }, message: string(2000), nickname: string(80) }, ['userId', 'role', 'status', 'nickname'])),
+  'GET /api/communities/{id}/join-requests': { ...array(object({ userId: string(36), role: choice('viewer'), status: { const: 'PENDING' }, message: string(2000), nickname: string(80) }, ['userId', 'role', 'status', 'nickname'])), description: '승인을 기다리는 가입 신청. 방장만 부른다. 신청자는 DELETE /members/{자기 ID}로 승인 전에 신청을 취소할 수 있다.' },
   'GET /api/share/blocks': array(object({ userId: string(36), nickname: string(80) }, ['userId', 'nickname'])),
   'GET /api/share/groups/{id}/members': { ...array(object({ userId: string(36), role: choice('owner', 'editor', 'viewer'), status: choice('ACTIVE', 'INVITED'), message: string(2000), nickname: string(80) }, ['userId', 'role', 'status', 'nickname'])), description: '기본은 활성 멤버. status=invited면 아직 수락하지 않은 초대이고 방장만 부를 수 있다.' },
   'GET /api/record-links': array(object({ kind: choice('task', 'schedule', 'actual'), id: string(100), title: string(200), direction: choice('source', 'target') }, ['kind', 'id', 'title', 'direction'])),
