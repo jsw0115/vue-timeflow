@@ -47,7 +47,9 @@ public class ScheduleService {
     Map<String,Object> history(String user, String id, String from, String to, LocalDate today) {
         var routine = store.get(user, FeatureType.ROUTINE_RECORD, id); LocalDate start = FeatureInput.date(from), end = FeatureInput.date(to);
         if (end.isBefore(start) || ChronoUnit.DAYS.between(start, end) > 366) FeatureInput.fail("조회 기간은 최대 367일입니다.");
-        Map<String,Boolean> logs = new HashMap<>(); for (var row : store.all(user, FeatureType.ROUTINE_COMPLETION)) if (id.equals(row.get("routineId"))) logs.put(row.get("date").toString(), Boolean.TRUE.equals(row.get("completed")));
+        // 화면이 완료를 바꿀 때 보낼 수 있게 그날 수행 기록의 version도 함께 준다(없으면 0, PR-07 5단계)
+        Map<String,Boolean> logs = new HashMap<>(); Map<String,Long> versions = new HashMap<>();
+        for (var row : store.all(user, FeatureType.ROUTINE_COMPLETION)) if (id.equals(row.get("routineId"))) { logs.put(row.get("date").toString(), Boolean.TRUE.equals(row.get("completed"))); versions.put(row.get("date").toString(), ((Number) row.get("version")).longValue()); }
         Set<LocalDate> skipped = RecurrenceRule.skipDates(routine.get("recurrence"));
         // Q-05: 쉬는 날과 반복에 없는 날은 계산에서 빼고, 지난 미완료 회차만 연속 기록을 끊는다. 오늘·미래의 미완료 회차는 아직 놓친 날이 아니다.
         List<Map<String,Object>> rows = new ArrayList<>(); int done = 0, total = 0, rest = 0, streak = 0, best = 0;
@@ -58,7 +60,7 @@ public class ScheduleService {
             else if (completed) { status = "done"; done++; total++; streak++; best = Math.max(best, streak); }
             else if (!day.isBefore(today)) status = "pending";
             else { status = "missed"; total++; streak = 0; }
-            rows.add(Map.of("date", day.toString(), "completed", completed, "status", status));
+            rows.add(Map.of("date", day.toString(), "completed", completed, "status", status, "version", versions.getOrDefault(day.toString(), 0L)));
         }
         return Map.of("routineId", id, "items", rows, "done", done, "total", total, "skipped", rest, "rate", total == 0 ? 0 : Math.round(100.0 * done / total), "streak", streak, "best", best);
     }

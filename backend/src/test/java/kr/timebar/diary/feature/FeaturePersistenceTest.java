@@ -81,6 +81,18 @@ class FeaturePersistenceTest {
         var weekly = Map.of("frequency", "weekly", "interval", 2, "endMode", "count", "count", 3, "weekdays", List.of(1,3));
         assertEquals(List.of(java.time.LocalDate.parse("2026-10-05"), java.time.LocalDate.parse("2026-10-07"), java.time.LocalDate.parse("2026-10-19")), RecurrenceRule.dates("2026-10-05", weekly, java.time.LocalDate.parse("2026-10-01"), java.time.LocalDate.parse("2026-11-01")));
     }
+    /** 이력 항목은 그날 수행 기록의 version을 준다(없으면 0). 새로고침한 화면도 이 version으로 완료를 취소할 수 있다(PR-07 5단계). */
+    @Test void routineHistoryItemsCarryTheCompletionVersionForLaterChanges() {
+        String today = java.time.LocalDate.now(java.time.ZoneId.of("Asia/Seoul")).toString();
+        String id = records.create(user, FeatureType.ROUTINE_RECORD, Map.of("title", "스트레칭", "startDate", today, "time", "07:00", "duration", 5, "days", List.of(0,1,2,3,4,5,6), "goal", Map.of("count", 1, "unit", "회"))).get("id").toString();
+        @SuppressWarnings("unchecked") java.util.function.Supplier<Map<String, Object>> todayItem = () -> ((List<Map<String, Object>>) schedules.history(user, id, today, today).get("items")).get(0);
+        assertEquals(0L, ((Number) todayItem.get().get("version")).longValue(), "기록이 없으면 0");
+        schedules.complete(user, id, today, Map.of("completed", true));
+        assertEquals(1L, ((Number) todayItem.get().get("version")).longValue());
+        schedules.complete(user, id, today, Map.of("completed", false, "version", ((Number) todayItem.get().get("version")).longValue()));
+        assertEquals(false, todayItem.get().get("completed"));
+        assertEquals(2L, ((Number) todayItem.get().get("version")).longValue());
+    }
     @Test void multiDayOccurrencesOverlapVisibleRangeAndRoutineCompletionIsIdempotent() {
         records.create(user, FeatureType.SCHEDULE, Map.of("title", "자정 넘김", "startDate", "2026-10-09", "endDate", "2026-10-10", "startTime", "23:00", "endTime", "01:00"));
         assertEquals(1, schedules.occurrences(user, "2026-10-10", "2026-10-10").size());

@@ -1,4 +1,4 @@
-import { eventStore, taskStore, routines } from './appState'
+import { eventStore, taskStore, routineStore } from './appState'
 import { diaries, memos } from './writing'
 import { moneyEntries } from './money'
 import { communityPosts } from './communityPosts'
@@ -52,7 +52,10 @@ export async function savePostDraft(kind, draft, progress = null) {
     await eventStore.create({ title, body, startDate: draft.startDate, endDate: draft.endDate, startTime: draft.startTime, endTime: draft.endTime, date: draft.startDate + ' ' + draft.startTime, time: draft.startTime, category: draft.category, tag: draft.category, state: '예정', color: draft.color, attendeeIds: [...draft.attendeeIds], recurrence: makeRecurrence(draft.recurrence) })
     return true
   }
-  if (kind === '루틴') insert(routines, { title, body, category: draft.category, startDate: draft.startDate, recurrence: makeRecurrence(draft.recurrence), time: draft.time, duration: draft.duration, days: [...draft.days].sort(), goal: { count: draft.goalCount, unit: draft.goalUnit }, notify: draft.notify, reminderMinutes: draft.reminderMinutes, done: false, streak: 0, best: 0, history: [0, 0, 0, 0, 0, 0, 0], paused: false })
+  if (kind === '루틴') {
+    await routineStore.create({ title, body, category: draft.category, startDate: draft.startDate, recurrence: makeRecurrence(draft.recurrence), time: draft.time, duration: draft.duration, days: [...draft.days].sort(), goal: { count: draft.goalCount, unit: draft.goalUnit }, notify: draft.notify, reminderMinutes: draft.reminderMinutes, done: false, streak: 0, best: 0, history: [0, 0, 0, 0, 0, 0, 0], paused: false })
+    return true
+  }
   if (kind === '다이어리') insert(diaries, { title, body, date: draft.date, mood: draft.mood })
   if (kind === '메모') insert(memos, { title, body, time: localDate(), color: '', actionable: false })
   if (kind === 'D-Day') addDday({ title, body, category: draft.category, date: draft.date, notifyDays: [...draft.notifyDays] })
@@ -72,5 +75,5 @@ export async function savePostDraft(kind, draft, progress = null) {
 
 /** 계정 저장을 지원하는 종류의 지금 저장 방식('server' 또는 'local'). 아직 이 브라우저에만 저장하는 종류는 null이다(PR-07). */
 export function postStorageMode(kind) {
-  return ({ '할 일': taskStore, '일정': eventStore })[kind]?.mode.value ?? null
+  return ({ '할 일': taskStore, '일정': eventStore, '루틴': routineStore })[kind]?.mode.value ?? null
 }

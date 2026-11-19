@@ -3,8 +3,12 @@ import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   routines, openPostComposer, ROUTINE_DAYS, isRoutineToday, routineRate, dayLabel, toggleRoutine,
-  isRestToday, routineRule, routinePlannedDates,
+  isRestToday, routineRule, routinePlannedDates, routineStore,
 } from '../../store/appState'
+import { createSaveState, saveFailureMessage } from '../../features/records/saveState.mjs'
+import SaveStatus from '../../components/SaveStatus.vue'
+import ConflictCompare from '../../components/ConflictCompare.vue'
+import StorageNote from '../../components/StorageNote.vue'
 import { isAutomationOn, automationParam } from '../../store/automations'
 import RepeatSettings from '../../components/RepeatSettings.vue'
 import { makeRecurrence, skipDates, addSkipDates, removeSkipDate, recurrenceError, datesBetween, MAX_EXCEPTIONS } from '../../utils/recurrence.mjs'
@@ -62,6 +66,20 @@ const progress = computed(() => (todayList.value.length ? Math.round((doneCount.
 /* ---------- 만들기 · 수정 ---------- */
 const showModal = ref(false)
 const editingId = ref(null)
+const routineMode = routineStore.mode
+// 수정 창을 연 때의 루틴. 저장은 이 version으로 보내 다른 곳의 변경을 모르고 덮어쓰지 않는다(UF-84)
+const editingBase = ref(null)
+const saving = createSaveState({ fields: { title: ['title', '이름', '제목'], time: ['time', '시간'], goal: ['goal', '목표'], days: ['요일', 'days'] } })
+const conflict = ref(null)
+// 중지·쉬는 날·삭제처럼 창 없이 바로 저장하는 동작의 실패 안내
+const actionMessage = ref('')
+async function quick(run) {
+  actionMessage.value = ''
+  try { await run() } catch (error) {
+    if (error.kind === 'stale') return
+    actionMessage.value = error.kind === 'conflict' ? '다른 곳에서 먼저 바뀌어 최신 내용으로 바꿨어요. 확인한 뒤 다시 시도해 주세요.' : saveFailureMessage(error)
+  }
+}
 const DAY_PRESETS = [
   { label: '매일', days: [0, 1, 2, 3, 4, 5, 6] },
   { label: '평일', days: [1, 2, 3, 4, 5] },
@@ -77,6 +95,9 @@ function on(key) {
 function openModal() { openPostComposer('루틴') }
 function openEdit(r) {
   editingId.value = r.id
+  editingBase.value = { ...r }
+  conflict.value = null
+  saving.reset()
   draft.value = {
     startDate: r.startDate ?? localDate(), recurrence: makeRecurrence(r.recurrence ?? { frequency: 'weekly', weekdays: r.days?.length ? r.days : [0,1,2,3,4,5,6] }),
     title: r.title,
@@ -106,7 +127,7 @@ function applyPreset(p) {
 const validationError = computed(() => routineError(draft.value))
 const canSave = computed(() => !validationError.value)
 
-function saveRoutine() {
+async function saveRoutine() {
   if (!canSave.value) return
   const payload = {
     startDate: draft.value.startDate, recurrence: makeRecurrence(draft.value.recurrence),
@@ -120,33 +141,53 @@ function saveRoutine() {
     goal: { count: draft.value.goalCount, unit: draft.value.goalUnit },
     notify: draft.value.notify,
   }
-  if (editingId.value) {
-    const target = routines.value.find((r) => r.id === editingId.value)
-    if (target) Object.assign(target, payload)
-  } else {
-    routines.value.push({
-      id: Math.max(0, ...routines.value.map((r) => r.id)) + 1,
-      ...payload,
-      done: false,
-      streak: 0,
-      best: 0,
-      history: [0, 0, 0, 0, 0, 0, 0],
-      paused: false,
-    })
-  }
-  showModal.value = false
+  conflict.value = null
+  const result = await saving.run(() => editingId.value
+    ? routineStore.update(editingBase.value, payload)
+    : routineStore.create({ ...payload, done: false, streak: 0, best: 0, history: [0, 0, 0, 0, 0, 0, 0], paused: false }))
+  if (result.ok) { showModal.value = false; return }
+  if (result.error.kind === 'conflict') conflict.value = { latest: { ...(result.error.latest ?? editingBase.value) } }
+}
+const compareRows = computed(() => {
+  if (!conflict.value) return []
+  const latest = conflict.value.latest, mine = draft.value
+  return [
+    { label: '루틴 이름', mine: mine.title.trim(), latest: latest.title },
+    { label: '시작 시간', mine: mine.time + ' · ' + mine.duration + '분', latest: latest.time + ' · ' + (latest.duration ?? 30) + '분' },
+    { label: '목표', mine: mine.goalCount + mine.goalUnit, latest: (latest.goal?.count ?? '') + (latest.goal?.unit ?? '') },
+    { label: '분류', mine: mine.category, latest: latest.category },
+    { label: '반복 시작일', mine: mine.startDate, latest: latest.startDate ?? '' },
+  ]
+})
+// 내 내용으로 다시 저장: 최신 version으로 내 입력을 다시 보낸다. 서버 내용 쓰기: 입력을 최신 값으로 바꾼다
+function keepMine() {
+  editingBase.value = { ...conflict.value.latest }
+  conflict.value = null
+  saveRoutine()
+}
+function useLatest() {
+  const latest = conflict.value.latest
+  editingBase.value = { ...latest }
+  conflict.value = null
+  saving.reset()
+  openEdit(latest)
 }
 function togglePause(r) {
-  r.paused = !r.paused
+  quick(() => routineStore.update(r, { paused: !r.paused }))
 }
 
 /* ---------- 쉬는 날 (UF-134) ---------- */
-const restTarget = ref(null)
+// 저장할 때마다 목록 항목이 최신 값으로 바뀌므로 ID로 찾아 쓴다
+const restTargetId = ref(null)
+const restTarget = computed(() => routines.value.find((r) => r.id === restTargetId.value) ?? null)
 const restFrom = ref('')
 const restTo = ref('')
+const restMessage = ref('')
+const restSaving = ref(false)
 const today = computed(() => localDate())
 function openRest(r) {
-  restTarget.value = r
+  restTargetId.value = r.id
+  restMessage.value = ''
   restFrom.value = today.value
   restTo.value = today.value
 }
@@ -170,19 +211,27 @@ const restError = computed(() => {
 })
 const restUpcoming = computed(() => [...skipDates(restTarget.value?.recurrence)].filter((date) => date >= today.value).sort())
 const restPastCount = computed(() => [...skipDates(restTarget.value?.recurrence)].filter((date) => date < today.value).length)
+async function saveRest(recurrence) {
+  if (restSaving.value) return
+  restSaving.value = true
+  restMessage.value = ''
+  try { await routineStore.update(restTarget.value, { recurrence }) } catch (error) {
+    if (error.kind !== 'stale') restMessage.value = error.kind === 'conflict' ? '다른 곳에서 먼저 바뀌어 최신 내용으로 바꿨어요. 확인한 뒤 다시 시도해 주세요.' : saveFailureMessage(error)
+  } finally { restSaving.value = false }
+}
 function addRest() {
   if (restError.value) return
-  restTarget.value.recurrence = restNextRule.value
+  saveRest(restNextRule.value)
 }
 function removeRest(date) {
-  restTarget.value.recurrence = removeSkipDate(restTarget.value.recurrence, date)
+  saveRest(removeSkipDate(restTarget.value.recurrence, date))
 }
 function restLabel(date) {
   return `${date} (${ROUTINE_DAYS[new Date(date + 'T12:00:00').getDay()]})`
 }
 function removeRoutine(r) {
   if (!window.confirm('‘' + r.title + '’ 루틴을 삭제할까요? 연속 기록도 함께 사라져요.')) return
-  routines.value = routines.value.filter((x) => x.id !== r.id)
+  quick(() => routineStore.remove(r))
 }
 </script>
 
@@ -218,6 +267,8 @@ function removeRoutine(r) {
     </p>
   </div>
 
+  <StorageNote :mode="routineMode" />
+  <p v-if="routineStore.notice.message || actionMessage" class="input-field-help" data-state="error" role="status">{{ routineStore.notice.message || actionMessage }}</p>
   <section class="card" style="margin-bottom: 16px">
     <div style="display: flex; align-items: baseline; gap: 4px; margin-bottom: 10px">
       <b class="figure" style="font-size: 1.5625rem; letter-spacing: -1px">{{ doneCount }}<small>/{{ todayList.length }}</small></b>
@@ -237,17 +288,18 @@ function removeRoutine(r) {
 
   <section class="card list">
     <div class="list-head routine-grid">
-      <span>루틴</span><span>주기</span><span>목표</span><span>연속</span><span>최근 7일</span><span>관리</span>
+      <span>루틴</span><span>주기</span><span>목표</span><span>{{ routineMode === 'server' ? '4주 달성률' : '연속' }}</span><span>최근 7일</span><span>관리</span>
     </div>
     <div class="row routine-grid" v-for="r in visible" :key="r.id" :class="{ 'routine-paused': r.paused }">
       <label>
-        <input type="checkbox" :checked="r.done" :disabled="r.paused || isRestToday(r)" @change="toggleRoutine(r)" />
+        <input type="checkbox" :checked="r.done" :disabled="r.paused || isRestToday(r)" :aria-busy="routineStore.isBusy(r) ? 'true' : undefined" @click.prevent="toggleRoutine(r)" />
         <span :class="{ done: r.done }">{{ r.title }}</span>
         <small style="color: var(--color-muted); margin-left: 6px">{{ r.time }} · {{ r.duration ?? 30 }}분<template v-if="isRestToday(r)"> · 오늘 쉬는 날</template></small>
       </label>
       <span class="tag">{{ dayLabel(r) }}</span>
       <span class="figure">{{ r.goal?.count }}{{ r.goal?.unit }}</span>
-      <span class="figure">{{ r.streak }}일<small style="color: var(--color-muted)"> · 최고 {{ r.best }}</small></span>
+      <span v-if="routineMode === 'server'" class="figure">{{ r.historyLoaded ? r.rate4w + '%' : '–' }}<small style="color: var(--color-muted)"> · 연속 {{ r.historyLoaded ? r.streak : '–' }}일</small></span>
+      <span v-else class="figure">{{ r.streak }}일<small style="color: var(--color-muted)"> · 최고 {{ r.best }}</small></span>
       <span class="week-dots">
         <i v-for="(h, i) in r.history" :key="i" :class="{ on: h }" :title="ROUTINE_DAYS[i]"></i>
         <b class="figure">{{ routineRate(r) }}%</b>
@@ -259,7 +311,9 @@ function removeRoutine(r) {
         <button class="review" style="margin: 0" @click="removeRoutine(r)">삭제</button>
       </span>
     </div>
-    <p v-if="!visible.length" class="empty-state" role="status">조건에 맞는 루틴이 없어요. 검색어나 필터를 바꾸거나 '+ 새 루틴'으로 만들어 보세요.</p>
+    <p v-if="routineMode === 'server' && routineStore.state.loading && !routineStore.state.loaded" class="input-field-help" role="status">루틴을 불러오는 중이에요.</p>
+    <div v-else-if="routineMode === 'server' && routineStore.state.error && !routineStore.state.loaded" class="empty-state" role="status"><p>루틴을 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요.</p><button type="button" class="button-secondary" @click="routineStore.reload()">다시 시도</button></div>
+    <p v-else-if="!visible.length" class="empty-state" role="status">조건에 맞는 루틴이 없어요. 검색어나 필터를 바꾸거나 '+ 새 루틴'으로 만들어 보세요.</p>
   </section>
 
   <Modal v-if="showModal" :title="editingId ? '루틴 수정' : '새 루틴 만들기'" :edit-resource="editingId ? 'routine:' + editingId : ''" wide @close="showModal = false">
@@ -289,14 +343,17 @@ function removeRoutine(r) {
     <label v-if="draft.notify">시작 전 알림 (분)<select v-model.number="draft.reminderMinutes"><option :value="0">시작 시간</option><option :value="5">5분 전</option><option :value="10">10분 전</option><option :value="30">30분 전</option></select></label>
     <label>내용 · 태그 · 멘션<TagMentionInput v-model="draft.body" /></label>
     <p v-if="!canSave" class="form-note">{{ validationError }}</p>
+    <p v-if="saving.state.fieldMessage" class="input-field-help" data-state="error" role="alert">{{ saving.state.fieldMessage }}</p>
+    <ConflictCompare v-if="conflict" :rows="compareRows" :busy="saving.state.status === 'saving'" @keep-mine="keepMine" @use-latest="useLatest" />
+    <SaveStatus :state="saving.state" :mode="routineMode" @retry="saveRoutine" />
 
     <template #footer>
       <button type="button" class="modal-secondary" @click="showModal = false">취소</button>
-      <button class="primary" :disabled="!canSave" @click="saveRoutine">{{ editingId ? '변경 저장' : '루틴 만들기' }}</button>
+      <button class="primary" :disabled="!canSave || !!conflict" :aria-busy="saving.state.status === 'saving' ? 'true' : undefined" @click="saveRoutine">{{ saving.state.status === 'saving' ? '저장하는 중' : editingId ? '변경 저장' : '루틴 만들기' }}</button>
     </template>
   </Modal>
 
-  <Modal v-if="restTarget" :title="'쉬는 날 · ' + restTarget.title" @close="restTarget = null">
+  <Modal v-if="restTarget" :title="'쉬는 날 · ' + restTarget.title" @close="restTargetId = null">
     <p class="form-note" style="margin: 0">쉬는 날은 달성률과 연속 기록 계산에서 빠져요. 하루 쉬어도 연속 기록이 이어지고, 그날은 오늘 목록에 나오지 않아요.</p>
     <div class="form-row rest-range">
       <label style="flex: 1">시작일<input v-model="restFrom" type="date" :min="today" /></label>
@@ -313,10 +370,11 @@ function removeRoutine(r) {
     </ul>
     <p v-else class="empty-state">예정된 쉬는 날이 없어요. 위에서 기간을 고르고 '쉬는 날 추가'를 눌러 보세요.</p>
     <p v-if="restPastCount" class="form-note">지난 쉬는 날 {{ restPastCount }}일은 기록 계산에 그대로 반영돼요.</p>
+    <p v-if="restMessage" class="input-field-help" data-state="error" role="status">{{ restMessage }}</p>
 
     <template #footer>
-      <button type="button" class="modal-secondary" @click="restTarget = null">닫기</button>
-      <button type="button" class="primary" :disabled="!!restError" @click="addRest">쉬는 날 추가</button>
+      <button type="button" class="modal-secondary" @click="restTargetId = null">닫기</button>
+      <button type="button" class="primary" :disabled="!!restError || restSaving" :aria-busy="restSaving ? 'true' : undefined" @click="addRest">{{ restSaving ? '저장하는 중' : '쉬는 날 추가' }}</button>
     </template>
   </Modal>
 </template>

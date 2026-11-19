@@ -4,6 +4,7 @@ import { localDate } from '../utils/postValidation.mjs'
 import { occurrenceDates, skipDates, datesBetween, makeRecurrence } from '../utils/recurrence.mjs'
 import { createTaskStore } from '../features/records/taskStore.mjs'
 import { createScheduleStore } from '../features/records/scheduleStore.mjs'
+import { createRoutineStore } from '../features/records/routineStore.mjs'
 
 export const composer = ref(false)
 
@@ -24,11 +25,16 @@ export const tasks = taskStore.list
  */
 export const ROUTINE_DAYS = ['일', '월', '화', '수', '목', '금', '토']
 
-export const routines = localCollection('routines', [
-  { id: 1, title: '물 2L 마시기', time: '08:00', done: true, category: '건강', days: [0, 1, 2, 3, 4, 5, 6], goal: { count: 8, unit: '잔' }, streak: 12, best: 31, history: [1, 1, 1, 0, 1, 1, 1], paused: false, notify: true },
-  { id: 2, title: '영어 단어 20개', time: '21:00', done: false, category: '공부', days: [1, 2, 3, 4, 5], goal: { count: 20, unit: '개' }, streak: 30, best: 30, history: [1, 1, 1, 1, 1, 0, 0], paused: false, notify: true },
-  { id: 3, title: '하루 회고 5분', time: '22:30', done: false, category: '개인', days: [0, 1, 2, 3, 4, 5, 6], goal: { count: 1, unit: '회' }, streak: 3, best: 14, history: [1, 0, 1, 1, 0, 1, 1], paused: false, notify: false },
-])
+// 시연 기본 루틴. origin: 'demo'로 표시해 로그인할 때 계정으로 옮기지 않는다(Q-11)
+export const ROUTINE_SEEDS = [
+  { id: 1, title: '물 2L 마시기', time: '08:00', done: true, category: '건강', days: [0, 1, 2, 3, 4, 5, 6], goal: { count: 8, unit: '잔' }, streak: 12, best: 31, history: [1, 1, 1, 0, 1, 1, 1], paused: false, notify: true, origin: 'demo' },
+  { id: 2, title: '영어 단어 20개', time: '21:00', done: false, category: '공부', days: [1, 2, 3, 4, 5], goal: { count: 20, unit: '개' }, streak: 30, best: 30, history: [1, 1, 1, 1, 1, 0, 0], paused: false, notify: true, origin: 'demo' },
+  { id: 3, title: '하루 회고 5분', time: '22:30', done: false, category: '개인', days: [0, 1, 2, 3, 4, 5, 6], goal: { count: 1, unit: '회' }, streak: 3, best: 14, history: [1, 0, 1, 1, 0, 1, 1], paused: false, notify: false, origin: 'demo' },
+]
+const localRoutines = localCollection('routines', ROUTINE_SEEDS.map(routine => ({ ...routine, goal: { ...routine.goal }, days: [...routine.days], history: [...routine.history] })))
+/** 루틴. 로그인하면 계정의 서버 목록(/api/routine-records)과 이력, 로그아웃이면 이 브라우저의 목록이다(PR-07 5단계). */
+export const routineStore = createRoutineStore({ local: localRoutines })
+export const routines = routineStore.list
 
 /** 오늘 요일에 해당하는 루틴인지. 오늘을 쉬는 날로 정했으면 오늘 루틴이 아니다(UF-134). */
 export function isRoutineToday(routine, weekday = new Date().getDay()) {
@@ -70,14 +76,9 @@ export function dayLabel(routine) {
   return d.slice().sort().map((x) => ROUTINE_DAYS[x]).join('·')
 }
 /** 체크할 때 연속 기록도 함께 갱신한다 */
+/** 오늘 완료 토글. 로그인 상태는 서버 수행 기록에 저장하고 이력을 다시 불러온다(PR-07 5단계). */
 export function toggleRoutine(routine) {
-  routine.done = !routine.done
-  if (routine.done) {
-    routine.streak += 1
-    routine.best = Math.max(routine.best ?? 0, routine.streak)
-  } else {
-    routine.streak = Math.max(0, routine.streak - 1)
-  }
+  return routineStore.toggleToday(routine)
 }
 
 // 시연 기본 일정. origin: 'demo'로 표시해 로그인할 때 계정으로 옮기지 않는다(Q-11)
