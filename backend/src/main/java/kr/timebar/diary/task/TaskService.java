@@ -63,6 +63,13 @@ public class TaskService {
         return TaskResponse.from(entity);
     }
 
+    /** 멱등 키가 있으면 응답을 잃어 다시 보낸 같은 수정에 처음 결과의 할 일을 돌려준다(PR-12). 키는 할 일 ID와 함께 해시한다. */
+    @Transactional
+    public TaskResponse update(String userId, String taskId, TaskRequest request, String idempotencyKey) {
+        var body = new java.util.LinkedHashMap<String, Object>(); body.put("id", taskId); body.put("request", request);
+        return idempotency.apply(userId, idempotencyKey, body, 200, () -> update(userId, taskId, request), TaskResponse::id, id -> detail(userId, id));
+    }
+
     @Transactional
     public void delete(String userId, String taskId, Long version) {
         // Checklist changes lock the same parent, so deletion cannot race an item insertion.

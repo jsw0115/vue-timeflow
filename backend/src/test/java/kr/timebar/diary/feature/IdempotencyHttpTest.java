@@ -89,6 +89,32 @@ class IdempotencyHttpTest {
         assertEquals(2, store.all(owner, FeatureType.MEMO).size(), "키가 없으면 지금처럼 매번 만든다");
     }
 
+    /** UT-182·UT-183 서버 전제: 오프라인 대기열이 만든 뒤 두 번 고치고, 각 요청의 응답을 잃어 같은 키로 다시 보내도 한 건이고 마지막 수정이 남는다(PR-12). */
+    @Test void replayedCreateAndUpdatesKeepOneMemoInOrder() throws Exception {
+        var created = Map.<String, Object>of("title", "지하철 메모", "body", "초안");
+        String id = send("memos", "offline-create-1", created, 201);
+        assertEquals(id, send("memos", "offline-create-1", created, 201));
+        for (int step = 1; step <= 2; step++) {
+            var body = Map.<String, Object>of("title", "지하철 메모", "body", "수정 " + step, "version", step);
+            String key = "offline-update-" + step;
+            var first = mapper.readTree(put("memos/" + id, key, body, 200));
+            var again = mapper.readTree(put("memos/" + id, key, body, 200));
+            assertEquals(step + 1, first.path("data").path("version").asInt());
+            assertEquals(first.path("data"), again.path("data"), "같은 키의 재전송은 409가 아니라 처음 결과를 돌려준다");
+        }
+        assertEquals(1, store.all(owner, FeatureType.MEMO).size());
+        assertEquals("수정 2", store.get(owner, FeatureType.MEMO, id).get("body"));
+        // 키 없이 보낸 같은 오래된 수정은 지금처럼 409이고, 같은 키로 다른 기록을 고치면 409다
+        put("memos/" + id, null, Map.of("title", "지하철 메모", "body", "수정 1", "version", 1), 409);
+        String other = send("memos", null, Map.of("title", "다른 메모"), 201);
+        put("memos/" + other, "offline-update-1", Map.of("title", "지하철 메모", "body", "수정 1", "version", 1), 409);
+    }
+    private String put(String path, String key, Map<String, Object> body, int expected) throws Exception {
+        var request = org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/" + path).contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsString(body));
+        if (key != null) request.header(IdempotencyKeys.HEADER, key);
+        return mvc.perform(request).andExpect(status().is(expected)).andReturn().getResponse().getContentAsString();
+    }
+
     @Test void sameKeyWithDifferentBodyIsRejectedAndInvalidKeysAreBadRequests() throws Exception {
         send("diaries", "local:diary:1", Map.of("title", "일기", "date", "2026-11-19"), 201);
         send("diaries", "local:diary:1", Map.of("title", "다른 일기", "date", "2026-11-19"), 409);

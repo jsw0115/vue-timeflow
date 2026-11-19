@@ -33,6 +33,11 @@ public class RecordService {
     public Map<String, Object> update(String user, FeatureType type, String id, Map<String, Object> body) {
         return store.replace(user, type, id, FeatureInput.version(body), FeatureInput.validate(type, body));
     }
+    /** 멱등 키가 있으면 응답을 잃어 다시 보낸 같은 수정에 처음 결과의 기록을 돌려준다(PR-12). 키는 수정할 기록 ID와 함께 해시한다. */
+    public Map<String, Object> update(String user, FeatureType type, String id, Map<String, Object> body, String idempotencyKey) {
+        var request = new LinkedHashMap<String, Object>(); request.put("id", id); request.put("body", body);
+        return idempotency.apply(user, idempotencyKey, request, 200, () -> update(user, type, id, body), row -> row.get("id").toString(), recordId -> get(user, type, recordId));
+    }
     public void delete(String user, FeatureType type, String id, long version) { store.delete(user, type, id, version); }
 
     public Map<String, Object> saveDate(String user, FeatureType type, String date, Map<String, Object> body) {

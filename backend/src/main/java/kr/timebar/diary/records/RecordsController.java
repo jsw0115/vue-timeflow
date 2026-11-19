@@ -38,7 +38,7 @@ public class RecordsController {
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<?> memoCreate(@RequestHeader(value="Idempotency-Key", required=false) String key, @RequestBody Map<String,Object> body) { return ApiResponse.ok(records.create(CurrentUser.id(), FeatureType.MEMO, body, key)); }
     @PutMapping("/memos/{id}")
-    public ApiResponse<?> memoUpdate(@PathVariable String id, @RequestBody Map<String,Object> body) { return ApiResponse.ok(records.update(CurrentUser.id(), FeatureType.MEMO, id, body)); }
+    public ApiResponse<?> memoUpdate(@PathVariable String id, @RequestHeader(value="Idempotency-Key", required=false) String key, @RequestBody Map<String,Object> body) { return ApiResponse.ok(records.update(CurrentUser.id(), FeatureType.MEMO, id, body, key)); }
     @DeleteMapping("/memos/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void memoDelete(@PathVariable String id, @RequestParam long version) { records.delete(CurrentUser.id(), FeatureType.MEMO, id, version); }

@@ -165,6 +165,19 @@ class TaskVersionTest {
         } finally { executor.shutdownNow(); }
     }
 
+    /** 오프라인 대기열이 응답을 잃은 수정을 같은 키로 다시 보내면 409 대신 처음 결과의 할 일을 돌려준다(PR-12, UT-182). */
+    @Test void replayedUpdateWithTheSameKeyReturnsTheFirstResult(@Autowired DataSource source) {
+        new JdbcTemplate(source).execute("CREATE TABLE IF NOT EXISTS idempotency_key (owner_id VARCHAR(36) NOT NULL, idem_key VARCHAR(100) NOT NULL, request_hash CHAR(64) NOT NULL, status_code INT NOT NULL, resource_id VARCHAR(100) NOT NULL, created_at TIMESTAMP(6) NOT NULL, PRIMARY KEY (owner_id, idem_key))");
+        TaskResponse created = tasks.create(owner, input("오프라인 할 일", null));
+        TaskResponse first = tasks.update(owner, created.id(), input("지하철에서 고침", 1L), "offline-task-update-1");
+        TaskResponse again = tasks.update(owner, created.id(), input("지하철에서 고침", 1L), "offline-task-update-1");
+        assertEquals(2L, first.version());
+        assertEquals(first.id(), again.id());
+        assertEquals(2L, again.version());
+        assertEquals(1, tasks.list(owner).size());
+        assertEquals(ErrorCode.CONFLICT, assertThrows(ApiException.class, () -> tasks.update(owner, created.id(), input("다른 내용", 1L), "offline-task-update-1")).errorCode());
+    }
+
     /** 로컬 자료 이전처럼 같은 멱등 키로 다시 만들면 처음 할 일을 돌려주고, 다른 내용이면 409다(PR-07 3단계, Q-13). */
     @Test void createWithTheSameIdempotencyKeyReturnsTheFirstTask(@Autowired DataSource source) throws Exception {
         // 이 설정의 H2는 MySQL 모드가 아니어서 V9의 ENGINE 절 없이 같은 표를 만든다(V9 자체는 IdempotencyHttpTest가 MySQL 모드로 적용한다)

@@ -4464,6 +4464,12 @@
         "required": true
       },
       {
+        "name": "Idempotency-Key",
+        "type": "String",
+        "location": "header",
+        "required": false
+      },
+      {
         "name": "body",
         "type": "Map<String,Object>",
         "location": "body",
@@ -8068,6 +8074,12 @@
         "type": "String",
         "location": "path",
         "required": true
+      },
+      {
+        "name": "Idempotency-Key",
+        "type": "String",
+        "location": "header",
+        "required": false
       },
       {
         "name": "request",

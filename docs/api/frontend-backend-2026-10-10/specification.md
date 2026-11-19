@@ -1608,6 +1608,7 @@ file을 multipart/form-data로 전달한다. boundary는 HTTP 클라이언트가
 | 위치 | 이름 | 타입 | 필수 | 기본값 |
 |---|---|---|---|---|
 | path | id | String | 예 | 없음 |
+| header | Idempotency-Key | String | 아니오 | 없음 |
 
 | 본문 필드 | 타입 | 필수 | 제약 |
 |---|---|---|---|
@@ -2901,6 +2902,7 @@ JSON 최대 깊이 8, 객체 100필드, 배열 500항목, 저장 크기 128 KiB.
 | 위치 | 이름 | 타입 | 필수 | 기본값 |
 |---|---|---|---|---|
 | path | taskId | String | 예 | 없음 |
+| header | Idempotency-Key | String | 아니오 | 없음 |
 
 | 본문 필드 | 타입 | 필수 | 제약 |
 |---|---|---|---|

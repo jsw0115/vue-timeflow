@@ -37,8 +37,9 @@ public class TaskController {
     }
 
     @PutMapping("/{taskId}")
-    public ApiResponse<TaskResponse> update(@PathVariable String taskId, @Valid @RequestBody TaskRequest request) {
-        return ApiResponse.ok(taskService.update(CurrentUser.id(), taskId, request), "수정했어요.");
+    public ApiResponse<TaskResponse> update(@PathVariable String taskId, @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
+            @Valid @RequestBody TaskRequest request) {
+        return ApiResponse.ok(taskService.update(CurrentUser.id(), taskId, request, idempotencyKey), "수정했어요.");
     }
 
     @DeleteMapping("/{taskId}")

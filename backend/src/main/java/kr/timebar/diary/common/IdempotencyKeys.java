@@ -43,6 +43,14 @@ public class IdempotencyKeys {
      * 같은 키를 동시에 처리하면 늦은 쪽은 기본 키 충돌로 409가 되고 그 트랜잭션의 생성도 되돌린다.
      */
     public <T> T create(String owner, String key, Object request, Supplier<T> create, Function<T, String> idOf, Function<String, T> replay) {
+        return apply(owner, key, request, 201, create, idOf, replay);
+    }
+
+    /**
+     * 생성이 아닌 변경(수정)에도 같은 규칙을 쓴다. 응답을 잃어 같은 키로 다시 보낸 수정은 version 충돌(409) 대신 처음 결과의 기록을 돌려준다(PR-12 오프라인 재전송).
+     * 처음 요청이 실패했으면 키가 남지 않으므로 다시 보내면 그때 다시 검사한다.
+     */
+    public <T> T apply(String owner, String key, Object request, int statusCode, Supplier<T> create, Function<T, String> idOf, Function<String, T> replay) {
         if (key == null) return create.get();
         if (!KEY.matcher(key).matches()) {
             throw new ApiException(ErrorCode.VALIDATION_FAILED, "Idempotency-Key는 영문·숫자와 : _ . - 로 1~100자여야 합니다.");
@@ -57,7 +65,7 @@ public class IdempotencyKeys {
         T created = create.get();
         try {
             jdbc.update("INSERT INTO idempotency_key(owner_id, idem_key, request_hash, status_code, resource_id, created_at) VALUES (?,?,?,?,?,?)",
-                    owner, key, hash, 201, idOf.apply(created), Timestamp.from(Instant.now()));
+                    owner, key, hash, statusCode, idOf.apply(created), Timestamp.from(Instant.now()));
         } catch (DuplicateKeyException e) {
             throw new ApiException(ErrorCode.CONFLICT, "같은 요청을 처리하는 중입니다. 잠시 후 다시 시도해주세요.");
         }
