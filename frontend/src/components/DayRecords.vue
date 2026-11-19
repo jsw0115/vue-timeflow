@@ -5,6 +5,8 @@ import { session } from '../features/auth/session.js'
 import { apiRequest } from '../features/auth/apiRequest.js'
 import { events } from '../store/appState'
 import { eventOccurrences } from '../utils/recurrence.mjs'
+import { localDate } from '../utils/postValidation.mjs'
+import { dayBoundary, dayRange } from '../features/records/dayBoundary.mjs'
 
 const props = defineProps({ date: { type: String, required: true } })
 const recordings = ref({ status: 'idle', items: [] })
@@ -22,14 +24,19 @@ async function load() {
 }
 watch(() => session.userId, load, { immediate: true })
 
-const schedules = computed(() => (/^\d{4}-\d{2}-\d{2}$/.test(props.date) ? eventOccurrences(events.value, props.date, props.date) : []))
-// 이 브라우저 시간대의 그날 0시~다음 날 0시와 겹치는 완료 기록. 자정을 넘는 기록은 두 날짜에 모두 보인다
-const actuals = computed(() => {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(props.date)) return []
-  const begin = new Date(props.date + 'T00:00:00'), end = new Date(begin)
-  end.setDate(end.getDate() + 1)
-  return recordings.value.items.filter((row) => row.state === 'COMPLETED' && Date.parse(row.startedAt) < +end && Date.parse(row.endedAt) > +begin)
+// 플래너와 같은 하루(계정의 하루 시작 시각부터 다음 날 같은 시각 직전, 이 브라우저 시간대)를 쓴다(UF-95)
+const valid = computed(() => /^\d{4}-\d{2}-\d{2}$/.test(props.date))
+const day = computed(() => dayRange(props.date, dayBoundary.state.startHour))
+const schedules = computed(() => {
+  if (!valid.value) return []
+  const next = new Date(props.date + 'T12:00:00'); next.setDate(next.getDate() + 1)
+  return eventOccurrences(events.value, props.date, localDate(next)).filter((o) => {
+    const start = +new Date(o.startDate + 'T' + o.startTime + ':00'), end = +new Date(o.endDate + 'T' + o.endTime + ':00')
+    return start < day.value.end && end > day.value.start
+  })
 })
+// 자정을 넘는 기록은 두 날짜에 모두 보인다
+const actuals = computed(() => (valid.value ? recordings.value.items.filter((row) => row.state === 'COMPLETED' && Date.parse(row.startedAt) < day.value.end && Date.parse(row.endedAt) > day.value.start) : []))
 const clock = (iso) => new Date(iso).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })
 </script>
 

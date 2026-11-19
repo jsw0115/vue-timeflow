@@ -10,6 +10,7 @@ import { localDate } from '../../utils/postValidation.mjs'
 import { useRecording } from '../../features/recording/useRecording.js'
 import { recordingSeconds } from '../../features/recording/recordingClient.mjs'
 import LinkedRecords from '../../components/LinkedRecords.vue'
+import { dayBoundary, dayRange } from '../../features/records/dayBoundary.mjs'
 
 const router = useRouter()
 const route = useRoute()
@@ -28,23 +29,35 @@ function clock(sec) {
 
 /* 회고 — 저장하면 날짜별로 보관된다 */
 const reviewDate = computed(() => localDate(cursor.value))
-const dayEvents = computed(() => eventOccurrences(events.value, reviewDate.value, reviewDate.value))
-const dayRecords = computed(() => {
-  const begin = new Date(reviewDate.value + 'T00:00:00'), end = new Date(begin)
-  end.setDate(end.getDate() + 1)
-  return records.value.filter(row => row.state === 'COMPLETED' && Date.parse(row.startedAt) < +end && Date.parse(row.endedAt) >= +begin)
-})
+// 하루는 계정의 하루 시작 시각부터 다음 날 같은 시각 직전까지다(UF-95). 로그아웃 상태는 자정 기준
+const startHour = computed(() => dayBoundary.state.startHour)
+const day = computed(() => dayRange(reviewDate.value, startHour.value))
+// 24시간 보기(UF-94)는 그 하루 전체를, 기본 보기는 08~23시를 그린다. 고른 보기는 이 브라우저에 남긴다
+const FULL_DAY_KEY = 'timebar.planner.fullDay.v1'
+const fullDay = ref((() => { try { return localStorage.getItem(FULL_DAY_KEY) === '1' } catch { return false } })())
+watch(fullDay, (value) => { try { localStorage.setItem(FULL_DAY_KEY, value ? '1' : '0') } catch { /* 저장하지 못해도 이번 화면에는 적용된다 */ } })
+const viewRange = computed(() => (fullDay.value ? day.value : { start: +new Date(reviewDate.value + 'T08:00:00'), end: +new Date(reviewDate.value + 'T23:00:00') }))
+const hourLabels = computed(() => (fullDay.value
+  ? Array.from({ length: 24 }, (_, i) => String((startHour.value + i) % 24).padStart(2, '0'))
+  : ['08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22']))
+const nextDate = computed(() => { const d = new Date(reviewDate.value + 'T12:00:00'); d.setDate(d.getDate() + 1); return localDate(d) })
+const span = (event) => ({ start: +new Date(event.startDate + 'T' + event.startTime + ':00'), end: +new Date(event.endDate + 'T' + event.endTime + ':00') })
+// 하루 시작이 0시가 아니면 다음 날 새벽 회차도 이 날에 들어온다
+const dayEvents = computed(() => eventOccurrences(events.value, reviewDate.value, nextDate.value).filter((event) => { const t = span(event); return t.start < day.value.end && t.end > day.value.start }))
+// 자정을 넘는 기록은 두 날짜에 모두 보이고 원본 ID는 하나다(UF-94)
+const dayRecords = computed(() => records.value.filter(row => row.state === 'COMPLETED' && Date.parse(row.startedAt) < day.value.end && Date.parse(row.endedAt) > day.value.start))
 const selectedRecord = computed(() => records.value.find(row => row.id === route.query.recording))
-function actualStyle(row) {
-  const begin = +new Date(reviewDate.value + 'T08:00:00'), end = +new Date(reviewDate.value + 'T23:00:00')
-  const start = Math.max(begin, Date.parse(row.startedAt)), finish = Math.min(end, Date.parse(row.endedAt))
-  return { display: finish < start ? 'none' : undefined, top: Math.max(0, (start - begin) / (end - begin) * 100) + '%', height: Math.max(2, (finish - start) / (end - begin) * 100) + '%' }
+function blockStyle(from, to) {
+  const { start: begin, end } = viewRange.value
+  const start = Math.max(begin, from), finish = Math.min(end, to)
+  return { display: finish <= start ? 'none' : undefined, top: Math.max(0, (start - begin) / (end - begin) * 100) + '%', height: Math.max(2, (finish - start) / (end - begin) * 100) + '%' }
 }
+const actualStyle = (row) => blockStyle(Date.parse(row.startedAt), Date.parse(row.endedAt))
 function planStyle(event) {
-  const minutes = time => Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5))
-  const start = event.startDate < reviewDate.value ? 480 : Math.max(480, minutes(event.startTime)), end = event.endDate > reviewDate.value ? 1380 : Math.min(1380, minutes(event.endTime))
-  return { top: Math.max(0, (start - 480) / 900 * 100) + '%', height: Math.max(2, (end - start) / 900 * 100) + '%', background: event.color }
+  const t = span(event)
+  return { ...blockStyle(t.start, t.end), background: event.color }
 }
+const browserZone = Intl.DateTimeFormat().resolvedOptions().timeZone
 const reviewText = ref('')
 watch(() => [reviewDate.value, plannerReviews.value.find(item => item.id === reviewDate.value)?.body], ([date]) => { reviewText.value = plannerReviews.value.find(item => item.id === date)?.body || '' }, { immediate: true })
 </script>
@@ -63,8 +76,14 @@ watch(() => [reviewDate.value, plannerReviews.value.find(item => item.id === rev
         <div><h3>오늘의 타임바</h3><p>계획과 실제를 색으로 기록해요</p></div>
         <div class="tabs"><button v-for="v in ['Actual', 'Plan', '모두']" :key="v" :class="{ selected: view === v }" @click="view = v">{{ v }}</button></div>
       </div>
-      <div class="timeline">
-        <div class="hours"><small v-for="h in ['08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22']" :key="h">{{ h }}:00</small></div>
+      <div class="segmented-tab planner-range" role="group" aria-label="시간 범위">
+        <button type="button" :aria-pressed="!fullDay" @click="fullDay = false">08~23시</button>
+        <button type="button" :aria-pressed="fullDay" @click="fullDay = true">24시간</button>
+      </div>
+      <p v-if="startHour" class="form-note">하루를 <span class="figure">{{ String(startHour).padStart(2, '0') }}:00</span>에 시작해요. 그 전 기록은 전날에 들어가요.</p>
+      <p v-if="dayBoundary.state.timeZone && dayBoundary.state.timeZone !== browserZone" class="form-note">계정 시간대(<span class="figure">{{ dayBoundary.state.timeZone }}</span>)와 이 브라우저 시간대(<span class="figure">{{ browserZone }}</span>)가 달라요. 플래너는 이 브라우저 시간대로 그리고, 통계는 계정 시간대로 나눠요.</p>
+      <div class="timeline" :class="{ 'full-day': fullDay }">
+        <div class="hours"><small v-for="h in hourLabels" :key="h">{{ h }}:00</small></div>
         <div class="grid">
           <div v-for="event in dayEvents" v-show="view !== 'Actual'" :key="event.occurrenceKey" class="plan" :style="planStyle(event)">계획 · {{ event.title }}</div>
           <div v-for="row in dayRecords" :key="row.id" v-show="view !== 'Plan'" class="block" :style="actualStyle(row)"><b>{{ row.title }}</b><small>실제 기록 · {{ clock(recordingSeconds(row)) }}</small></div>
@@ -107,3 +126,9 @@ watch(() => [reviewDate.value, plannerReviews.value.find(item => item.id === rev
     </section>
   </div>
 </template>
+
+<style scoped>
+.planner-range { margin-top: var(--space-lg); width: fit-content; }
+/* 기본 보기와 같은 시간당 31px 격자로 24시간을 그린다 */
+.timeline.full-day { height: calc(24 * 31px); }
+</style>

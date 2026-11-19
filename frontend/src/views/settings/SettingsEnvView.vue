@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { modeState, modeMeta } from '../../store/modeProfiles'
 import { appearance, DENSITIES, FONT_SIZES } from '../../store/appearance'
+import DayBoundarySettings from '../../components/DayBoundarySettings.vue'
 
 const router = useRouter()
 const modes = ['J', 'P', 'B']
@@ -69,6 +70,8 @@ function save() {
       <input type="checkbox" v-model="appearance.reduceMotion" />
       <span style="flex: 1"><b>동작 줄이기</b><small>전환 효과와 애니메이션을 최소화해요</small></span>
     </label>
+
+    <DayBoundarySettings />
 
     <div class="section-label" style="margin-top: 22px">기본값</div>
     <label>시작 화면<select v-model="startScreen"><option>홈 대시보드</option><option>플래너</option><option>할 일</option><option>통계 보드</option></select></label>
