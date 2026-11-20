@@ -6,6 +6,7 @@ import { moodLabel } from '../../utils/mood.mjs'
 import { openPostComposer } from '../../store/appState'
 import { localDate } from '../../utils/postValidation.mjs'
 import RichText from '../../components/RichText.vue'
+import PageActions from '../../components/PageActions.vue'
 const router = useRouter()
 const route = useRoute()
 const month = ref(localDate().slice(0, 7))
@@ -20,7 +21,7 @@ const dayEntries = day => visible.value.filter(d => Number(d.date.slice(-2)) ===
   <div class="page-tools">
     <label>기록 월<input type="month" v-model="month" /></label><span></span>
     <button class="review" @click="view = view === '목록' ? '캘린더' : '목록'">{{ view === '목록' ? '캘린더 보기' : '목록 보기' }}</button>
-    <button class="primary" @click="openPostComposer('다이어리')">다이어리 작성</button>
+    <PageActions><button class="primary" @click="openPostComposer('다이어리')">다이어리 작성</button></PageActions>
   </div>
   <section v-if="view === '캘린더' && month" class="card">
     <div class="diary-month-grid">

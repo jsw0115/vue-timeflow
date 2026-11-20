@@ -1,4 +1,5 @@
 <script setup>
+import AppIcon from '../../components/icons/AppIcon.vue'
 import { computed, ref, watch, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import { diaries, diaryStore } from '../../store/writing'
@@ -12,6 +13,7 @@ import { events } from '../../store/appState'
 import TagMentionInput from '../../components/TagMentionInput.vue'
 import EditPresence from '../../components/EditPresence.vue'
 import DayRecords from '../../components/DayRecords.vue'
+import PageActions from '../../components/PageActions.vue'
 
 const written = [1, 4, 6, 8, 9, 10, 12, 13, 14, 16, 17, 18, 20, 21, 24]
 
@@ -149,8 +151,8 @@ function linkPlannerItem(title) {
   <div class="page-tools">
     <span></span>
     <input ref="fileInput" type="file" accept="image/*" multiple hidden @change="onPhoto" />
-    <button class="icon" title="사진 첨부" aria-label="사진 첨부" @click="pickPhoto">📷</button>
-    <button class="primary" :disabled="!isDirty || !entryTitle.trim() || !entryDate || !!conflict" :aria-busy="saving.state.status === 'saving' ? 'true' : undefined" @click="save">{{ saving.state.status === 'saving' ? '저장하는 중' : !entryId || isDirty ? '저장하기' : '저장됨' }}</button>
+    <button type="button" class="icon-button" title="사진 첨부" aria-label="사진 첨부" @click="pickPhoto"><AppIcon name="image" /></button>
+    <PageActions><button class="primary" :disabled="!isDirty || !entryTitle.trim() || !entryDate || !!conflict" :aria-busy="saving.state.status === 'saving' ? 'true' : undefined" @click="save">{{ saving.state.status === 'saving' ? '저장하는 중' : !entryId || isDirty ? '저장하기' : '저장됨' }}</button></PageActions>
   </div>
   <StorageNote :mode="diaryMode" />
   <p v-if="saving.state.fieldMessage" class="input-field-help" data-state="error" role="alert">{{ saving.state.fieldMessage }}</p>
@@ -160,8 +162,9 @@ function linkPlannerItem(title) {
     <section class="card editor">
       <EditPresence v-if="entryId" :resource="'diary:' + entryId" />
       <div class="head">
-        <span class="pill warm">맑음 ☀ · 서울</span>
-        <button :class="{ 'chip-on': highlighted }" @click="toggleHighlight">{{ highlighted ? '★ 하이라이트' : '☆ 하이라이트로 저장' }}</button>
+        <!-- 날씨 연동이 없어 고정 문구('맑음 · 서울')를 보이던 칩을 뺐다(DESIGN.md 1장 신뢰) -->
+        <span></span>
+        <button type="button" :class="{ 'chip-on': highlighted }" :aria-pressed="highlighted" @click="toggleHighlight">{{ highlighted ? '하이라이트로 저장됨' : '하이라이트로 저장' }}</button>
       </div>
       <div class="form-row"><label>기록 날짜<input type="date" v-model="entryDate" /></label><label>제목<input v-model="entryTitle" placeholder="오늘의 한 줄" maxlength="200" /></label></div>
       <p v-if="photos.length" class="form-note">사진은 미리보기 전용이며 저장되지 않습니다.</p>
@@ -183,7 +186,7 @@ function linkPlannerItem(title) {
       <label style="display: block; font-size: 0.8125rem; font-weight: 600; margin-top: 15px">태그</label>
       <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px">
         <span class="tag" v-for="t in tags" :key="t">#{{ t }} <a style="cursor: pointer; font-weight: 700" @click="removeTag(t)">×</a></span>
-        <input v-model="tagInput" @keydown.enter.prevent="addTag" placeholder="태그 입력 후 Enter" style="border: 1px solid var(--color-hairline); border-radius: var(--radius-sm); padding: 4px 8px; width: 140px; background: var(--color-canvas)" />
+        <input v-model="tagInput" @keydown.enter.prevent="addTag" placeholder="태그 입력 후 Enter" style="border: 1px solid var(--color-hairline); border-radius: var(--radius-sm); padding: 4px 8px; width: 140px; background: var(--color-card)" />
       </div>
       <DayRecords :date="entryDate" />
     </section>

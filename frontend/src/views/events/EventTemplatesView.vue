@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import Modal from '../../components/Modal.vue'
 import ListFilterBar from '../../components/ListFilterBar.vue'
+import PageActions from '../../components/PageActions.vue'
 
 /** 일정 템플릿 — 자주 쓰는 일정을 저장했다가 새 일정으로 바로 만든다. */
 const router = useRouter()
@@ -75,10 +76,9 @@ function alarmLabel(min) {
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 1rem">일정 템플릿</b>
     <span class="form-note" style="margin: 0">자주 만드는 일정을 저장해두세요</span>
     <span></span>
-    <button class="primary" @click="openAdd">+ 템플릿 저장</button>
+    <PageActions><button class="primary" @click="openAdd">+ 템플릿 저장</button></PageActions>
   </div>
 
   <ListFilterBar

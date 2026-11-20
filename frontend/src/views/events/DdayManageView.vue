@@ -6,6 +6,7 @@ import ListFilterBar from '../../components/ListFilterBar.vue'
 import { ddays, isPast, togglePin, removeDday, notifyLabel, ddayNotice, ddayStore } from '../../store/ddays'
 import { saveFailureMessage } from '../../features/records/saveState.mjs'
 import StorageNote from '../../components/StorageNote.vue'
+import PageActions from '../../components/PageActions.vue'
 const ddayMode = ddayStore.mode
 
 /**
@@ -57,10 +58,9 @@ async function remove(d) {
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 1rem">D-Day 관리</b>
     <span class="form-note" style="margin: 0">D-Day 화면과 같은 목록이에요</span>
     <span></span>
-    <button class="primary" @click="openModal">+ 새 D-Day</button>
+    <PageActions><button class="primary" @click="openModal">+ 새 D-Day</button></PageActions>
   </div>
   <StorageNote :mode="ddayMode" />
   <p v-if="ddayNotice.message" class="input-field-help" data-state="error" role="status">{{ ddayNotice.message }}</p>

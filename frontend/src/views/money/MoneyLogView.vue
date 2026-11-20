@@ -10,6 +10,7 @@ import { localDate } from '../../utils/postValidation.mjs'
 import { openPostComposer } from '../../store/appState'
 import Modal from '../../components/Modal.vue'
 import ListFilterBar from '../../components/ListFilterBar.vue'
+import PageActions from '../../components/PageActions.vue'
 
 /**
  * 머니로그 — 내역 CRUD와 카테고리 집계.
@@ -128,12 +129,11 @@ function importCsv(event) {
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 1rem">머니로그</b>
     <input type="month" v-model="month" style="margin-left: 0" />
     <span></span>
     <span class="currency-picker">₩ {{ currency }}</span>
     <button class="review" style="margin: 0" @click="showIntegration = true">외부 연동</button>
-    <button class="primary" @click="openAdd">+ 내역 추가</button>
+    <PageActions><button class="primary" @click="openAdd">+ 내역 추가</button></PageActions>
   </div>
   <StorageNote :mode="moneyMode" />
   <p v-if="moneyMessage" class="input-field-help" data-state="error" role="status">{{ moneyMessage }}</p>

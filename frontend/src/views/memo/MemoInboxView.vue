@@ -8,6 +8,7 @@ import ListFilterBar from '../../components/ListFilterBar.vue'
 import { memos } from '../../store/writing'
 import { taskStore, openPostComposer } from '../../store/appState'
 import { OFFLINE_LABEL } from '../../features/records/syncedCollection.mjs'
+import PageActions from '../../components/PageActions.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -86,11 +87,7 @@ async function convertToTasks() {
 </script>
 
 <template>
-  <div class="page-tools">
-    <b style="font-size: 1rem">메모</b>
-    <span></span>
-    <button class="primary" @click="openEditor">+ 메모 작성</button>
-  </div>
+  <PageActions><button class="primary" @click="openEditor">+ 메모 작성</button></PageActions>
 
   <ListFilterBar
     v-model:query="query"
@@ -101,14 +98,14 @@ async function convertToTasks() {
     :total-count="memos.length"
   />
   <div class="form-note" v-if="isAutomationOn('memo-to-task')">
-    ⚡ 자동화 켜짐 · 실행 가능한 메모는 자동으로 표시돼요 ·
-    <a @click="router.push('/settings/automation')" style="color: var(--color-accent); font-weight: 700; cursor: pointer">설정</a>
+    자동화 켜짐 · 실행 가능한 메모는 자동으로 표시돼요 ·
+    <RouterLink to="/settings/automation" class="inline-link">설정</RouterLink>
   </div>
   <div class="memo-grid">
     <section class="card memo-card" :class="m.color" style="break-inside: avoid; margin-bottom: 12px" v-for="m in visibleMemos" :key="m.id">
       <div style="display: flex; justify-content: space-between; align-items: start; gap: 8px">
         <b>{{ m.title }}</b>
-        <button class="badge new" style="cursor: pointer; flex: none" @click.stop="openConvert(m)">⚡ 할 일로 변환</button>
+        <button type="button" class="button-text memo-convert" @click.stop="openConvert(m)">할 일로 변환</button>
       </div>
       <p v-if="m.body"><RichText :text="m.body" /></p>
       <p v-else class="form-note" style="margin: 6px 0 0">내용 없음</p>

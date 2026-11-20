@@ -8,6 +8,7 @@ import ListFilterBar from '../../components/ListFilterBar.vue'
 import { contactById } from '../../store/contacts'
 import { modeState, modeMeta, isFieldOn } from '../../store/modeProfiles'
 import { OFFLINE_LABEL } from '../../features/records/syncedCollection.mjs'
+import PageActions from '../../components/PageActions.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -61,11 +62,7 @@ watch(() => route.query.new, (v) => { if (v) openModal() }, { immediate: true })
 </script>
 
 <template>
-  <div class="page-tools">
-    <b style="font-size: 1rem">할 일</b>
-    <span></span>
-    <button class="primary" @click="openModal">+ 새 할 일</button>
-  </div>
+  <PageActions><button class="primary" @click="openModal">+ 새 할 일</button></PageActions>
 
   <StorageNote :mode="taskMode" />
   <p v-if="taskStore.notice.message" class="input-field-help" data-state="error" role="status">{{ taskStore.notice.message }}</p>
@@ -97,7 +94,7 @@ watch(() => route.query.new, (v) => { if (v) openModal() }, { immediate: true })
       <p v-if="activeChecklist.status === 'loading'" class="input-field-help" role="status">체크리스트를 불러오는 중이에요.</p>
       <div v-else-if="activeChecklist.status === 'error'" role="status"><p class="input-field-help" data-state="error">체크리스트를 불러오지 못했어요.</p><button type="button" class="button-secondary" @click="taskStore.loadChecklist(activeTask)">다시 불러오기</button></div>
       <p v-else-if="!activeChecklist.items.length" class="form-note">상세 보기에서 체크리스트와 담당자를 추가하세요.</p>
-      <button class="primary" @click="router.push(`/tasks/${activeTask.id}`)">상세 보기</button>
+      <button class="button-secondary" @click="router.push(`/tasks/${activeTask.id}`)">상세 보기</button>
     </aside>
   </div>
 

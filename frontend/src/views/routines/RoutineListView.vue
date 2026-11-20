@@ -19,6 +19,7 @@ import Modal from '../../components/Modal.vue'
 import ListFilterBar from '../../components/ListFilterBar.vue'
 import HelpPopover from '../../components/HelpPopover.vue'
 import { modeState, modeMeta, isFieldOn } from '../../store/modeProfiles'
+import PageActions from '../../components/PageActions.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -237,7 +238,6 @@ function removeRoutine(r) {
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 1rem">루틴</b>
     <HelpPopover
       title="루틴 사용법"
       summary="반복 주기와 목표를 정해두면, 오늘 해야 할 루틴만 골라 보여주고 연속 기록을 이어줘요."
@@ -257,13 +257,13 @@ function removeRoutine(r) {
       :tips="['요일을 고르면 그 요일에만 오늘 목록에 나타나요.']"
     />
     <span></span>
-    <button class="primary" @click="openModal">+ 새 루틴</button>
+    <PageActions><button class="primary" @click="openModal">+ 새 루틴</button></PageActions>
   </div>
 
   <div class="callout" v-if="isAutomationOn('routine-streak-alert')">
-    <b>⚡ 자동화 켜짐</b>
+    <b>자동화 켜짐</b>
     <p>{{ automationParam('routine-streak-alert') }}일 이상 연속으로 놓치면 알림을 보내드려요 ·
-      <a @click="router.push('/settings/automation')" style="color: var(--color-accent); font-weight: 700; cursor: pointer">설정 바꾸기</a>
+      <RouterLink to="/settings/automation" class="inline-link">설정 바꾸기</RouterLink>
     </p>
   </div>
 

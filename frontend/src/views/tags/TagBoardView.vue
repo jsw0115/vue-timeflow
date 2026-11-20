@@ -61,7 +61,6 @@ const relatedTags = computed(() => {
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 1rem">태그 모아보기</b>
     <span class="form-note" style="margin: 0">태그 {{ tagCounts.length }}종 · 글 {{ posts.length }}개</span>
     <span></span>
     <button v-if="activeTag" class="review" style="margin: 0" @click="router.push('/tags')">태그 해제</button>

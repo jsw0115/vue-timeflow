@@ -66,7 +66,6 @@ const topMood = computed(() => (buckets.value.reduce((a, b) => a + b.mood, 0) / 
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 1rem">기간 요약</b>
     <span></span>
     <div class="filter">
       <button v-for="p in PRESETS" :key="p.id" :class="{ selected: preset === p.id }" @click="applyPreset(p)">{{ p.label }}</button>

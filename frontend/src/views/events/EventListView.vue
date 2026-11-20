@@ -21,6 +21,7 @@ import { openProfile } from '../../store/people'
 import PersonTag from '../../components/PersonTag.vue'
 import LinkedRecords from '../../components/LinkedRecords.vue'
 import { startRecordingFrom } from '../../features/recording/useRecording.js'
+import PageActions from '../../components/PageActions.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -286,11 +287,7 @@ watch(() => [route.query.id, route.query.occurrence, events.value.length], ([id,
 </script>
 
 <template>
-  <div class="page-tools">
-    <b style="font-size: 1rem">일정</b>
-    <span></span>
-    <button class="primary" @click="openModal">+ 새 일정</button>
-  </div>
+  <PageActions><button class="primary" @click="openModal">+ 새 일정</button></PageActions>
 
   <StorageNote :mode="eventMode" />
   <ListFilterBar
@@ -327,7 +324,7 @@ watch(() => [route.query.id, route.query.occurrence, events.value.length], ([id,
       </p>
       <p v-else class="empty-state">아직 참석자가 없어요. '상세 보기'에서 주소록의 사람을 추가해 보세요.</p>
       </template>
-      <button class="primary" @click="openDetail()">상세 보기</button>
+      <button class="button-secondary" @click="openDetail()">상세 보기</button>
     </aside>
   </div>
 
