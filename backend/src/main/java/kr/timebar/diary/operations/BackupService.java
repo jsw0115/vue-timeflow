@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import kr.timebar.diary.common.*;
 import kr.timebar.diary.feature.*;
+import kr.timebar.diary.records.RecordingTime;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -166,12 +167,16 @@ public class BackupService {
         if (!digest(backup).equals(backup.get("checksum"))) FeatureInput.fail("백업 검증값이 일치하지 않습니다. 손상 여부를 확인해주세요.");
         return backup;
     }
+    /** 타이머 모드·목표 시간·일시정지 구간도 실시간 기록과 같은 규칙으로 확인한다. 경과 시간은 일시정지를 뺀 값이어야 한다(PR-09). */
     private void validateActual(Map<String,Object> data) {
-        FeatureInput.keys(data, Set.of("title", "startedAt", "endedAt", "timeZone", "state", "elapsedSeconds"));
+        FeatureInput.keys(data, Set.of("title", "startedAt", "endedAt", "timeZone", "state", "elapsedSeconds", "mode", "targetMinutes", "pauses"));
         if (FeatureInput.requiredText(data, "title").length() > 200 || !"COMPLETED".equals(data.get("state"))) FeatureInput.fail("완료한 실제 기록만 복원할 수 있습니다.");
         Instant start = FeatureInput.instant(FeatureInput.requiredText(data, "startedAt")), end = FeatureInput.instant(FeatureInput.requiredText(data, "endedAt"));
         double seconds = FeatureInput.number(data, "elapsedSeconds", 0, 3155760000L, true);
-        if (end.isBefore(start) || Duration.between(start, end).getSeconds() != seconds) FeatureInput.fail("실제 기록의 시각과 경과 시간이 다릅니다.");
+        if (end.isBefore(start)) FeatureInput.fail("실제 기록의 시각과 경과 시간이 다릅니다.");
+        RecordingTime.validateTimer(data);
+        RecordingTime.pauses(data, start, end);
+        if (RecordingTime.seconds(data) != seconds) FeatureInput.fail("실제 기록의 시각과 경과 시간이 다릅니다.");
         try { ZoneId.of(FeatureInput.requiredText(data, "timeZone")); } catch (DateTimeException e) { FeatureInput.fail("기록 시간대가 올바르지 않습니다."); }
     }
     private Map<String,Object> describe(Map<String,Object> job, Map<String,Object> backup) {

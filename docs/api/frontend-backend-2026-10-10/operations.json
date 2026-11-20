@@ -5652,6 +5652,46 @@
   },
   {
     "method": "POST",
+    "route": "/api/planner/recordings/{id}/cancel",
+    "parameters": [
+      {
+        "name": "id",
+        "type": "String",
+        "location": "path",
+        "required": true
+      },
+      {
+        "name": "body",
+        "type": "Map<String,Object>",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 204,
+    "responseType": "void",
+    "controller": "ActualRecordingController",
+    "kind": "서비스 연결",
+    "implementationStatus": "서비스 연결 · 검증 범위 별도",
+    "public": false,
+    "requestSchema": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "version"
+      ],
+      "additionalProperties": false,
+      "description": "끝내지 않은 기록을 지우고 원본 연결도 지운다. 끝낸 기록은 409, 다른 계정 기록은 404."
+    },
+    "responseSchema": {},
+    "externalBoundary": false
+  },
+  {
+    "method": "POST",
     "route": "/api/planner/recordings/{id}/finish",
     "parameters": [
       {
@@ -5689,7 +5729,7 @@
         "endedAt": {
           "type": "string",
           "format": "date-time",
-          "description": "시작 이후·서버 현재 시각+5초 이내. 응답 유실 시 같은 식별자와 시각으로 재전송."
+          "description": "시작 이후·마지막 일시정지·재개 이후·서버 현재 시각+5초 이내. 일시정지 중이면 그 일시정지를 이 시각에서 닫는다. 응답 유실 시 같은 식별자와 시각으로 재전송."
         }
       },
       "required": [
@@ -5698,6 +5738,90 @@
         "endedAt"
       ],
       "additionalProperties": false
+    },
+    "responseSchema": {
+      "$ref": "#/components/schemas/ActualRecording"
+    },
+    "externalBoundary": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/planner/recordings/{id}/pause",
+    "parameters": [
+      {
+        "name": "id",
+        "type": "String",
+        "location": "path",
+        "required": true
+      },
+      {
+        "name": "body",
+        "type": "Map<String,Object>",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "?",
+    "controller": "ActualRecordingController",
+    "kind": "서비스 연결",
+    "implementationStatus": "서비스 연결 · 검증 범위 별도",
+    "public": false,
+    "requestSchema": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "version"
+      ],
+      "additionalProperties": false,
+      "description": "진행 중(RUNNING) 기록을 서버 현재 시각으로 일시정지한다. 기록 하나에 100번까지. 상태나 version이 다르면 409."
+    },
+    "responseSchema": {
+      "$ref": "#/components/schemas/ActualRecording"
+    },
+    "externalBoundary": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/planner/recordings/{id}/resume",
+    "parameters": [
+      {
+        "name": "id",
+        "type": "String",
+        "location": "path",
+        "required": true
+      },
+      {
+        "name": "body",
+        "type": "Map<String,Object>",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "?",
+    "controller": "ActualRecordingController",
+    "kind": "서비스 연결",
+    "implementationStatus": "서비스 연결 · 검증 범위 별도",
+    "public": false,
+    "requestSchema": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "version"
+      ],
+      "additionalProperties": false,
+      "description": "일시정지(PAUSED) 기록의 마지막 일시정지를 서버 현재 시각으로 닫고 다시 시작한다. 상태나 version이 다르면 409."
     },
     "responseSchema": {
       "$ref": "#/components/schemas/ActualRecording"
@@ -5786,6 +5910,21 @@
         "sourceId": {
           "type": "string",
           "maxLength": 100
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "pomodoro",
+            "countdown",
+            "stopwatch"
+          ],
+          "description": "집중 타이머 종류. 빼면 플래너의 실제 기록이다."
+        },
+        "targetMinutes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1440,
+          "description": "포모도로·카운트다운에만 필수. 스톱워치·모드 없는 기록에 보내면 400."
         }
       },
       "required": [

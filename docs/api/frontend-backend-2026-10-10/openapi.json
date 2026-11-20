@@ -18758,6 +18758,110 @@
         "x-test-evidence": "verification.md"
       }
     },
+    "/api/planner/recordings/{id}/cancel": {
+      "post": {
+        "operationId": "ActualRecordingController_post__api_planner_recordings__id__cancel",
+        "tags": [
+          "ActualRecordingController"
+        ],
+        "summary": "POST /api/planner/recordings/{id}/cancel",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "version": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "version"
+                ],
+                "additionalProperties": false,
+                "description": "끝내지 않은 기록을 지우고 원본 연결도 지운다. 끝낸 기록은 409, 다른 계정 기록은 404."
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "본문 없음."
+          },
+          "400": {
+            "description": "입력 검증 오류.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 필요 또는 폐기된 토큰.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "역할·회원 권한 부족.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "없음·타인 리소스·만료.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "버전·현재 상태 충돌.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-implementation-status": "서비스 연결 · 검증 범위 별도",
+        "x-source": "ActualRecordingController.java",
+        "x-admin-required": false,
+        "x-test-evidence": "verification.md"
+      }
+    },
     "/api/planner/recordings/{id}/finish": {
       "post": {
         "operationId": "ActualRecordingController_post__api_planner_recordings__id__finish",
@@ -18800,7 +18904,7 @@
                   "endedAt": {
                     "type": "string",
                     "format": "date-time",
-                    "description": "시작 이후·서버 현재 시각+5초 이내. 응답 유실 시 같은 식별자와 시각으로 재전송."
+                    "description": "시작 이후·마지막 일시정지·재개 이후·서버 현재 시각+5초 이내. 일시정지 중이면 그 일시정지를 이 시각에서 닫는다. 응답 유실 시 같은 식별자와 시각으로 재전송."
                   }
                 },
                 "required": [
@@ -18809,6 +18913,268 @@
                   "endedAt"
                 ],
                 "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "성공. 세부 정책은 README와 기능 규약을 따른다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ActualRecording"
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 검증 오류.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 필요 또는 폐기된 토큰.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "역할·회원 권한 부족.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "없음·타인 리소스·만료.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "버전·현재 상태 충돌.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-implementation-status": "서비스 연결 · 검증 범위 별도",
+        "x-source": "ActualRecordingController.java",
+        "x-admin-required": false,
+        "x-test-evidence": "verification.md"
+      }
+    },
+    "/api/planner/recordings/{id}/pause": {
+      "post": {
+        "operationId": "ActualRecordingController_post__api_planner_recordings__id__pause",
+        "tags": [
+          "ActualRecordingController"
+        ],
+        "summary": "POST /api/planner/recordings/{id}/pause",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "version": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "version"
+                ],
+                "additionalProperties": false,
+                "description": "진행 중(RUNNING) 기록을 서버 현재 시각으로 일시정지한다. 기록 하나에 100번까지. 상태나 version이 다르면 409."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "성공. 세부 정책은 README와 기능 규약을 따른다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ActualRecording"
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 검증 오류.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 필요 또는 폐기된 토큰.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "역할·회원 권한 부족.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "없음·타인 리소스·만료.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "버전·현재 상태 충돌.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-implementation-status": "서비스 연결 · 검증 범위 별도",
+        "x-source": "ActualRecordingController.java",
+        "x-admin-required": false,
+        "x-test-evidence": "verification.md"
+      }
+    },
+    "/api/planner/recordings/{id}/resume": {
+      "post": {
+        "operationId": "ActualRecordingController_post__api_planner_recordings__id__resume",
+        "tags": [
+          "ActualRecordingController"
+        ],
+        "summary": "POST /api/planner/recordings/{id}/resume",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "version": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "version"
+                ],
+                "additionalProperties": false,
+                "description": "일시정지(PAUSED) 기록의 마지막 일시정지를 서버 현재 시각으로 닫고 다시 시작한다. 상태나 version이 다르면 409."
               }
             }
           }
@@ -19069,6 +19435,21 @@
                   "sourceId": {
                     "type": "string",
                     "maxLength": 100
+                  },
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "pomodoro",
+                      "countdown",
+                      "stopwatch"
+                    ],
+                    "description": "집중 타이머 종류. 빼면 플래너의 실제 기록이다."
+                  },
+                  "targetMinutes": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1440,
+                    "description": "포모도로·카운트다운에만 필수. 스톱워치·모드 없는 기록에 보내면 400."
                   }
                 },
                 "required": [
@@ -46364,6 +46745,7 @@
             "type": "string",
             "enum": [
               "RUNNING",
+              "PAUSED",
               "COMPLETED"
             ]
           },
@@ -46385,6 +46767,41 @@
           "sourceId": {
             "type": "string",
             "maxLength": 100
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "pomodoro",
+              "countdown",
+              "stopwatch"
+            ]
+          },
+          "targetMinutes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1440
+          },
+          "pauses": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "type": "object",
+              "properties": {
+                "from": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "to": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "from"
+              ],
+              "additionalProperties": false
+            },
+            "description": "서버 시각으로 찍은 일시정지 구간. 끝(to)이 없는 구간은 일시정지 중인 마지막 하나뿐이다. 기록 시간에서 뺀다."
           },
           "id": {
             "type": "string",
@@ -46414,7 +46831,7 @@
           "updatedAt"
         ],
         "additionalProperties": false,
-        "description": "서버가 시작을 저장한다. 종료는 version·요청 식별자·시각으로 멱등 처리하며 초 단위로 집계한다. FOCUS나 planner_item에 같은 시간을 중복 생성하지 않는다."
+        "description": "서버가 시작·일시정지·재개 시각을 저장한다. 종료는 version·요청 식별자·시각으로 멱등 처리하며 일시정지를 뺀 초 단위로 집계한다. FOCUS나 planner_item에 같은 시간을 중복 생성하지 않는다."
       },
       "BackupRecord": {
         "oneOf": [
@@ -46620,7 +47037,43 @@
                   "elapsedSeconds": {
                     "type": "integer",
                     "minimum": 0,
-                    "maximum": 3155760000
+                    "maximum": 3155760000,
+                    "description": "일시정지를 뺀 초."
+                  },
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "pomodoro",
+                      "countdown",
+                      "stopwatch"
+                    ]
+                  },
+                  "targetMinutes": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 1440
+                  },
+                  "pauses": {
+                    "type": "array",
+                    "maxItems": 100,
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "from": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "to": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "from"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "description": "서버 시각으로 찍은 일시정지 구간. 끝(to)이 없는 구간은 일시정지 중인 마지막 하나뿐이다. 기록 시간에서 뺀다."
                   }
                 },
                 "required": [

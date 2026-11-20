@@ -124,9 +124,12 @@ const resources = { '/api/schedules': 'SCHEDULE', '/api/routine-records': 'ROUTI
 const custom = {
   'POST /api/planner/items': ref('PlannerItemCreate'),
   'PUT /api/planner/items/{id}': ref('PlannerItemUpdate'),
-  'POST /api/planner/recordings/start': object({ requestId: { ...string(80), minLength: 16, pattern: '^[A-Za-z0-9_-]+$' }, title: { ...string(200), minLength: 1 }, timeZone: string(200), sourceKind: { ...choice('task', 'schedule'), description: '할 일·일정에서 시작할 때 원본 종류. sourceId와 함께 보낸다. 다른 계정의 원본이면 404.' }, sourceId: string(100) }, ['requestId', 'title', 'timeZone']),
+  'POST /api/planner/recordings/start': object({ requestId: { ...string(80), minLength: 16, pattern: '^[A-Za-z0-9_-]+$' }, title: { ...string(200), minLength: 1 }, timeZone: string(200), sourceKind: { ...choice('task', 'schedule'), description: '할 일·일정에서 시작할 때 원본 종류. sourceId와 함께 보낸다. 다른 계정의 원본이면 404.' }, sourceId: string(100), mode: { ...choice('pomodoro', 'countdown', 'stopwatch'), description: '집중 타이머 종류. 빼면 플래너의 실제 기록이다.' }, targetMinutes: { ...integer(1, 1440), description: '포모도로·카운트다운에만 필수. 스톱워치·모드 없는 기록에 보내면 400.' } }, ['requestId', 'title', 'timeZone']),
   'POST /api/tasks/{taskId}/schedules': { ...object(schemas.SCHEDULECreate.properties, schemas.SCHEDULECreate.required.filter(field => field !== 'title')), description: '할 일을 일정으로 배치하고 할 일→일정 연결을 같은 트랜잭션에서 남긴다. title을 비우면 할 일 제목을 복사하며, 그 뒤 할 일 제목을 바꿔도 일정 제목은 바뀌지 않는다. Idempotency-Key를 받는다.' },
-  'POST /api/planner/recordings/{id}/finish': object({ requestId: { ...string(80), minLength: 16, pattern: '^[A-Za-z0-9_-]+$' }, version: integer(1), endedAt: { type: 'string', format: 'date-time', description: '시작 이후·서버 현재 시각+5초 이내. 응답 유실 시 같은 식별자와 시각으로 재전송.' } }, ['requestId', 'version', 'endedAt']),
+  'POST /api/planner/recordings/{id}/finish': object({ requestId: { ...string(80), minLength: 16, pattern: '^[A-Za-z0-9_-]+$' }, version: integer(1), endedAt: { type: 'string', format: 'date-time', description: '시작 이후·마지막 일시정지·재개 이후·서버 현재 시각+5초 이내. 일시정지 중이면 그 일시정지를 이 시각에서 닫는다. 응답 유실 시 같은 식별자와 시각으로 재전송.' } }, ['requestId', 'version', 'endedAt']),
+  'POST /api/planner/recordings/{id}/pause': { ...object({ version: integer(1) }, ['version']), description: '진행 중(RUNNING) 기록을 서버 현재 시각으로 일시정지한다. 기록 하나에 100번까지. 상태나 version이 다르면 409.' },
+  'POST /api/planner/recordings/{id}/resume': { ...object({ version: integer(1) }, ['version']), description: '일시정지(PAUSED) 기록의 마지막 일시정지를 서버 현재 시각으로 닫고 다시 시작한다. 상태나 version이 다르면 409.' },
+  'POST /api/planner/recordings/{id}/cancel': { ...object({ version: integer(1) }, ['version']), description: '끝내지 않은 기록을 지우고 원본 연결도 지운다. 끝낸 기록은 409, 다른 계정 기록은 404.' },
   'POST /api/memos/{id}/convert-to-task': object({ version: integer(1), due: date, category: string() }, ['version']),
   'POST /api/events/templates/{id}/apply': object({ date, startTime: string(5) }, ['date', 'startTime']),
   'POST /api/planner/templates/{id}/apply': object({ date }, ['date']),
@@ -164,11 +167,12 @@ const custom = {
 const pageOf = items => object({ items: array(items), page: integer(0), size: integer(1, 100), total: integer(0) }, ['items', 'page', 'size', 'total'])
 const flexible = properties => ({ type: 'object', properties, additionalProperties: true })
 const instant = { type: 'string', format: 'date-time' }
-const actualFields = { title: string(200), startedAt: instant, endedAt: instant, timeZone: string(200), state: choice('RUNNING', 'COMPLETED'), elapsedSeconds: integer(0), finishKey: string(80), sourceKind: choice('task', 'schedule'), sourceId: string(100) }
+const actualTimer = { mode: choice('pomodoro', 'countdown', 'stopwatch'), targetMinutes: integer(1, 1440), pauses: { type: 'array', maxItems: 100, items: object({ from: instant, to: instant }, ['from']), description: '서버 시각으로 찍은 일시정지 구간. 끝(to)이 없는 구간은 일시정지 중인 마지막 하나뿐이다. 기록 시간에서 뺀다.' } }
+const actualFields = { title: string(200), startedAt: instant, endedAt: instant, timeZone: string(200), state: choice('RUNNING', 'PAUSED', 'COMPLETED'), elapsedSeconds: integer(0), finishKey: string(80), sourceKind: choice('task', 'schedule'), sourceId: string(100), ...actualTimer }
 schemas.ActualRecording = object({ ...actualFields, id: string(100), version: integer(1), createdAt: instant, updatedAt: instant }, ['id', 'title', 'startedAt', 'timeZone', 'state', 'version', 'createdAt', 'updatedAt'])
-schemas.ActualRecording.description = '서버가 시작을 저장한다. 종료는 version·요청 식별자·시각으로 멱등 처리하며 초 단위로 집계한다. FOCUS나 planner_item에 같은 시간을 중복 생성하지 않는다.'
+schemas.ActualRecording.description = '서버가 시작·일시정지·재개 시각을 저장한다. 종료는 version·요청 식별자·시각으로 멱등 처리하며 일시정지를 뺀 초 단위로 집계한다. FOCUS나 planner_item에 같은 시간을 중복 생성하지 않는다.'
 const backupTypes = ['DIARY', 'MEMO', 'DDAY', 'MONEY', 'REVIEW', 'FOCUS', 'ACTUAL_SESSION']
-const actualBackup = object({ title: string(200), startedAt: instant, endedAt: instant, timeZone: string(200), state: { const: 'COMPLETED' }, elapsedSeconds: integer(0, 3155760000) }, ['title', 'startedAt', 'endedAt', 'timeZone', 'state', 'elapsedSeconds'])
+const actualBackup = object({ title: string(200), startedAt: instant, endedAt: instant, timeZone: string(200), state: { const: 'COMPLETED' }, elapsedSeconds: { ...integer(0, 3155760000), description: '일시정지를 뺀 초.' }, ...actualTimer }, ['title', 'startedAt', 'endedAt', 'timeZone', 'state', 'elapsedSeconds'])
 schemas.BackupRecord = { oneOf: backupTypes.map(kind => object({ kind: { const: kind }, id: { ...string(100), pattern: '^[A-Za-z0-9_@-]+$' }, version: integer(1), data: kind === 'ACTUAL_SESSION' ? actualBackup : ref(kind + 'Create') }, ['kind', 'id', 'version', 'data'])) }
 schemas.BackupAttachment = object({ id: string(100), name: string(200), sizeBytes: integer(1, 5242880), expiresAt: { type: ['string', 'null'], format: 'date-time' }, contentBase64: { type: 'string', maxLength: 8388608 }, sha256: { type: 'string', pattern: '^[a-f0-9]{64}$' } }, ['id', 'name', 'sizeBytes', 'expiresAt', 'contentBase64', 'sha256'])
 schemas.BackupFile = object({ schemaVersion: { const: 1 }, backupId: string(80), exportedAt: instant, timeZone: { const: 'UTC' }, includedTypes: { type: 'array', items: choice(...backupTypes) }, excluded: array(string()), records: array(ref('BackupRecord')), attachments: { type: 'array', maxItems: 50, items: ref('BackupAttachment') }, checksum: { type: 'string', pattern: '^[a-f0-9]{64}$' } }, ['schemaVersion', 'backupId', 'exportedAt', 'timeZone', 'includedTypes', 'excluded', 'records', 'attachments', 'checksum'])
@@ -204,6 +208,7 @@ const responseOverrides = {
   'GET /api/planner/recordings': { type: 'array', items: ref('ActualRecording') },
   'GET /api/planner/recordings/current': object({ active: { anyOf: [ref('ActualRecording'), { type: 'null' }] }, serverTime: instant }, ['active', 'serverTime']),
   'GET /api/planner/recordings/{id}': ref('ActualRecording'), 'POST /api/planner/recordings/start': ref('ActualRecording'), 'POST /api/planner/recordings/{id}/finish': ref('ActualRecording'),
+  'POST /api/planner/recordings/{id}/pause': ref('ActualRecording'), 'POST /api/planner/recordings/{id}/resume': ref('ActualRecording'),
   'GET /api/user/data/backup': ref('BackupFile'),
   'GET /api/user/data/backup/status': object({ lastExport: { anyOf: [ref('BackupJob'), { type: 'null' }] }, lastRestore: { anyOf: [ref('BackupJob'), { type: 'null' }] }, includedTypes: array(string()), excluded: array(string()) }, ['lastExport', 'lastRestore', 'includedTypes', 'excluded']),
   'POST /api/user/data/backup/preview': ref('BackupJob'), 'POST /api/user/data/backup/{jobId}/restore': ref('BackupJob'),

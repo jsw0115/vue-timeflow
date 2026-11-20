@@ -93,7 +93,10 @@ public class InsightService {
         if (category == null || category.equals("미분류")) result.addAll(actualBlocks(user, days.of(user), day, day));
         return result;
     }
-    /** 실제 기록을 날짜별로 나눈다. 기록에 저장한 시간대가 아니라 사용자 시간대와 하루 경계를 쓴다(Q-06). 저장된 시작·종료 시각은 바꾸지 않는다. */
+    /**
+     * 실제 기록을 날짜별로 나눈다. 기록에 저장한 시간대가 아니라 사용자 시간대와 하루 경계를 쓴다(Q-06). 저장된 시작·종료 시각은 바꾸지 않는다.
+     * 그날 구간에 겹친 일시정지는 뺀다(PR-09 UF-122).
+     */
     private List<Map<String,Object>> actualBlocks(String user, DayPolicy.Day clock, LocalDate from, LocalDate to) {
         var result = new ArrayList<Map<String,Object>>();
         for (var row : store.all(user, FeatureType.ACTUAL_SESSION)) {
@@ -101,10 +104,8 @@ public class InsightService {
             Instant start = Instant.parse(row.get("startedAt").toString()), end = Instant.parse(row.get("endedAt").toString());
             for (LocalDate day = from; !day.isAfter(to); day = day.plusDays(1)) {
                 Instant dayStart = clock.start(day), dayEnd = clock.end(day);
-                if (start.isBefore(dayEnd) && end.isAfter(dayStart)) {
-                    Instant clippedStart = start.isBefore(dayStart) ? dayStart : start, clippedEnd = end.isAfter(dayEnd) ? dayEnd : end;
-                    result.add(Map.of("id", row.get("id"), "title", row.get("title"), "date", day.toString(), "minutes", Duration.between(clippedStart, clippedEnd).toMinutes(), "type", "ACTUAL"));
-                }
+                if (start.isBefore(dayEnd) && end.isAfter(dayStart))
+                    result.add(Map.of("id", row.get("id"), "title", row.get("title"), "date", day.toString(), "minutes", RecordingTime.seconds(row, dayStart, dayEnd) / 60, "type", "ACTUAL"));
             }
         }
         return result;

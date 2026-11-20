@@ -14,6 +14,7 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.time.Instant;
 import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -66,6 +67,28 @@ class BackupTest {
         assertEquals(1, rows(preview, "items").stream().filter(item -> "SKIP".equals(item.get("action"))).count());
         service.restore(destination, preview.get("id").toString(), file);
         assertEquals("보존", store.get(destination, FeatureType.MEMO, "memo-1").get("body"));
+    }
+    /** 타이머 모드·목표 시간·일시정지 구간도 백업·복원한다. 경과 시간은 일시정지를 뺀 값이어야 하고, 기록 밖 일시정지는 거부한다(PR-09). */
+    @SuppressWarnings("unchecked")
+    @Test void timerRecordsKeepPausesThroughBackup() throws Exception {
+        Instant start = Instant.parse("2026-11-18T01:00:00Z");
+        store.create(source, FeatureType.ACTUAL_SESSION, "timer-1", Map.of("title", "집중", "state", "COMPLETED", "timeZone", "Asia/Seoul", "mode", "pomodoro", "targetMinutes", 50,
+                "startedAt", start.toString(), "endedAt", start.plusSeconds(1800).toString(), "elapsedSeconds", 1500, "finishKey", "finish-key-0000000001",
+                "pauses", List.of(Map.of("from", start.plusSeconds(600).toString(), "to", start.plusSeconds(900).toString()))));
+        byte[] file = bytes(service.export(source));
+        service.restore(destination, service.preview(destination, file).get("id").toString(), file);
+        var restored = store.all(destination, FeatureType.ACTUAL_SESSION).get(0);
+        assertEquals(1500, ((Number)restored.get("elapsedSeconds")).intValue());
+        assertEquals("pomodoro", restored.get("mode"));
+        assertEquals(1, ((List<?>)restored.get("pauses")).size());
+        assertFalse(restored.containsKey("finishKey"));
+        for (var change : List.<Map<String,Object>>of(Map.of("elapsedSeconds", 1800), Map.of("mode", "stopwatch"),
+                Map.of("pauses", List.of(Map.of("from", start.minusSeconds(60).toString(), "to", start.plusSeconds(60).toString()))))) {
+            var tampered = service.export(source);
+            var data = (Map<String,Object>)rows(tampered, "records").stream().filter(row -> "ACTUAL_SESSION".equals(row.get("kind"))).findFirst().orElseThrow().get("data");
+            data.putAll(change); sign(tampered);
+            assertThrows(ApiException.class, () -> service.preview(destination, bytes(tampered)), change.toString());
+        }
     }
     @Test void damagedUnsupportedDuplicateAndMissingAttachmentBackupsAreRejected() throws Exception {
         assertThrows(ApiException.class, () -> service.preview(destination, "broken".getBytes(StandardCharsets.UTF_8)));

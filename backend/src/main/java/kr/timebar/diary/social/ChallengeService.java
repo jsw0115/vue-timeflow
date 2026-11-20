@@ -9,6 +9,7 @@ import kr.timebar.diary.feature.FeatureInput;
 import kr.timebar.diary.feature.FeatureStore;
 import kr.timebar.diary.feature.FeatureType;
 import kr.timebar.diary.records.DayPolicy;
+import kr.timebar.diary.records.RecordingTime;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -151,6 +152,7 @@ public class ChallengeService {
     /**
      * 실시간 종료 API만 finishKey를 남긴다. 그런 기록은 시작 시각을 서버가 찍었고 종료 시각이 현재를 넘을 수 없어 나중에 지어낼 수 없다.
      * 백업에서 복원한 기록은 finishKey가 없어 근거로 쓰지 않는다. 시간대 조건이 있으면 그 구간과 겹친 시간만 센다.
+     * 일시정지한 시간은 어느 경우든 뺀다(PR-09 UF-122).
      */
     private Evidence evidence(String user, Map<String,Object> challenge, LocalDate day, ZoneId zone, String sessionId) {
         var session = store.optional(user, FeatureType.ACTUAL_SESSION, sessionId).orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND, "실제 기록을 찾을 수 없습니다."));
@@ -160,12 +162,11 @@ public class ChallengeService {
         long seconds;
         if (windowStart.isEmpty()) {
             if (!days.dateOf(user, from).equals(day)) FeatureInput.fail("기록을 시작한 날짜와 인증 날짜가 다릅니다.");
-            seconds = Duration.between(from, to).getSeconds();
+            seconds = RecordingTime.seconds(session);
         } else {
             Instant open = day.atTime(LocalTime.parse(windowStart)).atZone(zone).toInstant();
             Instant close = day.atTime(LocalTime.parse(challenge.get("windowEnd").toString())).atZone(zone).toInstant();
-            Instant a = from.isAfter(open) ? from : open, b = to.isBefore(close) ? to : close;
-            seconds = b.isAfter(a) ? Duration.between(a, b).getSeconds() : 0;
+            seconds = RecordingTime.seconds(session, open, close);
         }
         long minutes = seconds / 60, need = challenge.get("minMinutes") instanceof Number number ? number.longValue() : 1;
         if (minutes < need) FeatureInput.fail(windowStart.isEmpty() ? "기록 시간이 " + need + "분보다 짧습니다." : "인증 시간대 안에서 기록한 시간이 " + need + "분보다 짧습니다.");

@@ -71,6 +71,22 @@ class ChallengeCheckinTest {
         assertEquals(40, ((Number)result.get("minutes")).intValue());
     }
 
+    /** 일시정지한 시간은 인증 시간에서 뺀다(PR-09 UF-122). 06:30~07:00 기록이라도 06:40~06:55에 쉬었다면 15분이다. */
+    @Test void pausedMinutesDoNotCountTowardCheckin() {
+        Instant start = yesterday.atTime(6, 30).atZone(SEOUL).toInstant();
+        var data = new LinkedHashMap<String,Object>(Map.of("title", "한강 러닝", "timeZone", "Asia/Seoul", "state", "COMPLETED", "mode", "stopwatch", "finishKey", UUID.randomUUID().toString(),
+                "startedAt", start.toString(), "endedAt", start.plusSeconds(30 * 60).toString(), "elapsedSeconds", 15 * 60,
+                "pauses", List.of(Map.of("from", start.plusSeconds(10 * 60).toString(), "to", start.plusSeconds(25 * 60).toString()))));
+        String paused = store.create(runner, FeatureType.ACTUAL_SESSION, data).get("id").toString();
+        String whole = challenge(Map.of("verify", "record", "minMinutes", 20));
+        challenges.join(runner, community, whole, Map.of());
+        assertEquals(ErrorCode.VALIDATION_FAILED, error(() -> challenges.checkin(runner, community, whole, yesterday.toString(), Map.of("sessionId", paused))));
+        // 06:00~06:45 시간대와 겹친 15분에서 06:40~06:45 일시정지 5분을 빼 10분이다
+        String window = challenge(Map.of("verify", "record", "minMinutes", 5, "windowStart", "06:00", "windowEnd", "06:45"));
+        challenges.join(runner, community, window, Map.of());
+        assertEquals(10, ((Number)challenges.checkin(runner, community, window, yesterday.toString(), Map.of("sessionId", paused)).get("minutes")).intValue());
+    }
+
     /** 시간대가 없는 기록 확인은 기록을 시작한 날짜에만 인증된다. 직접 인증 챌린지도 기록을 붙이면 기록 확인이 된다. */
     @Test void recordDateMustMatchAndSelfChallengeAcceptsRecords() {
         String record = challenge(Map.of("verify", "record", "minMinutes", 10));

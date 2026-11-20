@@ -1985,6 +1985,22 @@ KRW 정수. type=in은 양수, out은 음수. 0은 거부한다.
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 
+## POST /api/planner/recordings/{id}/cancel
+
+인증은 JWT이며 소스는 ActualRecordingController.java다. 성공 HTTP는 204다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | id | String | 예 | 없음 |
+
+| 본문 필드 | 타입 | 필수 | 제약 |
+|---|---|---|---|
+| version | integer | 예 | 최소 1 |
+
+끝내지 않은 기록을 지우고 원본 연결도 지운다. 끝낸 기록은 409, 다른 계정 기록은 404.
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
 ## POST /api/planner/recordings/{id}/finish
 
 인증은 JWT이며 소스는 ActualRecordingController.java다. 성공 HTTP는 200다.
@@ -1997,7 +2013,39 @@ KRW 정수. type=in은 양수, out은 음수. 0은 거부한다.
 |---|---|---|---|
 | requestId | string | 예 | 길이 ≤ 80 |
 | version | integer | 예 | 최소 1 |
-| endedAt | string | 예 | date-time · 시작 이후·서버 현재 시각+5초 이내. 응답 유실 시 같은 식별자와 시각으로 재전송. |
+| endedAt | string | 예 | date-time · 시작 이후·마지막 일시정지·재개 이후·서버 현재 시각+5초 이내. 일시정지 중이면 그 일시정지를 이 시각에서 닫는다. 응답 유실 시 같은 식별자와 시각으로 재전송. |
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## POST /api/planner/recordings/{id}/pause
+
+인증은 JWT이며 소스는 ActualRecordingController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | id | String | 예 | 없음 |
+
+| 본문 필드 | 타입 | 필수 | 제약 |
+|---|---|---|---|
+| version | integer | 예 | 최소 1 |
+
+진행 중(RUNNING) 기록을 서버 현재 시각으로 일시정지한다. 기록 하나에 100번까지. 상태나 version이 다르면 409.
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## POST /api/planner/recordings/{id}/resume
+
+인증은 JWT이며 소스는 ActualRecordingController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | id | String | 예 | 없음 |
+
+| 본문 필드 | 타입 | 필수 | 제약 |
+|---|---|---|---|
+| version | integer | 예 | 최소 1 |
+
+일시정지(PAUSED) 기록의 마지막 일시정지를 서버 현재 시각으로 닫고 다시 시작한다. 상태나 version이 다르면 409.
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 
@@ -2018,6 +2066,8 @@ KRW 정수. type=in은 양수, out은 음수. 0은 거부한다.
 | timeZone | string | 예 | 길이 ≤ 200 |
 | sourceKind | string | 아니오 | task/schedule · 할 일·일정에서 시작할 때 원본 종류. sourceId와 함께 보낸다. 다른 계정의 원본이면 404. |
 | sourceId | string | 아니오 | 길이 ≤ 100 |
+| mode | string | 아니오 | pomodoro/countdown/stopwatch · 집중 타이머 종류. 빼면 플래너의 실제 기록이다. |
+| targetMinutes | integer | 아니오 | 최소 1 · 최대 1440 · 포모도로·카운트다운에만 필수. 스톱워치·모드 없는 기록에 보내면 400. |
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 
