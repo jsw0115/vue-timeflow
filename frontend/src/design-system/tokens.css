@@ -1,78 +1,109 @@
-/* Timebar Diary 디자인 토큰. 값과 근거의 원문은 루트 DESIGN.md 2~6장이다.
-   출처 표기: 계약(이전 DESIGN.md), Figma(Figma 레퍼런스), 코드(기존 frontend/src), 보완(2026-11-18 기존 규칙에서 유도).
-   DESIGN.md 목표 값과 다른 현재 값은 DESIGN.md 부록 B 항목이다. 화면을 맞출 때 이 파일과 부록 B를 함께 고친다.
-   tests/design-tokens.test.mjs가 이 파일과 DESIGN.md의 값이 같은지 검사한다. */
+/* Timebar Diary 디자인 토큰. 값과 근거의 원문은 루트 DESIGN.md(2026-11-20 판) 앞머리 YAML과 2~6장이다.
+   기존 변수 이름은 유지하고 값만 새 계약으로 옮겼다(DESIGN.md 2장 "토큰 이름을 한 번에 바꾸는 대규모 치환은 하지 않는다").
+   DESIGN.md 이름과 이 파일 변수의 대응은 tests/design-tokens.test.mjs의 MAP 표가 검사한다.
+   표면·포인트 색은 store/theme.js와 utils/colorTheme.mjs가 :root에 다시 써서 테마를 바꾼다. 아래 값은 라이트 + 포레스트 기본값이다. */
 :root {
-  /* 2장 인터페이스 색. 크롬은 모노톤으로 두고 강조는 accent 하나만 쓴다(계약). */
-  --color-canvas: #ffffff;      /* 페이지·카드·입력 배경 */
-  --color-surface: #f5f3f1;     /* canvas보다 한 단계 낮은 구획. 위에 본문 크기 muted 금지(4.36:1) */
-  --color-foreground: #000000;  /* 본문 텍스트, 주 액션 배경. canvas 대비 21:1 */
-  --color-muted: #777169;       /* 보조 설명 텍스트. canvas 대비 4.83:1 */
-  --color-hairline: #e5e5e5;    /* 구분선·테두리. 목표 #ebebeb(Figma), 부록 B */
-  --color-on-primary: #ffffff;  /* 검정 주 액션 위 텍스트 */
-  --color-accent: #2f5d46;      /* 화면당 단일 강조, 포커스 표시. on-accent 대비 7.57:1 */
+  /* 2장 표면·글자. canvas는 앱 바탕, card는 카드·입력·팝오버·모달 패널이다. */
+  --color-canvas: #faf9f6;
+  --color-surface: #f3f0e9;          /* 사이드바·구획·세그먼트 그룹. muted 5.09:1 */
+  --color-card: #ffffff;
+  --color-foreground: #242721;       /* 제목·본문 */
+  --color-body: #41463f;             /* 설명·보조 본문 */
+  --color-muted: #62675f;            /* 캡션·메타. canvas 5.50:1, surface 5.09:1 */
+  --color-hairline: #e1ddd4;         /* 장식성 구분선·카드 외곽선 */
+  --color-control-border: #767b72;   /* 입력·체크박스 등 조작 경계. card 4.33:1 */
+
+  /* 2장 포인트·데이터. accent는 주 버튼·링크·포커스·선택 신호다. 한 화면에 강조 하나. */
+  --color-accent: #2f5d46;           /* canvas 7.19:1, 흰 글자 7.57:1 */
+  --color-accent-hover: #254a38;
   --color-on-accent: #ffffff;
-  /* 2장 색 역할 나눔(보완). 선택·켜짐 상태는 foreground로 채우고, 기록·달성 데이터는 data로 채운다.
-     data는 accent와 같은 파인 그린 계열(색상 150°)에서 밝기를 높이고 채도를 낮춘 세이지 톤이다.
-     흰 글자 4.95:1, canvas 위 그래픽 4.95:1, surface 4.48:1, hairline 트랙 3.93:1. accent와는 1.53:1로 구분된다. */
-  --color-data: #4e7963;
+  --color-on-primary: #ffffff;       /* 이전 컴포넌트 호환 alias(= on-accent) */
+  --color-data: #4e7963;             /* 실제 기록·진행·차트. 흰 글자 4.95:1, hairline 3.66:1 */
   --color-on-data: #ffffff;
+  /* 선택 상태의 옅은 accent 배경(2장 "선택됨은 accent의 옅은 배경 틴트 + accent 테두리/텍스트 + 체크"). 테마 accent를 따라간다. */
+  --color-accent-soft: color-mix(in srgb, var(--color-accent) 10%, var(--color-card));
 
-  /* 2장 상태 색. 텍스트·배지·작은 점에만 쓰고 버튼 배경에는 쓰지 않는다. danger는 오류·초과에만, 계획 미완료에는 쓰지 않는다(계약). */
-  --color-status-danger: #b23b3b;   /* canvas 대비 5.86:1 */
-  --color-status-warning: #8a6a3c;  /* canvas 대비 4.99:1 */
-  --color-status-info: #43596b;     /* canvas 대비 7.29:1 */
+  /* 2장 Category and chart colors: 콘텐츠(카테고리·템플릿·메모) 구분 색. 서비스 accent·상태 색과 따로 쓰고, 이름·라벨과 함께 보인다.
+     라이트 card 위 비텍스트 대비 4.5:1 이상. 다크 표면 값은 아래 data-theme='dark' 규칙이 밝게 바꾼다. */
+  --color-content-sage: #4e7963;
+  --color-content-slate: #43596b;
+  --color-content-steel: #5c7891;
+  --color-content-ochre: #8a6a3c;
+  --color-content-rose: #a15a72;
 
-  /* 3장 서체. 숫자·시간·ID에만 mono를 쓴다(계약, Figma). */
-  --font-sans: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  /* 2장 상태 색. 아이콘·문구와 함께 쓴다. danger는 오류·초과에만, 계획 미완료에는 쓰지 않는다. */
+  --color-status-success: #356b49;
+  --color-status-warning: #815e26;
+  --color-status-danger: #a83f3a;
+  --color-status-info: #3c617b;
+
+  /* 3장 서체 */
+  --font-sans: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
-  /* 3장 타입 역할. 크기는 글자 크기 설정을 따르도록 rem으로 쓴다(코드).
-     범위로 정한 display(40–56px)·heading(18–24px)·figure(28–40px) 크기는 화면에서 정한다. */
-  --type-display-weight: 300;  --type-display-leading: 1.15; --type-display-tracking: -0.02em;
-  --type-heading-weight: 600;  --type-heading-leading: 1.3;  --type-heading-tracking: -0.01em;
-  --type-body-size: 0.875rem;  --type-body-weight: 400;      --type-body-leading: 1.6;
-  --type-control-size: 0.8125rem; --type-control-weight: 500; --type-control-leading: 1;
+  /* 3장 타입 스케일. 글자 크기 설정을 따르도록 rem으로 쓴다(16px 기준). */
+  --type-display-size: 1.875rem;      /* display-md 30px 앱 페이지 제목. 좁은 화면 1.5rem */
+  --type-display-weight: 600;  --type-display-leading: 1.25; --type-display-tracking: -0.02em;
+  --type-title-lg-size: 1.375rem;     /* 22px 주요 섹션 제목 */
+  --type-title-md-size: 1.125rem;     /* 18px 카드·패널 제목 */
+  --type-heading-weight: 600;  --type-heading-leading: 1.35; --type-heading-tracking: -0.01em;
+  --type-body-size: 0.9375rem;        /* body-md 15px */
+  --type-body-sm-size: 0.875rem;      /* body-sm 14px 보조 본문·조밀한 표 */
+  --type-body-weight: 400;     --type-body-leading: 1.6;
+  --type-control-size: 0.875rem;      /* button 14px */
+  --type-control-weight: 600;  --type-control-leading: 1;
+  --type-caption-size: 0.75rem;       /* caption 12px. 짧은 메타에만 */
+  --type-time-size: 0.8125rem;        /* time 13px */
   --type-figure-weight: 500;   --type-figure-tracking: -0.01em;
-  --type-caption-size: 0.75rem; /* 보조 설명·도움말 12px. 텍스트 최소 크기(코드 typography 검사) */
 
-  /* 5장 간격(계약). 화면 밀도 설정이 아래 data-density에서 덮어쓴다(코드). */
-  --space-xs: 4px;
-  --space-sm: 6px;
-  --space-md: 8px;
-  --space-lg: 12px;
-  --space-xl: 16px;
-  --space-xxl: 20px;
-  --space-section: 96px;
-  --space-gutter: 48px;
+  /* 5장 간격. 기존 이름을 유지하고 값을 새 스케일(4·8·12·16·24·32·48·64)에 맞췄다. */
+  --space-xs: 4px;        /* DESIGN xxs */
+  --space-sm: 8px;        /* DESIGN xs (이전 6px) */
+  --space-md: 8px;        /* DESIGN xs */
+  --space-lg: 12px;       /* DESIGN sm */
+  --space-xl: 16px;       /* DESIGN md */
+  --space-xxl: 24px;      /* DESIGN lg (이전 20px). 카드 안쪽·그룹 사이 */
+  --space-block: 32px;    /* DESIGN xl. 페이지 안 영역 구분 */
+  --space-gutter: 48px;   /* DESIGN xxl */
+  --space-section: 64px;  /* DESIGN section(이전 96px). 긴 페이지에서만 */
+  /* 5장 앱 셸. 페이지 좌우 패딩 데스크톱 32–40, 태블릿 24, 모바일 16. 콘텐츠 최대 폭 1240. */
+  --page-padding-x: 40px;
+  --page-padding-y: 32px;
+  --content-max: 1240px;
+  --sidebar-width: 248px;
 
-  /* 5장 모서리. 이 다섯 값 밖의 모서리를 새로 만들지 않는다(계약). */
-  --radius-sm: 4px;       /* 입력, 배지, 시간 블록 */
-  --radius-control: 8px;  /* button-secondary(Figma) */
-  --radius-md: 12px;      /* nav-item, 선택형 카드 */
-  --radius-lg: 16px;      /* surface-card, 모달 */
-  --radius-full: 9999px;  /* button-primary, icon-button, segmented-tab, 아바타 */
+  /* 5장 모서리. 이 여섯 값 밖의 모서리를 새로 만들지 않는다. */
+  --radius-xs: 4px;       /* 작은 상태 요소 */
+  --radius-sm: 8px;       /* nav 항목·작은 칩·시간 블록(이전 4px) */
+  --radius-control: 8px;  /* 이전 이름 호환(= sm) */
+  --radius-md: 10px;      /* 버튼·입력·선택 컨트롤(이전 12px) */
+  --radius-lg: 14px;      /* 카드·패널(이전 16px) */
+  --radius-xl: 18px;      /* 큰 미리보기 패널 */
+  --radius-full: 9999px;  /* 태그·아바타·의미가 맞는 pill */
 
-  /* 6장 그림자. 이 세 토큰 밖의 그림자를 새로 만들지 않는다(계약, Figma). */
-  --shadow-card: 0px 2px 4px rgba(0,0,0,.04), 0px 1px 1px rgba(0,0,0,.05);
-  /* 목표 0px 2px 4px rgba(0,0,0,0.04), 0px 0px 1.143px rgba(0,0,0,0.4)(계약), 부록 B */
-  --shadow-raised: 0px 1px 1px rgba(0,0,0,.16), 0px 1px 1px rgba(0,0,0,.04), 0px 2px 4px rgba(0,0,0,.04);
-  /* 목표 0px 0px 1px rgba(0,0,0,0.4), 0px 1px 1px rgba(0,0,0,0.04), 0px 2px 4px rgba(0,0,0,0.04)(계약), 부록 B */
-  --shadow-overlay: 0 24px 70px rgba(0,0,0,0.1); /* 화면 위에 뜨는 패널에만(Figma panel) */
+  /* 6장 그림자. 카드는 그림자 없이 경계로 나누고, 떠 있는 요소에만 쓴다. 다크 표면은 theme.js가 none으로 바꾼다. */
+  --shadow-card: none;
+  --shadow-raised: none;
+  --shadow-popover: 0 8px 24px rgba(36, 39, 33, 0.08);
+  --shadow-overlay: 0 24px 70px rgba(36, 39, 33, 0.14);
 
-  /* 4·8장 컴포넌트 치수. 주 컨트롤 높이 40px, 탭 32px, 버튼 여백 11px 18px, 입력 여백 9px(코드). */
-  --control-height: 40px;
-  --control-padding-y: 11px;
-  --control-padding-x: 18px;
-  --tab-height: 32px;
-  --input-padding: 9px;
+  /* 4·8장 컨트롤 치수. 버튼 42px, 입력 44px, 아이콘 버튼 40px, 터치 44px. */
+  --control-height: 42px;
+  --input-height: 44px;
+  --icon-button-size: 40px;
+  --control-padding-y: 12px;
+  --control-padding-x: 24px;
+  --tab-height: 36px;
+  --input-padding: 12px;
 
-  /* 4장 공통 상호작용. 전환 0.15s, 포커스 accent 2px 실선·오프셋 2px(계약, 코드).
-     disabled 불투명도는 button-primary 값을 모든 컨트롤에 같게 쓴다(보완). */
-  --motion-fast: 0.15s;
+  /* 4장 공통 상호작용. 전환 160ms 안팎, 포커스 accent 2px·오프셋 2px. */
+  --motion-fast: 0.16s;
   --focus-ring-width: 2px;
   --focus-ring-offset: 2px;
-  --opacity-disabled: 0.45;
+  --opacity-disabled: 0.5;
 }
-:root[data-density='compact']{--space-xs:3px;--space-sm:5px;--space-md:6px;--space-lg:9px;--space-xl:12px;--space-xxl:15px;--space-section:52px;--space-gutter:32px}
-:root[data-density='roomy']{--space-xl:20px;--space-xxl:26px;--space-section:120px;--space-gutter:60px}
+:root[data-theme='dark']{--color-content-sage:#8fb5a0;--color-content-slate:#9db1c2;--color-content-steel:#a3b8cb;--color-content-ochre:#cfae7c;--color-content-rose:#d69bb0}
+:root[data-density='compact']{--space-xs:3px;--space-sm:6px;--space-md:6px;--space-lg:9px;--space-xl:12px;--space-xxl:18px;--space-block:24px;--space-section:48px;--space-gutter:32px;--page-padding-y:24px}
+:root[data-density='roomy']{--space-xl:20px;--space-xxl:28px;--space-block:40px;--space-section:80px;--space-gutter:60px;--page-padding-y:40px}
+@media (max-width: 1150px){:root{--page-padding-x:24px;--page-padding-y:24px}}
+@media (max-width: 760px){:root{--page-padding-x:16px;--page-padding-y:16px;--type-display-size:1.5rem}}

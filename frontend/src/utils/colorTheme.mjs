@@ -1,12 +1,15 @@
-// 표면 테마와 색상 테마(포인트 컬러)에서 대비 기준을 지키는 색 토큰을 계산한다(DESIGN.md 2장 테마).
+// 표면 테마와 색상 테마(포인트 컬러)에서 대비 기준을 지키는 색 토큰을 계산한다(DESIGN.md 2장 Theme contrast rules).
 const HEX = /^#[0-9a-f]{6}$/i
 export const isHex = value => typeof value === 'string' && HEX.test(value)
 
-// 화면 상태 색의 기준 값(DESIGN.md 2장). 표면에 맞춰 밝기만 옮겨 쓴다.
-export const STATUS_BASE = { danger: '#b23b3b', warning: '#8a6a3c', info: '#43596b' }
+// 화면 상태 색의 기준 값(DESIGN.md 2장 Default palette). 표면에 맞춰 밝기만 옮겨 쓴다.
+export const STATUS_BASE = { success: '#356b49', warning: '#815e26', danger: '#a83f3a', info: '#3c617b' }
 
 // 대비 하한. 포인트 컬러는 글자로도 쓰이고(링크·강조 글자) 데이터 색이 그보다 밝게(다크 표면에서는 어둡게) 구분될 여유가 필요해 canvas 대비 7:1로 둔다.
 export const MIN = { accentCanvas: 7, accentSurface: 4.5, text: 4.5, graphic: 3, status: 4.5 }
+
+// 주 버튼 hover는 accent에서 HSL 밝기를 이만큼 옮긴다(밝은 표면은 어둡게, 어두운 표면은 밝게).
+const HOVER_SHIFT = 0.057
 
 const channel = value => {
   const c = value / 255
@@ -60,30 +63,43 @@ function dataSeed(accent, dark) {
   return fromHsl(h, s * 0.67, Math.min(1, Math.max(0, l + (dark ? -0.115 : 0.115))))
 }
 
+/** 주 버튼 hover 색. 밝은 표면에서는 어둡게, 어두운 표면에서는 밝게 옮겨 on-accent 대비를 더 키운다. */
+export function hoverOf(accent, dark) {
+  const [h, s, l] = toHsl(accent)
+  return fromHsl(h, s, Math.min(1, Math.max(0, l + (dark ? HOVER_SHIFT : -HOVER_SHIFT))))
+}
+
 /**
  * 표면 토큰과 색상 선택에서 화면 토큰을 만든다.
- * choice = { accent: '#rrggbb', data?: '#rrggbb' }. data는 밝은 표면용으로 검증된 프리셋 값이 있을 때만 준다.
+ * choice = { accent: '#rrggbb', data?: '#rrggbb', hover?: '#rrggbb' }. data·hover는 밝은 표면용으로 검증된 프리셋 값이 있을 때만 준다.
  * 반환값의 adjusted는 고른 포인트 컬러를 대비 기준 때문에 바꿨는지 알려 준다.
  */
 export function themeTokens(surfaceTokens, choice) {
   const canvas = surfaceTokens['--color-canvas'], surface = surfaceTokens['--color-surface'], hairline = surfaceTokens['--color-hairline']
+  const card = surfaceTokens['--color-card'] ?? canvas
   const dark = isDarkSurface(canvas)
   const picked = isHex(choice?.accent) ? choice.accent.toLowerCase() : '#2f5d46'
-  const accent = fitContrast(picked, [[canvas, MIN.accentCanvas], [surface, MIN.accentSurface]], dark)
+  const accent = fitContrast(picked, [[canvas, MIN.accentCanvas], [surface, MIN.accentSurface], [card, MIN.accentSurface]], dark)
+  // on-accent는 흰색 또는 그 표면의 canvas 중 대비가 큰 쪽(DESIGN.md 2장). 밝은 표면은 흰색, 어두운 표면은 canvas다.
   const onAccent = dark ? canvas : '#ffffff'
-  const seed = !dark && isHex(choice?.data) && accent === picked ? choice.data.toLowerCase() : dataSeed(accent, dark)
+  const preset = !dark && accent === picked
+  const seed = preset && isHex(choice?.data) ? choice.data.toLowerCase() : dataSeed(accent, dark)
   const data = fitContrast(seed, [[onAccent, MIN.text], [hairline, MIN.graphic], [canvas, MIN.graphic], [surface, MIN.graphic]], dark)
-  const status = Object.fromEntries(Object.entries(STATUS_BASE).map(([name, base]) => [name, fitContrast(base, [[canvas, MIN.status], [surface, MIN.status]], dark)]))
+  const hover = preset && isHex(choice?.hover) ? choice.hover.toLowerCase() : hoverOf(accent, dark)
+  const status = Object.fromEntries(Object.entries(STATUS_BASE).map(([name, base]) => [name, fitContrast(base, [[canvas, MIN.status], [surface, MIN.status], [card, MIN.status]], dark)]))
   return {
     adjusted: accent !== picked,
     tokens: {
       ...surfaceTokens,
       '--color-accent': accent,
+      '--color-accent-hover': hover,
       '--color-on-accent': onAccent,
+      '--color-on-primary': onAccent,
       '--color-data': data,
       '--color-on-data': onAccent,
-      '--color-status-danger': status.danger,
+      '--color-status-success': status.success,
       '--color-status-warning': status.warning,
+      '--color-status-danger': status.danger,
       '--color-status-info': status.info,
     },
   }
