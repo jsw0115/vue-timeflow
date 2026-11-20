@@ -88,8 +88,8 @@ schemas.Goal = object({ count: integer(1, 9999), unit: string() }, ['count', 'un
 schemas.TemplateBlock = object({ time: { type: 'string', pattern: '^(?:[01][0-9]|2[0-3]):[0-5][0-9]$' }, title: string(), duration: integer(1, 1440) }, ['time', 'title'])
 schemas.BoardColumn = object({ id: string(), title: string(), wip: integer(0, 500) }, ['id', 'title', 'wip'])
 schemas.BoardCard = object({ id: string(), columnId: string(), title: string(), assignee: string(), due: { type: 'string' }, priority: choice('low', 'normal', 'high'), labels: array(string()), checklist: array(object({ text: string(), done: boolean }, ['text', 'done'])), plannerBlock: string(), order: integer(0, 10000) }, ['id', 'columnId', 'title', 'priority', 'order'])
-const booleans = new Set('pinned actionable open favorite read live published popup paused notify completed'.split(' '))
-const numbers = { amount: integer(-1e12, 1e12), duration: integer(1, 1440), alarm: integer(0, 10080), leaveDays: { type: 'number', minimum: 0.5, maximum: 365, multipleOf: 0.5 }, expense: { type: 'number', minimum: 0, maximum: 1e8 }, md: { type: 'number', minimum: 0, maximum: 100000 }, progress: { type: 'number', minimum: 0, maximum: 100 }, years: integer(0, 100), days: integer(3, 100), capacity: integer(2, 500), reminderMinutes: integer(0, 1440) }
+const booleans = new Set('pinned actionable open favorite read live published popup paused notify completed openRecords'.split(' '))
+const numbers = { amount: integer(-1e12, 1e12), duration: integer(1, 1440), alarm: integer(0, 10080), leaveDays: { type: 'number', minimum: 0.5, maximum: 365, multipleOf: 0.5 }, expense: { type: 'number', minimum: 0, maximum: 1e8 }, md: { type: 'number', minimum: 0, maximum: 100000 }, progress: { type: 'number', minimum: 0, maximum: 100 }, years: integer(0, 100), days: integer(3, 100), capacity: integer(2, 500), reminderMinutes: integer(0, 1440), minMinutes: integer(1, 600) }
 const arrays = { tags: array(string()), achievements: array(string()), notifyDays: array(integer(0, 365)), attendeeIds: array(string(36)), itemIds: array(string(100)), blocks: array(ref('TemplateBlock')), columns: array(ref('BoardColumn')), cards: array(ref('BoardCard')) }
 const featureSource = java.find(source => source.includes('public enum FeatureType'))
 for (const match of featureSource.matchAll(/(\w+)\("([^"]*)",\s*"([^"]*)"\)/g)) {
@@ -104,6 +104,7 @@ for (const match of featureSource.matchAll(/(\w+)\("([^"]*)",\s*"([^"]*)"\)/g)) 
   if (name === 'MONEY') properties.type = choice('in', 'out')
   if (name === 'WORK_RECORD') { properties.type = choice('연차', '반차', '외근', '출장', '이직'); properties.half = choice('오전', '오후') }
   if (name === 'COMMUNITY') { properties.joinPolicy = choice('open', 'approval'); properties.visibility = choice('public', 'private') }
+  if (name === 'CHALLENGE') { properties.verify = choice('self', 'record'); properties.windowStart = clock; properties.windowEnd = clock }
   for (const field of required.split(' ')) if (properties[field]?.type === 'string') properties[field] = { ...properties[field], minLength: 1 }
   for (const [field, definition] of Object.entries(properties)) if (!required.split(' ').includes(field)) properties[field] = { anyOf: [definition, { type: 'null' }] }
   schemas[name + 'Create'] = object(properties, required.split(' '))
@@ -113,6 +114,7 @@ for (const match of featureSource.matchAll(/(\w+)\("([^"]*)",\s*"([^"]*)"\)/g)) 
 }
 schemas.MONEYCreate.description = 'KRW 정수. type=in은 양수, out은 음수. 0은 거부한다.'
 schemas.WORK_RECORDCreate.description = '종료 일시는 시작 이후. 반차는 같은 날짜와 half 필수. 연차는 leaveDays 0.5일 단위. 외근·출장은 location, 출장은 expense, 이직은 toCompany/role 필수.'
+schemas.CHALLENGECreate.description = 'verify는 self(직접 인증, 기본) 또는 record(실시간 실제 기록으로 확인). record이면 minMinutes(1~600) 필수. windowStart·windowEnd(HH:mm)는 record에서만 함께 정하며 끝이 시작보다 늦어야 한다(자정을 넘지 않음). openRecords=true(기록 공개 챌린지)는 record여야 한다. 만든 뒤에는 규칙을 바꾸지 않는다.'
 schemas.SCHEDULECreate.description = '종료 일시는 시작 이후, 최대 366일. 참석자 ID는 메타데이터이며 공유 권한을 만들지 않는다.'
 schemas.SETTINGCreate.description = 'JSON 최대 깊이 8, 객체 100필드, 배열 500항목, 저장 크기 128 KiB. apiKey/password/secret/cardNumber/accessToken/refreshToken은 중첩 위치에서도 거부한다. 자동화·AI 설정 저장은 실행을 의미하지 않는다.'
 
@@ -140,6 +142,8 @@ const custom = {
   'POST /api/communities/{id}/posts/{postId}/comments': ref('COMMENTCreate'),
   'PUT /api/communities/{id}/posts/{postId}/like': object({ liked: boolean }, ['liked']),
   'POST /api/communities/{id}/challenges': ref('CHALLENGECreate'),
+  'POST /api/communities/{id}/challenges/{challengeId}/join': { ...object({ consent: boolean }), description: '기록 공개 챌린지(openRecords)는 consent=true여야 참여한다. 끝난 챌린지는 409.' },
+  'PUT /api/communities/{id}/challenges/{challengeId}/checkins/{date}': { ...object({ sessionId: string(100) }), description: '본문 없이 보내면 직접 인증. sessionId는 내 실제 기록 중 실시간으로 시작·종료한 완료 기록(다른 계정·없는 기록은 404). 시간대가 없으면 기록 시작 날짜(사용자 하루 기준)가 인증 날짜와 같아야 하고, 시간대가 있으면 그 날짜의 시간대와 겹친 분이 minMinutes 이상이어야 한다. record 챌린지는 sessionId 필수. 같은 기록은 한 챌린지에서 한 번만 쓴다(409).' },
   'POST /api/communities/{id}/posts/{postId}/report': object({ reason: string() }, ['reason']),
   'PUT /api/admin/moderation/{id}': object({ userId: string(36), version: integer(1), action: choice('REMOVE', 'IGNORE') }, ['userId', 'version', 'action']),
   'PUT /api/routine-records/{id}/history/{date}': object({ completed: boolean, version: integer(1) }, ['completed']),
@@ -217,13 +221,16 @@ const responseOverrides = {
   'GET /api/search': pageOf(flexible({ id: string(), domain: string(), title: string(), body: string(20000), date })), 'GET /api/search/tags': array(object({ tag: string(), count: integer(0) }, ['tag', 'count'])),
   'GET /api/communities/{id}/posts': pageOf(ref('POSTResponse')), 'POST /api/communities/{id}/posts': ref('POSTResponse'), 'PUT /api/communities/{id}/posts/{postId}': ref('POSTResponse'),
   'GET /api/communities/{id}/posts/{postId}/comments': array(ref('COMMENTResponse')), 'POST /api/communities/{id}/posts/{postId}/comments': ref('COMMENTResponse'),
-  'GET /api/communities/{id}/challenges': array(ref('CHALLENGEResponse')), 'POST /api/communities/{id}/challenges': ref('CHALLENGEResponse'),
-  'GET /api/communities/{id}/challenges/{challengeId}/ranking': array(object({ userId: string(), doneDays: integer(0) }, ['userId', 'doneDays'])),
+  'GET /api/communities/{id}/challenges': array(flexible({ ...schemas.CHALLENGEResponse.properties, members: integer(0), joined: boolean, myDays: integer(0), myLastDate: { anyOf: [date, { type: 'null' }] } })), 'POST /api/communities/{id}/challenges': ref('CHALLENGEResponse'),
+  'GET /api/communities/{id}/challenges/{challengeId}/ranking': { ...array(object({ userId: string(), nickname: string(), doneDays: integer(0), verifiedDays: integer(0) }, ['userId', 'nickname', 'doneDays', 'verifiedDays'])), description: '참여 중이면서 커뮤니티 활성 회원인 사람. 인증 일수와 그중 실제 기록으로 확인한 일수만 집계하고 개인 기록은 집계하지 않는다. 서로 차단한 사람은 빠진다.' },
+  'GET /api/communities/{id}/challenges/{challengeId}/checkins': { ...array(ref('ChallengeCheckin')), description: 'userId로 한 사람만 고를 수 있다. 다른 참여자에게는 날짜·인증 방식만 보이고, 기록 제목·시각·분은 본인 것과 기록 공개 챌린지에 동의한 참여자 것만 담는다.' },
+  'PUT /api/communities/{id}/challenges/{challengeId}/checkins/{date}': ref('ChallengeCheckin'),
   'GET /api/notifications': pageOf(ref('NOTIFICATIONResponse')), 'PUT /api/notifications/{id}/read': ref('NOTIFICATIONResponse'),
   'GET /api/integrations/capabilities': array(object({ feature: string(), available: { const: false }, status: { const: 'PROVIDER_REQUIRED' } }, ['feature', 'available', 'status'])),
   'GET /api/sync/status': object({ providers: array({}), conflicts: array({}), logs: array({}), available: { const: false } }, ['providers', 'conflicts', 'logs', 'available']),
   'GET /api/user/social-accounts': { type: 'array', maxItems: 0, items: {} },
 }
+schemas.ChallengeCheckin = object({ userId: string(36), nickname: string(), date, method: choice('self', 'record'), minutes: integer(0), startedAt: { type: 'string', format: 'date-time' }, endedAt: { type: 'string', format: 'date-time' }, title: string() }, ['userId', 'nickname', 'date', 'method'])
 schemas.Error = object({ success: { const: false }, data: { type: 'null' }, message: { type: 'string' } }, ['success', 'data', 'message'])
 const paths = {}, contract = []
 const envelope = data => object({ success: { const: true }, data, message: { type: ['string', 'null'] } }, ['success', 'data', 'message'])

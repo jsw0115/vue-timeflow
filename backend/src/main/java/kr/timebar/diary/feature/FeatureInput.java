@@ -11,8 +11,8 @@ import java.time.LocalTime;
 import java.util.*;
 
 public final class FeatureInput {
-    private static final Set<String> BOOLEANS = Set.of("pinned", "actionable", "open", "favorite", "read", "live", "published", "popup", "paused", "notify", "completed");
-    private static final Set<String> NUMBERS = Set.of("amount", "duration", "alarm", "leaveDays", "expense", "md", "progress", "years", "capacity", "reminderMinutes", "days");
+    private static final Set<String> BOOLEANS = Set.of("pinned", "actionable", "open", "favorite", "read", "live", "published", "popup", "paused", "notify", "completed", "openRecords");
+    private static final Set<String> NUMBERS = Set.of("amount", "duration", "alarm", "leaveDays", "expense", "md", "progress", "years", "capacity", "reminderMinutes", "days", "minMinutes");
     private static final Set<String> ARRAYS = Set.of("tags", "notifyDays", "blocks", "columns", "cards", "achievements", "attendeeIds", "itemIds");
     private static final Set<String> DATES = Set.of("date", "startDate", "endDate", "from", "to", "deadline");
 
@@ -92,11 +92,27 @@ public final class FeatureInput {
             }
             case RESUME -> { if (body.get("years") != null) number(body, "years", 0, 100, true); }
             case COMMUNITY -> { choice(body, "joinPolicy", "open", "approval"); choice(body, "visibility", "public", "private"); number(body, "capacity", 2, 500, true); }
-            case CHALLENGE -> number(body, "days", 3, 100, true);
+            case CHALLENGE -> validateChallenge(body);
             case NOTICE -> { if (!text(body, "from").isEmpty() && !text(body, "to").isEmpty()) range(text(body, "from"), text(body, "to")); }
             default -> { }
         }
         return body;
+    }
+
+    /** 인증 방식(직접·실제 기록), 최소 기록 시간, 인증 시간대, 기록 공개 여부를 확인한다(PR-10 3b, Q-26). */
+    private static void validateChallenge(Map<String, Object> body) {
+        number(body, "days", 3, 100, true);
+        if (text(body, "verify").isEmpty()) body.put("verify", "self");
+        choice(body, "verify", "self", "record");
+        boolean record = "record".equals(body.get("verify"));
+        if (Boolean.TRUE.equals(body.get("openRecords")) && !record) fail("기록 공개 챌린지는 실제 기록으로 인증해야 합니다.");
+        if (record) number(body, "minMinutes", 1, 600, true);
+        else if (body.get("minMinutes") != null) fail("최소 기록 시간은 기록 확인 챌린지에만 정합니다.");
+        String from = text(body, "windowStart"), to = text(body, "windowEnd");
+        if (from.isEmpty() != to.isEmpty()) fail("인증 시간대는 시작과 끝을 함께 정합니다.");
+        if (from.isEmpty()) return;
+        if (!record) fail("인증 시간대는 기록 확인 챌린지에만 정합니다.");
+        if (!time(from).isBefore(time(to))) fail("인증 시간대의 끝은 시작보다 늦어야 합니다. 자정을 넘는 시간대는 정할 수 없습니다.");
     }
 
     private static void validateBlocks(Map<String, Object> body) {

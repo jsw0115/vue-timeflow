@@ -28,6 +28,12 @@ public class DayPolicy {
         return new Day(zone, startHour(user), clock);
     }
 
+    /** 사용자 시간대. 챌린지 인증 시간대처럼 달력 날짜의 시각을 계산할 때 쓴다(PR-10 3b). */
+    public ZoneId zone(String user) { return of(user).zone(); }
+
+    /** 사용자 하루 기준(시간대·하루 시작 시각)으로 시각이 속한 날짜(PR-10 3b). */
+    public LocalDate dateOf(String user, Instant instant) { return of(user).dateOf(instant); }
+
     /** 프로필 추가 정보의 dayStartHour. 저장하지 않았으면 0(자정)이다. */
     private int startHour(String user) {
         return store.optional(user, FeatureType.SETTING, "profile")

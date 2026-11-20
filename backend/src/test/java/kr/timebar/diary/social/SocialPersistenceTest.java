@@ -14,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringJUnitConfig(FeatureTestConfig.class)
 class SocialPersistenceTest {
     @Autowired SocialService social;
+    @Autowired ChallengeService challenges;
     @Autowired UserRepository users;
     @Autowired FeatureStore store;
     String alice, bob, stranger;
@@ -75,11 +76,11 @@ class SocialPersistenceTest {
     @Test void challengeCheckinsAreIdempotentAndDoNotExposePrivateWorkData() {
         String id = community("open", "public", 10); social.join(bob, FeatureType.COMMUNITY, id, Map.of());
         String today = java.time.LocalDate.now(java.time.ZoneId.of("Asia/Seoul")).toString();
-        String challenge = social.challenge(alice, id, Map.of("title", "챌린지", "startDate", today, "days", 7)).get("id").toString();
-        assertThrows(ApiException.class, () -> social.checkin(bob, id, challenge, today));
-        social.challengeJoin(bob, id, challenge); social.checkin(bob, id, challenge, today); social.checkin(bob, id, challenge, today);
-        var row = social.ranking(alice, id, challenge).get(0); assertEquals(bob, row.get("userId")); assertEquals(1L, row.get("doneDays"));
-        assertFalse(row.containsKey("work")); assertThrows(ApiException.class, () -> social.ranking(stranger, id, challenge));
+        String challenge = challenges.create(alice, id, Map.of("title", "챌린지", "startDate", today, "days", 7)).get("id").toString();
+        assertThrows(ApiException.class, () -> challenges.checkin(bob, id, challenge, today, Map.of()));
+        challenges.join(bob, id, challenge, Map.of()); challenges.checkin(bob, id, challenge, today, Map.of()); challenges.checkin(bob, id, challenge, today, Map.of());
+        var row = challenges.ranking(alice, id, challenge).get(0); assertEquals(bob, row.get("userId")); assertEquals(1, ((Number)row.get("doneDays")).intValue());
+        assertFalse(row.containsKey("work")); assertThrows(ApiException.class, () -> challenges.ranking(stranger, id, challenge));
     }
     private String community(String policy, String visibility, int capacity) { return social.createSpace(alice, FeatureType.COMMUNITY, Map.of("title", "커뮤니티", "joinPolicy", policy, "visibility", visibility, "capacity", capacity)).get("id").toString(); }
 }

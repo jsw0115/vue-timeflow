@@ -1,6 +1,6 @@
 # API 목록
 
-기준 2026-10-10. 총 292개 매핑이며 wildcard 경로는 허용된 값을 선택한다. 채팅은 CHAT_ENABLED=true 조건부 등록이다. 구현·검증 범위는 [검증 기록](verification.md)을 확인한다.
+기준 2026-10-10. 총 294개 매핑이며 wildcard 경로는 허용된 값을 선택한다. 채팅은 CHAT_ENABLED=true 조건부 등록이다. 구현·검증 범위는 [검증 기록](verification.md)을 확인한다.
 
 | 메서드 | 경로 | 인증 | 처리 | 소스 |
 |---|---|---|---|---|
@@ -68,8 +68,10 @@
 | PUT | `/api/communities/{id}` | JWT | 실제 처리 소스 있음 | CommunityController |
 | GET | `/api/communities/{id}/challenges` | JWT | 실제 처리 소스 있음 | CommunityController |
 | POST | `/api/communities/{id}/challenges` | JWT | 실제 처리 소스 있음 | CommunityController |
+| GET | `/api/communities/{id}/challenges/{challengeId}/checkins` | JWT | 실제 처리 소스 있음 | CommunityController |
 | PUT | `/api/communities/{id}/challenges/{challengeId}/checkins/{date}` | JWT | 실제 처리 소스 있음 | CommunityController |
 | POST | `/api/communities/{id}/challenges/{challengeId}/join` | JWT | 실제 처리 소스 있음 | CommunityController |
+| DELETE | `/api/communities/{id}/challenges/{challengeId}/members/me` | JWT | 실제 처리 소스 있음 | CommunityController |
 | GET | `/api/communities/{id}/challenges/{challengeId}/ranking` | JWT | 실제 처리 소스 있음 | CommunityController |
 | POST | `/api/communities/{id}/join` | JWT | 실제 처리 소스 있음 | CommunityController |
 | GET | `/api/communities/{id}/join-requests` | JWT | 실제 처리 소스 있음 | CommunityController |

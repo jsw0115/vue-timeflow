@@ -40,3 +40,19 @@
 - 웹 접근성: 1단계 화면 변경 없음. N/A.
 - 오탐 제외: 없음.
 - 남은 위험: 이메일을 아는 사람에게 가입 여부가 드러날 수 있다(Q-24에서 받아들임). 멤버·기간이 크면 그룹 캘린더 계산이 느려질 수 있다(PR-18에서 측정).
+
+## 3b-1 챌린지 인증 서버(2026-11-20)
+
+| 명령 | 종료 코드 | 결과 |
+| --- | --- | --- |
+| `backend`: `gradlew.bat test --tests "kr.timebar.diary.social.ChallengeCheckinTest"`(서비스 작성 전) | 1 | FAIL(의도). `ChallengeService` 없음으로 컴파일 실패 |
+| `backend`: `gradlew.bat test --tests "kr.timebar.diary.social.*" --tests "kr.timebar.diary.feature.FeatureHttpTest"` | 0 | PASS. ChallengeCheckinTest 5, SocialPersistenceTest 6, FeatureHttpTest 23 |
+| `backend`: `gradlew.bat test --console=plain` | 0 | PASS. 268개, 실패 0 |
+| `node frontend/scripts/api-inventory.mjs --check`, `node frontend/scripts/frontend-api-contract.mjs --check` | 0 | PASS. 294개 경로, 294개 operation·200개 schema |
+| `frontend`: `TZ=Asia/Seoul node --test --test-concurrency=1`(device-preview 제외) | 0 | PASS. 185개 |
+| `python -B scripts/verify_agent_kit.py` | 0 | PASS |
+| `git diff --check`(사용자 변경 3개 파일 제외) | 0 | PASS |
+| MySQL 8.4 임시 스키마 `v12_check`에 V6 feature_member·V11·CHECKIN 행·V12 실행 후 삭제 | 0 | PASS. challenge_checkin 1행(self), CHECKIN 행 0 |
+
+- 이 PC의 Node는 20.18이다(프로젝트 요구 22.12 이상, PR-06). 결과는 Node 20 기준이다.
+- 격리 개발 DB(`timeflow_chat_dev`)는 V9 상태이며 이 단계에서 건드리지 않았다.

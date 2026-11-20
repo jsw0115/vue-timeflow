@@ -7158,7 +7158,132 @@
                     "data": {
                       "type": "array",
                       "items": {
-                        "$ref": "#/components/schemas/CHALLENGEResponse"
+                        "type": "object",
+                        "properties": {
+                          "title": {
+                            "type": "string",
+                            "maxLength": 200,
+                            "minLength": 1
+                          },
+                          "desc": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "maxLength": 200
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "startDate": {
+                            "type": "string",
+                            "format": "date",
+                            "minLength": 1
+                          },
+                          "days": {
+                            "type": "integer",
+                            "minimum": 3,
+                            "maximum": 100
+                          },
+                          "verify": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "self",
+                                  "record"
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "minMinutes": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 600
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "windowStart": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "windowEnd": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "openRecords": {
+                            "anyOf": [
+                              {
+                                "type": "boolean"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "id": {
+                            "type": "string",
+                            "maxLength": 100
+                          },
+                          "version": {
+                            "type": "integer",
+                            "minimum": 1
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "members": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "joined": {
+                            "type": "boolean"
+                          },
+                          "myDays": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "myLastDate": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "additionalProperties": true
                       },
                       "maxItems": 500
                     },
@@ -7354,6 +7479,137 @@
         "x-test-evidence": "verification.md"
       }
     },
+    "/api/communities/{id}/challenges/{challengeId}/checkins": {
+      "get": {
+        "operationId": "CommunityController_get__api_communities__id__challenges__challengeId__checkins",
+        "tags": [
+          "CommunityController"
+        ],
+        "summary": "GET /api/communities/{id}/challenges/{challengeId}/checkins",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "challengeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "성공. 세부 정책은 README와 기능 규약을 따른다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ChallengeCheckin"
+                      },
+                      "maxItems": 500,
+                      "description": "userId로 한 사람만 고를 수 있다. 다른 참여자에게는 날짜·인증 방식만 보이고, 기록 제목·시각·분은 본인 것과 기록 공개 챌린지에 동의한 참여자 것만 담는다."
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 검증 오류.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 필요 또는 폐기된 토큰.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "역할·회원 권한 부족.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "없음·타인 리소스·만료.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "버전·현재 상태 충돌.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-implementation-status": "서비스 연결 · 검증 범위 별도",
+        "x-source": "CommunityController.java",
+        "x-admin-required": false,
+        "x-test-evidence": "verification.md"
+      }
+    },
     "/api/communities/{id}/challenges/{challengeId}/checkins/{date}": {
       "put": {
         "operationId": "CommunityController_put__api_communities__id__challenges__challengeId__checkins__date_",
@@ -7392,6 +7648,25 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "sessionId": {
+                    "type": "string",
+                    "maxLength": 100
+                  }
+                },
+                "required": [],
+                "additionalProperties": false,
+                "description": "본문 없이 보내면 직접 인증. sessionId는 내 실제 기록 중 실시간으로 시작·종료한 완료 기록(다른 계정·없는 기록은 404). 시간대가 없으면 기록 시작 날짜(사용자 하루 기준)가 인증 날짜와 같아야 하고, 시간대가 있으면 그 날짜의 시간대와 겹친 분이 minMinutes 이상이어야 한다. record 챌린지는 sessionId 필수. 같은 기록은 한 챌린지에서 한 번만 쓴다(409)."
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "성공. 세부 정책은 README와 기능 규약을 따른다.",
@@ -7404,8 +7679,7 @@
                       "const": true
                     },
                     "data": {
-                      "type": "object",
-                      "additionalProperties": true
+                      "$ref": "#/components/schemas/ChallengeCheckin"
                     },
                     "message": {
                       "type": [
@@ -7511,6 +7785,24 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "consent": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [],
+                "additionalProperties": false,
+                "description": "기록 공개 챌린지(openRecords)는 consent=true여야 참여한다. 끝난 챌린지는 409."
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "성공. 세부 정책은 README와 기능 규약을 따른다.",
@@ -7542,6 +7834,97 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "입력 검증 오류.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 필요 또는 폐기된 토큰.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "역할·회원 권한 부족.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "없음·타인 리소스·만료.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "버전·현재 상태 충돌.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-implementation-status": "서비스 연결 · 검증 범위 별도",
+        "x-source": "CommunityController.java",
+        "x-admin-required": false,
+        "x-test-evidence": "verification.md"
+      }
+    },
+    "/api/communities/{id}/challenges/{challengeId}/members/me": {
+      "delete": {
+        "operationId": "CommunityController_delete__api_communities__id__challenges__challengeId__members_me",
+        "tags": [
+          "CommunityController"
+        ],
+        "summary": "DELETE /api/communities/{id}/challenges/{challengeId}/members/me",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "challengeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "본문 없음."
           },
           "400": {
             "description": "입력 검증 오류.",
@@ -7650,18 +8033,29 @@
                             "type": "string",
                             "maxLength": 200
                           },
+                          "nickname": {
+                            "type": "string",
+                            "maxLength": 200
+                          },
                           "doneDays": {
+                            "type": "integer",
+                            "minimum": 0
+                          },
+                          "verifiedDays": {
                             "type": "integer",
                             "minimum": 0
                           }
                         },
                         "required": [
                           "userId",
-                          "doneDays"
+                          "nickname",
+                          "doneDays",
+                          "verifiedDays"
                         ],
                         "additionalProperties": false
                       },
-                      "maxItems": 500
+                      "maxItems": 500,
+                      "description": "참여 중이면서 커뮤니티 활성 회원인 사람. 인증 일수와 그중 실제 기록으로 확인한 일수만 집계하고 개인 기록은 집계하지 않는다. 서로 차단한 사람은 빠진다."
                     },
                     "message": {
                       "type": [
@@ -45216,6 +45610,64 @@
             "type": "integer",
             "minimum": 3,
             "maximum": 100
+          },
+          "verify": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "self",
+                  "record"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "minMinutes": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 600
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "windowStart": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "windowEnd": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "openRecords": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -45223,7 +45675,8 @@
           "startDate",
           "days"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "verify는 self(직접 인증, 기본) 또는 record(실시간 실제 기록으로 확인). record이면 minMinutes(1~600) 필수. windowStart·windowEnd(HH:mm)는 record에서만 함께 정하며 끝이 시작보다 늦어야 한다(자정을 넘지 않음). openRecords=true(기록 공개 챌린지)는 record여야 한다. 만든 뒤에는 규칙을 바꾸지 않는다."
       },
       "CHALLENGEUpdate": {
         "type": "object",
@@ -45254,6 +45707,64 @@
             "minimum": 3,
             "maximum": 100
           },
+          "verify": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "self",
+                  "record"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "minMinutes": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 600
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "windowStart": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "windowEnd": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "openRecords": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "version": {
             "type": "integer",
             "minimum": 1
@@ -45265,7 +45776,8 @@
           "days",
           "version"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "verify는 self(직접 인증, 기본) 또는 record(실시간 실제 기록으로 확인). record이면 minMinutes(1~600) 필수. windowStart·windowEnd(HH:mm)는 record에서만 함께 정하며 끝이 시작보다 늦어야 한다(자정을 넘지 않음). openRecords=true(기록 공개 챌린지)는 record여야 한다. 만든 뒤에는 규칙을 바꾸지 않는다."
       },
       "CHALLENGEUpsert": {
         "type": "object",
@@ -45296,6 +45808,64 @@
             "minimum": 3,
             "maximum": 100
           },
+          "verify": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "self",
+                  "record"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "minMinutes": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 600
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "windowStart": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "windowEnd": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "openRecords": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "version": {
             "type": "integer",
             "minimum": 1
@@ -45306,7 +45876,8 @@
           "startDate",
           "days"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "verify는 self(직접 인증, 기본) 또는 record(실시간 실제 기록으로 확인). record이면 minMinutes(1~600) 필수. windowStart·windowEnd(HH:mm)는 record에서만 함께 정하며 끝이 시작보다 늦어야 한다(자정을 넘지 않음). openRecords=true(기록 공개 챌린지)는 record여야 한다. 만든 뒤에는 규칙을 바꾸지 않는다."
       },
       "CHALLENGEResponse": {
         "type": "object",
@@ -45336,6 +45907,64 @@
             "type": "integer",
             "minimum": 3,
             "maximum": 100
+          },
+          "verify": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "self",
+                  "record"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "minMinutes": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 600
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "windowStart": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "windowEnd": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "openRecords": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "id": {
             "type": "string",
@@ -46418,6 +47047,53 @@
         ],
         "additionalProperties": false,
         "description": "그룹 멤버가 고른 범위만큼만 담는다. busy는 시간만, title은 제목까지, detail은 내용·분류·색까지. 일정 ID는 어느 범위에도 없다."
+      },
+      "ChallengeCheckin": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "maxLength": 36
+          },
+          "nickname": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "self",
+              "record"
+            ]
+          },
+          "minutes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 200
+          }
+        },
+        "required": [
+          "userId",
+          "nickname",
+          "date",
+          "method"
+        ],
+        "additionalProperties": false
       },
       "Error": {
         "type": "object",

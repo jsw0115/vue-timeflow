@@ -19,3 +19,7 @@
 - 3단계: 게시글 시각은 서버 UTC 값을 잘라 보이고 있어 한국 시간과 9시간 어긋났다. 기기 시간대로 바꿨다(`localTime`).
 - 새 컨테이너에서는 Docker 데몬·MySQL·백엔드·Vite가 꺼져 있다. 다시 띄우는 명령은 `dockerd &`, `docker compose -f infra/chat/compose.yml up -d --wait`, `sh ./gradlew bootRun --args="--spring.profiles.active=chat-local --server.port=18080"`, `DEV_API_TARGET=http://127.0.0.1:18080 npx vite --port 15173 --strictPort`다.
 - 다음 작업: 3b 또는 4단계(업무·WBS·위키). 첫 명령은 `grep -n "work" frontend/src/router/index.js`다.
+- 3b 결정(2026-11-20 사용자 선택): Q-25 커뮤니티 채팅은 회원과 채팅방을 자동 동기화한다. Q-26 랭킹은 챌린지별 인증 랭킹으로 하고, 그 시간에 그 일을 했는지 확인하는 연계와 개인 기록 공개에 동의하는 별도 챌린지를 둔다. 전체 달성률 랭킹 서버는 만들지 않는다.
+- 3b-1: 인증 근거는 실제 기록(ACTUAL_SESSION) 중 `finishKey`가 있는 완료 기록만 쓴다. 시작 시각을 서버가 찍었고 종료는 현재 시각을 넘을 수 없어 나중에 지어낼 수 없다. 백업 복원 기록은 `finishKey`가 없어 근거가 될 수 없다.
+- 3b-1: 인증 날짜는 기록 시작 시각을 사용자 하루 기준(`DayPolicy`, 시간대·하루 시작 시각)으로 바꾼 날짜다. 시간대 조건(예: 06:00~08:00)이 있으면 그 구간과 겹친 시간만 센다.
+- 3b-1: 인증은 feature_member의 CHECKIN 행 대신 새 테이블 `challenge_checkin`(V12)에 둔다. 근거(기록 ID·서버 시각·분)를 열로 남겨야 해서다. 기존 CHECKIN 행은 V12에서 옮기고 지운다.

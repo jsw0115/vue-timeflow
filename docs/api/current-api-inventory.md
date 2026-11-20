@@ -2,7 +2,7 @@
 
 기준 2026-10-10. 생성 명령: frontend에서 npm run docs:api. 현재 컨트롤러의 단일 문자열 매핑 형식에 한정된 생성기입니다.
 
-총 292개. 기존 지정 계약 검증 10, 서비스 연결 269, 외부 제공자 경계 13, 미구현 stub 0, 공용 메모리 시연 0.
+총 294개. 기존 지정 계약 검증 10, 서비스 연결 271, 외부 제공자 경계 13, 미구현 stub 0, 공용 메모리 시연 0.
 
 | 상태 | 의미 |
 |---|---|
@@ -266,7 +266,9 @@ ChatController의 18개 경로는 CHAT_ENABLED=true일 때 등록됩니다. [채
 | GET | /api/communities/{id}/challenges | 서비스 연결 · 검증 범위 별도 | JWT | CommunityController |
 | POST | /api/communities/{id}/challenges | 서비스 연결 · 검증 범위 별도 | JWT | CommunityController |
 | POST | /api/communities/{id}/challenges/{challengeId}/join | 서비스 연결 · 검증 범위 별도 | JWT | CommunityController |
+| DELETE | /api/communities/{id}/challenges/{challengeId}/members/me | 서비스 연결 · 검증 범위 별도 | JWT | CommunityController |
 | PUT | /api/communities/{id}/challenges/{challengeId}/checkins/{date} | 서비스 연결 · 검증 범위 별도 | JWT | CommunityController |
+| GET | /api/communities/{id}/challenges/{challengeId}/checkins | 서비스 연결 · 검증 범위 별도 | JWT | CommunityController |
 | GET | /api/communities/{id}/challenges/{challengeId}/ranking | 서비스 연결 · 검증 범위 별도 | JWT | CommunityController |
 | GET | /api/tasks | 서비스 연결 · 검증 범위 별도 | JWT | TaskController |
 | GET | /api/tasks/{taskId} | 서비스 연결 · 검증 범위 별도 | JWT | TaskController |

@@ -12,7 +12,8 @@ import java.util.*;
 @RequestMapping("/api/communities")
 public class CommunityController {
     private final SocialService service;
-    public CommunityController(SocialService service) { this.service = service; }
+    private final ChallengeService challenges;
+    public CommunityController(SocialService service, ChallengeService challenges) { this.service = service; this.challenges = challenges; }
     @GetMapping
     public ApiResponse<?> list(@RequestParam(required=false) String q, @RequestParam(defaultValue="0") int page, @RequestParam(defaultValue="20") int size) { return ApiResponse.ok(FeaturePage.of(service.spaces(CurrentUser.id(), FeatureType.COMMUNITY), null, null, q, null, page, size)); }
     @PostMapping
@@ -59,14 +60,19 @@ public class CommunityController {
         service.like(CurrentUser.id(), id, postId, Boolean.TRUE.equals(body.get("liked"))); return ApiResponse.ok(null);
     }
     @GetMapping("/{id}/challenges")
-    public ApiResponse<?> challenges(@PathVariable String id) { return ApiResponse.ok(service.posts(CurrentUser.id(), id, FeatureType.CHALLENGE)); }
+    public ApiResponse<?> challenges(@PathVariable String id) { return ApiResponse.ok(challenges.list(CurrentUser.id(), id)); }
     @PostMapping("/{id}/challenges")
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<?> challenge(@PathVariable String id, @RequestBody Map<String,Object> body) { return ApiResponse.ok(service.challenge(CurrentUser.id(), id, body)); }
+    public ApiResponse<?> challenge(@PathVariable String id, @RequestBody Map<String,Object> body) { return ApiResponse.ok(challenges.create(CurrentUser.id(), id, body)); }
     @PostMapping("/{id}/challenges/{challengeId}/join")
-    public ApiResponse<?> challengeJoin(@PathVariable String id, @PathVariable String challengeId) { service.challengeJoin(CurrentUser.id(), id, challengeId); return ApiResponse.ok(null); }
+    public ApiResponse<?> challengeJoin(@PathVariable String id, @PathVariable String challengeId, @RequestBody(required=false) Map<String,Object> body) { challenges.join(CurrentUser.id(), id, challengeId, body == null ? Map.of() : body); return ApiResponse.ok(null); }
+    @DeleteMapping("/{id}/challenges/{challengeId}/members/me")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void challengeLeave(@PathVariable String id, @PathVariable String challengeId) { challenges.leave(CurrentUser.id(), id, challengeId); }
     @PutMapping("/{id}/challenges/{challengeId}/checkins/{date}")
-    public ApiResponse<?> checkin(@PathVariable String id, @PathVariable String challengeId, @PathVariable String date) { service.checkin(CurrentUser.id(), id, challengeId, date); return ApiResponse.ok(null); }
+    public ApiResponse<?> checkin(@PathVariable String id, @PathVariable String challengeId, @PathVariable String date, @RequestBody(required=false) Map<String,Object> body) { return ApiResponse.ok(challenges.checkin(CurrentUser.id(), id, challengeId, date, body == null ? Map.of() : body)); }
+    @GetMapping("/{id}/challenges/{challengeId}/checkins")
+    public ApiResponse<?> checkins(@PathVariable String id, @PathVariable String challengeId, @RequestParam(required=false) String userId) { return ApiResponse.ok(challenges.checkins(CurrentUser.id(), id, challengeId, userId)); }
     @GetMapping("/{id}/challenges/{challengeId}/ranking")
-    public ApiResponse<?> ranking(@PathVariable String id, @PathVariable String challengeId) { return ApiResponse.ok(service.ranking(CurrentUser.id(), id, challengeId)); }
+    public ApiResponse<?> ranking(@PathVariable String id, @PathVariable String challengeId) { return ApiResponse.ok(challenges.ranking(CurrentUser.id(), id, challengeId)); }
 }

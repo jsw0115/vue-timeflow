@@ -33,6 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringJUnitConfig(FeatureTestConfig.class)
 class ShareCalendarTest {
     @Autowired SocialService social;
+    @Autowired kr.timebar.diary.social.ChallengeService challenges;
     @Autowired ShareCalendar calendar;
     @Autowired PeopleFinder people;
     @Autowired RecordService records;
@@ -44,7 +45,7 @@ class ShareCalendarTest {
 
     @BeforeEach void setup() {
         alice = account("alice"); bob = account("bob"); carol = account("carol");
-        mvc = MockMvcBuilders.standaloneSetup(new ShareController(social, calendar, people), new CommunityController(social)).setControllerAdvice(new ApiExceptionHandler()).build();
+        mvc = MockMvcBuilders.standaloneSetup(new ShareController(social, calendar, people), new CommunityController(social, challenges)).setControllerAdvice(new ApiExceptionHandler()).build();
     }
     @AfterEach void clear() { SecurityContextHolder.clearContext(); }
     private String account(String name) {

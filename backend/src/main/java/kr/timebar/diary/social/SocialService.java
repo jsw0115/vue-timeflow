@@ -93,7 +93,7 @@ public class SocialService {
         for (var post : store.all(id, FeatureType.POST)) jdbc.update("DELETE FROM feature_member WHERE space_type='LIKE' AND space_id=?", post.get("id"));
         for (var challenge : store.all(id, FeatureType.CHALLENGE)) {
             jdbc.update("DELETE FROM feature_member WHERE space_type='CHALLENGE' AND space_id=?", challenge.get("id"));
-            jdbc.update("DELETE FROM feature_member WHERE space_type='CHECKIN' AND space_id LIKE ?", challenge.get("id") + ":%");
+            jdbc.update("DELETE FROM challenge_checkin WHERE challenge_id=?", challenge.get("id"));
         }
         for (FeatureType child : List.of(FeatureType.POST, FeatureType.COMMENT, FeatureType.CHALLENGE)) store.deleteAll(id, child);
     }
@@ -203,28 +203,6 @@ public class SocialService {
         if (liked) setMember("LIKE", post, user, "viewer", "ACTIVE", "");
         else jdbc.update("DELETE FROM feature_member WHERE space_type='LIKE' AND space_id=? AND user_id=?", post, user);
     }
-    public Map<String,Object> challenge(String user, String id, Map<String,Object> body) {
-        store.lock(FeatureStore.SYSTEM, FeatureType.COMMUNITY, id); require(user, FeatureType.COMMUNITY, id, false);
-        var data = FeatureInput.validate(FeatureType.CHALLENGE, body); data.put("authorId", user);
-        return store.create(id, FeatureType.CHALLENGE, data);
-    }
-    public void challengeJoin(String user, String id, String challenge) {
-        require(user, FeatureType.COMMUNITY, id, false); store.lock(id, FeatureType.CHALLENGE, challenge);
-        setMember("CHALLENGE", challenge, user, "viewer", "ACTIVE", "");
-    }
-    public void checkin(String user, String id, String challenge, String date) {
-        require(user, FeatureType.COMMUNITY, id, false); var item = store.lock(id, FeatureType.CHALLENGE, challenge);
-        var joined = member("CHALLENGE", challenge, user); if (joined.isEmpty()) throw new ApiException(ErrorCode.FORBIDDEN);
-        LocalDate day = FeatureInput.date(date), start = FeatureInput.date(item.get("startDate").toString());
-        if (day.isBefore(start) || !day.isBefore(start.plusDays(((Number)item.get("days")).longValue())) || day.isAfter(LocalDate.now(ZoneId.of("Asia/Seoul")))) FeatureInput.fail("챌린지 기간과 인증 날짜를 확인해주세요.");
-        setMember("CHECKIN", challenge + ":" + date, user, "viewer", "ACTIVE", "");
-    }
-    public List<Map<String,Object>> ranking(String user, String id, String challenge) {
-        require(user, FeatureType.COMMUNITY, id, false); store.get(id, FeatureType.CHALLENGE, challenge);
-        // 업무 시간·경력·개인 기록 없이 챌린지 인증 횟수만 집계한다.
-        return jdbc.queryForList("SELECT user_id AS userId,COUNT(*) AS doneDays FROM feature_member WHERE space_type='CHECKIN' AND space_id LIKE ? GROUP BY user_id ORDER BY COUNT(*) DESC,user_id", challenge + ":%").stream().filter(row -> !blocked(user, row.get("userId").toString())).map(row -> SqlResponses.fields(row, "userId", "doneDays")).toList();
-    }
-
     public void require(String user, FeatureType type, String id, boolean owner) {
         store.get(FeatureStore.SYSTEM, type, id);
         var member = member(type, id, user).orElseThrow(() -> new ApiException(ErrorCode.FORBIDDEN));

@@ -750,6 +750,25 @@ file을 multipart/form-data로 전달한다. boundary는 HTTP 클라이언트가
 | desc | string 또는 null | 아니오 | 기능 규약 참조 |
 | startDate | string | 예 | date |
 | days | integer | 예 | 최소 3 · 최대 100 |
+| verify | string 또는 null | 아니오 | 기능 규약 참조 |
+| minMinutes | integer 또는 null | 아니오 | 기능 규약 참조 |
+| windowStart | string 또는 null | 아니오 | 기능 규약 참조 |
+| windowEnd | string 또는 null | 아니오 | 기능 규약 참조 |
+| openRecords | boolean 또는 null | 아니오 | 기능 규약 참조 |
+
+verify는 self(직접 인증, 기본) 또는 record(실시간 실제 기록으로 확인). record이면 minMinutes(1~600) 필수. windowStart·windowEnd(HH:mm)는 record에서만 함께 정하며 끝이 시작보다 늦어야 한다(자정을 넘지 않음). openRecords=true(기록 공개 챌린지)는 record여야 한다. 만든 뒤에는 규칙을 바꾸지 않는다.
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## GET /api/communities/{id}/challenges/{challengeId}/checkins
+
+인증은 JWT이며 소스는 CommunityController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | id | String | 예 | 없음 |
+| path | challengeId | String | 예 | 없음 |
+| query | userId | String | 아니오 | 없음 |
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 
@@ -763,11 +782,34 @@ file을 multipart/form-data로 전달한다. boundary는 HTTP 클라이언트가
 | path | challengeId | String | 예 | 없음 |
 | path | date | String | 예 | 없음 |
 
+| 본문 필드 | 타입 | 필수 | 제약 |
+|---|---|---|---|
+| sessionId | string | 아니오 | 길이 ≤ 100 |
+
+본문 없이 보내면 직접 인증. sessionId는 내 실제 기록 중 실시간으로 시작·종료한 완료 기록(다른 계정·없는 기록은 404). 시간대가 없으면 기록 시작 날짜(사용자 하루 기준)가 인증 날짜와 같아야 하고, 시간대가 있으면 그 날짜의 시간대와 겹친 분이 minMinutes 이상이어야 한다. record 챌린지는 sessionId 필수. 같은 기록은 한 챌린지에서 한 번만 쓴다(409).
+
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 
 ## POST /api/communities/{id}/challenges/{challengeId}/join
 
 인증은 JWT이며 소스는 CommunityController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | id | String | 예 | 없음 |
+| path | challengeId | String | 예 | 없음 |
+
+| 본문 필드 | 타입 | 필수 | 제약 |
+|---|---|---|---|
+| consent | boolean | 아니오 | 기능 규약 참조 |
+
+기록 공개 챌린지(openRecords)는 consent=true여야 참여한다. 끝난 챌린지는 409.
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## DELETE /api/communities/{id}/challenges/{challengeId}/members/me
+
+인증은 JWT이며 소스는 CommunityController.java다. 성공 HTTP는 204다.
 
 | 위치 | 이름 | 타입 | 필수 | 기본값 |
 |---|---|---|---|---|

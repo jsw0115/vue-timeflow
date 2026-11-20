@@ -39,7 +39,7 @@ public enum FeatureType {
     COMMUNITY("title desc emoji category joinPolicy visibility capacity deadline", "title joinPolicy visibility capacity"),
     POST("title body", "body"),
     COMMENT("body", "body"),
-    CHALLENGE("title desc startDate days", "title startDate days"),
+    CHALLENGE("title desc startDate days verify minMinutes windowStart windowEnd openRecords", "title startDate days"),
     SETTING("value", "value");
 
     private final Set<String> fields;
