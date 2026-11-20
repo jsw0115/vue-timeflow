@@ -44,7 +44,8 @@ public class ChallengeService {
             result.put("members", participants(community, id).size());
             result.put("joined", joined(id, user));
             result.put("myDays", jdbc.queryForObject("SELECT COUNT(*) FROM challenge_checkin WHERE challenge_id=? AND user_id=?", Integer.class, id, user));
-            result.put("myLastDate", jdbc.queryForList("SELECT MAX(check_date) FROM challenge_checkin WHERE challenge_id=? AND user_id=?", java.sql.Date.class, id, user).stream().filter(Objects::nonNull).map(d -> d.toLocalDate().toString()).findFirst().orElse(null));
+            LocalDate last = jdbc.queryForObject("SELECT MAX(check_date) FROM challenge_checkin WHERE challenge_id=? AND user_id=?", LocalDate.class, id, user);
+            result.put("myLastDate", last == null ? null : last.toString());
             return (Map<String,Object>) result;
         }).toList();
     }
@@ -81,17 +82,17 @@ public class ChallengeService {
         LocalDate day = FeatureInput.date(date), start = FeatureInput.date(challenge.get("startDate").toString());
         if (day.isBefore(start) || day.isAfter(lastDay(challenge)) || day.isAfter(LocalDate.now(zone))) FeatureInput.fail("챌린지 기간과 인증 날짜를 확인해주세요.");
         String sessionId = FeatureInput.text(body, "sessionId");
-        jdbc.update("DELETE FROM challenge_checkin WHERE challenge_id=? AND user_id=? AND check_date=?", id, user, java.sql.Date.valueOf(day));
+        jdbc.update("DELETE FROM challenge_checkin WHERE challenge_id=? AND user_id=? AND check_date=?", id, user, day);
         if (sessionId.isEmpty()) {
             if ("record".equals(challenge.get("verify"))) FeatureInput.fail("이 챌린지는 실시간으로 남긴 실제 기록으로 인증합니다.");
-            jdbc.update("INSERT INTO challenge_checkin(challenge_id,user_id,check_date,method,created_at) VALUES (?,?,?,'self',?)", id, user, java.sql.Date.valueOf(day), now());
+            jdbc.update("INSERT INTO challenge_checkin(challenge_id,user_id,check_date,method,created_at) VALUES (?,?,?,'self',?)", id, user, day, now());
         } else {
             var proof = evidence(user, challenge, day, zone, sessionId);
             if (Boolean.TRUE.equals(jdbc.queryForObject("SELECT COUNT(*)>0 FROM challenge_checkin WHERE challenge_id=? AND user_id=? AND session_id=?", Boolean.class, id, user, sessionId)))
                 throw new ApiException(ErrorCode.CONFLICT, "이 기록은 이미 다른 날짜의 인증에 썼습니다.");
             // 기록 제목은 다른 참여자에게 보일 수 있는 기록 공개 챌린지에서만 복사해 둔다
             jdbc.update("INSERT INTO challenge_checkin(challenge_id,user_id,check_date,method,session_id,session_title,started_at,ended_at,minutes,created_at) VALUES (?,?,?,'record',?,?,?,?,?,?)",
-                    id, user, java.sql.Date.valueOf(day), sessionId, open(challenge) ? proof.title() : null, timestamp(proof.from()), timestamp(proof.to()), proof.minutes(), now());
+                    id, user, day, sessionId, open(challenge) ? proof.title() : null, timestamp(proof.from()), timestamp(proof.to()), proof.minutes(), now());
         }
         return checkins(user, community, id, user).stream().filter(row -> day.toString().equals(row.get("date"))).findFirst().orElseThrow();
     }
@@ -107,20 +108,22 @@ public class ChallengeService {
         var consented = new HashSet<>(jdbc.queryForList("SELECT user_id FROM feature_member WHERE space_type='CHALLENGE' AND space_id=? AND share_level='detail'", String.class, id));
         boolean open = open(challenge);
         var names = new HashMap<String,String>();
-        String sql = "SELECT * FROM challenge_checkin WHERE challenge_id=?" + (target == null ? "" : " AND user_id=?") + " ORDER BY check_date DESC, user_id";
-        var rows = target == null ? jdbc.queryForList(sql, id) : jdbc.queryForList(sql, id, target);
+        String sql = "SELECT user_id,check_date,method,session_id,session_title,started_at,ended_at,minutes FROM challenge_checkin WHERE challenge_id=?" + (target == null ? "" : " AND user_id=?") + " ORDER BY check_date DESC, user_id";
+        Object[] args = target == null ? new Object[] { id } : new Object[] { id, target };
+        // 시각은 getTimestamp로 읽어 드라이버가 연결 시간대(chat-local은 UTC)를 반영하게 한다
+        var rows = jdbc.query(sql, (rs, i) -> new Checkin(rs.getString("user_id"), rs.getObject("check_date", LocalDate.class), rs.getString("method"), rs.getString("session_id"), rs.getString("session_title"),
+                instant(rs.getTimestamp("started_at")), instant(rs.getTimestamp("ended_at")), rs.getInt("minutes")), args);
         List<Map<String,Object>> result = new ArrayList<>();
         for (var row : rows) {
-            String owner = row.get("user_id").toString();
-            if (!people.contains(owner) || social.blocked(user, owner)) continue;
+            if (!people.contains(row.user()) || social.blocked(user, row.user())) continue;
             var item = new LinkedHashMap<String,Object>();
-            item.put("userId", owner); item.put("nickname", names.computeIfAbsent(owner, this::nickname));
-            item.put("date", date(row.get("check_date"))); item.put("method", row.get("method"));
-            boolean mine = owner.equals(user);
-            if ("record".equals(row.get("method")) && (mine || open && consented.contains(owner))) {
-                item.put("minutes", ((Number)row.get("minutes")).intValue());
-                item.put("startedAt", instant(row.get("started_at"))); item.put("endedAt", instant(row.get("ended_at")));
-                item.put("title", open ? row.get("session_title") : title(owner, Objects.toString(row.get("session_id"), "")));
+            item.put("userId", row.user()); item.put("nickname", names.computeIfAbsent(row.user(), this::nickname));
+            item.put("date", row.date().toString()); item.put("method", row.method());
+            boolean mine = row.user().equals(user);
+            if ("record".equals(row.method()) && (mine || open && consented.contains(row.user()))) {
+                item.put("minutes", row.minutes());
+                item.put("startedAt", row.from()); item.put("endedAt", row.to());
+                item.put("title", open ? row.title() : title(row.user(), Objects.toString(row.session(), "")));
             }
             result.add(item);
         }
@@ -143,6 +146,7 @@ public class ChallengeService {
     }
 
     private record Evidence(String title, Instant from, Instant to, long minutes) { }
+    private record Checkin(String user, LocalDate date, String method, String session, String title, String from, String to, int minutes) { }
 
     /**
      * 실시간 종료 API만 finishKey를 남긴다. 그런 기록은 시작 시각을 서버가 찍었고 종료 시각이 현재를 넘을 수 없어 나중에 지어낼 수 없다.
@@ -183,11 +187,5 @@ public class ChallengeService {
     private String title(String user, String session) { return store.optional(user, FeatureType.ACTUAL_SESSION, session).map(row -> Objects.toString(row.get("title"), "")).orElse(""); }
     private static Timestamp now() { return Timestamp.from(Instant.now()); }
     private static Timestamp timestamp(Instant instant) { return Timestamp.from(instant); }
-    private static String date(Object value) { return value instanceof java.sql.Date d ? d.toLocalDate().toString() : value.toString(); }
-    /** 저장할 때 JVM 시간대로 바꿔 넣은 DATETIME을 같은 시간대로 되읽는다. MySQL 드라이버는 LocalDateTime, H2는 Timestamp를 준다. */
-    private static String instant(Object value) {
-        if (value instanceof Timestamp t) return t.toInstant().toString();
-        if (value instanceof LocalDateTime local) return local.atZone(ZoneId.systemDefault()).toInstant().toString();
-        return Objects.toString(value, null);
-    }
+    private static String instant(Timestamp value) { return value == null ? null : value.toInstant().toString(); }
 }
