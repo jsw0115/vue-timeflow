@@ -620,6 +620,8 @@ Plan과 Actual 차이는 점선/실선, 라벨, 패턴 및 수치로도 구분�
 </svg>
 ```
 
+현재 구현(2026-11-20): 앱 안 심볼은 `frontend/src/components/brand/BrandMark.vue`(currentColor), 파비콘은 같은 기하를 포레스트(`#2F5D46`) 타일 위 흰색으로 그린 `frontend/public/favicon.svg`와 거기서 렌더링한 `favicon.ico`(16·32·48), `apple-touch-icon.png`(180, 모서리 없는 정사각형 — iOS가 둥근 모서리를 씌운다)다. Android·iOS·Electron 앱 아이콘은 아직 바꾸지 않았다.
+
 심볼은 `viewBox 0 0 24 24`, 둥근 선 끝, 1.8px 단일 선 굵기를 유지한다. 상단 점선은 계획, 하단 실선과 점은 실제 기록을 나타낸다. 서비스 명칭은 별도 워드마크 텍스트로 조합한다. SVG에 텍스트를 경로로 박아 넣거나 이미지 한 장으로만 제공하지 않아야 크기·접근성·다크 테마 대응이 쉽다.
 
 ### Iconography

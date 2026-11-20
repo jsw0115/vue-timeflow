@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <!-- Timebar Diary 파비콘. BrandMark.vue와 같은 기하(DESIGN.md 7장)를 포레스트 타일 위에 흰색으로 그린다. 밝은·어두운 탭 막대 모두에서 보인다. -->
+  <title>Timebar Diary</title>
+  <rect width="24" height="24" rx="5.5" fill="#2F5D46"/>
+  <g fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round">
+    <path d="M5 4.5v15"/>
+    <path d="M9 8h10" stroke-dasharray="2.2 2.2"/>
+    <path d="M9 16h6.5"/>
+  </g>
+  <circle cx="18" cy="16" r="2" fill="#FFFFFF"/>
+</svg>
