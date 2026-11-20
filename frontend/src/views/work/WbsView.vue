@@ -10,6 +10,7 @@ import Modal from '../../components/Modal.vue'
 import HelpPopover from '../../components/HelpPopover.vue'
 import { isFeatureOn } from '../../store/aiSettings'
 import { useCapabilityStatus } from '../../features/integrations/useCapabilityStatus.mjs'
+import PageActions from '../../components/PageActions.vue'
 
 // AI 안내는 서버 제공 상태 기준이다. 확인 중·확인 실패에는 아무 안내도 하지 않는다
 const { state: aiStatus } = useCapabilityStatus(() => 'ai')
@@ -158,7 +159,7 @@ async function addNode() {
     />
     <span class="badge danger">비공개 · 나만 보기</span>
     <span></span>
-    <button class="primary" @click="openAdd(null)">+ 최상위 작업</button>
+    <PageActions><button class="primary" @click="openAdd(null)">+ 최상위 작업</button></PageActions>
   </div>
   <StorageNote :mode="wbsStore.mode.value" />
   <p v-if="saving.state.message && !adding" class="input-field-help wbs-message" data-state="error" role="alert">{{ saving.state.message }}</p>

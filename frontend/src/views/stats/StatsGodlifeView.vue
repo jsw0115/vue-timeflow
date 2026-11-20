@@ -1,4 +1,5 @@
 <script setup>
+import AppIcon from '../../components/icons/AppIcon.vue'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { isAutomationOn, toggleAutomation } from '../../store/automations'
@@ -55,10 +56,11 @@ const goldenHour = computed(() => {
 })
 
 const BADGES = [
-  { id: 'streak', icon: '🔥', label: '연속 기록', desc: '12일 연속 기록', earned: true },
-  { id: 'morning', icon: '🌱', label: '아침형 인간', desc: '오전 집중 3주 연속', earned: true },
-  { id: 'mvp', icon: '⭐', label: '이번 주 MVP', desc: '그룹 내 달성률 1위', earned: true },
-  { id: 'perfect', icon: '◎', label: '퍼펙트 위크', desc: '한 주 모든 루틴 달성', earned: false },
+  // 뱃지 표식은 앱 선 아이콘이다(DESIGN.md 7장: 장식 이모지를 상태 아이콘으로 쓰지 않는다)
+  { id: 'streak', icon: 'repeat', label: '연속 기록', desc: '12일 연속 기록', earned: true },
+  { id: 'morning', icon: 'sun', label: '아침형 인간', desc: '오전 집중 3주 연속', earned: true },
+  { id: 'mvp', icon: 'star', label: '이번 주 MVP', desc: '그룹 내 달성률 1위', earned: true },
+  { id: 'perfect', icon: 'target', label: '퍼펙트 위크', desc: '한 주 모든 루틴 달성', earned: false },
 ]
 const earnedBadges = computed(() => BADGES.filter((b) => b.earned))
 
@@ -71,7 +73,6 @@ const summary = computed(() => {
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 1rem">갓생 리포트</b>
     <HelpPopover
       title="갓생 점수 계산법"
       summary="루틴·할 일·집중 시간을 가중 합산해 100점 만점으로 계산해요. 미완료를 벌점으로 깎지 않고, 해낸 만큼만 더합니다."
@@ -123,20 +124,20 @@ const summary = computed(() => {
       <h3>획득 뱃지 {{ earnedBadges.length }}/{{ BADGES.length }}</h3>
       <div class="badge-grid">
         <div v-for="b in BADGES" :key="b.id" class="badge-item" :class="{ locked: !b.earned }" :title="b.desc">
-          <i>{{ b.icon }}</i>
-          <span><b>{{ b.label }}</b><small>{{ b.desc }}</small></span>
+          <i aria-hidden="true"><AppIcon :name="b.icon" :size="18" /></i>
+          <span><b>{{ b.label }}</b><small>{{ b.desc }}{{ b.earned ? '' : ' · 아직 얻지 않음' }}</small></span>
         </div>
       </div>
     </section>
   </div>
 
   <section class="card" style="margin-top: 16px; display: flex; align-items: center; gap: 12px">
-    <span>✉</span>
+    <span class="godlife-mail" aria-hidden="true"><AppIcon name="mail" /></span>
     <span style="flex: 1">
       <b>매주 갓생 리포트 메일로 받기</b><br />
-      <small>매주 월요일 오전 9시 · <a @click="router.push('/settings/automation')" style="color: var(--color-accent); font-weight: 700; cursor: pointer">자동화 설정에서 관리</a></small>
+      <small>매주 월요일 오전 9시 · <RouterLink to="/settings/automation" class="inline-link">자동화 설정에서 관리</RouterLink></small>
     </span>
-    <button type="button" role="switch" class="toggle" :aria-checked="isAutomationOn('weekly-report')" :class="{ on: isAutomationOn('weekly-report') }" @click="toggleAutomation('weekly-report')"><em></em></button>
+    <button type="button" role="switch" class="toggle" aria-label="매주 갓생 리포트 메일로 받기" :aria-checked="isAutomationOn('weekly-report')" :class="{ on: isAutomationOn('weekly-report') }" @click="toggleAutomation('weekly-report')"><em></em></button>
   </section>
 
   <p class="form-note" style="margin-top: 12px">

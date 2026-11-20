@@ -13,6 +13,7 @@ import {
   resetStatsPortlets,
 } from '../../store/statsPortlets'
 import { modeState, modeMeta } from '../../store/modeProfiles'
+import PageActions from '../../components/PageActions.vue'
 
 /**
  * 통계 보드 — 포틀릿을 사용자가 직접 켜고 끄고 순서를 바꾼다.
@@ -102,7 +103,7 @@ const focusPath = FOCUS_TREND.map((v, i) => (i * 100) / (FOCUS_TREND.length - 1)
     <span class="form-note" style="margin: 0">
       {{ modeMeta(modeState.activeMode).name }} 기본 구성 · 포틀릿 {{ visible.length }}개
     </span>
-    <button class="primary" @click="showConfig = true">포틀릿 구성</button>
+    <PageActions><button class="primary" @click="showConfig = true">포틀릿 구성</button></PageActions>
   </div>
   <p class="input-field-help stat-demo-note" role="note">한눈에 보기 밖의 포틀릿은 아직 시연 데이터예요. 실제 기록으로 계산한 수치는 한눈에 보기에 있어요.</p>
 
@@ -247,7 +248,7 @@ const focusPath = FOCUS_TREND.map((v, i) => (i * 100) / (FOCUS_TREND.length - 1)
 <style scoped>
 .stat-demo-note { margin: 0 0 var(--space-lg); }
 .stat-figures { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-lg); margin-top: var(--space-lg); }
-.stat-figure { display: grid; gap: var(--space-sm); align-content: start; text-align: left; padding: var(--space-lg); background: var(--color-canvas); border: 1px solid var(--color-hairline); border-radius: var(--radius-md); color: var(--color-foreground); cursor: pointer; transition: border-color .15s; }
+.stat-figure { display: grid; gap: var(--space-sm); align-content: start; text-align: left; padding: var(--space-lg); background: var(--color-card); border: 1px solid var(--color-hairline); border-radius: var(--radius-md); color: var(--color-foreground); cursor: pointer; transition: border-color .15s; }
 .stat-figure:hover { border-color: var(--color-foreground); }
 .stat-figure > span { color: var(--color-muted); font-size: var(--type-body-size); }
 .stat-figure b { font-size: 1.375rem; font-weight: var(--type-figure-weight); line-height: 1.2; }

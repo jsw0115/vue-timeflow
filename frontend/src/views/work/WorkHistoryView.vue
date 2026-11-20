@@ -4,6 +4,7 @@ import Modal from '../../components/Modal.vue'
 import HelpPopover from '../../components/HelpPopover.vue'
 import { exportPdf, exportWord, sectionsToHtml } from '../../store/docExport'
 import { workPrivacy, logAccess } from '../../store/workPrivacy'
+import PageActions from '../../components/PageActions.vue'
 
 /** 업무 히스토리 — 누적 시간 집계와 인수인계 문서 생성. */
 const types = ref([
@@ -117,7 +118,6 @@ function download(kind) {
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 1rem">업무 히스토리</b>
     <HelpPopover
       title="업무 히스토리 · 인수인계"
       summary="업무 유형별 누적 시간을 모아두고, 자리를 옮기거나 휴가를 갈 때 인수인계 문서로 바로 뽑아 쓰는 화면이에요."
@@ -134,7 +134,7 @@ function download(kind) {
       :tips="['보안 설정에서 워터마크를 켜두면 내보낸 문서에 작성자와 날짜가 남아요.']"
     />
     <span></span>
-    <button class="primary" @click="openCreate">인수인계 문서 생성</button>
+    <PageActions><button class="primary" @click="openCreate">인수인계 문서 생성</button></PageActions>
   </div>
 
   <div class="metrics" style="--metric-cols: 3; margin-bottom: 16px">

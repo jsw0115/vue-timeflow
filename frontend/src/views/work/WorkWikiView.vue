@@ -1,4 +1,5 @@
 <script setup>
+import PageActions from '../../components/PageActions.vue'
 import { computed, ref, watch } from 'vue'
 import StorageNote from '../../components/StorageNote.vue'
 import { createSaveState } from '../../features/records/saveState.mjs'
@@ -97,7 +98,6 @@ function pickTag(tag) {
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 1rem">업무 위키</b>
     <HelpPopover
       title="업무 위키 사용법"
       summary="반복해서 찾는 업무 지식을 문서로 쌓아두는 공간이에요. 공간(폴더)과 해시태그로 정리하고 검색해서 찾습니다."
@@ -117,7 +117,7 @@ function pickTag(tag) {
     <span class="badge danger">비공개 · 나만 보기</span>
     <span></span>
     <button v-if="wikiStore.mode.value === 'local'" class="review" style="margin: 0" @click="onReset">초기화</button>
-    <button class="primary" @click="openAdd(null)">+ 새 문서</button>
+    <PageActions><button class="primary" @click="openAdd(null)">+ 새 문서</button></PageActions>
   </div>
   <StorageNote :mode="wikiStore.mode.value" />
   <p v-if="saving.state.message && !editing" class="input-field-help wiki-message" data-state="error" role="alert">{{ saving.state.message }}</p>

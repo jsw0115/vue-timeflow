@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import Modal from '../../components/Modal.vue'
 import HelpPopover from '../../components/HelpPopover.vue'
+import PageActions from '../../components/PageActions.vue'
 
 /**
  * 공수 계산 — 인원 × 기간 × 투입률로 MD/MM을 산정하고,
@@ -102,7 +103,7 @@ function fixAll() {
     <span class="form-note" style="margin: 0">MD = 인원 × 기간(일) × 투입률 · 1 MM = {{ MD_PER_MM }} MD</span>
     <div class="form-row" style="margin: 0">
       <button class="review" style="margin: 0" @click="showAdd = true">+ 공수 항목</button>
-      <button class="primary" @click="fixAll">이번 달 확정하기</button>
+      <PageActions><button class="primary" @click="fixAll">이번 달 확정하기</button></PageActions>
     </div>
   </div>
 

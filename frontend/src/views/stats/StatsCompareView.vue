@@ -142,7 +142,7 @@ function hm(min) {
 
     <svg :viewBox="'0 0 ' + W + ' ' + H" class="compare-chart" preserveAspectRatio="none">
       <g v-for="(s, i) in series" :key="'b' + i">
-        <rect :x="i * barW + barW * 0.16" :y="y(s.planned)" :width="barW * 0.32" :height="H - y(s.planned)" fill="var(--color-hairline)" />
+        <rect :x="i * barW + barW * 0.16" :y="y(s.planned)" :width="barW * 0.32" :height="H - y(s.planned)" fill="var(--color-card)" stroke="var(--color-control-border)" stroke-dasharray="3 2" vector-effect="non-scaling-stroke" />
         <rect :x="i * barW + barW * 0.52" :y="y(s.actual)" :width="barW * 0.32" :height="H - y(s.actual)" fill="var(--color-data)" opacity="0.9" />
       </g>
     </svg>

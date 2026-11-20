@@ -393,6 +393,7 @@ function onVisibilityChange(v) {
             type="button"
             role="switch"
             class="toggle"
+            :aria-label="p.title + ' 링크 공개'"
             :aria-checked="isPortfolioShared(p.id)"
             :disabled="workPrivacy.portfolioVisibility !== 'link'"
             :class="{ on: isPortfolioShared(p.id) }"

@@ -128,7 +128,7 @@ async function copyDraft() {
 
   <section class="card" style="margin-top: 16px">
     <div class="head">
-      <div><h3 style="margin: 0">업무 유형별 Plan vs Actual</h3><p style="margin: 4px 0 0">{{ active.key }} 기준</p></div>
+      <div><h3 style="margin: 0">업무 유형별 계획 대비 실제</h3><p style="margin: 4px 0 0">{{ active.key }} 기준</p></div>
       <button class="review" style="margin: 0" @click="showReport = !showReport">{{ showReport ? 'AI 업무보고 닫기' : 'AI 업무보고 생성' }}</button>
     </div>
     <div class="chart">
