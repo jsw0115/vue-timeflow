@@ -7,6 +7,7 @@ import ShareSignIn from '../../components/share/ShareSignIn.vue'
 import { session } from '../../features/auth/session.js'
 import { shareClient } from '../../features/share/share.js'
 import { splitFriends, shareErrorText } from '../../features/share/shareClient.mjs'
+import PageActions from '../../components/PageActions.vue'
 
 const tab = ref('친구')
 const rows = ref([])
@@ -71,7 +72,7 @@ function openFinder() {
         <button type="button" :aria-pressed="tab === '차단'" @click="tab = '차단'">차단 {{ blocks.length }}</button>
       </div>
       <span></span>
-      <button type="button" class="primary" @click="openFinder">+ 친구 찾기</button>
+      <PageActions><button type="button" class="primary" @click="openFinder">+ 친구 찾기</button></PageActions>
     </div>
     <p v-if="notice && !showFinder" class="input-field-help share-message" data-state="success" role="status">{{ notice }}</p>
     <p v-if="error && status === 'ready' && !showFinder" class="input-field-help share-message" data-state="error" role="alert">{{ error }}</p>

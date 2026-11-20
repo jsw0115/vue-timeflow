@@ -1,4 +1,5 @@
 <script setup>
+import PageActions from '../../components/PageActions.vue'
 import { computed, ref, watch } from 'vue'
 import Modal from '../../components/Modal.vue'
 import HelpPopover from '../../components/HelpPopover.vue'
@@ -214,7 +215,6 @@ const extension = (name) => (name.includes('.') ? name.split('.').pop().toUpperC
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 1rem">공유 첨부</b>
     <HelpPopover
       title="공유 첨부 사용법"
       summary="내가 올린 파일과 내가 속한 캘린더 그룹에 올라온 파일을 한곳에서 확인하고, 내 파일마다 내려받을 수 있는 기간을 정하는 화면이에요."
@@ -235,7 +235,7 @@ const extension = (name) => (name.includes('.') ? name.split('.').pop().toUpperC
     <template v-if="session.userId">
       <button class="review" style="margin: 0" :disabled="!mine.length || !!busy" @click="showBulk = true">일괄 기간 설정</button>
       <button class="review" style="margin: 0" :disabled="!!busy" @click="onPurge">만료 파일 정리{{ myExpired.length ? ' (' + myExpired.length + ')' : '' }}</button>
-      <button class="primary" @click="openUpload">파일 올리기</button>
+      <PageActions><button class="primary" @click="openUpload">파일 올리기</button></PageActions>
     </template>
   </div>
 

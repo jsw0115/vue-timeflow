@@ -8,6 +8,7 @@ import ShareSignIn from '../../components/share/ShareSignIn.vue'
 import { session } from '../../features/auth/session.js'
 import { shareClient } from '../../features/share/share.js'
 import { SHARE_LEVELS, levelLabel, shareErrorText, weekRange } from '../../features/share/shareClient.mjs'
+import PageActions from '../../components/PageActions.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -113,7 +114,7 @@ const timeText = (row) => `${row.startDate.slice(5)} ${row.startTime || ''}${row
       <div class="form-row" style="margin: 0">
         <template v-if="isOwner">
           <button type="button" class="button-secondary" :disabled="!!busy" @click="removeGroup">그룹 삭제</button>
-          <button type="button" class="primary" @click="openInvite">이메일로 초대</button>
+          <PageActions><button type="button" class="primary" @click="openInvite">이메일로 초대</button></PageActions>
         </template>
         <button v-else type="button" class="button-secondary" :disabled="!!busy" @click="leave">그룹 나가기</button>
       </div>

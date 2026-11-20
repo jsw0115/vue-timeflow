@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import Modal from '../../components/Modal.vue'
 import ListFilterBar from '../../components/ListFilterBar.vue'
 import { contacts, groups, membersOf, isBlocked, toggleBlock, toggleMember, contactById } from '../../store/contacts'
+import PageActions from '../../components/PageActions.vue'
 
 const router = useRouter()
 const keyword = ref('')
@@ -54,11 +55,7 @@ function inviteToGroup(g) {
 </script>
 
 <template>
-  <div class="page-tools">
-    <b style="font-size: 1rem">주소록</b>
-    <span></span>
-    <button class="primary" @click="showPicker = true">참석자 선택</button>
-  </div>
+  <PageActions><button class="primary" @click="showPicker = true">참석자 선택</button></PageActions>
 
   <ListFilterBar
     v-model:query="keyword"

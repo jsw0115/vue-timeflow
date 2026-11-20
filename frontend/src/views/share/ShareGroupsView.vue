@@ -7,6 +7,7 @@ import ShareSignIn from '../../components/share/ShareSignIn.vue'
 import { session } from '../../features/auth/session.js'
 import { shareClient } from '../../features/share/share.js'
 import { levelLabel, shareErrorText } from '../../features/share/shareClient.mjs'
+import PageActions from '../../components/PageActions.vue'
 
 const router = useRouter()
 const groups = ref([])
@@ -69,7 +70,7 @@ function open(g) {
   <template v-else>
     <div class="page-tools">
       <span class="input-field-help" style="margin: 0">그룹마다 내 일정을 보일 범위를 따로 정해요. 처음에는 공유 안 함이에요</span>
-      <button type="button" class="primary" @click="openCreate">+ 그룹 만들기</button>
+      <PageActions><button type="button" class="primary" @click="openCreate">+ 그룹 만들기</button></PageActions>
     </div>
     <p v-if="notice" class="input-field-help group-message" data-state="success" role="status">{{ notice }}</p>
     <p v-if="error && status === 'ready'" class="input-field-help group-message" data-state="error" role="alert">{{ error }}</p>

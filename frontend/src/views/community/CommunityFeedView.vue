@@ -7,6 +7,7 @@ import { session } from '../../features/auth/session.js'
 import { communityClient } from '../../features/community/community.js'
 import { COMMUNITY_CATEGORIES, communityErrorText, filterCommunities, membershipAction } from '../../features/community/communityClient.mjs'
 import { communityComposer } from '../../store/communities'
+import PageActions from '../../components/PageActions.vue'
 
 const router = useRouter()
 const SORTS = [
@@ -67,7 +68,7 @@ async function act(c) {
         <button v-for="s in SORTS" :key="s.id" type="button" :aria-pressed="sort === s.id" @click="sort = s.id">{{ s.label }}</button>
       </div>
       <input v-model="query" type="search" placeholder="커뮤니티 검색" aria-label="커뮤니티 검색" />
-      <button type="button" class="primary" @click="communityComposer = true">+ 커뮤니티 만들기</button>
+      <PageActions><button type="button" class="primary" @click="communityComposer = true">+ 커뮤니티 만들기</button></PageActions>
     </div>
     <p v-if="notice" class="input-field-help community-message" data-state="success" role="status">{{ notice }}</p>
     <p v-if="error && status === 'ready'" class="input-field-help community-message" data-state="error" role="alert">{{ error }}</p>
@@ -87,7 +88,7 @@ async function act(c) {
 
       <div class="comm-grid">
         <section class="card comm-card" v-for="c in visible" :key="c.id">
-          <b>{{ c.title }}</b>
+          <h3 class="comm-title"><button type="button" class="card-link" @click="open(c)">{{ c.title }}</button></h3>
           <p>{{ c.desc || '소개가 없어요' }}</p>
           <div class="comm-meta">
             <span v-if="c.category" class="tag">{{ c.category }}</span>
@@ -97,8 +98,9 @@ async function act(c) {
           </div>
           <p v-if="membershipAction(c).state" class="input-field-help">{{ membershipAction(c).state }}</p>
           <div class="community-actions">
-            <button type="button" class="button-secondary" @click="open(c)">둘러보기</button>
+            <!-- 카드마다 같은 무게 버튼 두 개 대신: 가입이 대표 행동(보조 버튼), 둘러보기는 낮은 우선순위 글자 버튼 -->
             <button v-if="membershipAction(c).action !== 'none'" type="button" class="button-secondary" :disabled="!!busy" :aria-busy="busy === c.id ? 'true' : undefined" @click="act(c)">{{ membershipAction(c).label }}</button>
+            <button type="button" class="button-text" @click="open(c)">둘러보기</button>
           </div>
         </section>
       </div>
@@ -114,4 +116,6 @@ async function act(c) {
 .community-mine { margin-bottom: var(--space-xl); }
 .community-name { flex: 1; min-width: 0; }
 .community-actions { display: flex; flex-wrap: wrap; gap: var(--space-md); margin-top: var(--space-lg); }
+.comm-title { margin: 0; font-size: var(--type-title-md-size); }
+.comm-title .card-link { padding: 0; font: inherit; text-align: left; }
 </style>
