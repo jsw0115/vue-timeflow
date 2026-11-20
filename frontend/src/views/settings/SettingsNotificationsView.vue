@@ -1,10 +1,11 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { modeState, modeMeta, modeContent } from '../../store/modeProfiles'
+import { session } from '../../features/auth/session.js'
 
 const channels = ref([
   { id: 'push', title: '푸시 알림', desc: '앱과 브라우저 알림', on: true },
-  { id: 'email', title: '이메일 알림', desc: 'jisoo@timebar.kr', on: false },
+  { id: 'email', title: '이메일 알림', desc: '', on: false },
   { id: 'kakao', title: '카카오톡 알림톡', desc: '중요한 알림을 카카오톡으로 받아요', on: false },
 ])
 const kakao = ref({ phone: '', verified: false, code: '', sending: false, notice: '', consent: false })
@@ -18,7 +19,8 @@ function sendCode() {
     return
   }
   kakao.value.sending = true
-  kakao.value.notice = '인증번호를 보냈어요. 카카오톡을 확인해주세요.'
+  // 알림톡 발송은 아직 연결되지 않았다(503 경계). 실제로 보낸 것처럼 안내하지 않는다
+  kakao.value.notice = '시연 화면이에요. 실제 인증번호는 보내지 않아요. 4자리 이상 숫자를 넣으면 다음 단계를 볼 수 있어요.'
 }
 function verifyCode() {
   if (kakao.value.code.trim().length < 4) {
@@ -27,7 +29,7 @@ function verifyCode() {
   }
   kakao.value.verified = true
   kakao.value.sending = false
-  kakao.value.notice = '번호 인증이 끝났어요.'
+  kakao.value.notice = '시연용 번호 확인을 마쳤어요. 실제 카카오톡 연결은 아직 준비 중이에요.'
 }
 function resetKakao() {
   kakao.value = { phone: '', verified: false, code: '', sending: false, notice: '', consent: false }
@@ -86,9 +88,10 @@ function save() {
     <div class="trow" v-for="c in channels" :key="c.id">
       <span style="flex: 1">
         <b style="display: block">{{ c.title }}</b>
-        <small style="color: var(--color-muted)">{{ c.desc }}</small>
+        <!-- 이메일 채널은 시연 주소 대신 로그인한 계정 이메일을 보인다 -->
+        <small style="color: var(--color-muted)">{{ c.id === 'email' ? (session.email || '로그인한 계정 이메일로 받아요') : c.desc }}</small>
       </span>
-      <button type="button" role="switch" class="toggle" :aria-checked="c.on" :class="{ on: c.on }" @click="toggleChannel(c)"><em></em></button>
+      <button type="button" role="switch" class="toggle" :aria-label="c.title" :aria-checked="c.on" :class="{ on: c.on }" @click="toggleChannel(c)"><em></em></button>
     </div>
 
     <!-- 카카오톡 알림톡 설정 -->
@@ -105,7 +108,7 @@ function save() {
         </div>
         <div class="form-row" v-if="kakao.sending">
           <label style="flex: 1">인증번호<input v-model="kakao.code" placeholder="숫자 4~6자리" inputmode="numeric" /></label>
-          <button class="primary" style="align-self: flex-end" @click="verifyCode">확인</button>
+          <button type="button" class="button-secondary" style="align-self: flex-end" @click="verifyCode">확인</button>
         </div>
       </template>
       <template v-else>
@@ -123,7 +126,7 @@ function save() {
       <div class="section-label">알림톡으로 받을 알림</div>
       <div class="trow" v-for="t in KAKAO_TEMPLATES" :key="t.id">
         <span style="flex: 1"><b style="display: block">{{ t.label }}</b><small style="color: var(--color-muted)">{{ t.desc }}</small></span>
-        <button type="button" role="switch" class="toggle" :aria-checked="kakaoTemplates[t.id] && kakaoChannel.on" :class="{ on: kakaoTemplates[t.id] && kakaoChannel.on }" @click="kakaoTemplates[t.id] = !kakaoTemplates[t.id]"><em></em></button>
+        <button type="button" role="switch" class="toggle" :aria-label="t.label" :aria-checked="kakaoTemplates[t.id] && kakaoChannel.on" :class="{ on: kakaoTemplates[t.id] && kakaoChannel.on }" @click="kakaoTemplates[t.id] = !kakaoTemplates[t.id]"><em></em></button>
       </div>
 
       <p v-if="kakao.notice" class="badge warn" style="display: inline-block">{{ kakao.notice }}</p>
@@ -133,7 +136,7 @@ function save() {
       카테고리별 알림 <span class="badge new">보충 반영 · SET-004-F03</span>
       <span class="form-note">{{ modeMeta(modeState.activeMode).name }} 추천 기본값이 적용돼 있어요</span>
     </div>
-    <div class="trow" v-for="c in categories" :key="c.title"><b>{{ c.title }}</b><button type="button" role="switch" class="toggle" :aria-checked="c.on" :class="{ on: c.on }" @click="c.on = !c.on"><em></em></button></div>
+    <div class="trow" v-for="c in categories" :key="c.title"><b>{{ c.title }}</b><button type="button" role="switch" class="toggle" :aria-label="c.title + ' 알림'" :aria-checked="c.on" :class="{ on: c.on }" @click="c.on = !c.on"><em></em></button></div>
     <div class="section-label">방해 금지</div>
     <label class="task" style="border: 0; display: inline-flex;">
       <input type="checkbox" v-model="dnd.on" />

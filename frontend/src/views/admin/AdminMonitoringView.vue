@@ -42,7 +42,7 @@ const activeRules = computed(() => monitoring.alertRules.filter((r) => r.on).len
   <section class="card">
     <div class="trow" v-for="r in monitoring.alertRules" :key="r.id">
       <span style="flex: 1"><b>{{ r.label }}</b><small style="display: block; color: var(--color-muted)">발송 채널: {{ r.channel }}</small></span>
-      <button type="button" role="switch" class="toggle" :aria-checked="r.on" :class="{ on: r.on }" @click="toggleAlertRule(r)"><em></em></button>
+      <button type="button" role="switch" class="toggle" :aria-label="r.label" :aria-checked="r.on" :class="{ on: r.on }" @click="toggleAlertRule(r)"><em></em></button>
     </div>
     <p class="form-note">규칙을 켜고 끄면 감사 로그에 기록돼요. 구독 결제 실패와 CS 미답변도 여기서 감시합니다.</p>
   </section>

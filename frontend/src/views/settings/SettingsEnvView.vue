@@ -41,7 +41,7 @@ function save() {
         <b>일정·루틴·업무 글양식 · 화면 구성</b>
         <p>모드별로 작성 항목과 홈·통계 포틀릿 구성을 직접 고를 수 있어요. 바꿔도 이미 쓴 글은 그대로 유지돼요.</p>
       </div>
-      <button class="primary" @click="router.push('/settings/forms')">설정하기 ›</button>
+      <button type="button" class="button-secondary" @click="router.push('/settings/forms')">글양식 설정하기</button>
     </div>
 
     <div class="section-label" style="margin-top: 22px">화면 밀도</div>

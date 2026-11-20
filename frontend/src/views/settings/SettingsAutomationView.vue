@@ -86,7 +86,7 @@ function onToggleFeature(f) {
           <small>{{ f.desc }}</small>
           <small style="display: block; margin-top: 4px; color: var(--color-muted)">입력: {{ f.needs.join(' · ') }}</small>
         </span>
-        <button type="button" role="switch" class="toggle" :aria-checked="isFeatureOn(f.id, aiStatus.available)" :class="{ on: isFeatureOn(f.id, aiStatus.available) }" :disabled="!aiReady" aria-describedby="ai-feature-note" style="flex: none" @click="onToggleFeature(f)"><em></em></button>
+        <button type="button" role="switch" class="toggle" :aria-label="f.title" :aria-checked="isFeatureOn(f.id, aiStatus.available)" :class="{ on: isFeatureOn(f.id, aiStatus.available) }" :disabled="!aiReady" aria-describedby="ai-feature-note" style="flex: none" @click="onToggleFeature(f)"><em></em></button>
       </div>
       <p id="ai-feature-note" class="form-note">{{ aiReady ? '켠 산출물만 고른 범위 안의 데이터로 만들어요.' : aiStatus.available === false ? 'AI 기능은 준비 중이라 지금은 켤 수 없어요.' : aiStatus.available === true ? '연동 방식을 ‘기본 제공(서버)’로 고르면 켤 수 있어요.' : '서버의 AI 제공 상태를 확인한 뒤 켤 수 있어요.' }}</p>
     </template>
@@ -113,7 +113,7 @@ function onToggleFeature(f) {
             </div>
           </span>
         </span>
-        <button type="button" role="switch" class="toggle" :aria-checked="isAutomationOn(a.id)" :class="{ on: isAutomationOn(a.id) }" @click="toggleAutomation(a.id)" style="flex: none"><em></em></button>
+        <button type="button" role="switch" class="toggle" :aria-label="a.title" :aria-checked="isAutomationOn(a.id)" :class="{ on: isAutomationOn(a.id) }" @click="toggleAutomation(a.id)" style="flex: none"><em></em></button>
       </div>
     </template>
 

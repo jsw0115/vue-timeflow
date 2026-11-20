@@ -83,7 +83,7 @@ function deleteAccount() {
 
     <template #footer>
       <button type="button" class="modal-secondary" @click="showPassword = false">취소</button>
-      <button class="primary" :disabled="Boolean(pwError)" @click="changePassword">변경하기</button>
+      <button type="button" class="button-secondary" :disabled="Boolean(pwError)" @click="changePassword">비밀번호 변경</button>
     </template>
   </Modal>
 </template>

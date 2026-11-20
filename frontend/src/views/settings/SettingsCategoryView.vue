@@ -55,7 +55,7 @@ const subCount = computed(() => cats.value.reduce((a, c) => a + c.subs.length, 0
         <h2>카테고리</h2>
         <p>기록을 분류하는 기준이에요. 카테고리 {{ cats.length }}개 · 하위 {{ subCount }}개</p>
       </div>
-      <button class="primary" @click="openAdd">+ 카테고리 추가</button>
+      <button type="button" class="button-secondary" @click="openAdd">+ 카테고리 추가</button>
     </div>
 
     <div class="trow" v-for="c in cats" :key="c.id">
