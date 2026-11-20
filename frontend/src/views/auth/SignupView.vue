@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import BrandMark from '../../components/brand/BrandMark.vue'
 
 /** 회원가입 — 입력 검증과 휴대폰 인증이 실제로 동작한다. */
 const router = useRouter()
@@ -51,7 +52,7 @@ function flash(t) {
   <div class="auth-page">
     <div class="auth-form-inner">
       <div style="display: flex; align-items: center; gap: 9px; margin-bottom: 20px">
-        <b style="background: var(--color-foreground); color: var(--color-on-primary); border-radius: 8px; width: 27px; height: 27px; display: inline-grid; place-items: center">t</b>Timebar Diary
+        <BrandMark class="auth-mark" label="" />Timebar Diary
       </div>
       <h2>계정 만들기</h2>
       <p>이메일과 간단한 정보만 있으면 30초면 충분해요.</p>

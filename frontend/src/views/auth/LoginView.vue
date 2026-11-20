@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import BrandMark from '../../components/brand/BrandMark.vue'
 import { login } from '../../features/auth/session'
 
 const router = useRouter()
@@ -34,9 +35,9 @@ function social(provider) {
 <template>
   <div class="auth-split">
     <div class="auth-side">
-      <div style="display: flex; align-items: center; gap: 9px"><b style="background: #ffffff26; border-radius: 8px; width: 30px; height: 30px; display: inline-grid; place-items: center">t</b>Timebar Diary</div>
+      <div class="auth-brand"><BrandMark class="auth-mark" label="" />Timebar Diary</div>
       <div style="max-width: 400px">
-        <p style="font-size: 0.8125rem; font-weight: 700; letter-spacing: 1px; opacity: 0.75; margin-bottom: 12px">PLAN vs ACTUAL</p>
+        <p class="auth-eyebrow">계획과 실제 기록</p>
         <h1>계획한 하루와<br />실제로 산 하루,<br />같은 타임라인 위에서.</h1>
         <p>타임바 다이어리는 당신의 계획과 실행 사이의 간격을 시각화해 더 나은 내일을 계획하도록 돕습니다.</p>
       </div>
@@ -44,7 +45,6 @@ function social(provider) {
     </div>
     <div class="auth-form">
       <div class="auth-form-inner">
-        <p class="eyebrow">WELCOME BACK</p>
         <h2>로그인</h2>
         <label>이메일<input v-model="email" type="email" autocomplete="email" /></label>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px">

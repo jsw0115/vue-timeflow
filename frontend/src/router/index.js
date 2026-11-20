@@ -150,7 +150,7 @@ export const navGroups = [
       { path: '/stats', name: '통계 보드', icon: '◔', component: StatsBoardView, title: '포틀릿으로 내 통계를 구성해요' },
       { path: '/stats/daily', name: '일간 통계', icon: '◔', component: StatsDailyView, title: '내 리듬을 돌아봐요' },
       { path: '/stats/category', name: '카테고리 통계', icon: '◔', component: StatsCategoryView, title: '카테고리별 추이를 봐요' },
-      { path: '/stats/compare', name: '비교 분석', icon: '⇄', component: StatsCompareView, title: 'Plan vs Actual 심층 분석' },
+      { path: '/stats/compare', name: '비교 분석', icon: '⇄', component: StatsCompareView, title: '계획 대비 실제를 깊게 비교해요' },
       { path: '/stats/godlife', name: '갓생 리포트', icon: '★', component: StatsGodlifeView, title: '이번 주 갓생 점수' },
       { path: '/insight', name: 'AI 리포트', icon: '✦', component: AiInsightView, title: 'AI가 발견한 나의 패턴' },
       { path: '/work', name: '업무 리포트', icon: '▧', component: WorkReportView, title: '업무 시간을 정리해요' },
@@ -232,9 +232,9 @@ export const navItems = navGroups.flatMap((g) => g.items)
 
 const routes = [
   ...[
-    ['/planner/daily', PlannerDailyView], ['/planner/weekly', PlannerWeeklyView],
-    ['/planner/monthly', PlannerMonthlyView], ['/planner/yearly', PlannerYearlyView],
-  ].map(([path, component]) => ({ path, component, meta: { title: '계획과 실제를 나란히' } })),
+    ['/planner/daily', PlannerDailyView, '일간 플래너'], ['/planner/weekly', PlannerWeeklyView, '주간 플래너'],
+    ['/planner/monthly', PlannerMonthlyView, '월간 플래너'], ['/planner/yearly', PlannerYearlyView, '연간 플래너'],
+  ].map(([path, component, label]) => ({ path, component, meta: { label, title: '계획과 실제를 나란히' } })),
   ...navItems.map((item) => ({
     path: item.path,
     name: item.name,

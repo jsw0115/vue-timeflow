@@ -2,6 +2,8 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { SETTINGS_GROUPS, SETTINGS_SECTIONS } from '../../router/settingsSections'
+import AppIcon from '../../components/icons/AppIcon.vue'
+import { SETTINGS_ICONS } from '../../components/icons/iconPaths.mjs'
 
 /**
  * 환경설정 셸 — 관리자 콘솔과 같은 구조.
@@ -58,9 +60,9 @@ const noResult = computed(() => query.value.trim() && !filteredGroups.value.leng
           :aria-current="activeId === item.id ? 'true' : undefined"
           @click="select(item)"
         >
-          <i class="setting-menu-icon">{{ item.icon }}</i>
+          <i class="setting-menu-icon"><AppIcon :name="SETTINGS_ICONS[item.id]" :fallback="item.icon" :size="18" /></i>
           <span class="setting-menu-label">{{ item.label }}</span>
-          <span class="setting-menu-caret">›</span>
+          <span class="setting-menu-caret" aria-hidden="true"><AppIcon name="chevronRight" :size="16" /></span>
         </button>
       </template>
 

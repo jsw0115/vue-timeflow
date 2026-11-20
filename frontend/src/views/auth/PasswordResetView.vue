@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import BrandMark from '../../components/brand/BrandMark.vue'
 
 /** 비밀번호 재설정 — 링크 발송과 새 비밀번호 설정이 각각 검증을 거친다. */
 const router = useRouter()
@@ -38,7 +39,7 @@ function flash(t) {
   <div class="auth-page">
     <div class="auth-form-inner" style="text-align: center">
       <div style="display: flex; align-items: center; gap: 9px; margin-bottom: 20px; justify-content: center">
-        <b style="background: var(--color-foreground); color: var(--color-on-primary); border-radius: 8px; width: 27px; height: 27px; display: inline-grid; place-items: center">t</b>Timebar Diary
+        <BrandMark class="auth-mark" label="" />Timebar Diary
       </div>
 
       <section class="card" style="text-align: center">

@@ -2,6 +2,9 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { adminGroups } from './router'
+import AppIcon from './components/icons/AppIcon.vue'
+import BrandMark from './components/brand/BrandMark.vue'
+import { NAV_ICONS } from './components/icons/iconPaths.mjs'
 import { session } from './features/auth/session.js'
 import { adminAccess, refreshAdminAccess } from './features/admin/admin.js'
 import { ADMIN_ACCESS_TEXT } from './features/admin/adminClient.mjs'
@@ -37,19 +40,19 @@ function backToApp() {
 <template>
   <div class="app admin-shell">
     <aside class="sidebar" :class="{ open: mobileNav }">
-      <div class="brand"><b>a</b>timebar <small class="admin-chip">ADMIN</small></div>
+      <div class="brand"><BrandMark class="brand-mark" label="" /><span class="brand-name">Timebar Diary</span><small class="admin-chip">관리자</small></div>
       <button class="workspace" @click="backToApp">
-        <i>↩</i><span><b>사용자 화면으로</b><small>관리자 창 닫기</small></span>
+        <i aria-hidden="true"><AppIcon name="chevronLeft" :size="18" /></i><span><b>사용자 화면으로</b><small>관리자 창 닫기</small></span>
       </button>
       <nav v-if="allowed">
         <template v-for="group in adminGroups" :key="group.label">
           <button type="button" class="nav-section" :class="{ collapsed: collapsed[group.label] }" @click="toggleGroup(group.label)">
-            {{ group.label }}<i class="chev">›</i>
+            {{ group.label }}<i class="chev" aria-hidden="true"><AppIcon name="chevronDown" :size="14" /></i>
           </button>
           <template v-if="!collapsed[group.label]">
             <router-link v-for="item in group.items" :key="item.path" :to="item.path" custom v-slot="{ navigate }">
-              <button :class="{ active: route.path === item.path }" @click="navigate(); mobileNav = false">
-                <span class="nav-icon">{{ item.icon }}</span><span class="nav-text">{{ item.name }}</span>
+              <button :class="{ active: route.path === item.path }" :aria-current="route.path === item.path ? 'page' : undefined" @click="navigate(); mobileNav = false">
+                <span class="nav-icon"><AppIcon :name="NAV_ICONS[item.path]" :fallback="item.icon" /></span><span class="nav-text">{{ item.name }}</span>
               </button>
             </router-link>
           </template>
@@ -62,8 +65,8 @@ function backToApp() {
 
     <main>
       <header>
-        <button class="hamburger" @click="mobileNav = true">☰</button>
-        <div><p class="eyebrow">TIMEBAR ADMIN CONSOLE</p><h1>{{ allowed ? pageTitle : '관리자 화면' }}</h1></div>
+        <button class="hamburger" aria-label="메뉴 열기" @click="mobileNav = true"><AppIcon name="menu" /></button>
+        <div><p class="eyebrow">관리자 콘솔</p><h1>{{ allowed ? pageTitle : '관리자 화면' }}</h1></div>
         <div v-if="allowed" class="actions">
           <button class="review" style="margin: 0" @click="router.push('/admin/audit')">감사 로그</button>
         </div>
