@@ -1,34 +1,76 @@
-# 설계 단계 문서 안내
+# Career OS 설계 문서 묶음
 
-> 보존 기록입니다. 본문의 현행은 2026-09-26 당시 소스 분석을 뜻합니다. 2026-10-31 현재 기준은 [전체 문서](../README.md), [시스템 구조](../architecture/system-architecture.md), [실제 DB 정의](../database/current-database.md), [최신 API](../api/README.md)입니다. 아래의 37개 V1·169개 목표 API를 현재 설치로 사용하지 않습니다.
+- 문서 묶음 버전: v2.1
+- 기준일: 2026-11-20
+- 적용 위치 제안: `docs/design/`
+- 목적: 기존 Timebar Diary의 시간관리·기록·업무·협업 기능을 보존하면서 취업·이직·경력·포트폴리오 중심의 통합 커리어 플랫폼으로 확장하기 위한 설계 기준을 제공한다.
 
-기준일: 2026-09-26. 현재 소스의 사실과 향후 구현 제안을 분리했습니다. 도표는 Mermaid 지원 Markdown 뷰어에서 렌더링됩니다.
+> **주의:** 이 문서 묶음은 사용자가 제공한 Markdown 발췌문을 통합·재구성한 설계 초안이다. 저장소 파일 전체, 실제 브랜치, 운영 DB, 외부 서비스 계정에 접근해 검증한 결과가 아니다. 구현 상태는 제공된 2026-11-20 기능개발·메뉴 문서의 기록을 기준으로 인용하며, 실제 적용 전 현재 HEAD와 최신 테스트 결과를 대조해야 한다.
 
-| 문서 | 내용 |
-| --- | --- |
-| [01 시스템 구성도](01-system-architecture.md) | 현행·목표 아키텍처, 웹/iOS/Android/데스크톱, 서버·네트워크·DB, 배포·보안 경계 |
-| [02 현행 DB 설계](02-current-database.md) | V1에 정의된 37개 테이블의 모든 컬럼·타입·NULL·기본값·키·인덱스 |
-| [03 목표 DB 및 ERD](03-target-database.md) | 기능별 관계도, 신규 테이블 속성, 기존 테이블 확장 및 이행 정책 |
-| [04 현행 스키마 차이·위험](04-schema-gaps.md) | DDL과 JPA 불일치, FK 대상 오류, 데이터 보존형 변경 절차 |
-| [05 외부 인터페이스 정의](05-external-interfaces.md) | OAuth·메일·푸시·캘린더·스토리지·AI·CI/CD 요청/응답 및 실패 처리 |
-| [06 검증 기록](06-validation.md) | 정적 분석·계약 검사 결과, 미검증 항목과 배포 전 체크리스트 |
-| [API 상세 명세](../api-info/README.md) | 169개 목표 API의 요청·응답·파라미터·오류 및 104개 현행 계약 |
+## 문서 목록
 
-## 중요한 구분
+| 파일 | 목적 | 먼저 읽을 때 |
+|---|---|---|
+| [01-service-overview.md](01-service-overview.md) | 서비스 목표, 타깃, 핵심 가치, 사용자 시나리오 | 기획·디자인·개발 공통 |
+| [02-requirements-addendum.md](02-requirements-addendum.md) | 기존 요구 보존 정책과 신규 요구 후보 | 요구사항·수용 기준 작성 |
+| [03-menu-structure.md](03-menu-structure.md) | 기존 메뉴를 보존한 통합 메뉴 제안 | IA·라우팅·화면 설계 |
+| [04-feature-development.md](04-feature-development.md) | 기존 FD와 신규 기능의 구현 경계 | 개발 작업 분해 |
+| [05-system-architecture.md](05-system-architecture.md) | 현재/목표 시스템 구성도와 배포 경계 | 시스템 설계·인프라 |
+| [06-data-model-and-erd.md](06-data-model-and-erd.md) | 현재 DB 위험, 목표 논리 ERD, 신규 도메인 | DB 설계·마이그레이션 |
+| [07-external-integrations.md](07-external-integrations.md) | GitHub·클라우드·메신저·허용 사이트 연동 | OAuth·API 연동 |
+| [08-ai-architecture.md](08-ai-architecture.md) | 별도 AI 서버, 비동기 작업, AI 문서 생성 | AI 백엔드 설계 |
+| [09-security-and-privacy.md](09-security-and-privacy.md) | 사용자 데이터, 경력 증거, 공유, 토큰, AI 보호 | 보안 검토 |
+| [10-roadmap-and-priorities.md](10-roadmap-and-priorities.md) | 단계별 개발 순서와 의존성 | 일정·WBS·릴리스 |
+| [11-ui-ux-guidelines.md](11-ui-ux-guidelines.md) | 웹·모바일 UX 및 DESIGN.md 적용 | UI/UX 리뉴얼 |
+| [12-decisions-and-open-issues.md](12-decisions-and-open-issues.md) | 충돌·결정 대기·추가 확인사항 | 착수 전 검토 |
+| [13-source-reconciliation.md](13-source-reconciliation.md) | 제공 문서 간 기준일·상태 충돌 정리 | 문서 통합·정합성 점검 |
 
-- **현행**은 소스에서 읽은 결과입니다. DB에 실제 적용된 스키마나 실제 HTTP 응답을 확인한 것은 아닙니다.
-- **목표**는 구현할 계약입니다. 일정 기간·태그·멘션·WBS·커뮤니티·채팅 등 확장 기능을 포함하며 모두 운영 가능하다는 의미가 아닙니다.
-- 기존 [기능 문서](../product/feature-design.md) 및 [화면 문서](../product/screen-design.md)는 화면 맥락 참고용입니다. 세부 API는 새 `9-API` 계약을 기준으로 구현 전에 합의해야 합니다.
+## 적용 원칙
 
-## DB 실행 주의
+1. 기존 `REQ-F01~F23`, `REQ-N01~N10`, `MN-01~MN-127`, `FD-01~FD-84`는 이 문서 묶음에서 삭제·재사용·재번호화하지 않는다.
+2. 신규 ID는 후보 번호로만 제안한다. 실제 ID 발급과 수용 기준의 원문 등록은 기존 변경 절차대로 `../planning/requirements.md` 등 원본 문서에서 수행한다.
+3. 기존 메뉴 경로와 API 계약은 실제 코드 확인 없이 변경하지 않는다. 새 메뉴는 기존 화면을 대체하기보다 연결하거나 확장하는 방향을 우선한다.
+4. 문서의 Mermaid ERD는 논리 설계도다. 실제 DB DDL 또는 Flyway migration으로 바로 실행하지 않는다.
+5. “서버 구현”, “화면 연결”, “검증 통과”, “외부 제공자 연결”은 서로 다른 상태다. 하나의 상태로 합쳐 표시하지 않는다.
+6. 외부 제공자 미연결 기능은 화면에 준비 중/미연결 상태를 사실대로 표시한다.
+7. 신규 개발 전 최신 `master`/실제 작업 브랜치, 최신 테스트 결과서, Flyway 이력, DB 스키마, API 계약을 재확인한다.
 
-현재 V1은 `CREATE OR REPLACE TABLE`을 사용하며 생성 테이블은 `tbl_*`, FK 참조 및 JPA 일부 매핑은 접두사 없는 이름입니다. **문서를 보고 V1을 재실행하지 마세요.** 기존 데이터가 교체되거나 FK 생성/런타임 매핑이 실패할 수 있습니다. 이번 작업은 SQL 실행·수정이나 DB 데이터 변경을 하지 않았습니다.
+## 문서 관계
 
-기존 테이블을 먼저 제거하는 동작은 [MariaDB CREATE TABLE 공식 문서](https://mariadb.com/docs/server/server-usage/tables/create-table)의 OR REPLACE 설명을 참고하세요.
+```mermaid
+flowchart TD
+  A[01 서비스 개요] --> B[02 요구사항]
+  A --> C[03 메뉴 구조]
+  B --> D[04 기능 개발]
+  C --> D
+  D --> E[10 개발 로드맵]
+  A --> F[05 시스템 아키텍처]
+  F --> G[06 데이터 모델]
+  F --> H[07 외부 연동]
+  F --> I[08 AI 아키텍처]
+  G --> J[09 보안·개인정보]
+  H --> J
+  I --> J
+  C --> K[11 UI/UX 가이드]
+  L[13 기준·출처 정합성] --> A
+  L --> F
+  M[12 결정 대기] --> B
+  M --> G
+  M --> H
+  M --> E
+```
 
-## 추적 자료
+## 추천 적용 순서
 
-- [현행 DDL 관계도 원본](diagrams/current-ddl-relationships.md): FK에서 참조하는 이름 그대로이며 정상 생성됐다는 뜻이 아닙니다.
-- [테이블 분석 JSON](current-schema.json).
-- [근거 소스 SHA-256 스냅샷](source-snapshot.json).
-- 생성기: `frontend/scripts/design-docs/`. API 및 DB 계약 변경 후 재생성·검사하는 방법은 [API 문서 안내](../api-info/README.md#기계-판독-및-검증)를 참고하세요.
+1. `13-source-reconciliation.md`와 `12-decisions-and-open-issues.md`에서 기존 문서 충돌 및 결정 대기 사항을 닫는다.
+2. `01-service-overview.md`를 서비스 정의의 기준으로 합의한다.
+3. `02-requirements-addendum.md`의 신규 요구 후보를 원본 요구사항 문서에 정식 등록한다.
+4. `03-menu-structure.md`와 `11-ui-ux-guidelines.md`로 IA·화면을 설계한다.
+5. `05-system-architecture.md`, `06-data-model-and-erd.md`, `07-external-integrations.md`, `08-ai-architecture.md`를 상세 설계 및 검토한다.
+6. `04-feature-development.md`와 `10-roadmap-and-priorities.md`를 실제 PR·테스트 ID에 연결한다.
+
+## 변경 이력
+
+| 버전 | 날짜 | 내용 |
+|---|---|---|
+| v2.1 | 2026-11-20 | 제공된 설계·메뉴·요구·기능개발·DB·외부 인터페이스 자료를 커리어 플랫폼 확장 기준으로 분리 정리 |
