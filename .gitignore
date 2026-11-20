@@ -3,7 +3,6 @@ dist/
 .npm-cache/
 .idea/
 target/
-.env
 HELP.md
 .gradle
 build/
@@ -93,13 +92,19 @@ package-lock.json
 infra/deploy/backups/
 infra/deploy/.release-state
 frontend/.npm/
-frontend/.env.production.local
 /public/
 
-# Codex 작업 중 생성되는 로컬 비밀값과 원본 진단 자료
+# 로컬 환경 설정·비밀값(.env). 실제 값 파일은 올리지 않고 *.example만 올린다.
+#   backend/.env                    DB·JWT 비밀값 등 백엔드 로컬 실행 설정
+#   frontend/.env.local             개발 프록시 대상(DEV_API_TARGET) 등 이 PC 전용 설정
+#   frontend/.env.production.local  Pages 로컬 빌드 값
+#   infra/deploy/.env               배포 서버 설정
+.env
 .env.*
 !.env.example
 !.env.*.example
+
+# Codex 작업 중 생성되는 로컬 비밀값과 원본 진단 자료
 *.jks
 *.p12
 *.pfx
