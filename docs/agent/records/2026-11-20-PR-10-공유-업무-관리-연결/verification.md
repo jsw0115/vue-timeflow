@@ -91,3 +91,15 @@
 | `backend`: `gradlew.bat test --console=plain` | 0 | PASS. 282개 |
 | `node frontend/scripts/api-inventory.mjs --check`, `node frontend/scripts/frontend-api-contract.mjs --check` | 0 | PASS. 295개 |
 | 로컬 격리 MySQL·chat-local 백엔드·Vite·Chrome 점검(작업 폴더 밖) | 0 | PASS. 21/21(첫 실행 20/21은 스크립트 대기 문제) |
+
+## 5단계 공유 첨부 한도 안내·관리 화면 403(2026-11-20)
+
+| 명령 | 종료 코드 | 결과 |
+| --- | --- | --- |
+| `backend`: `gradlew.bat test --tests "kr.timebar.diary.feature.FeatureHttpTest"`(서버 수정 파일만 `git stash`로 되돌림) | 1 | FAIL(의도). 첨부 목록에 ownerName 없음 |
+| `backend`: 같은 테스트(수정 후) | 0 | PASS. 24개 |
+| `frontend`: `node --test tests/attachment-client.test.mjs tests/admin-access.test.mjs` | 0 | PASS. 10개 |
+| `frontend`: Node 테스트 전체, `npm run build:web` | 0 | PASS. 207개, 빌드 성공 |
+| `backend`: `gradlew.bat test --console=plain` | 0 | PASS. 282개 |
+| `node frontend/scripts/api-inventory.mjs --check`, `node frontend/scripts/frontend-api-contract.mjs --check` | 0 | PASS. 295개 operation, 201개 schema |
+| 로컬 격리 MySQL·chat-local 백엔드·Vite·Chrome 세 계정 점검(작업 폴더 밖 `check-5.mjs`) | 0 | PASS. 30/30. 앞선 실행에서 결함 2건(관리자 목록 100명 제한, 올린 사람 이름의 로컬 프로필)을 찾아 고침. 프록시 404 안내는 이 실행 뒤에 더해 Node 테스트로만 확인 |
