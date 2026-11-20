@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import Modal from '../../components/Modal.vue'
+import PageActions from '../../components/PageActions.vue'
 
 /** 플래너 템플릿 — 자주 쓰는 하루 구성을 저장했다가 오늘에 적용한다. */
 const router = useRouter()
@@ -101,10 +102,9 @@ function applyToday(t) {
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 1rem">템플릿 관리</b>
     <span class="form-note" style="margin: 0">템플릿 {{ templates.length }}개</span>
     <span></span>
-    <button class="primary" @click="openAdd">+ 템플릿 추가</button>
+    <PageActions><button class="primary" @click="openAdd">+ 템플릿 추가</button></PageActions>
   </div>
 
   <p v-if="applied" class="badge ok" style="display: inline-block; margin-bottom: 12px">

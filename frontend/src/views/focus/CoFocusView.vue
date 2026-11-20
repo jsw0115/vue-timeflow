@@ -3,6 +3,7 @@ import { ref, watch, onBeforeUnmount } from 'vue'
 import Modal from '../../components/Modal.vue'
 import ShareConsentModal from '../../components/ShareConsentModal.vue'
 import { mediaState, currentStream, startRecording, stopRecording, stopShare, formatElapsed } from '../../store/mediaShare'
+import PageActions from '../../components/PageActions.vue'
 
 const rooms = ref([
   { id: 1, title: '스터디 크루 · 저녁 집중 세션', meta: '3명 참여중 · 다음 세션까지 4분', joined: true },
@@ -56,10 +57,7 @@ onBeforeUnmount(() => stopShare())
 </script>
 
 <template>
-  <div class="page-tools">
-    <span></span>
-    <button class="primary" @click="showCreate = true">+ 방 만들기</button>
-  </div>
+  <PageActions><button class="primary" @click="showCreate = true">+ 방 만들기</button></PageActions>
 
   <section class="card hero" style="min-height: auto; padding: 24px 28px; flex-direction: column; align-items: flex-start">
     <span class="pill">참여중인 방</span>

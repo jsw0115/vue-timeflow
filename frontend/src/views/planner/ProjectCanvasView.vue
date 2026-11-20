@@ -1,4 +1,5 @@
 <script setup>
+import PageActions from '../../components/PageActions.vue'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import Modal from '../../components/Modal.vue'
@@ -133,7 +134,6 @@ function priorityLabel(id) {
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 1rem">프로젝트 캔버스</b>
     <HelpPopover
       title="프로젝트 캔버스 사용법"
       summary="작업을 카드로 만들어 상태별 컬럼에 놓고, 끌어다 옮기며 진행 상황을 관리하는 보드예요."
@@ -152,7 +152,7 @@ function priorityLabel(id) {
     />
     <span></span>
     <button class="review" style="margin: 0" @click="showColumns = true">컬럼 관리</button>
-    <button class="primary" @click="openAdd(board.columns[0].id)">+ 카드 추가</button>
+    <PageActions><button class="primary" @click="openAdd(board.columns[0].id)">+ 카드 추가</button></PageActions>
   </div>
 
   <div class="metrics" style="--metric-cols: 4; margin-bottom: 16px">
