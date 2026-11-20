@@ -35,4 +35,9 @@
 ## 다음 작업(남은 체크리스트)
 - 관리자 계정 로그인 상태로 관리자 화면 확인, 200% 확대·스크린리더 확인.
 - 프로젝트 캔버스·WBS·업무 위키·경력·공유 첨부·머니로그 세부 배치.
-- 재개 시 첫 명령: `docker compose -f infra/chat/compose.yml up -d --wait`, `cd backend; $env:SERVER_PORT=18080; .\gradlew.bat bootRun --args="--spring.profiles.active=chat-local"`, `cd frontend; $env:DEV_API_TARGET='http://127.0.0.1:18080'; npx vite --host 127.0.0.1 --port 15173` 후 scratchpad pw/shot2.mjs·shot-auth.mjs로 캡처. (8080은 다른 프로젝트 oracle-xe가 쓰고 있어 기본 프록시 대상이 아니다)
+- 재개 시 첫 명령: `docker compose -f infra/chat/compose.yml up -d --wait`, `cd backend; $env:SERVER_PORT=18080; .\gradlew.bat bootRun --args="--spring.profiles.active=chat-local"`, `cd frontend; $env:DEV_API_TARGET='http://127.0.0.1:18080'; npx vite --host 127.0.0.1 --port 15173` 후 scratchpad pw/shot2.mjs·shot-auth.mjs로 캡처. (8080을 다른 프로그램이 쓰는 환경이면 DEV_API_TARGET으로 백엔드 포트를 맞춘다)
+
+## 세션 3(2026-11-20 밤) 파비콘
+- 파비콘이 없었다(public 폴더·icon 링크 없음, 탭 제목은 예전 이름 'Timeflow'). DESIGN.md 7장('파비콘은 심볼만')대로 BrandMark 기하를 포레스트 타일 위 흰색으로 그린 `frontend/public/favicon.svg`를 원본으로 두고, Chrome 렌더링으로 `favicon.ico`(16·32·48)·`apple-touch-icon.png`(180, 모서리 없는 정사각형)를 만들었다. 이미지에 메타데이터 없음.
+- `index.html`: icon 링크 3개(ico는 sizes=32x32로 SVG 우선), 제목 'Timebar Diary · 계획과 실제 기록'. 빌드 시 `./favicon.*`로 바뀌어 다른 자산과 같은 경로 규칙을 따른다.
+- 앱 스토어 아이콘(android·ios·electron)은 범위 밖이라 바꾸지 않았다.
