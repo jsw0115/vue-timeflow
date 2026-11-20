@@ -11,7 +11,7 @@ public final class ChatModels {
                           String senderName, String clientMessageId, String body, Instant createdAt,
                           List<String> tags, List<String> mentionUserIds) {}
     public record Room(String id, String kind, String name, String ownerId, String lastSequence,
-                       long unreadCount, Message lastMessage, List<Member> members, Instant updatedAt) {}
+                       long unreadCount, Message lastMessage, List<Member> members, Instant updatedAt, String communityId) {}
     public record Page<T>(List<T> items, String nextCursor, boolean hasNext) {}
     public record SearchPage<T>(List<T> items, String nextCursor, boolean hasNext, boolean indexing) {}
     public record ReadState(String roomId, String lastReadSequence) {}

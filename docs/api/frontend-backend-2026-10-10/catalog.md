@@ -1,6 +1,6 @@
 # API 목록
 
-기준 2026-10-10. 총 294개 매핑이며 wildcard 경로는 허용된 값을 선택한다. 채팅은 CHAT_ENABLED=true 조건부 등록이다. 구현·검증 범위는 [검증 기록](verification.md)을 확인한다.
+기준 2026-10-10. 총 295개 매핑이며 wildcard 경로는 허용된 값을 선택한다. 채팅은 CHAT_ENABLED=true 조건부 등록이다. 구현·검증 범위는 [검증 기록](verification.md)을 확인한다.
 
 | 메서드 | 경로 | 인증 | 처리 | 소스 |
 |---|---|---|---|---|
@@ -42,6 +42,7 @@
 | POST | `/api/auth/signup` | 공개 | 실제 처리 소스 있음 | AuthController |
 | POST | `/api/billing/cancel` | JWT | 외부 연동 경계 | IntegrationController |
 | POST | `/api/billing/checkout` | JWT | 외부 연동 경계 | IntegrationController |
+| PUT | `/api/chat/communities/{communityId}/room` | JWT | 실제 처리 소스 있음 | ChatController |
 | GET | `/api/chat/events` | JWT | 실제 처리 소스 있음 | ChatController |
 | GET | `/api/chat/mentions` | JWT | 실제 처리 소스 있음 | ChatController |
 | PUT | `/api/chat/mentions/{messageId}/read` | JWT | 실제 처리 소스 있음 | ChatController |

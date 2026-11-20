@@ -49,7 +49,7 @@ public class FeatureTestConfig {
     @Bean RefreshTokenRepository tokens() { return mock(RefreshTokenRepository.class); }
     @Bean PasswordEncoder encoder() { return new BCryptPasswordEncoder(); }
     @Bean PasswordPolicy passwords() { return new PasswordPolicy(); }
-    @Bean SocialService social(FeatureStore store, JdbcTemplate jdbc, UserRepository users) { return new SocialService(store, jdbc, users); }
+    @Bean SocialService social(FeatureStore store, JdbcTemplate jdbc, UserRepository users, org.springframework.context.ApplicationEventPublisher events) { return new SocialService(store, jdbc, users, events); }
     @Bean kr.timebar.diary.social.ShareCalendar shareCalendar(SocialService social, ScheduleService schedules, JdbcTemplate jdbc, UserRepository users) { return new kr.timebar.diary.social.ShareCalendar(social, schedules, jdbc, users); }
     @Bean kr.timebar.diary.social.ChallengeService challenges(FeatureStore store, JdbcTemplate jdbc, SocialService social, DayPolicy days, UserRepository users) { return new kr.timebar.diary.social.ChallengeService(store, jdbc, social, days, users); }
     @Bean kr.timebar.diary.social.PeopleFinder peopleFinder(UserRepository users, SocialService social) { return new kr.timebar.diary.social.PeopleFinder(users, social); }

@@ -17,7 +17,8 @@ import java.util.*;
 public class ChatService {
     private final ChatRepository repo;
     private final ChatIdentity identity;
-    public ChatService(ChatRepository repo, ChatIdentity identity) { this.repo=repo; this.identity=identity; }
+    private final ChatCommunities communities;
+    public ChatService(ChatRepository repo, ChatIdentity identity, ChatCommunities communities) { this.repo=repo; this.identity=identity; this.communities=communities; }
     public void active(String user) { identity.requireActive(user); }
     @Transactional(readOnly=true) public Page<InboxItem> search(String user,String query,String room,String before,int size) {
         active(user);
@@ -112,6 +113,7 @@ public class ChatService {
     @Transactional public void transfer(String user,String room,String nextOwner) {
         active(user);
         var locked=repo.lockRoom(room,user);
+        communityRoomGuard(locked);
         if(!"GROUP".equals(locked.get("kind"))||!user.equals(locked.get("owner_id"))) throw new ApiException(ErrorCode.FORBIDDEN);
         identity.requireActive(nextOwner); repo.requireMember(room,nextOwner);
         repo.jdbc().update("UPDATE chat_room SET owner_id=? WHERE id=?",nextOwner,room);
@@ -120,10 +122,46 @@ public class ChatService {
     @Transactional public void leave(String user,String room) {
         active(user);
         var locked=repo.lockRoom(room,user);
+        communityRoomGuard(locked);
         if(!"GROUP".equals(locked.get("kind"))) throw new ApiException(ErrorCode.CONFLICT,"개인 대화에서는 나가기를 지원하지 않습니다.");
         if(user.equals(locked.get("owner_id"))&&repo.members(room).size()>1) throw new ApiException(ErrorCode.CONFLICT,"다른 참여자에게 방장을 넘긴 뒤 나갈 수 있습니다.");
         repo.jdbc().update("UPDATE chat_member SET left_at=UTC_TIMESTAMP(6) WHERE room_id=? AND user_id=?",room,user);
         repo.signal(room,"ROOM");
+    }
+    /** 커뮤니티 채팅방을 열고(없으면 만들고) 지금 활성 회원으로 멤버를 맞춘다. 볼 수 없는 커뮤니티는 404, 회원이 아니면 403이다(PR-10 3b-3, Q-25). */
+    @Transactional public Room communityRoom(String user,String communityId) {
+        active(user);
+        communities.visibleTitle(communityId,user).orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND,"커뮤니티를 찾을 수 없습니다."));
+        if(!communities.activeMembers(communityId).contains(user)) throw new ApiException(ErrorCode.FORBIDDEN,"커뮤니티 회원만 채팅에 들어올 수 있습니다.");
+        String room=repo.communityRoom(communityId).orElse(null);
+        if(room==null) {
+            repo.syncPerson(identity.requireActive(user));
+            String id=UlidGenerator.newUlid();
+            room=repo.createCommunityRoom(id,roomName(communities.title(communityId).orElse("")),user,communityId)?id:repo.communityRoom(communityId).orElseThrow();
+        }
+        syncRoom(room,communityId);
+        return repo.room(room,user);
+    }
+    /** 커뮤니티 회원이 바뀌면 이미 있는 채팅방만 맞춘다. 커뮤니티가 지워졌으면 모두 내보낸다. */
+    @Transactional public void syncCommunity(String communityId) { repo.communityRoom(communityId).ifPresent(room -> syncRoom(room,communityId)); }
+    private void syncRoom(String room,String communityId) {
+        String name=communities.title(communityId).map(ChatService::roomName).orElse(null);
+        var members=new TreeSet<String>();
+        for(String id:communities.activeMembers(communityId)) {
+            // 쓸 수 없게 된 계정은 채팅방에 넣지 않는다
+            try { repo.syncPerson(identity.requireActive(id)); members.add(id); } catch(ApiException e) { }
+        }
+        if(repo.syncCommunityMembers(room,name,members)) repo.signal(room,"ROOM");
+    }
+    /** 채팅방 이름은 80자까지다. 글자(코드 포인트) 단위로 자른다. */
+    static String roomName(String title) {
+        String name=title==null?"":title.strip();
+        if(name.isEmpty()) return "커뮤니티 채팅";
+        return name.codePointCount(0,name.length())<=80?name:name.substring(0,name.offsetByCodePoints(0,80));
+    }
+    /** 커뮤니티 채팅방은 커뮤니티 회원으로 정해지므로 채팅에서 나가거나 방장을 넘길 수 없다. */
+    private static void communityRoomGuard(Map<String,Object> room) {
+        if(room.get("community_id")!=null) throw new ApiException(ErrorCode.CONFLICT,"커뮤니티 채팅방은 커뮤니티를 나가면 함께 나가져요.");
     }
     private int limit(int requested) {
         if(requested<1||requested>100) throw new ApiException(ErrorCode.VALIDATION_FAILED,"조회 개수는 1~100입니다.");

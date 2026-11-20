@@ -27,6 +27,7 @@ export function communityTabs(id, isOwner = false) {
     { label: '게시판', path: '/community/board' + q },
     { label: '챌린지', path: '/community/challenge' + q },
     { label: '멤버', path: '/community/members' + q },
+    { label: '채팅', path: '/community/chat' + q },
     ...(isOwner ? [{ label: '가입 요청함', path: '/community/approvals' + q }] : []),
   ]
 }
@@ -78,5 +79,7 @@ export function createCommunityClient({ request }) {
     comments: (id, postId) => request(`${base(id)}/posts/${q(postId)}/comments`),
     comment: (id, postId, body) => send(`${base(id)}/posts/${q(postId)}/comments`, 'POST', { body }),
     like: (id, postId, liked) => send(`${base(id)}/posts/${q(postId)}/like`, 'PUT', { liked }),
+    /** 커뮤니티 채팅방을 열고 멤버를 커뮤니티 회원과 맞춘다. 여러 번 불러도 같은 방이다(PR-10 3b-3). */
+    chatRoom: (id) => send(`/api/chat/communities/${q(id)}/room`, 'PUT'),
   }
 }

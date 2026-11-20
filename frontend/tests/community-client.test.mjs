@@ -28,6 +28,7 @@ test('가입·신청 취소·승인·글·좋아요는 서버 API 경로와 본�
   await client.deletePost('c1', { id: 'p1', version: 2 })
   await client.comment('c1', 'p1', '멋져요')
   await client.like('c1', 'p1', true)
+  await client.chatRoom('c1')
   await client.invite('c1', 'u9')
   assert.deepEqual(calls, [
     ['POST', '/api/communities/c%201/join', { message: '같이 달려요' }],
@@ -38,6 +39,7 @@ test('가입·신청 취소·승인·글·좋아요는 서버 API 경로와 본�
     ['DELETE', '/api/communities/c1/posts/p1?version=2', undefined],
     ['POST', '/api/communities/c1/posts/p1/comments', { body: '멋져요' }],
     ['PUT', '/api/communities/c1/posts/p1/like', { liked: true }],
+    ['PUT', '/api/chat/communities/c1/room', undefined],
     ['POST', '/api/communities/c1/members', { userId: 'u9' }],
   ])
 })
@@ -67,7 +69,7 @@ test('분류·검색어로 거르고 멤버순·최신순으로 정렬한다', (
 })
 
 test('하위 화면 탭은 커뮤니티 ID를 넘기고, 가입 요청함은 방장에게만 보인다', () => {
-  assert.deepEqual(communityTabs('c/1').map((t) => t.path), ['/community/home?id=c%2F1', '/community/board?id=c%2F1', '/community/challenge?id=c%2F1', '/community/members?id=c%2F1'])
+  assert.deepEqual(communityTabs('c/1').map((t) => t.path), ['/community/home?id=c%2F1', '/community/board?id=c%2F1', '/community/challenge?id=c%2F1', '/community/members?id=c%2F1', '/community/chat?id=c%2F1'])
   assert.equal(communityTabs('c1', true).at(-1).label, '가입 요청함')
   assert.match(communityErrorText({ status: 404 }), /찾을 수 없어요/)
   assert.match(communityErrorText({ status: 403 }), /회원만/)

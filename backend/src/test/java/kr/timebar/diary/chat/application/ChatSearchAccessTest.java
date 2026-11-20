@@ -10,13 +10,13 @@ import static org.mockito.Mockito.*;
 class ChatSearchAccessTest {
     @Test void validatesRoomMembershipBeforeSearch() {
         var repo=mock(ChatRepository.class); var identity=mock(ChatIdentity.class);
-        var service=new ChatService(repo,identity);
+        var service=new ChatService(repo,identity,mock(ChatCommunities.class));
         doThrow(new ApiException(ErrorCode.NOT_FOUND)).when(repo).requireMember("private-room","viewer");
         assertThrows(ApiException.class,()->service.search("viewer","회의","private-room",null,40));
         verify(repo,never()).search(any(),any(),any(),any(),anyInt());
     }
     @Test void normalizesQueryAndBoundsPagination() {
-        var repo=mock(ChatRepository.class); var service=new ChatService(repo,mock(ChatIdentity.class));
+        var repo=mock(ChatRepository.class); var service=new ChatService(repo,mock(ChatIdentity.class),mock(ChatCommunities.class));
         service.search("viewer"," ＡＢＣ ",null,null,40);
         verify(repo).search("viewer","abc",null,null,40);
         assertThrows(ApiException.class,()->service.search("viewer"," ",null,null,40));

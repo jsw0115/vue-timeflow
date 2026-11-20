@@ -67,3 +67,14 @@
 | `backend`: `gradlew.bat test --tests "kr.timebar.diary.social.*"`(시각 읽기 수정 후) | 0 | PASS. ChallengeCheckinTest 5, SocialPersistenceTest 6 |
 | 격리 MySQL·chat-local 백엔드(18080)·Vite(15173)·Chrome(playwright-core, 작업 폴더 밖) 두 계정 점검 | 0 | PASS. 19/19, 페이지 오류 0. 첫 실행 17/19(스크립트 대기 1, `.event span` 화면 결함 1을 고침) |
 | `frontend`: empty-states·design-tokens·responsive-layout·writing-flows(스타일 수정 후) | 0 | PASS. 28개 |
+
+## 3b-3 커뮤니티 채팅(2026-11-20)
+
+| 명령 | 종료 코드 | 결과 |
+| --- | --- | --- |
+| `backend`: `gradlew.bat test --tests "...ChatCommunityRoomTest" --tests "...CommunityMembersEventTest"`(구현 전) | 1 | FAIL(의도). 컴파일 실패 |
+| `backend`: `gradlew.bat test --tests "kr.timebar.diary.chat.*" --tests "kr.timebar.diary.social.*"` | 0 | PASS. ChatCommunityRoomTest 5, CommunityMembersEventTest 2 |
+| `backend`: `gradlew.bat test --console=plain` | 0 | PASS. 275개 |
+| `node frontend/scripts/api-inventory.mjs --check`, `node frontend/scripts/frontend-api-contract.mjs --check` | 0 | PASS. 295개 경로, 295개 operation·201개 schema |
+| 로컬 격리 MySQL·Redis·chat-local 백엔드·Vite·Chrome 세 계정 점검(작업 폴더 밖) | 0 | PASS. 26/26. 첫 실행에서 채팅 시각 9시간 결함 발견·수정 |
+| DB에서 멤버 하나를 어긋나게 한 뒤 백엔드 재시작 | 0 | PASS. 활성 멤버 1명에서 2명으로 복구 |

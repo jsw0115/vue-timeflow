@@ -2,7 +2,7 @@
 
 기준 2026-10-10. 생성 명령: frontend에서 npm run docs:api. 현재 컨트롤러의 단일 문자열 매핑 형식에 한정된 생성기입니다.
 
-총 294개. 기존 지정 계약 검증 10, 서비스 연결 271, 외부 제공자 경계 13, 미구현 stub 0, 공용 메모리 시연 0.
+총 295개. 기존 지정 계약 검증 10, 서비스 연결 272, 외부 제공자 경계 13, 미구현 stub 0, 공용 메모리 시연 0.
 
 | 상태 | 의미 |
 |---|---|
@@ -14,7 +14,7 @@
 
 사전 설계: [구현 계획](implementation-plan-2026-10-03.md). 정확한 신규 입력·응답·권한·버전 계약: [체크리스트·플래너 계약](task-planner-contract.md).
 실제 DB 반영·데이터 보존·실서버 검증: [복구 기록](../development/database-recovery-2026-10-03.md).
-ChatController의 18개 경로는 CHAT_ENABLED=true일 때 등록됩니다. [채팅 계약](../chat/api/catalog.md) · [Redis 목록](../chat/redis/api-catalog.md). SSE는 JSON envelope 대신 text/event-stream을 반환합니다.
+ChatController의 19개 경로는 CHAT_ENABLED=true일 때 등록됩니다. [채팅 계약](../chat/api/catalog.md) · [Redis 목록](../chat/redis/api-catalog.md). SSE는 JSON envelope 대신 text/event-stream을 반환합니다.
 최신 기능 목록·요청 필드·응답·검증 범위는 [2026-10-10 명세](frontend-backend-2026-10-10/README.md)를 참조합니다. 관리자 API는 JWT + ADMIN과 실제 계정 권한을 검사합니다.
 
 | Method | 전체 경로 | 현재 상태 | 현재 인증 | 컨트롤러 |
@@ -25,6 +25,7 @@ ChatController의 18개 경로는 CHAT_ENABLED=true일 때 등록됩니다. [채
 | POST | /api/auth/refresh | 서비스 연결 · 검증 범위 별도 | 공개 | AuthController |
 | GET | /api/auth/me | 서비스 연결 · 검증 범위 별도 | JWT | AuthController |
 | GET | /api/chat/people | 서비스 연결 · 검증 범위 별도 | JWT | ChatController |
+| PUT | /api/chat/communities/{communityId}/room | 서비스 연결 · 검증 범위 별도 | JWT | ChatController |
 | GET | /api/chat/rooms | 서비스 연결 · 검증 범위 별도 | JWT | ChatController |
 | POST | /api/chat/rooms | 서비스 연결 · 검증 범위 별도 | JWT | ChatController |
 | GET | /api/chat/rooms/{id} | 서비스 연결 · 검증 범위 별도 | JWT | ChatController |

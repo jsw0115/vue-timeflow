@@ -59,7 +59,34 @@ public class ChatRepository {
         long unread = jdbc.queryForObject("SELECT COUNT(*) FROM chat_message WHERE room_id=? AND sender_id<>? AND sequence_no>(SELECT last_read_sequence FROM chat_member WHERE room_id=? AND user_id=?)", Long.class,id,viewer,id,viewer);
         return jdbc.queryForObject("SELECT * FROM chat_room WHERE id=?", (rs,i) -> new Room(rs.getString("id"),rs.getString("kind"),
                 "DM".equals(rs.getString("kind")) ? members.stream().filter(m -> !m.userId().equals(viewer)).map(Member::nickname).findFirst().orElse("개인 대화") : rs.getString("name"),
-                rs.getString("owner_id"),rs.getString("last_sequence"),unread,last.isEmpty()?null:last.get(0),members,instant(rs,"updated_at")), id);
+                rs.getString("owner_id"),rs.getString("last_sequence"),unread,last.isEmpty()?null:last.get(0),members,instant(rs,"updated_at"),rs.getString("community_id")), id);
+    }
+    /** 커뮤니티 채팅방 ID(PR-10 3b-3). */
+    public Optional<String> communityRoom(String communityId) {
+        return jdbc.queryForList("SELECT id FROM chat_room WHERE community_id=?", String.class, communityId).stream().findFirst();
+    }
+    public List<String> communityIds() { return jdbc.queryForList("SELECT community_id FROM chat_room WHERE community_id IS NOT NULL", String.class); }
+    /** 커뮤니티 채팅방을 만든다. 같은 커뮤니티 방을 다른 요청이 먼저 만들었으면 false다. */
+    public boolean createCommunityRoom(String id, String name, String owner, String communityId) {
+        try { jdbc.update("INSERT INTO chat_room(id,kind,name,owner_id,community_id) VALUES (?,'GROUP',?,?,?)", id, name, owner, communityId); return true; }
+        catch (org.springframework.dao.DuplicateKeyException e) { return false; }
+    }
+    /** 채팅방 멤버를 커뮤니티 활성 회원과 같게 맞추고, 이름이 있으면 함께 바꾼다. 바뀐 것이 있으면 true다. 다시 가입한 회원은 같은 멤버 행을 되살린다. */
+    public boolean syncCommunityMembers(String room, String name, java.util.Set<String> members) {
+        jdbc.queryForList("SELECT id FROM chat_room WHERE id=? FOR UPDATE", room);
+        boolean changed = name != null && jdbc.update("UPDATE chat_room SET name=? WHERE id=? AND name<>?", name, room, name) > 0;
+        var current = new java.util.HashSet<>(jdbc.queryForList("SELECT user_id FROM chat_member WHERE room_id=? AND left_at IS NULL", String.class, room));
+        for (String user : members) {
+            if (current.contains(user)) continue;
+            if (jdbc.update("UPDATE chat_member SET left_at=NULL,joined_at=UTC_TIMESTAMP(6) WHERE room_id=? AND user_id=?", room, user) == 0)
+                jdbc.update("INSERT INTO chat_member(room_id,user_id) VALUES (?,?)", room, user);
+            changed = true;
+        }
+        for (String user : current) if (!members.contains(user)) {
+            jdbc.update("UPDATE chat_member SET left_at=UTC_TIMESTAMP(6) WHERE room_id=? AND user_id=? AND left_at IS NULL", room, user);
+            changed = true;
+        }
+        return changed;
     }
     public List<String> roomIds(String viewer, String before, int limit) {
         return jdbc.queryForList("SELECT room_id FROM chat_member WHERE user_id=? AND left_at IS NULL AND (? IS NULL OR room_id<?) ORDER BY room_id DESC LIMIT ?", String.class,viewer,before,before,limit);

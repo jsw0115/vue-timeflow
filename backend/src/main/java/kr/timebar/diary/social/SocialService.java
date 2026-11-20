@@ -4,6 +4,7 @@ package kr.timebar.diary.social;
 import kr.timebar.diary.feature.*;
 import kr.timebar.diary.auth.*;
 import kr.timebar.diary.common.*;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,7 +17,8 @@ public class SocialService {
     private final FeatureStore store;
     private final JdbcTemplate jdbc;
     private final UserRepository users;
-    public SocialService(FeatureStore store, JdbcTemplate jdbc, UserRepository users) { this.store = store; this.jdbc = jdbc; this.users = users; }
+    private final ApplicationEventPublisher events;
+    public SocialService(FeatureStore store, JdbcTemplate jdbc, UserRepository users, ApplicationEventPublisher events) { this.store = store; this.jdbc = jdbc; this.users = users; this.events = events; }
 
     public List<Map<String,Object>> friends(String user) {
         // 화면이 이름을 보일 수 있게 상대방 ID와 이름을 더한다(PR-10 2단계)
@@ -72,6 +74,7 @@ public class SocialService {
         var data = FeatureInput.validate(type, body);
         var row = store.create(FeatureStore.SYSTEM, type, data);
         String id = row.get("id").toString(); setMember(type, id, user, "owner", "ACTIVE", "");
+        changed(type, id);
         return describe(user, type, row);
     }
     public Map<String,Object> space(String user, FeatureType type, String id) {
@@ -84,7 +87,9 @@ public class SocialService {
         store.lock(FeatureStore.SYSTEM, type, id); require(user, type, id, true);
         var data = FeatureInput.validate(type, body);
         if (type == FeatureType.COMMUNITY && ((Number)data.get("capacity")).longValue() < activeCount(type, id)) throw new ApiException(ErrorCode.CONFLICT, "정원은 현재 회원 수 이상이어야 합니다.");
-        return describe(user, type, store.replace(FeatureStore.SYSTEM, type, id, FeatureInput.version(body), data));
+        var saved = store.replace(FeatureStore.SYSTEM, type, id, FeatureInput.version(body), data);
+        changed(type, id);
+        return describe(user, type, saved);
     }
     public void deleteSpace(String user, FeatureType type, String id, long version) {
         store.lock(FeatureStore.SYSTEM, type, id); require(user, type, id, true);
@@ -96,6 +101,7 @@ public class SocialService {
             jdbc.update("DELETE FROM challenge_checkin WHERE challenge_id=?", challenge.get("id"));
         }
         for (FeatureType child : List.of(FeatureType.POST, FeatureType.COMMENT, FeatureType.CHALLENGE)) store.deleteAll(id, child);
+        changed(type, id);
     }
     public List<Map<String,Object>> members(String user, FeatureType type, String id, boolean pending) {
         require(user, type, id, pending);
@@ -126,6 +132,7 @@ public class SocialService {
         var member = member(type, id, target).orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND));
         if ("owner".equals(member.get("role"))) throw new ApiException(ErrorCode.CONFLICT, "소유자는 그룹 삭제로만 탈퇴할 수 있습니다.");
         jdbc.update("DELETE FROM feature_member WHERE space_type=? AND space_id=? AND user_id=?", type.name(), id, target);
+        changed(type, id);
     }
     public Map<String,Object> join(String user, FeatureType type, String id, Map<String,Object> body) {
         FeatureInput.keys(body, Set.of("message"));
@@ -142,6 +149,7 @@ public class SocialService {
         String message = FeatureInput.text(body, "message"); if (message.length() > 2000) FeatureInput.fail("가입 메시지는 최대 2000자입니다.");
         String status = type == FeatureType.COMMUNITY && !invited && "approval".equals(space.get("joinPolicy")) ? "PENDING" : "ACTIVE";
         setMember(type, id, user, invited ? previous.get().get("role").toString() : "viewer", status, message);
+        changed(type, id);
         return describe(user, type, space);
     }
     public void decide(String user, String id, String target, Map<String,Object> body) {
@@ -155,6 +163,7 @@ public class SocialService {
             if (activeCount(FeatureType.COMMUNITY, id) >= ((Number)space.get("capacity")).intValue()) throw new ApiException(ErrorCode.CONFLICT);
             setMember(FeatureType.COMMUNITY, id, target, "viewer", "ACTIVE", reason);
         } else setMember(FeatureType.COMMUNITY, id, target, "viewer", "REJECTED", reason);
+        changed(FeatureType.COMMUNITY, id);
         notify(target, "커뮤니티", "가입 요청이 처리되었습니다.", "/community");
     }
 
@@ -216,6 +225,14 @@ public class SocialService {
     private List<Map<String,Object>> named(List<Map<String,Object>> rows) {
         return rows.stream().map(row -> { var result = new LinkedHashMap<>(row); result.put("nickname", nickname(row.get("userId").toString())); return (Map<String,Object>) result; }).toList();
     }
+    /** 지금 활성 회원인 계정 ID. 커뮤니티 채팅방 동기화(PR-10 3b-3)가 쓴다. 없는 공간이면 빈 목록이다. */
+    public List<String> activeMembers(FeatureType type, String id) {
+        return jdbc.queryForList("SELECT user_id FROM feature_member WHERE space_type=? AND space_id=? AND status='ACTIVE' ORDER BY user_id", String.class, type.name(), id);
+    }
+    /** 공간 이름. 지워졌으면 비어 있다. */
+    public Optional<String> title(FeatureType type, String id) { return store.optional(FeatureStore.SYSTEM, type, id).map(row -> Objects.toString(row.get("title"), "")); }
+    /** 커뮤니티 회원·이름이 바뀌면 알린다. 채팅이 켜져 있으면 리스너가 같은 트랜잭션에서 채팅방 멤버를 맞춘다(Q-25). */
+    private void changed(FeatureType type, String id) { if (type == FeatureType.COMMUNITY) events.publishEvent(new CommunityMembersChanged(id)); }
     private UserEntity account(String user) { return users.findById(user).filter(UserEntity::isActive).orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND)); }
     private Optional<Map<String,Object>> member(FeatureType type, String id, String user) { return member(type.name(), id, user); }
     private Optional<Map<String,Object>> member(String type, String id, String user) { return jdbc.queryForList("SELECT * FROM feature_member WHERE space_type=? AND space_id=? AND user_id=?", type, id, user).stream().findFirst(); }

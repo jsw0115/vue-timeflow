@@ -183,7 +183,7 @@ onBeforeUnmount(() => { stopChat(); clearInterval(clock); clearTimeout(searchTim
             <p v-if="chat.loading && !chat.rooms.length" class="chat-note" role="status">대화를 불러오고 있어요…</p>
             <button v-for="room in visible" :key="room.id" class="chat-room-item" :class="{ selected: chat.selectedId === room.id }" :aria-current="chat.selectedId === room.id ? 'true' : undefined" @click="pick(room.id)">
               <span class="chat-avatar" aria-hidden="true">{{ room.name.slice(0, 1) }}<i v-if="room.members.some(member => member.userId !== chatUserId && isActive(member.userId))" class="chat-presence-dot"></i></span>
-              <span class="chat-room-copy"><span><strong>{{ room.name }}</strong><time v-if="room.lastMessage">{{ timeLabel(room.lastMessage.createdAt) }}</time></span><small>{{ room.lastMessage?.body || '첫 이야기를 나눠보세요' }}</small><span v-if="room.kind === 'GROUP'" class="chat-room-meta">그룹 · {{ room.members.length }}명</span></span>
+              <span class="chat-room-copy"><span><strong>{{ room.name }}</strong><time v-if="room.lastMessage">{{ timeLabel(room.lastMessage.createdAt) }}</time></span><small>{{ room.lastMessage?.body || '첫 이야기를 나눠보세요' }}</small><span v-if="room.kind === 'GROUP'" class="chat-room-meta">{{ room.communityId ? '커뮤니티' : '그룹' }} · {{ room.members.length }}명</span></span>
               <span v-if="room.unreadCount" class="chat-count">{{ room.unreadCount > 99 ? '99+' : room.unreadCount }}</span>
             </button>
             <div v-if="!visible.length && !chat.loading" class="chat-list-empty"><strong>{{ query || filter !== 'ALL' ? '조건에 맞는 대화가 없어요' : '아직 나눈 이야기가 없어요' }}</strong><p>{{ query || filter !== 'ALL' ? '검색어나 필터를 바꿔보세요.' : '새 대화에서 상대를 찾아보세요.' }}</p></div>
@@ -235,13 +235,14 @@ onBeforeUnmount(() => { stopChat(); clearInterval(clock); clearTimeout(searchTim
     <Modal v-if="showPresence" title="메신저 활성 상태" @close="showPresence = false"><p class="form-note">함께 대화하는 참여자의 메신저 상태를 표시해요.</p><ul class="chat-members"><li v-for="member in participants" :key="member.userId"><span>{{ member.nickname }}{{ member.userId === chatUserId ? ' (나)' : '' }}</span><small :class="{ 'chat-presence-active': isActive(member.userId) }">{{ presenceLabel(member.userId) }}</small></li></ul><template #footer><button class="modal-secondary" @click="showPresence = false">닫기</button></template></Modal>
     <NewConversationDialog v-if="showNew" @close="showNew = false" @created="created" />
     <Modal v-if="showDetails && activeRoom" title="대화 참여자" @close="showDetails = false">
-      <ul class="chat-members"><li v-for="member in activeRoom.members" :key="member.userId"><span>{{ member.nickname }}{{ member.userId === chatUserId ? ' (나)' : '' }}</span><small :class="{ 'chat-presence-active': isActive(member.userId) }">{{ presenceLabel(member.userId) }}</small><small v-if="member.userId === activeRoom.ownerId && activeRoom.kind === 'GROUP'">방장</small></li></ul>
-      <template v-if="activeRoom.kind === 'GROUP'">
+      <ul class="chat-members"><li v-for="member in activeRoom.members" :key="member.userId"><span>{{ member.nickname }}{{ member.userId === chatUserId ? ' (나)' : '' }}</span><small :class="{ 'chat-presence-active': isActive(member.userId) }">{{ presenceLabel(member.userId) }}</small><small v-if="member.userId === activeRoom.ownerId && activeRoom.kind === 'GROUP' && !activeRoom.communityId">방장</small></li></ul>
+      <p v-if="activeRoom.communityId" class="chat-note">커뮤니티 채팅방이에요. 커뮤니티 회원이 함께하고, 커뮤니티를 나가면 이 채팅방에서도 나가져요.</p>
+      <template v-if="activeRoom.kind === 'GROUP' && !activeRoom.communityId">
         <div v-if="activeRoom.ownerId === chatUserId && activeRoom.members.length > 1" class="chat-owner"><label>방장 넘기기<select v-model="nextOwner"><option disabled value="">참여자 선택</option><option v-for="member in activeRoom.members.filter(item => item.userId !== chatUserId)" :key="member.userId" :value="member.userId">{{ member.nickname }}</option></select></label></div>
         <p v-if="confirmLeave" class="chat-note">나가면 이 대화의 메시지를 더 이상 볼 수 없어요. 계속할까요?</p>
       </template>
       <p v-if="detailError" role="alert">{{ detailError }}</p>
-      <template #footer><button class="modal-secondary" @click="showDetails = false">닫기</button><button v-if="activeRoom.kind === 'GROUP' && activeRoom.ownerId === chatUserId && activeRoom.members.length > 1" class="modal-secondary" :disabled="!nextOwner" @click="transfer">방장 넘기기</button><button v-if="activeRoom.kind === 'GROUP'" class="chat-leave" @click="leave">{{ confirmLeave ? '확인하고 대화 나가기' : '대화 나가기' }}</button></template>
+      <template #footer><button class="modal-secondary" @click="showDetails = false">닫기</button><button v-if="activeRoom.kind === 'GROUP' && !activeRoom.communityId && activeRoom.ownerId === chatUserId && activeRoom.members.length > 1" class="modal-secondary" :disabled="!nextOwner" @click="transfer">방장 넘기기</button><button v-if="activeRoom.kind === 'GROUP' && !activeRoom.communityId" class="chat-leave" @click="leave">{{ confirmLeave ? '확인하고 대화 나가기' : '대화 나가기' }}</button></template>
     </Modal>
     <OutboxLogoutDialog v-if="confirmSignOut" @logout="finishSignOut" @close="confirmSignOut = false" />
   </div>

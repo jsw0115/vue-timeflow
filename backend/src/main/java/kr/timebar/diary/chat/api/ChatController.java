@@ -70,6 +70,13 @@ public class ChatController {
      * @param limit
      * @return
       */
+    /** 커뮤니티 채팅방을 열고 멤버를 커뮤니티 활성 회원과 맞춘다. 여러 번 불러도 같은 방이다(PR-10 3b-3, Q-25). */
+    @PutMapping("/communities/{communityId}/room")
+    public ApiResponse<Room> communityRoom(@PathVariable String communityId) {
+        if(!communityId.matches("[0-9A-HJKMNP-TV-Z]{26}")) throw new kr.timebar.diary.common.ApiException(kr.timebar.diary.common.ErrorCode.NOT_FOUND,"커뮤니티를 찾을 수 없습니다.");
+        return ApiResponse.ok(service.communityRoom(CurrentUser.id(),communityId));
+    }
+
     @GetMapping("/rooms") 
     public ApiResponse<Page<Room>> rooms(@RequestParam(required=false) String before,
         @RequestParam(defaultValue="50") int limit) {

@@ -29,5 +29,11 @@
 - 3b-2: 검색 색인(`post-index`, 로컬)에서 커뮤니티·챌린지·게시글을 빼고, 예전에 들어간 `/community/` 항목은 앱을 열 때 지운다. 쓰이지 않게 된 `communityPosts.js`·시연 목록·`toggleMembership`·`challengeError`와 그 테스트를 지웠다. `workPrivacy.sanitizeForShare`는 정책 함수로 문서화돼 있어 남겼다(지금 쓰는 곳 없음).
 - 3b-2: chat-local MySQL은 `connectionTimeZone=UTC`라 DATETIME을 `LocalDateTime`으로 읽어 JVM 시간대로 해석하면 9시간 어긋난다. 브라우저 점검을 준비하며 설정을 보다 찾았고 `getTimestamp`·`LocalDate`로 고쳤다(별도 커밋 64fe57a). H2 테스트로는 잡히지 않는다.
 - 3b-2: 전역 `.event span { display: grid }`가 목록 행 안의 숫자 span을 따로 줄에 세운다. 새 화면(랭킹 행, 커뮤니티 고르기 행)에서만 안쪽 span을 인라인으로 덮었다. 전역 규칙은 다른 화면이 기대고 있어 손대지 않았다.
-- 이 PC의 로컬 격리 DB는 3b-2 점검 때 V9에서 V12로 올라갔다(bootRun chat-local). 백엔드 18080·Vite 15173이 떠 있다.
-- 다음 작업: 3b-3 커뮤니티 채팅(채팅 V5 `chat_room.community_id`, 회원 확인 포트, 회원 변경 이벤트, 방 조회 API, 화면). 첫 명령은 `sed -n 60,135p backend/src/main/java/kr/timebar/diary/chat/infrastructure/jdbc/ChatRepository.java`다.
+- 이 PC의 로컬 격리 DB는 3b-2 점검 때 V9에서 V12로, 3b-3 점검 때 채팅 V5로 올라갔다(bootRun chat-local). 점검이 끝나 백엔드 18080·Vite 15173은 멈췄고, MySQL·Redis 컨테이너는 원래대로 켜 두었다. 다시 띄우는 명령은 `gradlew.bat bootRun --args="--spring.profiles.active=chat-local --server.port=18080"`, `DEV_API_TARGET=http://127.0.0.1:18080 npx vite --port 15173 --strictPort --host 127.0.0.1`이다. 이 PC의 Node는 20.18이다(PR-06).
+- 3b-3: 채팅의 검색·멘션·태그·목록 조회는 모두 `chat_member.left_at IS NULL`을 본다. 그래서 회원 확인을 채팅 요청마다 하는 대신, 커뮤니티 회원 변경과 같은 트랜잭션에서 `chat_member`를 맞추는 동기 리스너로 했다. 내보낸 회원이 커밋 직후부터 어떤 조회에서도 빠진다.
+- 3b-3: 채팅이 꺼진 채 회원이 바뀌면 리스너가 없어 어긋난다. 서버 시작(`ApplicationReadyEvent`)과 채팅방 열기 때 다시 맞춘다. 재시작으로 되돌아오는 것을 확인했다(RUN-148).
+- 3b-3: 커뮤니티 채팅방의 `owner_id`는 처음 연 사람이다(외래 키 때문). 방장 넘기기·나가기를 막아 의미가 없게 했고, 화면에서 "방장" 표시도 숨겼다.
+- 3b-3: 다시 가입한 회원은 기존 멤버 행을 되살려 이전 대화를 본다. 새 회원도 이전 대화를 본다(일반 그룹방과 같음).
+- 3b-3: 기존 채팅 시각 결함. 두 DB 설정 모두 `connectionTimeZone=UTC`인데 `toLocalDateTime().toInstant(UTC)`로 읽어 JVM이 UTC가 아니면 9시간 어긋났다. 운영 컨테이너 JVM이 UTC면 드러나지 않는다. `getTimestamp().toInstant()`로 고쳐 별도 커밋으로 남겼다.
+- 3b-3: devtools가 연달아 재시작한 뒤 채팅 API가 모두 404가 된 적이 있다. 백엔드를 멈추고 다시 띄우면 정상이었다. 재현 원인은 보지 않았다.
+- 2026-11-20 사용자 요청으로 3b-3까지만 진행하고 멈췄다. 다음 작업: 4단계 업무·WBS·위키 화면 연결(UF-115, UT-197). 첫 명령은 `grep -n "work" frontend/src/router/index.js`다.
