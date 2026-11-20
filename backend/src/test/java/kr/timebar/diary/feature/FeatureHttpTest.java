@@ -166,5 +166,21 @@ class FeatureHttpTest {
         authenticate(owner, "USER"); mvc.perform(delete("/api/work/portfolio-links/" + id)).andExpect(status().isNoContent());
         mvc.perform(get("/api/public/portfolios/" + token)).andExpect(status().isNotFound());
     }
+    /** 로컬 자료 이전(UF-86)이 같은 멱등 키로 다시 보내도 업무 기록·위키·WBS가 하나만 생긴다(PR-10 4단계). */
+    @Test void workCreatesReplayTheSameRecordForTheSameIdempotencyKey() throws Exception {
+        var bodies = Map.of(
+            "work/records", Map.of("title", "연차", "owner", "나", "type", "연차", "startDate", "2026-11-20", "endDate", "2026-11-20", "startTime", "09:00", "endTime", "18:00", "leaveDays", 1),
+            "work/wiki", Map.of("title", "배포", "space", "개발"),
+            "work/wbs/nodes", Map.of("title", "설계", "md", 2, "progress", 0));
+        for (var entry : bodies.entrySet()) {
+            String json = mapper.writeValueAsString(entry.getValue()), key = "local:" + entry.getKey().replace('/', '-') + ":7";
+            String first = mapper.readTree(mvc.perform(post("/api/" + entry.getKey()).header("Idempotency-Key", key).contentType("application/json").content(json)).andExpect(status().isCreated()).andReturn().getResponse().getContentAsString()).at("/data/id").asText();
+            String again = mapper.readTree(mvc.perform(post("/api/" + entry.getKey()).header("Idempotency-Key", key).contentType("application/json").content(json)).andExpect(status().isCreated()).andReturn().getResponse().getContentAsString()).at("/data/id").asText();
+            assertEquals(first, again, entry.getKey());
+        }
+        assertEquals(1, store.all(owner, FeatureType.WORK_RECORD).size());
+        assertEquals(1, store.all(owner, FeatureType.WIKI).size());
+        assertEquals(1, store.all(owner, FeatureType.WBS).size());
+    }
     private void authenticate(String user, String role) { SecurityContextHolder.getContext().setAuthentication(UsernamePasswordAuthenticationToken.authenticated(new AuthUserPrincipal(user, "test@example.test", role), null, List.of())); }
 }

@@ -7,29 +7,35 @@ import Modal from './Modal.vue'
 import EventDateFields from './EventDateFields.vue'
 import TagMentionInput from './TagMentionInput.vue'
 import RichText from './RichText.vue'
-import { workRecords as records } from '../store/workRecords'
+import { workRecords as records, workRecordStore } from '../store/workRecords'
+import { WORK_TYPES } from '../features/records/featureKinds.mjs'
+import { createSaveState } from '../features/records/saveState.mjs'
+import StorageNote from './StorageNote.vue'
 import { openPostComposer } from '../store/appState'
 import { localDate, workRecordError } from '../utils/postValidation.mjs'
 const props = defineProps({ projects: { type: Array, default: () => [] } })
-const types = ['연차', '반차', '외근', '출장', '이직', '기타']
+// 서버가 받는 다섯 가지 종류다(PR-10 4단계). 예전 로컬의 '기타' 기록은 목록에는 보인다
+const types = WORK_TYPES
 const filter = ref('전체')
 const visible = computed(() => records.value.filter(r => filter.value === '전체' || r.type === filter.value))
 const show = ref(false)
 const editing = ref(null)
-const fresh = () => ({ type: '연차', title: '', owner: '김지수', projectId: '', startDate: localDate(), endDate: localDate(), startTime: '09:00', endTime: '18:00', half: '오전', leaveDays: 1, status: '예정', location: '', partner: '', transport: '', expense: 0, fromCompany: '', toCompany: '', role: '', handover: '', body: '' })
+const fresh = () => ({ type: '연차', title: '', owner: '나', projectId: '', startDate: localDate(), endDate: localDate(), startTime: '09:00', endTime: '18:00', half: '오전', leaveDays: 1, status: '예정', location: '', partner: '', transport: '', expense: 0, fromCompany: '', toCompany: '', role: '', handover: '', body: '' })
 const draft = ref(fresh())
 const error = computed(() => workRecordError(draft.value))
+const saving = createSaveState({ fields: { title: ['title', '제목'], owner: ['owner', '담당'], dates: ['종료', '날짜'] } })
 function open(record) {
   if (!record) { openPostComposer('업무 기록', '', { projects: props.projects.map(project => ({ id: project.id, title: project.title })) }); return }
   editing.value = record?.id ?? null
   draft.value = record ? { ...fresh(), ...record } : fresh()
+  saving.reset()
   show.value = true
 }
 function setHalf() {
   if (draft.value.type !== '반차') return
   Object.assign(draft.value, { endDate: draft.value.startDate, startTime: draft.value.half === '오전' ? '09:00' : '14:00', endTime: draft.value.half === '오전' ? '13:00' : '18:00', leaveDays: 0.5 })
 }
-function save() {
+async function save() {
   if (error.value) return
   const data = { ...draft.value, title: draft.value.title.trim(), leaveDays: draft.value.type === '반차' ? 0.5 : draft.value.leaveDays }
   // 유형 변경 시 이전 유형의 민감한 상세값이 남지 않도록 정리합니다.
@@ -37,13 +43,16 @@ function save() {
   if (data.type !== '출장') Object.assign(data, { expense: 0, transport: '' })
   if (data.type !== '이직') Object.assign(data, { fromCompany: '', toCompany: '', role: '', handover: '' })
   if (!['연차','반차'].includes(data.type)) data.leaveDays = 0
+  // 로그인 상태는 서버 성공 응답 뒤에 목록에 들어가고, 실패하면 입력을 그대로 둔다(UF-82·UF-83)
   const target = records.value.find(r => r.id === editing.value)
-  if (target) Object.assign(target, data)
-  else records.value.unshift({ id: Math.max(0, ...records.value.map(r => r.id)) + 1, ...data })
-  show.value = false
+  const result = await saving.run(() => (target ? workRecordStore.update(target, data) : workRecordStore.create(data)))
+  if (result.ok) show.value = false
 }
-function remove(record) {
-  if (confirm('이 업무 기록을 삭제할까요?')) records.value = records.value.filter(r => r.id !== record.id)
+const removeError = ref('')
+async function remove(record) {
+  if (!confirm('이 업무 기록을 삭제할까요?')) return
+  removeError.value = ''
+  try { await workRecordStore.remove(record) } catch (cause) { removeError.value = '삭제하지 못했어요. 연결을 확인하고 다시 시도해 주세요.'; if (cause?.status === 409 || cause?.status === 404) await workRecordStore.reload() }
 }
 </script>
 <template>
@@ -61,6 +70,7 @@ function remove(record) {
       </div>
       <div class="record-actions"><button class="review" @click="open(record)">상세 · 수정</button><button class="review" @click="remove(record)">삭제</button></div>
     </article>
+    <p v-if="removeError" class="input-field-help" data-state="error" role="alert">{{ removeError }}</p>
     <p v-if="!visible.length" class="empty-state">등록된 업무 기록이 없어요. 연차부터 이직 준비까지 '기록 추가'로 한곳에 정리해 보세요.</p>
   </section>
   <Modal v-if="show" :title="editing ? '업무 기록 수정' : '업무 기록 작성'" :edit-resource="editing ? 'work-record:' + editing : ''" wide @close="show = false">
@@ -81,14 +91,16 @@ function remove(record) {
         <label>인수인계 · 준비 사항<TagMentionInput v-model="draft.handover" /></label>
       </template>
       <label>사유 · 상세 내용 · 태그 · 멘션<TagMentionInput v-model="draft.body" /></label>
-      <p class="form-note">로컬 개인 기록입니다. 승인 상태는 메모용이며 실제 결재나 연차 차감은 수행하지 않습니다. 민감한 인사정보는 입력하지 마세요.</p>
+      <p class="form-note">나만 보는 개인 기록이에요. 승인 상태는 메모용이며 실제 결재나 연차 차감은 하지 않아요. 민감한 인사정보는 입력하지 마세요.</p>
+      <StorageNote :mode="workRecordStore.mode.value" />
       <p v-if="error" class="form-note" role="status">{{ error }}</p>
+      <p v-if="saving.state.message" class="input-field-help" data-state="error" role="alert">{{ saving.state.message }} {{ saving.state.fieldMessage }}</p>
 
     </form>
 
     <template #footer>
       <button type="button" class="modal-secondary" @click="show = false">취소</button>
-      <button :form="modalFormId1" class="primary" type="submit" :disabled="!!error">저장하기</button>
+      <button :form="modalFormId1" class="primary" type="submit" :disabled="!!error || saving.state.status === 'saving'" :aria-busy="saving.state.status === 'saving' ? 'true' : undefined">{{ saving.state.status === 'saving' ? '저장하는 중' : '저장하기' }}</button>
     </template>
   </Modal>
 </template>

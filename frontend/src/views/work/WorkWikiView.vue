@@ -1,5 +1,7 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
+import StorageNote from '../../components/StorageNote.vue'
+import { createSaveState } from '../../features/records/saveState.mjs'
 import { openPostComposer } from '../../store/appState'
 import Modal from '../../components/Modal.vue'
 import HelpPopover from '../../components/HelpPopover.vue'
@@ -8,8 +10,8 @@ import RichText from '../../components/RichText.vue'
 import TagMentionInput from '../../components/TagMentionInput.vue'
 import PersonTag from '../../components/PersonTag.vue'
 import {
-  wiki, WIKI_SPACES, findDoc, childrenOf, pinnedDocs, wikiTags,
-  addDoc, updateDoc, togglePin, removeDoc, searchDocs, resetWiki,
+  wiki, wikiStore, WIKI_SPACES, findDoc, childrenOf, pinnedDocs, wikiTags,
+  updateDoc, togglePin, removeDoc, searchDocs, resetWiki, wikiHistory,
 } from '../../store/wiki'
 
 /** 업무 위키 — 반복해서 찾는 지식을 문서로 쌓고 검색한다. 업무 데이터라 비공개다. */
@@ -27,6 +29,21 @@ const FILTER_GROUPS = computed(() => [
 const results = computed(() => searchDocs({ keyword: query.value, space: filters.value.space, tag: activeTag.value }))
 const activeId = ref(wiki.docs[0]?.id ?? null)
 const active = computed(() => findDoc(activeId.value))
+// 로그인 상태는 목록이 나중에 오므로, 고른 문서가 없으면 첫 문서를 연다
+watch(() => wiki.docs.map((d) => d.id).join(), () => { if (!active.value) activeId.value = wiki.docs[0]?.id ?? null })
+const saving = createSaveState({ fields: { title: ['title', '제목'], space: ['space', '공간'], parent: ['부모', '단계'] } })
+// 이전 버전. 로그인 상태는 서버가 남긴 이전 내용, 로그아웃 상태는 이 브라우저의 변경 메모다
+const history = ref([])
+const historyStatus = ref('idle')
+const openedVersion = ref(null)
+async function loadHistory() {
+  openedVersion.value = null
+  const doc = active.value
+  if (!doc) { history.value = []; historyStatus.value = 'idle'; return }
+  historyStatus.value = 'loading'
+  try { const rows = await wikiHistory(doc); if (active.value === doc || active.value?.id === doc.id) { history.value = rows; historyStatus.value = 'ready' } } catch { historyStatus.value = 'error' }
+}
+watch(() => [active.value?.id, active.value?.version], loadHistory, { immediate: true })
 const activeChildren = computed(() => (active.value ? childrenOf(active.value.id) : []))
 const breadcrumb = computed(() => {
   const out = []
@@ -48,24 +65,25 @@ function openAdd(parentId = null) {
   openPostComposer('업무 위키', '', empty(parentId))
 }
 function openEdit(doc) {
+  saving.reset()
   editing.value = doc.id
   draft.value = { space: doc.space, title: doc.title, body: doc.body, parentId: doc.parentId }
 }
 const canSave = computed(() => Boolean(draft.value.title.trim()))
-function save() {
+async function save() {
   if (!canSave.value) return
-  if (editing.value === 'new') {
-    const doc = addDoc({ ...draft.value })
-    activeId.value = doc.id
-  } else {
-    updateDoc(editing.value, { ...draft.value })
-  }
-  editing.value = null
+  const doc = findDoc(editing.value)
+  const result = await saving.run(() => updateDoc(doc, { ...draft.value, title: draft.value.title.trim() }))
+  if (result.ok) editing.value = null
+  else if (['conflict', 'notFound'].includes(result.error?.kind) && wikiStore.onServer()) await wikiStore.reload()
 }
-function onRemove(doc) {
+async function onRemove(doc) {
   if (!window.confirm('‘' + doc.title + '’ 문서를 삭제할까요? 하위 문서는 상위로 옮겨져요.')) return
-  removeDoc(doc.id)
-  if (activeId.value === doc.id) activeId.value = wiki.docs[0]?.id ?? null
+  const result = await saving.run(() => removeDoc(doc))
+  if (result.ok && activeId.value === doc.id) activeId.value = wiki.docs[0]?.id ?? null
+}
+async function onPin(doc) {
+  await saving.run(() => togglePin(doc))
 }
 function onReset() {
   if (!window.confirm('위키를 초기 상태로 되돌릴까요? 작성한 문서가 사라져요.')) return
@@ -98,9 +116,15 @@ function pickTag(tag) {
     />
     <span class="badge danger">비공개 · 나만 보기</span>
     <span></span>
-    <button class="review" style="margin: 0" @click="onReset">초기화</button>
+    <button v-if="wikiStore.mode.value === 'local'" class="review" style="margin: 0" @click="onReset">초기화</button>
     <button class="primary" @click="openAdd(null)">+ 새 문서</button>
   </div>
+  <StorageNote :mode="wikiStore.mode.value" />
+  <p v-if="saving.state.message && !editing" class="input-field-help wiki-message" data-state="error" role="alert">{{ saving.state.message }}</p>
+  <p v-if="wikiStore.onServer() && wikiStore.state.loading && !wiki.docs.length" class="input-field-help" role="status">문서를 불러오는 중이에요.</p>
+  <section v-else-if="wikiStore.onServer() && wikiStore.state.error" class="card">
+    <div class="empty-state" role="status"><p>문서를 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요.</p><button type="button" class="button-secondary" @click="wikiStore.reload()">다시 시도</button></div>
+  </section>
 
   <div class="metrics" style="--metric-cols: 4; margin-bottom: 16px">
     <article><span>전체 문서</span><b class="figure">{{ wiki.docs.length }}<small>개</small></b></article>
@@ -161,7 +185,7 @@ function pickTag(tag) {
             <PersonTag :name="active.author" /> · {{ active.updatedAt }} 수정
           </p>
         </div>
-        <button class="person-info" :title="active.pinned ? '고정 해제' : '고정'" :aria-label="active.pinned ? '고정 해제' : '고정'" @click="togglePin(active)">
+        <button class="person-info" :title="active.pinned ? '고정 해제' : '고정'" :aria-label="active.pinned ? '고정 해제' : '고정'" :disabled="saving.state.status === 'saving'" @click="onPin(active)">
           {{ active.pinned ? '★' : '☆' }}
         </button>
       </div>
@@ -180,12 +204,19 @@ function pickTag(tag) {
         <button class="review" style="margin: 0" @click="onRemove(active)">삭제</button>
       </div>
 
-      <div class="section-label" style="margin-top: 20px">변경 이력</div>
-      <div class="event" v-for="(h, i) in active.history.slice(0, 5)" :key="i">
-        <i></i>
-        <span style="flex: 1"><b>{{ h.note }}</b><small>{{ h.by }}</small></span>
-        <small class="figure">{{ h.at }}</small>
-      </div>
+      <div class="section-label" style="margin-top: 20px">{{ wikiStore.onServer() ? '이전 버전' : '변경 이력' }}</div>
+      <p v-if="historyStatus === 'loading'" class="input-field-help" role="status">이전 버전을 불러오는 중이에요.</p>
+      <p v-else-if="historyStatus === 'error'" class="input-field-help" data-state="error" role="alert">이전 버전을 불러오지 못했어요. 문서를 다시 골라 주세요.</p>
+      <template v-else>
+        <div class="event wiki-version" v-for="(h, i) in history.slice(0, 10)" :key="h.version ?? i">
+          <i></i>
+          <span class="wiki-version-main"><b>{{ h.version ? h.version + '판 · ' : '' }}{{ h.label }}</b><small>{{ h.by }}</small></span>
+          <small class="figure">{{ h.at }}</small>
+          <button v-if="h.version" type="button" class="button-secondary" :aria-expanded="openedVersion === h.version" @click="openedVersion = openedVersion === h.version ? null : h.version">{{ openedVersion === h.version ? '접기' : '내용 보기' }}</button>
+          <div v-if="openedVersion === h.version" class="wiki-body wiki-version-body"><RichText :text="h.body" /></div>
+        </div>
+        <p v-if="!history.length" class="input-field-help">아직 고친 적이 없어요. 문서를 고치면 이전 내용이 여기에 남아요.</p>
+      </template>
     </aside>
 
     <aside class="card" v-else>
@@ -200,17 +231,25 @@ function pickTag(tag) {
       <label style="flex: 1">상위 문서
         <select v-model="draft.parentId">
           <option :value="null">없음 (최상위)</option>
-          <option v-for="d in wiki.docs.filter((x) => x.id !== editing)" :key="d.id" :value="d.id">{{ d.title }}</option>
+          <option v-for="d in wiki.docs.filter((x) => String(x.id) !== String(editing))" :key="d.id" :value="d.id">{{ d.title }}</option>
         </select>
       </label>
     </div>
     <label>본문</label>
     <TagMentionInput v-model="draft.body" :rows="10" placeholder="문서 내용을 적어주세요. #태그 와 @이름 을 쓸 수 있어요" />
     <p v-if="!canSave" class="form-note">제목을 입력하면 저장할 수 있어요.</p>
+    <p v-if="saving.state.message" class="input-field-help" data-state="error" role="alert">{{ saving.state.message }} {{ saving.state.fieldMessage }}</p>
 
     <template #footer>
       <button type="button" class="modal-secondary" @click="editing = null">취소</button>
-      <button class="primary" :disabled="!canSave" @click="save">{{ editing === 'new' ? '문서 만들기' : '변경 저장' }}</button>
+      <button class="primary" :disabled="!canSave || saving.state.status === 'saving'" :aria-busy="saving.state.status === 'saving' ? 'true' : undefined" @click="save">{{ saving.state.status === 'saving' ? '저장하는 중' : '변경 저장' }}</button>
     </template>
   </Modal>
 </template>
+
+<style scoped>
+.wiki-message { margin: 0 0 var(--space-lg); }
+.wiki-version { flex-wrap: wrap; }
+.wiki-version-main { flex: 1 1 160px; min-width: 0; }
+.wiki-version-body { flex-basis: 100%; }
+</style>

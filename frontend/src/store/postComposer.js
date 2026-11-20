@@ -3,10 +3,10 @@ import { diaryStore, memoStore } from './writing'
 import { moneyStore } from './money'
 import { ddayStore } from './ddays'
 import { moodCode } from '../utils/mood.mjs'
-import { workRecords } from './workRecords'
+import { workRecordStore } from './workRecords'
 import { addDday } from './ddays'
 import { savePlannerReview } from './plannerReviews'
-import { addDoc, WIKI_SPACES } from './wiki'
+import { addDoc, WIKI_SPACES, wikiStore } from './wiki'
 import { localDate, rangeError, routineError, workRecordError } from '../utils/postValidation.mjs'
 import { makeRecurrence, recurrenceError } from '../utils/recurrence.mjs'
 
@@ -19,7 +19,7 @@ export function makePostDraft(kind) {
     color: '#2f5d46', attendeeIds: [], time: '19:00', duration: 30, days: [0, 1, 2, 3, 4, 5, 6],
     recurrence: makeRecurrence(kind === '루틴' ? { frequency: 'weekly', weekdays: [0,1,2,3,4,5,6] } : {}), subtasks: [],
     goalCount: 1, goalUnit: '회', notify: true, reminderMinutes: 10, notifyDays: [1],
-    amount: 0, type: kind === '업무 기록' ? '연차' : 'out', owner: '김지수', projectId: '', status: '예정',
+    amount: 0, type: kind === '업무 기록' ? '연차' : 'out', owner: '나', projectId: '', status: '예정',
     half: '오전', leaveDays: 1, location: '', partner: '', transport: '', expense: 0,
     fromCompany: '', toCompany: '', role: '', handover: '', space: WIKI_SPACES[0], parentId: null }
 }
@@ -45,7 +45,6 @@ export function postDraftError(kind, draft) {
 export async function savePostDraft(kind, draft, progress = null) {
   if (postDraftError(kind, draft)) return false
   const title = draft.title.trim(), body = draft.body.trim()
-  const insert = (list, data) => list.value.unshift({ id: list.value.reduce((max, item) => Math.max(max, Number(item.id) || 0), 0) + 1, ...data })
   if (kind === '할 일') {
     await taskStore.createWithChecklist({ title, body, date: draft.date, category: draft.category, priority: draft.priority }, draft.subtasks ?? [], progress)
     return true
@@ -63,18 +62,18 @@ export async function savePostDraft(kind, draft, progress = null) {
   if (kind === 'D-Day') { await addDday({ title, body, category: draft.category, date: draft.date, notifyDays: [...draft.notifyDays] }); return true }
   if (kind === '머니로그') { await moneyStore.create({ title, body, date: draft.date, amount: draft.type === 'out' ? -draft.amount : draft.amount, type: draft.type, category: draft.type === 'in' ? '수입' : draft.category }); return true }
   if (kind === '회고') savePlannerReview(draft.date, body)
-  if (kind === '업무 위키') addDoc({ title, body, space: draft.space, parentId: draft.parentId })
+  if (kind === '업무 위키') { await addDoc({ title, body, space: draft.space, parentId: draft.parentId }); return true }
   if (kind === '업무 기록') {
     const data = { title, body, type: draft.type, owner: draft.owner, projectId: draft.projectId, status: draft.status, startDate: draft.startDate, endDate: draft.endDate, startTime: draft.startTime, endTime: draft.endTime, half: draft.half, leaveDays: draft.type === '반차' ? 0.5 : draft.type === '연차' ? draft.leaveDays : 0 }
     if (['외근', '출장'].includes(draft.type)) Object.assign(data, { location: draft.location, partner: draft.partner })
     if (draft.type === '출장') Object.assign(data, { transport: draft.transport, expense: draft.expense })
     if (draft.type === '이직') Object.assign(data, { fromCompany: draft.fromCompany, toCompany: draft.toCompany, role: draft.role, handover: draft.handover })
-    insert(workRecords, data)
+    await workRecordStore.create(data)
   }
   return true
 }
 
 /** 계정 저장을 지원하는 종류의 지금 저장 방식('server' 또는 'local'). 아직 이 브라우저에만 저장하는 종류는 null이다(PR-07). */
 export function postStorageMode(kind) {
-  return ({ '할 일': taskStore, '일정': eventStore, '루틴': routineStore, '다이어리': diaryStore, '메모': memoStore, 'D-Day': ddayStore, '머니로그': moneyStore })[kind]?.mode.value ?? null
+  return ({ '할 일': taskStore, '일정': eventStore, '루틴': routineStore, '다이어리': diaryStore, '메모': memoStore, 'D-Day': ddayStore, '머니로그': moneyStore, '업무 기록': workRecordStore, '업무 위키': wikiStore })[kind]?.mode.value ?? null
 }

@@ -10029,6 +10029,12 @@
     "route": "/api/work/records",
     "parameters": [
       {
+        "name": "Idempotency-Key",
+        "type": "String",
+        "location": "header",
+        "required": false
+      },
+      {
         "name": "body",
         "type": "Map<String,Object>",
         "location": "body",
@@ -10470,6 +10476,12 @@
     "route": "/api/work/wbs/nodes",
     "parameters": [
       {
+        "name": "Idempotency-Key",
+        "type": "String",
+        "location": "header",
+        "required": false
+      },
+      {
         "name": "body",
         "type": "Map<String,Object>",
         "location": "body",
@@ -10656,6 +10668,12 @@
     "method": "POST",
     "route": "/api/work/wiki",
     "parameters": [
+      {
+        "name": "Idempotency-Key",
+        "type": "String",
+        "location": "header",
+        "required": false
+      },
       {
         "name": "body",
         "type": "Map<String,Object>",

@@ -3459,6 +3459,10 @@ file을 multipart/form-data로 전달한다. boundary는 HTTP 클라이언트가
 
 인증은 JWT이며 소스는 WorkController.java다. 성공 HTTP는 201다.
 
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| header | Idempotency-Key | String | 아니오 | 없음 |
+
 | 본문 필드 | 타입 | 필수 | 제약 |
 |---|---|---|---|
 | title | string | 예 | 길이 ≤ 200 |
@@ -3589,6 +3593,10 @@ file을 multipart/form-data로 전달한다. boundary는 HTTP 클라이언트가
 
 인증은 JWT이며 소스는 WorkController.java다. 성공 HTTP는 201다.
 
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| header | Idempotency-Key | String | 아니오 | 없음 |
+
 | 본문 필드 | 타입 | 필수 | 제약 |
 |---|---|---|---|
 | title | string | 예 | 길이 ≤ 200 |
@@ -3665,6 +3673,10 @@ file을 multipart/form-data로 전달한다. boundary는 HTTP 클라이언트가
 ## POST /api/work/wiki
 
 인증은 JWT이며 소스는 WorkController.java다. 성공 HTTP는 201다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| header | Idempotency-Key | String | 아니오 | 없음 |
 
 | 본문 필드 | 타입 | 필수 | 제약 |
 |---|---|---|---|

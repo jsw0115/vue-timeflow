@@ -102,9 +102,10 @@ public class WorkService {
         if (type != FeatureType.WIKI && type != FeatureType.WBS) return;
         String parent = FeatureInput.text(data, "parentId");
         if (parent.isBlank()) { data.put("parentId", null); return; }
+        // 계층은 최대 100단계다(08 UF-51). 조상이 100개가 되면 101단계라 거부한다
         Set<String> visited = new HashSet<>();
         while (!parent.isEmpty()) {
-            if (parent.contains("@") || parent.equals(id) || !visited.add(parent) || visited.size() > 100) FeatureInput.fail("부모 계층이 순환하거나 너무 깊습니다.");
+            if (parent.contains("@") || parent.equals(id) || !visited.add(parent) || visited.size() >= 100) FeatureInput.fail("부모 계층이 순환하거나 100단계를 넘습니다.");
             var row = store.lock(user, type, parent);
             parent = FeatureInput.text(row, "parentId");
         }

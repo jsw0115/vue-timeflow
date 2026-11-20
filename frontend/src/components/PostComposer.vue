@@ -1,4 +1,5 @@
 <script setup>
+import { WORK_TYPES } from '../features/records/featureKinds.mjs'
 import { computed, nextTick, reactive, ref, useId, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import Modal from './Modal.vue'
@@ -28,7 +29,8 @@ const error = computed(() => postDraftError(kind.value, draft.value))
 const attendeeQuery = ref('')
 const attendees = computed(() => contacts.value.filter(contact => !isBlocked(contact.id) && contact.name.includes(attendeeQuery.value.trim())))
 const categories = computed(() => kind.value === '머니로그' ? ['식비', '여가', '건강', '교통', '주거', '수입', '기타'] : ['개인', '업무', '공부', '건강', '휴식', '가족'])
-const workTypes = ['연차', '반차', '외근', '출장', '이직', '기타']
+// 서버가 받는 업무 기록 종류(PR-10 4단계)
+const workTypes = WORK_TYPES
 watch(composerKind, value => { if (kinds.includes(value)) kind.value = value })
 watch(kind, async () => { saving.reset(); await nextTick(); formRoot.value?.closest('.modal-body')?.scrollTo({ top: 0 }) })
 function on(section, field) { return isFieldOn(modeState.activeMode, section, field) }

@@ -78,3 +78,16 @@
 | `node frontend/scripts/api-inventory.mjs --check`, `node frontend/scripts/frontend-api-contract.mjs --check` | 0 | PASS. 295개 경로, 295개 operation·201개 schema |
 | 로컬 격리 MySQL·Redis·chat-local 백엔드·Vite·Chrome 세 계정 점검(작업 폴더 밖) | 0 | PASS. 26/26. 첫 실행에서 채팅 시각 9시간 결함 발견·수정 |
 | DB에서 멤버 하나를 어긋나게 한 뒤 백엔드 재시작 | 0 | PASS. 활성 멤버 1명에서 2명으로 복구 |
+
+## 4단계 업무 기록·WBS·위키(2026-11-20)
+
+| 명령 | 종료 코드 | 결과 |
+| --- | --- | --- |
+| `backend`: `gradlew.bat test --tests "...WorkRulesTest" --tests "...FeatureHttpTest"`(고치기 전) | 1 | FAIL(의도). 101단계 허용, 같은 멱등 키로 WBS 두 개 |
+| `backend`: `gradlew.bat test --tests "kr.timebar.diary.work.*" --tests "kr.timebar.diary.feature.*"` | 0 | PASS. WorkRulesTest 6, FeatureHttpTest 24, FeaturePersistenceTest 10 |
+| `frontend`: `node --test tests/work-stores.test.mjs`(구현 전 → 후) | 1 → 0 | 구현 전 FAIL(의도), 구현 후 PASS 5 |
+| `frontend`: 관련 8개 파일 | 0 | PASS. 45개 |
+| `frontend`: 전체(device-preview 제외), `npm run build:web` | 0 | PASS. 194개, 빌드 성공 |
+| `backend`: `gradlew.bat test --console=plain` | 0 | PASS. 282개 |
+| `node frontend/scripts/api-inventory.mjs --check`, `node frontend/scripts/frontend-api-contract.mjs --check` | 0 | PASS. 295개 |
+| 로컬 격리 MySQL·chat-local 백엔드·Vite·Chrome 점검(작업 폴더 밖) | 0 | PASS. 21/21(첫 실행 20/21은 스크립트 대기 문제) |

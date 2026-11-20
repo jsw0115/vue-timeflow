@@ -1,4 +1,4 @@
-// 비공개 업무 기록의 조회와 저장 API를 제공한다.
+// 비공개 업무 기록의 조회와 저장 API를 제공한다. 생성은 Idempotency-Key로 같은 요청을 한 번만 만든다(로컬 자료 이전, Q-13).
 package kr.timebar.diary.work;
 
 import kr.timebar.diary.feature.*;
@@ -23,7 +23,7 @@ public class WorkController {
     public ApiResponse<?> workrecordGet(@PathVariable String id) { return ApiResponse.ok(records.get(CurrentUser.id(), FeatureType.WORK_RECORD, id)); }
     @PostMapping("/work/records")
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<?> workrecordCreate(@RequestBody Map<String,Object> body) { return ApiResponse.ok(work.create(CurrentUser.id(), FeatureType.WORK_RECORD, body)); }
+    public ApiResponse<?> workrecordCreate(@RequestHeader(value="Idempotency-Key", required=false) String key, @RequestBody Map<String,Object> body) { return ApiResponse.ok(work.create(CurrentUser.id(), FeatureType.WORK_RECORD, body, key)); }
     @PutMapping("/work/records/{id}")
     public ApiResponse<?> workrecordUpdate(@PathVariable String id, @RequestBody Map<String,Object> body) { return ApiResponse.ok(work.update(CurrentUser.id(), FeatureType.WORK_RECORD, id, body)); }
     @DeleteMapping("/work/records/{id}")
@@ -37,7 +37,7 @@ public class WorkController {
     public ApiResponse<?> wikiGet(@PathVariable String id) { return ApiResponse.ok(records.get(CurrentUser.id(), FeatureType.WIKI, id)); }
     @PostMapping("/work/wiki")
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<?> wikiCreate(@RequestBody Map<String,Object> body) { return ApiResponse.ok(work.create(CurrentUser.id(), FeatureType.WIKI, body)); }
+    public ApiResponse<?> wikiCreate(@RequestHeader(value="Idempotency-Key", required=false) String key, @RequestBody Map<String,Object> body) { return ApiResponse.ok(work.create(CurrentUser.id(), FeatureType.WIKI, body, key)); }
     @PutMapping("/work/wiki/{id}")
     public ApiResponse<?> wikiUpdate(@PathVariable String id, @RequestBody Map<String,Object> body) { return ApiResponse.ok(work.update(CurrentUser.id(), FeatureType.WIKI, id, body)); }
     @DeleteMapping("/work/wiki/{id}")
@@ -51,7 +51,7 @@ public class WorkController {
     public ApiResponse<?> wbsGet(@PathVariable String id) { return ApiResponse.ok(records.get(CurrentUser.id(), FeatureType.WBS, id)); }
     @PostMapping("/work/wbs/nodes")
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<?> wbsCreate(@RequestBody Map<String,Object> body) { return ApiResponse.ok(work.create(CurrentUser.id(), FeatureType.WBS, body)); }
+    public ApiResponse<?> wbsCreate(@RequestHeader(value="Idempotency-Key", required=false) String key, @RequestBody Map<String,Object> body) { return ApiResponse.ok(work.create(CurrentUser.id(), FeatureType.WBS, body, key)); }
     @PutMapping("/work/wbs/nodes/{id}")
     public ApiResponse<?> wbsUpdate(@PathVariable String id, @RequestBody Map<String,Object> body) { return ApiResponse.ok(work.update(CurrentUser.id(), FeatureType.WBS, id, body)); }
     @DeleteMapping("/work/wbs/nodes/{id}")

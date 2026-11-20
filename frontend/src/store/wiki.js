@@ -1,14 +1,15 @@
-import { computed, reactive } from 'vue'
+// 업무 위키를 로그인하면 계정에, 로그아웃이면 이 브라우저에 저장하고 검색·태그·이력을 준다(PR-10 4단계, UF-52).
+import { computed, ref, watch } from 'vue'
 import { parseTags } from './tagging'
-
+import { apiRequest } from '../features/auth/apiRequest.js'
+import { createFeatureStore } from '../features/records/featureStore.mjs'
+import { wikiKind } from '../features/records/featureKinds.mjs'
 /**
  * 업무 위키 — 팀에서 반복해서 찾는 지식을 문서로 쌓는다.
  * 업무 데이터이므로 workPrivacy 정책에 따라 다른 사용자에게 공개되지 않는다.
  */
 const STORAGE_KEY = 'timeflow.wiki.v1'
-
 export const WIKI_SPACES = ['온보딩', '개발', '운영', '회의록']
-
 function seed() {
   return {
     docs: [
@@ -59,90 +60,87 @@ function seed() {
     ],
   }
 }
-
+export const WIKI_SEEDS = seed().docs
 function load() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    const parsed = raw ? JSON.parse(raw) : null
-    if (!parsed?.docs?.length) return null
-    return parsed
+    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null')
+    return parsed?.docs?.length ? parsed.docs : null
   } catch {
     return null
   }
 }
+// 로그아웃 상태의 문서. 예전과 같은 키·모양({ docs })으로 저장해 이미 쓴 문서를 잃지 않는다
+const localDocs = ref(load() ?? seed().docs)
+watch(localDocs, (docs) => {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ docs })) } catch { /* 저장할 수 없는 환경 — 세션 내 상태만 유지 */ }
+}, { deep: true, flush: 'sync' })
 
-export const wiki = reactive(load() ?? seed())
-
-function persist() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ docs: wiki.docs }))
-  } catch {
-    // 저장할 수 없는 환경 — 세션 내 상태만 유지
-  }
+export const wikiStore = createFeatureStore({ local: localDocs, ...wikiKind })
+/** 지금 보이는 문서. 로그인하면 계정 문서, 로그아웃이면 이 브라우저 문서다. */
+export const wiki = {
+  get docs() { return wikiStore.list.value },
+  set docs(value) { localDocs.value = value },
 }
+const today = () => new Date().toISOString().slice(0, 10)
+const same = (a, b) => a !== null && a !== undefined && b !== null && b !== undefined && String(a) === String(b)
 
 export function findDoc(id) {
-  return wiki.docs.find((d) => String(d.id) === String(id)) ?? null
+  return wiki.docs.find((d) => same(d.id, id)) ?? null
 }
 export function childrenOf(id) {
-  return wiki.docs.filter((d) => d.parentId === id)
+  return wiki.docs.filter((d) => same(d.parentId, id))
 }
 export const rootDocs = computed(() => wiki.docs.filter((d) => !d.parentId))
 export const pinnedDocs = computed(() => wiki.docs.filter((d) => d.pinned))
-
 export const wikiTags = computed(() => {
   const map = new Map()
   wiki.docs.forEach((d) => parseTags(d.title + ' ' + d.body).forEach((t) => map.set(t, (map.get(t) ?? 0) + 1)))
   return [...map.entries()].map(([tag, count]) => ({ tag, count })).sort((a, b) => b.count - a.count)
 })
-
-export function addDoc({ space, title, body, parentId = null, author = '김지수' }) {
-  const doc = {
-    id: Math.max(0, ...wiki.docs.map((d) => d.id)) + 1,
-    space,
-    title: title.trim(),
-    body: body ?? '',
-    author,
-    updatedAt: new Date().toISOString().slice(0, 10),
-    parentId,
-    pinned: false,
-    history: [{ at: new Date().toISOString().slice(0, 10), by: author, note: '최초 작성' }],
+/** 로그인 상태는 서버 성공 응답 뒤에 목록에 들어간다. 로그아웃 상태는 이 브라우저에 쓰고 변경 메모를 남긴다. */
+export async function addDoc({ space, title, body, parentId = null }) {
+  const fields = { space, title: title.trim(), body: body ?? '', parentId: parentId ?? null, pinned: false }
+  if (wikiStore.onServer()) return wikiStore.create(fields)
+  return wikiStore.create({ ...fields, author: '나', updatedAt: today(), history: [{ at: today(), by: '나', note: '최초 작성' }] })
+}
+export async function updateDoc(doc, patch, note = '내용 수정') {
+  if (wikiStore.onServer()) return wikiStore.update(doc, patch)
+  return wikiStore.update(doc, { ...patch, updatedAt: today(), history: [{ at: today(), by: '나', note }, ...(doc.history ?? [])] })
+}
+export async function togglePin(doc) {
+  return updateDoc(doc, { pinned: !doc.pinned }, doc.pinned ? '고정 해제' : '고정')
+}
+/** 문서를 지우면 하위 문서는 상위로 끌어올린다(고아 문서 방지). 로그인 상태는 서버가 옮기므로 목록을 다시 부른다. */
+export async function removeDoc(doc) {
+  if (wikiStore.onServer()) {
+    await wikiStore.remove(doc)
+    await wikiStore.reload()
+    return
   }
-  wiki.docs.push(doc)
-  persist()
-  return doc
+  childrenOf(doc.id).forEach((c) => (c.parentId = doc.parentId))
+  await wikiStore.remove(doc)
 }
-export function updateDoc(id, patch, note = '내용 수정') {
-  const doc = findDoc(id)
-  if (!doc) return null
-  Object.assign(doc, patch)
-  doc.updatedAt = new Date().toISOString().slice(0, 10)
-  doc.history.unshift({ at: doc.updatedAt, by: '김지수', note })
-  persist()
-  return doc
-}
-export function togglePin(doc) {
-  doc.pinned = !doc.pinned
-  persist()
-}
-/** 문서를 지우면 하위 문서는 상위로 끌어올린다(고아 문서 방지) */
-export function removeDoc(id) {
-  const doc = findDoc(id)
-  if (!doc) return
-  childrenOf(id).forEach((c) => (c.parentId = doc.parentId))
-  wiki.docs = wiki.docs.filter((d) => d.id !== id)
-  persist()
+/**
+ * 이전 버전. 로그인 상태는 서버가 수정할 때마다 남긴 이전 내용(최근 것부터), 로그아웃 상태는 이 브라우저의 변경 메모다.
+ * 서버 이력 ID는 `문서ID@버전`이다.
+ */
+export async function wikiHistory(doc) {
+  if (!wikiStore.onServer()) return (doc.history ?? []).map((h) => ({ at: h.at, label: h.note, by: h.by }))
+  const rows = (await apiRequest(`/api/work/wiki/${encodeURIComponent(doc.id)}/history`)) ?? []
+  return rows
+    .map((row) => ({ version: Number(String(row.id).split('@')[1]) || 0, at: String(row.updatedAt ?? '').slice(0, 10), label: row.title, body: row.body ?? '', by: '나' }))
+    .sort((a, b) => b.version - a.version)
 }
 export function searchDocs({ keyword = '', space = '전체', tag = '' } = {}) {
   const k = keyword.trim()
   return wiki.docs.filter((d) => {
     if (space !== '전체' && d.space !== space) return false
     if (tag && !parseTags(d.title + ' ' + d.body).includes(tag)) return false
-    if (k && !d.title.includes(k) && !d.body.includes(k)) return false
+    if (k && !d.title.includes(k) && !(d.body ?? '').includes(k)) return false
     return true
   })
 }
+/** 시연 문서로 되돌린다. 이 브라우저 문서에만 쓴다(계정 문서는 지우지 않는다). */
 export function resetWiki() {
-  wiki.docs = seed().docs
-  persist()
+  localDocs.value = seed().docs
 }

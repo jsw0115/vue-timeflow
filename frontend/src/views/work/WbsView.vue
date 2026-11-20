@@ -2,7 +2,9 @@
 import { computed, ref, watch } from 'vue'
 import WorkRecords from '../../components/WorkRecords.vue'
 import TagMentionInput from '../../components/TagMentionInput.vue'
-import { localCollection } from '../../store/localCollection'
+import { wbsNodes, wbsStore } from '../../store/wbs'
+import StorageNote from '../../components/StorageNote.vue'
+import { createSaveState } from '../../features/records/saveState.mjs'
 import { syncPostCollection } from '../../store/tagging'
 import Modal from '../../components/Modal.vue'
 import HelpPopover from '../../components/HelpPopover.vue'
@@ -16,18 +18,12 @@ const { state: aiStatus } = useCapabilityStatus(() => 'ai')
  * WBS — 작업을 계층으로 쪼개고 공수와 진척을 굴린다.
  * 부모 작업의 공수·진척은 자식에서 자동 집계된다(직접 입력하지 않는다).
  */
-const nodes = localCollection('wbs', [
-  { id: 1, parentId: null, title: '타임바 리뉴얼', md: 0, progress: 0, owner: '김지수', open: true },
-  { id: 2, parentId: 1, title: '요구사항 정리', md: 0, progress: 0, owner: '김지수', open: true },
-  { id: 3, parentId: 2, title: '사용자 인터뷰', md: 2, progress: 100, owner: '김지수' },
-  { id: 4, parentId: 2, title: '기능 명세 작성', md: 3, progress: 60, owner: '이서연' },
-  { id: 5, parentId: 1, title: '화면 개발', md: 0, progress: 0, owner: '박민준', open: true },
-  { id: 6, parentId: 5, title: '홈·플래너', md: 8, progress: 45, owner: '박민준' },
-  { id: 7, parentId: 5, title: '통계·리포트', md: 6, progress: 20, owner: '최지우' },
-])
-
+// 로그인하면 계정의 노드, 로그아웃이면 이 브라우저의 노드다(PR-10 4단계)
+const nodes = wbsNodes
+const saving = createSaveState({ fields: { md: ['md', '공수'], progress: ['progress', '진척'], parent: ['부모', '단계'] } })
 watch(nodes, rows => syncPostCollection('wbs', rows, 'WBS', '/work/wbs'), { deep: true, immediate: true })
-const childrenOf = (id) => nodes.value.filter((n) => n.parentId === id)
+const same = (a, b) => a !== null && a !== undefined && b !== null && b !== undefined && String(a) === String(b)
+const childrenOf = (id) => nodes.value.filter((n) => same(n.parentId, id))
 const isLeaf = (n) => childrenOf(n.id).length === 0
 
 function rollupMd(n) {
@@ -45,7 +41,7 @@ function depthOf(n) {
   let d = 0
   let cur = n
   while (cur.parentId) {
-    cur = nodes.value.find((x) => x.id === cur.parentId)
+    cur = nodes.value.find((x) => same(x.id, cur.parentId))
     if (!cur) break
     d += 1
   }
@@ -54,7 +50,7 @@ function depthOf(n) {
 function isHidden(n) {
   let cur = n
   while (cur.parentId) {
-    const parent = nodes.value.find((x) => x.id === cur.parentId)
+    const parent = nodes.value.find((x) => same(x.id, cur.parentId))
     if (!parent) break
     if (parent.open === false) return true
     cur = parent
@@ -70,19 +66,35 @@ const totalProgress = computed(() => {
   return Math.round(roots.value.reduce((a, r) => a + rollupProgress(r) * rollupMd(r), 0) / t)
 })
 
-function setMd(n, event) { const value = Number(event.target.value); n.md = Number.isFinite(value) ? Math.max(0, value) : 0; event.target.value = n.md }
-function toggleOpen(n) {
-  if (isLeaf(n)) return
-  n.open = n.open === false
+/** 저장은 로그인 상태면 서버 성공 응답 뒤에 목록에 들어간다. 충돌·삭제됨이면 최신 목록을 다시 부른다. */
+async function persist(task) {
+  const result = await saving.run(task)
+  if (!result.ok && ['conflict', 'notFound'].includes(result.error?.kind) && wbsStore.onServer()) await wbsStore.reload()
+  return result
 }
-function removeNode(n) {
+async function setMd(n, event) {
+  const value = Number(event.target.value)
+  const md = Number.isFinite(value) ? Math.max(0, value) : 0
+  const result = await persist(() => wbsStore.update(n, { md }))
+  if (!result.ok) event.target.value = n.md
+}
+async function toggleOpen(n) {
+  if (isLeaf(n)) return
+  await persist(() => wbsStore.update(n, { open: n.open === false }))
+}
+async function removeNode(n) {
   if (!window.confirm('‘' + n.title + '’과(와) 하위 작업을 모두 삭제할까요?')) return
+  // 로그인 상태는 서버가 하위 작업까지 지우므로 목록을 다시 부른다
+  if (wbsStore.onServer()) {
+    if ((await persist(() => wbsStore.remove(n))).ok) await wbsStore.reload()
+    return
+  }
   const doomed = new Set([n.id])
   let grew = true
   while (grew) {
     grew = false
     nodes.value.forEach((x) => {
-      if (x.parentId && doomed.has(x.parentId) && !doomed.has(x.id)) {
+      if (x.parentId != null && doomed.has(x.parentId) && !doomed.has(x.id)) {
         doomed.add(x.id)
         grew = true
       }
@@ -95,33 +107,26 @@ const adding = ref(null) // 부모 노드
 const editingId = ref(null)
 const draft = ref({ title: '', md: 1, owner: '', progress: 0, body: '', startDate: '', endDate: '' })
 const draftError = computed(() => !draft.value.title.trim() ? '작업 이름을 입력해주세요.' : !Number.isFinite(draft.value.md) || draft.value.md < 0 || !Number.isFinite(draft.value.progress) || draft.value.progress < 0 || draft.value.progress > 100 ? '공수는 0 이상, 진척은 0~100으로 입력해주세요.' : (draft.value.startDate || draft.value.endDate) && (!draft.value.startDate || !draft.value.endDate || draft.value.endDate < draft.value.startDate) ? '시작·종료 날짜를 확인해주세요.' : '')
-function openEdit(n) { editingId.value = n.id; adding.value = n; draft.value = { body: '', startDate: '', endDate: '', ...n } }
+function openEdit(n) { saving.reset(); editingId.value = n.id; adding.value = n; draft.value = { title: n.title, md: n.md ?? 0, owner: n.owner ?? '', progress: n.progress ?? 0, body: n.body ?? '', startDate: n.startDate ?? '', endDate: n.endDate ?? '' } }
 function openAdd(parent) {
+  saving.reset()
   editingId.value = null
   adding.value = parent ?? { id: null, title: '최상위' }
   draft.value = { title: '', md: 1, owner: '', progress: 0, body: '', startDate: '', endDate: '' }
 }
-function addNode() {
+async function addNode() {
   if (draftError.value) return
+  const fields = { title: draft.value.title.trim(), md: draft.value.md, progress: draft.value.progress, owner: draft.value.owner.trim() || '미지정', body: draft.value.body, startDate: draft.value.startDate, endDate: draft.value.endDate }
   if (editingId.value) {
-    const target = nodes.value.find(n => n.id === editingId.value)
-    Object.assign(target, { ...draft.value, title: draft.value.title.trim() })
-    adding.value = null
+    const target = nodes.value.find((n) => same(n.id, editingId.value))
+    if ((await persist(() => wbsStore.update(target, fields))).ok) adding.value = null
     return
   }
-  nodes.value.push({
-    id: Math.max(0, ...nodes.value.map((n) => n.id)) + 1,
-    parentId: adding.value.id,
-    body: draft.value.body, startDate: draft.value.startDate, endDate: draft.value.endDate,
-    title: draft.value.title.trim(),
-    md: draft.value.md,
-    progress: draft.value.progress,
-    owner: draft.value.owner.trim() || '미지정',
-  })
-  if (adding.value.id) {
-    const parent = nodes.value.find((n) => n.id === adding.value.id)
-    if (parent) parent.open = true
-  }
+  const parentId = adding.value.id ?? null
+  const result = await persist(() => wbsStore.create({ ...fields, parentId }))
+  if (!result.ok) return
+  const parent = parentId == null ? null : nodes.value.find((n) => same(n.id, parentId))
+  if (parent && parent.open === false) await persist(() => wbsStore.update(parent, { open: true }))
   adding.value = null
 }
 </script>
@@ -155,6 +160,12 @@ function addNode() {
     <span></span>
     <button class="primary" @click="openAdd(null)">+ 최상위 작업</button>
   </div>
+  <StorageNote :mode="wbsStore.mode.value" />
+  <p v-if="saving.state.message && !adding" class="input-field-help wbs-message" data-state="error" role="alert">{{ saving.state.message }}</p>
+  <p v-if="wbsStore.onServer() && wbsStore.state.loading && !nodes.length" class="input-field-help" role="status">작업을 불러오는 중이에요.</p>
+  <section v-else-if="wbsStore.onServer() && wbsStore.state.error" class="card">
+    <div class="empty-state" role="status"><p>작업을 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요.</p><button type="button" class="button-secondary" @click="wbsStore.reload()">다시 시도</button></div>
+  </section>
 
   <div class="metrics" style="--metric-cols: 3; margin-bottom: 16px">
     <article><span>총 공수</span><b class="figure">{{ totalMd }}<small>MD</small></b><small>{{ (totalMd / 20).toFixed(2) }} MM</small></article>
@@ -203,10 +214,15 @@ function addNode() {
     <div class="form-row"><label>시작 날짜<input type="date" v-model="draft.startDate" /></label><label>종료 날짜<input type="date" v-model="draft.endDate" /></label></div>
     <label>상세 내용 · 태그 · 멘션<TagMentionInput v-model="draft.body" /></label>
     <p class="form-note" role="status">{{ draftError || '상위 작업의 공수·진척은 하위 작업에서 자동 집계됩니다.' }}</p>
+    <p v-if="saving.state.message" class="input-field-help" data-state="error" role="alert">{{ saving.state.message }} {{ saving.state.fieldMessage }}</p>
 
     <template #footer>
       <button type="button" class="modal-secondary" @click="adding = null">취소</button>
-      <button class="primary" :disabled="!!draftError" @click="addNode">{{ editingId ? '변경 저장' : '추가하기' }}</button>
+      <button class="primary" :disabled="!!draftError || saving.state.status === 'saving'" :aria-busy="saving.state.status === 'saving' ? 'true' : undefined" @click="addNode">{{ saving.state.status === 'saving' ? '저장하는 중' : editingId ? '변경 저장' : '추가하기' }}</button>
     </template>
   </Modal>
 </template>
+
+<style scoped>
+.wbs-message { margin: 0 0 var(--space-lg); }
+</style>

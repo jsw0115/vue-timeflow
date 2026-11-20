@@ -42,3 +42,46 @@ export const portfolioKind = {
   kind: 'portfolio', path: '/api/work/portfolio', fields: ['title', 'body', 'kind'], demoFields: ['title'],
   toLocal: (row) => ({ ...row, updated: String(row.updatedAt ?? '').slice(0, 10).replaceAll('-', '.') }),
 }
+
+/** 업무 기록 종류. 서버(FeatureInput.validateWork)가 받는 다섯 가지다(PR-10 4단계). */
+export const WORK_TYPES = ['연차', '반차', '외근', '출장', '이직']
+
+/** 종류에 필요한 필드만 보낸다. 반차의 사용 일수(0.5)는 서버가 채운다. */
+function workRecordBody(item) {
+  const out = { title: item.title, type: item.type, owner: item.owner, status: item.status, startDate: item.startDate, endDate: item.endDate, startTime: item.startTime, endTime: item.endTime }
+  if (String(item.body ?? '').trim()) out.body = item.body
+  if (item.projectId !== undefined && item.projectId !== null && item.projectId !== '') out.projectId = String(item.projectId)
+  if (item.type === '연차') out.leaveDays = item.leaveDays
+  if (item.type === '반차') out.half = item.half
+  if (['외근', '출장'].includes(item.type)) Object.assign(out, { location: item.location, partner: item.partner })
+  if (item.type === '출장') Object.assign(out, { transport: item.transport, expense: item.expense })
+  if (item.type === '이직') Object.assign(out, { fromCompany: item.fromCompany, toCompany: item.toCompany, role: item.role, handover: item.handover })
+  return out
+}
+
+export const workRecordKind = {
+  kind: 'work-record', path: '/api/work/records',
+  fields: ['title', 'body', 'type', 'owner', 'projectId', 'status', 'startDate', 'endDate', 'startTime', 'endTime', 'half', 'leaveDays', 'location', 'partner', 'transport', 'expense', 'fromCompany', 'toCompany', 'role', 'handover'],
+  demoFields: ['title', 'type', 'startDate'],
+  toBody: (item) => workRecordBody(item),
+}
+
+/** 부모 ID는 서버 ID 문자열이나 null로 보낸다. 빈 문자열 날짜·담당은 보내지 않는다. */
+function withParent(out, item) {
+  out.parentId = item.parentId === undefined || item.parentId === null || item.parentId === '' ? null : String(item.parentId)
+  for (const key of ['startDate', 'endDate', 'owner']) if (out[key] === '') delete out[key]
+  return out
+}
+
+/** WBS 노드. 부모가 있는 계층이라 로컬 자료 이전은 부모를 먼저 옮긴다(parentField). */
+export const wbsKind = {
+  kind: 'wbs', path: '/api/work/wbs/nodes', fields: ['title', 'body', 'parentId', 'md', 'progress', 'owner', 'open', 'startDate', 'endDate'], demoFields: ['title', 'md', 'progress'],
+  toBody: (item, pick) => withParent(pick(item), item), parentField: 'parentId',
+}
+
+/** 업무 위키. 화면의 수정일은 서버 수정 시각의 날짜이고, 작성자는 본인이다(업무 자료는 본인만 본다). */
+export const wikiKind = {
+  kind: 'wiki', path: '/api/work/wiki', fields: ['title', 'body', 'space', 'parentId', 'pinned'], demoFields: ['title', 'space'],
+  toBody: (item, pick) => withParent(pick(item), item), parentField: 'parentId',
+  toLocal: (row) => ({ ...row, parentId: row.parentId ?? null, updatedAt: String(row.updatedAt ?? '').slice(0, 10), author: '나' }),
+}
