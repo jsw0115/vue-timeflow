@@ -11,7 +11,6 @@ import org.springframework.stereotype.Repository;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Instant;
-import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Collection;
 import java.util.Map;
@@ -23,8 +22,9 @@ public class ChatRepository {
     private final JdbcTemplate jdbc;
     public ChatRepository(JdbcTemplate jdbc) { this.jdbc = jdbc; }
     public JdbcTemplate jdbc() { return jdbc; }
+    /** 연결 시간대가 UTC(connectionTimeZone=UTC)라 드라이버가 준 Timestamp가 곧 그 시각이다. JVM 시간대 벽시계로 바꾸면 UTC가 아닌 JVM에서 어긋난다. */
     private static Instant instant(ResultSet rs, String column) throws SQLException {
-        return rs.getTimestamp(column).toLocalDateTime().toInstant(ZoneOffset.UTC);
+        return rs.getTimestamp(column).toInstant();
     }
     private static final RowMapper<Message> MESSAGE = (rs, i) -> new Message(rs.getString("id"), rs.getString("room_id"),
             rs.getString("sequence_no"), rs.getString("sender_id"), rs.getString("nickname"),
