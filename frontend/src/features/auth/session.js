@@ -18,9 +18,16 @@ function save(value) {
 }
 export function clearSession() { save({}) }
 async function publicRequest(path, body) {
-  const response = await fetch(apiEndpoint(`/api/auth/${path}`), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+  let response
+  try {
+    response = await fetch(apiEndpoint(`/api/auth/${path}`), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+  } catch {
+    // 네트워크가 끊겼거나 서버가 꺼져 있다. 브라우저 영문 오류('Failed to fetch')를 그대로 보이지 않는다
+    throw new Error('서버에 연결하지 못했습니다. 잠시 후 다시 시도해주세요.')
+  }
   const payload = await response.json().catch(() => ({}))
-  if (!response.ok || !payload.success) throw new Error(payload.message || '서버에 연결하지 못했습니다. 잠시 후 다시 시도해주세요.')
+  // 서버가 답했지만 JSON 안내가 없으면(허용되지 않은 출처 403, 프록시 502 등) 연결 실패가 아니라 상태 코드로 알린다
+  if (!response.ok || !payload.success) throw new Error(payload.message || `서버가 요청을 처리하지 못했어요(HTTP ${response.status}). 잠시 후 다시 시도해주세요.`)
   return payload.data
 }
 export async function login(email, password) { save(await publicRequest('login', { email, password })) }

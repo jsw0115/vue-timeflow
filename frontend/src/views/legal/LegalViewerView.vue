@@ -1,9 +1,12 @@
 <script setup>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 const router = useRouter()
-const tab = ref('개인정보처리방침')
+const route = useRoute()
+// 가입 화면의 '약관 전문 보기'처럼 ?doc=이용약관 으로 열면 그 탭부터 보인다
+const DOCS = ['개인정보처리방침', '이용약관', '오픈소스 라이선스']
+const tab = ref(DOCS.includes(route.query.doc) ? route.query.doc : '개인정보처리방침')
 
 /** 확인 후 이전 화면으로 — 히스토리가 없으면 홈으로 */
 function close() {
