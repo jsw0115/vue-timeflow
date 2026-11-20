@@ -23,3 +23,11 @@
 - 3b-1: 인증 근거는 실제 기록(ACTUAL_SESSION) 중 `finishKey`가 있는 완료 기록만 쓴다. 시작 시각을 서버가 찍었고 종료는 현재 시각을 넘을 수 없어 나중에 지어낼 수 없다. 백업 복원 기록은 `finishKey`가 없어 근거가 될 수 없다.
 - 3b-1: 인증 날짜는 기록 시작 시각을 사용자 하루 기준(`DayPolicy`, 시간대·하루 시작 시각)으로 바꾼 날짜다. 시간대 조건(예: 06:00~08:00)이 있으면 그 구간과 겹친 시간만 센다.
 - 3b-1: 인증은 feature_member의 CHECKIN 행 대신 새 테이블 `challenge_checkin`(V12)에 둔다. 근거(기록 ID·서버 시각·분)를 열로 남겨야 해서다. 기존 CHECKIN 행은 V12에서 옮기고 지운다.
+- 3b-2: 챌린지·랭킹은 커뮤니티마다 따로라 `?id=` 없이 들어오면(사이드바) 내 커뮤니티 목록(`CommunityPicker`)을 보인다. 커뮤니티 탭에 챌린지를 더했다.
+- 3b-2: 화면당 주 액션은 "챌린지 만들기" 하나로 두고, 카드마다 반복되는 참여·인증·랭킹·참여 취소는 보조 버튼으로 했다(DESIGN.md 4장 button-primary).
+- 3b-2: 예전 랭킹 화면의 "업무 기록 제외"·"랭킹·비교에서 제외" 안내는 로컬 설정이고 서버 랭킹에 영향이 없어 뺐다. 서버 랭킹 참여 끄기는 UF-136(PR-19)이다.
+- 3b-2: 검색 색인(`post-index`, 로컬)에서 커뮤니티·챌린지·게시글을 빼고, 예전에 들어간 `/community/` 항목은 앱을 열 때 지운다. 쓰이지 않게 된 `communityPosts.js`·시연 목록·`toggleMembership`·`challengeError`와 그 테스트를 지웠다. `workPrivacy.sanitizeForShare`는 정책 함수로 문서화돼 있어 남겼다(지금 쓰는 곳 없음).
+- 3b-2: chat-local MySQL은 `connectionTimeZone=UTC`라 DATETIME을 `LocalDateTime`으로 읽어 JVM 시간대로 해석하면 9시간 어긋난다. 브라우저 점검을 준비하며 설정을 보다 찾았고 `getTimestamp`·`LocalDate`로 고쳤다(별도 커밋 64fe57a). H2 테스트로는 잡히지 않는다.
+- 3b-2: 전역 `.event span { display: grid }`가 목록 행 안의 숫자 span을 따로 줄에 세운다. 새 화면(랭킹 행, 커뮤니티 고르기 행)에서만 안쪽 span을 인라인으로 덮었다. 전역 규칙은 다른 화면이 기대고 있어 손대지 않았다.
+- 이 PC의 로컬 격리 DB는 3b-2 점검 때 V9에서 V12로 올라갔다(bootRun chat-local). 백엔드 18080·Vite 15173이 떠 있다.
+- 다음 작업: 3b-3 커뮤니티 채팅(채팅 V5 `chat_room.community_id`, 회원 확인 포트, 회원 변경 이벤트, 방 조회 API, 화면). 첫 명령은 `sed -n 60,135p backend/src/main/java/kr/timebar/diary/chat/infrastructure/jdbc/ChatRepository.java`다.

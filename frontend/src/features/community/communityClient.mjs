@@ -25,6 +25,7 @@ export function communityTabs(id, isOwner = false) {
   return [
     { label: '커뮤니티 홈', path: '/community/home' + q },
     { label: '게시판', path: '/community/board' + q },
+    { label: '챌린지', path: '/community/challenge' + q },
     { label: '멤버', path: '/community/members' + q },
     ...(isOwner ? [{ label: '가입 요청함', path: '/community/approvals' + q }] : []),
   ]

@@ -173,7 +173,7 @@ export const navGroups = [
       { path: '/chat', name: '채팅', icon: '✉', component: ChatListView, title: '대화를 이어가요' },
       { path: '/community', name: '커뮤니티', icon: '⌘', component: CommunityFeedView, title: '함께 갓생을 살아봐요' },
       { path: '/community/new', name: '커뮤니티 만들기', icon: '✎', component: CommunityCreateView, title: '새 커뮤니티를 만들어요' },
-      { path: '/community/ranking', name: '랭킹', icon: '★', component: RankingView, title: '이번 주 달성률 랭킹' },
+      { path: '/community/ranking', name: '랭킹', icon: '★', component: RankingView, title: '챌린지 인증 랭킹' },
       { path: '/community/challenge', name: '커뮤니티 챌린지', icon: '◆', component: ChallengeView, title: '커뮤니티에서 함께하는 챌린지' },
       { path: '/sync', name: '동기화', icon: '⇄', component: SyncStatusView, title: '외부 캘린더와 동기화해요' },
     ],

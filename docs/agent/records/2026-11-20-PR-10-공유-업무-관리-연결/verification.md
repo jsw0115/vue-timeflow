@@ -56,3 +56,14 @@
 
 - 이 PC의 Node는 20.18이다(프로젝트 요구 22.12 이상, PR-06). 결과는 Node 20 기준이다.
 - 격리 개발 DB(`timeflow_chat_dev`)는 V9 상태이며 이 단계에서 건드리지 않았다.
+
+## 3b-2 챌린지·랭킹 화면(2026-11-20)
+
+| 명령 | 종료 코드 | 결과 |
+| --- | --- | --- |
+| `frontend`: `node --test tests/challenge-client.test.mjs`(모듈 작성 전) | 1 | FAIL(의도). `ERR_MODULE_NOT_FOUND` |
+| `frontend`: `TZ=Asia/Seoul node --test` challenge-client·community-client·inbox·writing-flows·empty-states | 0 | PASS. 31개 |
+| `frontend`: `TZ=Asia/Seoul node --test --test-concurrency=1`(device-preview 제외), `npm run build:web` | 0 | PASS. 189개, 빌드 성공(기존 큰 번들 경고) |
+| `backend`: `gradlew.bat test --tests "kr.timebar.diary.social.*"`(시각 읽기 수정 후) | 0 | PASS. ChallengeCheckinTest 5, SocialPersistenceTest 6 |
+| 격리 MySQL·chat-local 백엔드(18080)·Vite(15173)·Chrome(playwright-core, 작업 폴더 밖) 두 계정 점검 | 0 | PASS. 19/19, 페이지 오류 0. 첫 실행 17/19(스크립트 대기 1, `.event span` 화면 결함 1을 고침) |
+| `frontend`: empty-states·design-tokens·responsive-layout·writing-flows(스타일 수정 후) | 0 | PASS. 28개 |

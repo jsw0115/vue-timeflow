@@ -6,7 +6,7 @@ import vue from '@vitejs/plugin-vue'
 import { createSSRApp, nextTick } from 'vue'
 import { renderToString } from 'vue/server-renderer'
 import { createRouter, createMemoryHistory } from 'vue-router'
-import { localDate, rangeError, routineError, challengeError, integerBetween, workRecordError } from '../src/utils/postValidation.mjs'
+import { localDate, rangeError, routineError, integerBetween, workRecordError } from '../src/utils/postValidation.mjs'
 
 const root = fileURLToPath(new URL('../', import.meta.url))
 const cache = new Map()
@@ -45,13 +45,6 @@ test('루틴: 요일·시작 시간·진행 시간·목표·알림 경계 검증
   assert.equal(routineError(valid), '')
   for (const invalid of [{days:[]},{days:[7]},{time:'24:90'},{duration:0},{duration:1441},{duration:1.5},{goalCount:0},{goalUnit:''},{reminderMinutes:-1}]) assert.notEqual(routineError({...valid,...invalid}), '')
   assert.equal(integerBetween('', 0, 10), false)
-})
-test('챌린지: 참여 커뮤니티만 선택, 잘못된 기간·지연 값 거부', () => {
-  const communities = [{id:1, joined:true},{id:2, joined:false}]
-  const valid = {communityId:1,title:'아침 독서',days:21,startsIn:0}
-  assert.equal(challengeError(valid, communities), '')
-  for (const invalid of [{communityId:2},{communityId:999},{days:2},{days:101},{days:3.1},{startsIn:-1},{startsIn:31},{title:' '}]) assert.notEqual(challengeError({...valid,...invalid},communities), '')
-  assert.notEqual(challengeError(valid, []), '')
 })
 test('로컬 컬렉션: 수정·삭제 후 재로딩, 손상 JSON 복구, 저장 실패 경고', async () => {
   const { localCollection, storageWarning } = await load('store/localCollection.js')
@@ -92,22 +85,6 @@ test('통합 글: 종류 선택, 목록 공유, 수정 인덱스 중복 방지, 
   await nextTick()
   assert.equal(tags.postsByTag('검증전용태그').length,0)
   assert.equal(tags.postsByTag('수정검증태그').length,0)
-})
-test('가입 상태: 가입/탈퇴와 생성된 커뮤니티가 챌린지 선택에 반영', async () => {
-  const { communities, joinedCommunities, toggleMembership } = await load('store/communities.js')
-  communities.value.push({id:990,title:'새 커뮤니티',joined:true,members:1,owner:true})
-  assert.ok(joinedCommunities.value.some(x=>x.id===990))
-  const group = {id:991,joined:false,members:3}
-  communities.value.push(group)
-  const entry = communities.value.find(x=>x.id===991)
-  toggleMembership(entry)
-  assert.ok(joinedCommunities.value.some(x=>x.id===991))
-  toggleMembership(entry)
-  assert.ok(!joinedCommunities.value.some(x=>x.id===991))
-  const approval = {joined:false,joinPolicy:'approval',members:1}
-  toggleMembership(approval)
-  assert.equal(approval.pending,true)
-  assert.equal(approval.joined,false)
 })
 test('태그·멘션: 중복 제거, 주소록·차단 규칙, HTML 비실행 렌더링', async () => {
   const tags = await load('store/tagging.js')
@@ -170,9 +147,9 @@ test('통합 작성: 종류별 검증·저장과 다른 종류 초안의 독립�
   const { postKinds, makePostDraft, postDraftError, savePostDraft } = await load('store/postComposer.js')
   const state = await load('store/appState.js'), writing = await load('store/writing.js')
   const { moneyEntries } = await load('store/money.js'), { workRecords } = await load('store/workRecords.js')
-  const { communityPosts } = await load('store/communityPosts.js'), { ddays } = await load('store/ddays.js')
+  const { ddays } = await load('store/ddays.js')
   const { plannerReviews } = await load('store/plannerReviews.js'), { wiki } = await load('store/wiki.js')
-  const collections = [state.events, state.tasks, state.routines, writing.diaries, writing.memos, moneyEntries, workRecords, communityPosts, ddays, plannerReviews]
+  const collections = [state.events, state.tasks, state.routines, writing.diaries, writing.memos, moneyEntries, workRecords, ddays, plannerReviews]
   const backup = collections.map(list => [...list.value]), wikiBackup = [...wiki.docs]
   const counts = () => [...collections.map(list => list.value.length), wiki.docs.length]
   try {

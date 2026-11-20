@@ -27,17 +27,15 @@ test('모든 글 저장소가 제목·본문 태그와 수신 멘션을 등록�
   const { posts, mentions, markMentionRead } = await load('store/tagging.js')
   const { events, tasks, routines } = await load('store/appState.js')
   const { diaries, memos } = await load('store/writing.js')
-  const { communities, challenges } = await load('store/communities.js')
   const { ddays } = await load('store/ddays.js')
-  const { communityPosts } = await load('store/communityPosts.js')
   const { plannerReviews } = await load('store/plannerReviews.js')
-  const sources = { event: events, task: tasks, routine: routines, diary: diaries, memo: memos, community: communities, challenge: challenges, dday: ddays, board: communityPosts, planner: plannerReviews }
+  const sources = { event: events, task: tasks, routine: routines, diary: diaries, memo: memos, dday: ddays, planner: plannerReviews }
   for (const [source, list] of Object.entries(sources)) {
     list.value.push({ id: 'inbox-test', title: `${source} #통합`, body: '@김지수 확인해주세요 #Plan', author: '이서연' })
   }
   await nextTick()
-  assert.equal(posts.value.filter(p => p.sourceKey?.endsWith(':inbox-test')).length, 10)
-  assert.equal(mentions.value.filter(p => p.id.endsWith(':inbox-test')).length, 10)
+  assert.equal(posts.value.filter(p => p.sourceKey?.endsWith(':inbox-test')).length, 7)
+  assert.equal(mentions.value.filter(p => p.id.endsWith(':inbox-test')).length, 7)
   markMentionRead(mentions.value.find(p => p.id === 'dday:inbox-test'))
   assert.ok(mentions.value.find(p => p.id === 'dday:inbox-test').read)
   assert.ok(JSON.parse(cache.get('timeflow.demo.v1.mention-states')).find(item => item.id === 'dday:inbox-test').read)

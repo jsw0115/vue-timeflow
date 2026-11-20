@@ -67,7 +67,7 @@ test('분류·검색어로 거르고 멤버순·최신순으로 정렬한다', (
 })
 
 test('하위 화면 탭은 커뮤니티 ID를 넘기고, 가입 요청함은 방장에게만 보인다', () => {
-  assert.deepEqual(communityTabs('c/1').map((t) => t.path), ['/community/home?id=c%2F1', '/community/board?id=c%2F1', '/community/members?id=c%2F1'])
+  assert.deepEqual(communityTabs('c/1').map((t) => t.path), ['/community/home?id=c%2F1', '/community/board?id=c%2F1', '/community/challenge?id=c%2F1', '/community/members?id=c%2F1'])
   assert.equal(communityTabs('c1', true).at(-1).label, '가입 요청함')
   assert.match(communityErrorText({ status: 404 }), /찾을 수 없어요/)
   assert.match(communityErrorText({ status: 403 }), /회원만/)

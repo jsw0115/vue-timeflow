@@ -10,14 +10,6 @@ export function rangeError(startDate, startTime, endDate, endTime) {
   if (!Number.isFinite(+start) || !Number.isFinite(+end) || localDate(start) !== startDate || localDate(end) !== endDate) return '올바른 날짜와 시간을 입력해주세요.'
   return end <= start ? '종료 일시는 시작 일시보다 늦어야 해요.' : ''
 }
-export function challengeError(draft, communities) {
-  if (!communities.some(c => c.id === draft.communityId && c.joined)) return '참여 중인 커뮤니티를 선택해주세요.'
-  if (!draft.title.trim()) return '챌린지 이름을 입력해주세요.'
-  if (!integerBetween(draft.days, 3, 100)) return '기간은 3~100일 사이의 정수로 입력해주세요.'
-  if (!integerBetween(draft.startsIn, 0, 30)) return '시작까지 남은 일수는 0~30일로 입력해주세요.'
-  return ''
-}
-
 export function routineError(d) {
   if (!d.title.trim()) return '이름을 입력해주세요.'
   if (!Array.isArray(d.days) || !d.days.length || !d.days.every(day => integerBetween(day, 0, 6))) return '반복 요일을 선택해주세요.'

@@ -53,11 +53,8 @@ export function tokenize(text) {
 export const ME = '김지수'
 
 export const posts = localCollection('post-index', [
-  { id: 1, kind: '게시글', title: '오늘도 6km 완주', body: '오늘도 6km 완주! #러닝 #갓생 @이서연 같이 뛰어요', author: ME, at: '2026-09-06', link: '/community/board' },
-  { id: 2, kind: '게시글', title: '아침 스트레칭', body: '아침 스트레칭 15분 완료! #운동 다들 화이팅이에요', author: '이서연', at: '2026-09-06', link: '/community/board' },
   { id: 3, kind: '메모', title: '디자인 리뷰 아이디어', body: '색상 토큰을 카테고리별로 분리하면 좋을 듯 #디자인 #아이디어 @박민준 의견 주세요', author: ME, at: '2026-09-05', link: '/memos' },
   { id: 4, kind: '다이어리', title: '8월 24일 기록', body: '프로젝트 킥오프 준비로 바빴다 #회고 #업무', author: ME, at: '2026-08-24', link: '/diary' },
-  { id: 5, kind: '게시글', title: '독서 인증', body: '이번 주 2권 완독 #독서 #갓생 @김지수 추천 감사해요', author: '최지우', at: '2026-09-04', link: '/community/board' },
   { id: 6, kind: '메모', title: '회고 메모', body: '이번 주는 계획 대비 실행률이 낮았다 #회고', author: ME, at: '2026-08-18', link: '/memos' },
 ])
 
