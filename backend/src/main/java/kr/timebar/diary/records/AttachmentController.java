@@ -19,14 +19,17 @@ import java.util.*;
 @Transactional
 public class AttachmentController {
     private static final int MAX_BYTES = 10 * 1024 * 1024;
+    private static final String COLUMNS = "SELECT id,owner_id AS ownerId,group_id AS groupId,name,size_bytes AS sizeBytes,expires_at AS expiresAt,created_at AS createdAt FROM feature_file";
     private final JdbcTemplate jdbc;
     private final SocialService social;
     public AttachmentController(JdbcTemplate jdbc, SocialService social) { this.jdbc = jdbc; this.social = social; }
     @GetMapping
     public ApiResponse<?> list(@RequestParam(required=false) String groupId) {
         if (groupId != null) social.require(CurrentUser.id(), FeatureType.GROUP, groupId, false);
-        String sql = "SELECT id,owner_id AS ownerId,group_id AS groupId,name,size_bytes AS sizeBytes,expires_at AS expiresAt FROM feature_file WHERE " + (groupId == null ? "owner_id=?" : "group_id=?") + " ORDER BY created_at DESC";
-        return ApiResponse.ok(jdbc.queryForList(sql, groupId == null ? CurrentUser.id() : groupId).stream().map(this::fields).filter(row -> row.get("ownerId").equals(CurrentUser.id()) || !social.blocked(CurrentUser.id(), row.get("ownerId").toString())).toList());
+        String sql = COLUMNS + " WHERE " + (groupId == null ? "owner_id=?" : "group_id=?") + " ORDER BY created_at DESC";
+        // 공유 첨부 화면이 올린 사람을 보이도록 이름을 더한다(PR-10 5단계, UF-116)
+        return ApiResponse.ok(jdbc.queryForList(sql, groupId == null ? CurrentUser.id() : groupId).stream().map(this::fields).filter(row -> row.get("ownerId").equals(CurrentUser.id()) || !social.blocked(CurrentUser.id(), row.get("ownerId").toString()))
+                .map(row -> { row.put("ownerName", social.nickname(row.get("ownerId").toString())); return row; }).toList());
     }
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
@@ -63,8 +66,8 @@ public class AttachmentController {
     public void delete(@PathVariable String id) { authorize(metadata(id), true); jdbc.update("DELETE FROM feature_file WHERE id=?", id); }
     @PostMapping("/purge-expired")
     public ApiResponse<?> purge() { return ApiResponse.ok(Map.of("deleted", jdbc.update("DELETE FROM feature_file WHERE owner_id=? AND expires_at IS NOT NULL AND expires_at<=?", CurrentUser.id(), timestamp(Instant.now())))); }
-    private Map<String,Object> metadata(String id) { return jdbc.queryForList("SELECT id,owner_id AS ownerId,group_id AS groupId,name,size_bytes AS sizeBytes,expires_at AS expiresAt FROM feature_file WHERE id=?", id).stream().findFirst().map(this::fields).orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND)); }
-    private Map<String,Object> fields(Map<String,Object> row) { return SqlResponses.fields(row, "id", "ownerId", "groupId", "name", "sizeBytes", "expiresAt"); }
+    private Map<String,Object> metadata(String id) { return jdbc.queryForList(COLUMNS + " WHERE id=?", id).stream().findFirst().map(this::fields).orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND)); }
+    private Map<String,Object> fields(Map<String,Object> row) { return SqlResponses.fields(row, "id", "ownerId", "groupId", "name", "sizeBytes", "expiresAt", "createdAt"); }
     private void authorize(Map<String,Object> file, boolean owner) {
         if (file.get("ownerId").equals(CurrentUser.id())) return;
         if (owner || file.get("groupId") == null || social.blocked(CurrentUser.id(), file.get("ownerId").toString())) throw new ApiException(ErrorCode.NOT_FOUND);

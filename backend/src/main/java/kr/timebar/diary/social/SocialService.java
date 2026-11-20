@@ -221,7 +221,7 @@ public class SocialService {
         return Boolean.TRUE.equals(jdbc.queryForObject("SELECT COUNT(*)>0 FROM feature_block WHERE (user_id=? AND target_id=?) OR (user_id=? AND target_id=?)", Boolean.class, user, target, target, user));
     }
     private void available(String user, String target) { if (user.equals(target)) FeatureInput.fail("자신을 초대할 수 없습니다."); account(target); if (blocked(user, target)) throw new ApiException(ErrorCode.FORBIDDEN); }
-    private String nickname(String user) { return users.findById(user).map(UserEntity::getNickname).orElse(""); }
+    public String nickname(String user) { return users.findById(user).map(UserEntity::getNickname).orElse(""); }
     private List<Map<String,Object>> named(List<Map<String,Object>> rows) {
         return rows.stream().map(row -> { var result = new LinkedHashMap<>(row); result.put("nickname", nickname(row.get("userId").toString())); return (Map<String,Object>) result; }).toList();
     }

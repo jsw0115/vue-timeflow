@@ -135,6 +135,8 @@ class FeatureHttpTest {
         String response = mvc.perform(multipart("/api/attachments").file(file)).andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
         String id = mapper.readTree(response).path("data").path("id").asText();
         mvc.perform(get("/api/attachments/" + id + "/download")).andExpect(status().isOk()).andExpect(content().bytes(content)).andExpect(header().string("Cache-Control", "no-store"));
+        // 공유 첨부 화면은 올린 사람 이름과 올린 시각을 보인다(PR-10 5단계, UF-116)
+        mvc.perform(get("/api/attachments")).andExpect(jsonPath("$.data[0].id").value(id)).andExpect(jsonPath("$.data[0].ownerName").value("테스터")).andExpect(jsonPath("$.data[0].createdAt").isNotEmpty());
         authenticate("other", "USER"); mvc.perform(get("/api/attachments/" + id + "/download")).andExpect(status().isNotFound()); authenticate(owner, "USER");
         mvc.perform(multipart("/api/attachments").file(file).param("domain", "work")).andExpect(status().isBadRequest());
         jdbc.update("UPDATE feature_file SET expires_at='2000-01-01T00:00:00Z' WHERE id=?", id);
