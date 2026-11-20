@@ -1,130 +1,182 @@
+<!-- 환경설정 > 화면 테마. 표면 모드와 색상 분위기를 고르면 미리보기에만 먼저 반영하고, 적용하기에서 계정(로그인)·이 브라우저에 저장한다(DESIGN.md 4장 Settings: theme customization). -->
 <script setup>
-import { computed, useId } from 'vue'
-import { THEMES, ACCENTS, CUSTOM_ACCENT, themeState, resolveTheme, effectiveTheme } from '../../store/theme'
+import { computed, reactive, ref, watch } from 'vue'
+import { THEMES, ACCENTS, CUSTOM_ACCENT, themeState, resolveTheme } from '../../store/theme'
 import { appearance, DENSITIES, FONT_SIZES } from '../../store/appearance'
 import { contrast, luminance } from '../../utils/colorTheme.mjs'
+import { session } from '../../features/auth/session.js'
+import { apiRequest } from '../../features/auth/apiRequest.js'
+import { createThemeAccount, sameTheme, themeErrorText, THEME_DEFAULT } from '../../features/settings/themeAccount.mjs'
 
-const activeTheme = computed(() => THEMES[themeState.theme])
-const customId = useId()
-const surfaceKey = computed(() => effectiveTheme())
-/** 지금 표면에서 각 색상 테마가 실제로 쓰일 포인트·데이터 색 */
-const swatches = computed(() => Object.fromEntries(
-  [...Object.keys(ACCENTS), CUSTOM_ACCENT].map((key) => [key, resolveTheme(surfaceKey.value, key, themeState.customAccent).tokens]),
-))
-const current = computed(() => resolveTheme(surfaceKey.value, themeState.accent, themeState.customAccent))
-const ratio = (a, b) => contrast(a, b).toFixed(1)
-const summary = computed(() => {
-  const t = current.value.tokens
-  return {
-    accent: ratio(t['--color-accent'], t['--color-canvas']),
-    data: ratio(t['--color-on-data'], t['--color-data']),
-    track: ratio(t['--color-data'], t['--color-hairline']),
-  }
-})
-/** 사용자 지정 색을 대비 기준 때문에 바꿨으면 어느 쪽으로 바꿨는지 알려 준다 */
-const customNote = computed(() => {
-  if (themeState.accent !== CUSTOM_ACCENT || !current.value.adjusted) return ''
-  const used = current.value.tokens['--color-accent']
-  const way = luminance(used) < luminance(themeState.customAccent) ? '어둡게' : '밝게'
-  return `고른 색 ${themeState.customAccent}는 글자 대비 기준에 못 미쳐 ${used}로 조금 ${way} 맞춰 쓰고 있어요.`
-})
-function pickCustom(value) {
-  themeState.customAccent = value.toLowerCase()
-  themeState.accent = CUSTOM_ACCENT
-}
+const keys = { surfaces: Object.keys(THEMES), accents: Object.keys(ACCENTS) }
+const account = createThemeAccount({ request: apiRequest, keys })
 const stickerPacks = [
   { id: 'basic', label: '기본', items: ['🙂', '✅', '⭐'] },
   { id: 'animal', label: '동물', items: ['🐻', '🐰', '🐤'] },
   { id: 'plant', label: '식물', items: ['🌱', '🌿', '🍀'] },
 ]
+const snapshot = () => ({ theme: themeState.theme, accent: themeState.accent, customAccent: themeState.customAccent, followSystem: themeState.followSystem })
+
+/** 적용 전 고른 값. 미리보기에만 쓰고 앱 전체(themeState)는 적용하기에서 바꾼다. */
+const draft = reactive(snapshot())
+const status = ref('idle') // idle · saving · saved · error
+const message = ref('')
+const dirty = computed(() => !sameTheme(draft, themeState))
+// 다른 곳(로그인 직후 계정 테마 불러오기 등)에서 적용 테마가 바뀌면 고치지 않은 미리보기도 따라간다
+watch(() => snapshot(), (now, before) => { if (sameTheme(draft, before)) Object.assign(draft, now) })
+
+const previewSurface = computed(() => (draft.followSystem && typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: dark)')?.matches ? 'dark' : draft.theme))
+const preview = computed(() => resolveTheme(previewSurface.value, draft.accent, draft.customAccent))
+/** 미리보기 영역에만 쓰는 CSS 변수. 선택 틴트는 :root 계산값을 물려받지 않도록 미리보기 accent로 다시 만든다. */
+const previewStyle = computed(() => {
+  const t = preview.value.tokens
+  return { ...t, '--color-accent-soft': `color-mix(in srgb, ${t['--color-accent']} 10%, ${t['--color-card']})`, colorScheme: previewSurface.value === 'dark' ? 'dark' : 'light' }
+})
+const optionTokens = (surface, accent = draft.accent) => resolveTheme(surface, accent, draft.customAccent).tokens
+
+const appliedLabel = computed(() => `${themeState.followSystem ? '시스템 설정 따름' : THEMES[themeState.theme].label} · ${themeState.accent === CUSTOM_ACCENT ? '사용자 지정' : ACCENTS[themeState.accent].label}`)
+
+/** 미리보기 조합의 대비. DESIGN.md 2장 Theme contrast rules의 기준과 함께 보인다. */
+const checks = computed(() => {
+  const t = preview.value.tokens
+  const row = (label, a, b, min) => { const value = contrast(a, b); return { label, value: value.toFixed(2), pass: value >= min, min } }
+  return [
+    row('본문 글자 / 바탕', t['--color-foreground'], t['--color-canvas'], 4.5),
+    row('보조 글자 / 구획', t['--color-muted'], t['--color-surface'], 4.5),
+    row('포인트 색 / 바탕', t['--color-accent'], t['--color-canvas'], 4.5),
+    row('주 버튼 글자 / 주 버튼', t['--color-on-accent'], t['--color-accent'], 4.5),
+    row('입력 경계 / 카드', t['--color-control-border'], t['--color-card'], 3),
+    row('데이터 색 / 트랙', t['--color-data'], t['--color-hairline'], 3),
+  ]
+})
+const customNote = computed(() => {
+  if (draft.accent !== CUSTOM_ACCENT || !preview.value.adjusted) return ''
+  const used = preview.value.tokens['--color-accent']
+  return `고른 색 ${draft.customAccent}는 대비 기준에 못 미쳐 ${used}로 ${luminance(used) < luminance(draft.customAccent) ? '어둡게' : '밝게'} 맞춰 써요.`
+})
+
+function pickCustom(value) {
+  draft.customAccent = value.toLowerCase()
+  draft.accent = CUSTOM_ACCENT
+}
+function cancel() {
+  Object.assign(draft, snapshot())
+  status.value = 'idle'; message.value = ''
+}
+function restoreDefault() {
+  Object.assign(draft, THEME_DEFAULT)
+  status.value = 'idle'; message.value = '기본 테마(라이트 · 포레스트)로 돌아갑니다. 적용하기를 눌러야 저장돼요.'
+}
+/** 로그인 상태면 계정 저장이 성공한 뒤에만 앱에 적용하고 완료를 알린다. 실패하면 기존 설정을 그대로 둔다. */
+async function apply() {
+  if (status.value === 'saving' || !dirty.value) return
+  const next = { ...draft }
+  status.value = 'saving'; message.value = '테마를 적용하는 중이에요.'
+  try {
+    if (session.userId) await account.save(next)
+    Object.assign(themeState, next)
+    status.value = 'saved'
+    message.value = session.userId ? '화면 테마를 적용했어요. 계정에 저장돼 다른 기기에서도 같은 테마를 써요.' : '화면 테마를 이 브라우저에 적용했어요. 로그인하면 계정에 저장할 수 있어요.'
+  } catch (error) {
+    status.value = 'error'; message.value = themeErrorText(error)
+  }
+}
 </script>
 
 <template>
-  <section class="card setting-content">
+  <section class="card setting-content theme-settings">
     <div class="setting-head">
       <div>
-        <h2>테마 · 디자인</h2>
-        <p>표면 톤과 포인트 컬러를 고르면 앱 전체에 바로 적용돼요</p>
+        <h2>화면 테마</h2>
+        <p>배경과 포인트 색을 조합해 나에게 편한 화면을 만들어 보세요.</p>
       </div>
-      <span class="badge ok">{{ themeState.followSystem ? '시스템 설정 따름' : activeTheme.label }}</span>
+      <span class="tag applied">지금 적용 중 · {{ appliedLabel }}</span>
     </div>
 
-    <div class="section-label">표면 테마</div>
-    <div class="theme-grid">
-      <button
-        v-for="(t, key) in THEMES"
-        :key="key"
-        class="theme-card"
-        :class="{ selected: themeState.theme === key && !themeState.followSystem }"
-        :aria-pressed="themeState.theme === key && !themeState.followSystem"
-        :disabled="themeState.followSystem"
-        @click="themeState.theme = key"
-      >
-        <span class="theme-preview" :style="{ background: t.tokens['--color-canvas'], borderColor: t.tokens['--color-hairline'] }">
-          <i :style="{ background: t.tokens['--color-foreground'] }"></i>
-          <i :style="{ background: t.tokens['--color-surface'] }"></i>
-          <i :style="{ background: resolveTheme(key).tokens['--color-data'] }"></i>
-          <i :style="{ background: resolveTheme(key).tokens['--color-accent'] }"></i>
-        </span>
-        <b>{{ t.label }}</b>
-        <small>{{ t.desc }}</small>
-      </button>
+    <div class="theme-layout">
+      <div class="theme-controls">
+        <fieldset class="option-group">
+          <legend>표면 모드</legend>
+          <div class="surface-options">
+            <label v-for="(t, key) in THEMES" :key="key" class="option-card" :class="{ selected: draft.theme === key }">
+              <input v-model="draft.theme" class="option-input" type="radio" name="surface" :value="key" :aria-describedby="`surface-desc-${key}`" />
+              <span class="surface-swatch" aria-hidden="true" :style="{ background: optionTokens(key)['--color-canvas'], borderColor: optionTokens(key)['--color-hairline'] }">
+                <i class="swatch-card" :style="{ background: optionTokens(key)['--color-card'], borderColor: optionTokens(key)['--color-hairline'] }"><em :style="{ background: optionTokens(key)['--color-foreground'] }"></em><em :style="{ background: optionTokens(key)['--color-muted'] }"></em></i>
+                <i class="swatch-button" :style="{ background: optionTokens(key)['--color-accent'] }"></i>
+              </span>
+              <span class="option-text"><b>{{ t.label }}</b><small :id="`surface-desc-${key}`">{{ t.desc }}</small></span>
+              <svg v-if="draft.theme === key" class="option-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
+            </label>
+          </div>
+          <label class="follow-system"><input v-model="draft.followSystem" type="checkbox" /> 기기의 다크 모드 설정 따르기<small>켜면 기기가 다크 모드일 때 다크 표면을 써요.</small></label>
+        </fieldset>
+
+        <fieldset class="option-group">
+          <legend>색상 분위기</legend>
+          <div class="accent-options">
+            <label v-for="(a, key) in ACCENTS" :key="key" class="option-card accent-card" :class="{ selected: draft.accent === key }">
+              <input v-model="draft.accent" class="option-input" type="radio" name="accent" :value="key" :aria-describedby="`accent-desc-${key}`" />
+              <span class="accent-chips" aria-hidden="true"><i :style="{ background: optionTokens(previewSurface, key)['--color-accent'] }"></i><i :style="{ background: optionTokens(previewSurface, key)['--color-data'] }"></i></span>
+              <span class="option-text"><b>{{ a.label }}</b><small :id="`accent-desc-${key}`">{{ a.desc }}</small></span>
+              <svg v-if="draft.accent === key" class="option-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
+            </label>
+          </div>
+          <details class="custom-accent" :open="draft.accent === CUSTOM_ACCENT">
+            <summary>고급 설정 · 직접 고른 색</summary>
+            <label class="custom-row" :class="{ selected: draft.accent === CUSTOM_ACCENT }">
+              <input type="color" :value="draft.customAccent" aria-describedby="custom-accent-help" @input="pickCustom($event.target.value)" />
+              <span>직접 고른 색 쓰기 <span class="figure">{{ draft.customAccent }}</span></span>
+            </label>
+            <p id="custom-accent-help" class="input-field-help">{{ customNote || '고른 색이 대비 기준에 못 미치면 밝기만 맞춰 쓰고 여기서 알려 드려요.' }}</p>
+          </details>
+        </fieldset>
+      </div>
+
+      <div class="live-col">
+        <p class="preview-state" role="status">{{ dirty ? '아직 저장되지 않은 테마를 미리 보고 있어요.' : '지금 적용 중인 테마예요.' }}</p>
+        <!-- 실제 앱 요소로 만든 미리보기. 눌리지 않도록 inert로 둔다. -->
+        <div class="live-preview" :style="previewStyle" inert>
+          <div class="pv-shell">
+            <div class="pv-side">
+              <span class="pv-brand"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5v15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" /><path d="M9 8h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="2.2 2.2" /><path d="M9 16h6.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" /><circle cx="18" cy="16" r="2" fill="currentColor" /></svg>Timebar</span>
+              <span class="pv-nav active">오늘</span><span class="pv-nav">일간 플래너</span><span class="pv-nav">할 일</span>
+            </div>
+            <div class="pv-main">
+              <div class="pv-head"><div><small>메인</small><b>오늘</b></div><span class="pv-primary">새 글 작성</span></div>
+              <div class="pv-card">
+                <div class="pv-card-head"><b>오늘의 흐름</b><span class="pv-tag">진행 중</span></div>
+                <p>계획과 실제 기록을 같은 시간축에서 비교해요.</p>
+                <div class="pv-block pv-plan">계획 · 디자인 리뷰 <span class="figure">10:00</span></div>
+                <div class="pv-block pv-actual">실제 기록 · 디자인 리뷰 <span class="figure">48분</span></div>
+                <div class="pv-progress"><em></em></div>
+                <div class="pv-row"><span class="pv-input">메모를 적어 주세요</span><span class="pv-secondary">취소</span></div>
+                <div class="pv-row"><span class="pv-seg"><i class="on">오늘</i><i>이번 주</i></span><span class="pv-link">자세히 보기</span><span class="pv-status">저장 실패 · 다시 시도</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <ul class="contrast-list" aria-label="미리보기 테마의 대비">
+          <li v-for="item in checks" :key="item.label"><span>{{ item.label }}</span><b class="figure">{{ item.value }}:1</b><em :class="{ fail: !item.pass }">{{ item.pass ? `통과 (기준 ${item.min}:1)` : `기준 ${item.min}:1 미달` }}</em></li>
+        </ul>
+      </div>
     </div>
 
-    <label class="task" style="border: 0; margin-top: 12px; display: inline-flex;">
-      <input type="checkbox" v-model="themeState.followSystem" />
-      <span style="flex: 1"><b>시스템 설정 따르기</b><small>OS가 다크 모드면 자동으로 다크 테마를 써요</small></span>
-    </label>
-
-    <div class="section-label" style="margin-top: 22px">색상 테마</div>
-    <p class="form-note" style="margin-top: 0">고른 색은 화면당 강조 하나와 포커스 표시에 쓰이고, 같은 계열의 밝은 색이 진행 막대·차트 같은 기록 데이터에 쓰여요. 표면 테마에 맞춰 대비 기준을 넘도록 밝기를 자동으로 맞춰요.</p>
-    <div class="accent-row" role="group" aria-label="색상 테마">
-      <button
-        v-for="(a, key) in ACCENTS"
-        :key="key"
-        type="button"
-        class="accent-chip"
-        :class="{ selected: themeState.accent === key }"
-        :aria-pressed="themeState.accent === key"
-        @click="themeState.accent = key"
-      >
-        <i :style="{ background: swatches[key]['--color-accent'] }"></i><i :style="{ background: swatches[key]['--color-data'] }"></i>{{ a.label }}
-      </button>
-      <label class="accent-chip accent-custom" :class="{ selected: themeState.accent === CUSTOM_ACCENT }" :for="customId">
-        <input :id="customId" type="color" :value="themeState.customAccent" @input="pickCustom($event.target.value)" />
-        <span>직접 고르기</span>
-        <small v-if="themeState.accent === CUSTOM_ACCENT" class="figure">{{ themeState.customAccent }}</small>
-      </label>
+    <div class="theme-actions">
+      <button type="button" class="button-text" :disabled="status === 'saving'" @click="restoreDefault">기본값으로 복원</button>
+      <p v-if="message" class="theme-message" :class="status" :role="status === 'error' ? 'alert' : 'status'">{{ message }}</p>
+      <span class="theme-action-buttons">
+        <button type="button" class="button-secondary" :disabled="!dirty || status === 'saving'" @click="cancel">취소</button>
+        <button type="button" class="primary" :disabled="!dirty" :aria-busy="status === 'saving' ? 'true' : undefined" @click="apply">{{ status === 'saving' ? '적용하는 중' : '적용하기' }}</button>
+      </span>
     </div>
-    <p class="theme-contrast" role="status">
-      지금 대비 · 포인트 색 <b class="figure">{{ summary.accent }}:1</b>, 데이터 색 위 글자 <b class="figure">{{ summary.data }}:1</b>, 막대와 트랙 <b class="figure">{{ summary.track }}:1</b>.
-      <template v-if="customNote"> {{ customNote }}</template>
+    <p class="storage-note">{{ session.userId ? '적용하면 계정 환경설정에 저장돼요. 이 브라우저에도 함께 저장해 다음 실행 때 바로 보여요.' : '로그아웃 상태라 이 브라우저에만 저장돼요. 로그인하면 계정에 저장할 수 있어요.' }}</p>
+
+    <div class="section-label theme-extra">화면 밀도 · 글자 크기</div>
+    <p class="form-note">
+      지금 <b>{{ DENSITIES[appearance.density].label }}</b> · <b>{{ FONT_SIZES[appearance.fontSize].label }}</b>로 설정돼 있어요. 자세한 조절은 환경 설정에서 할 수 있어요.
     </p>
 
-    <div class="section-label" style="margin-top: 22px">미리보기 <small style="font-weight: 400; color: var(--color-muted)">· 실제로 눌리지 않아요</small></div>
-    <div class="theme-demo" aria-hidden="true">
-      <div class="theme-demo-head"><b>오늘의 흐름</b><span class="badge ok">진행중</span></div>
-      <p>계획한 일정과 실제 기록을 함께 확인해요.</p>
-      <div class="progress"><em style="width: 62%"></em></div>
-      <div class="theme-demo-row">
-        <span class="filter"><button class="selected" tabindex="-1">오늘</button><button tabindex="-1">이번 주</button></span>
-        <label class="task" style="border: 0; padding: 0"><input type="checkbox" checked tabindex="-1" />완료한 항목</label>
-        <a class="theme-demo-link">강조 글자</a>
-        <span class="badge danger">기한 초과</span>
-      </div>
-      <div class="form-row" style="margin-top: 12px">
-        <button class="primary" tabindex="-1">기본 액션</button>
-        <button class="button-secondary" tabindex="-1">보조 액션</button>
-      </div>
-    </div>
-
-    <div class="section-label" style="margin-top: 22px">화면 밀도 · 글자 크기</div>
-    <p class="form-note" style="margin-top: 0">
-      지금 <b>{{ DENSITIES[appearance.density].label }}</b> · <b>{{ FONT_SIZES[appearance.fontSize].label }}</b> 로 설정돼 있어요.
-      자세한 조절은 환경 설정에서 할 수 있어요.
-    </p>
-
-    <div class="section-label" style="margin-top: 22px">다이어리 스티커 팩</div>
+    <div class="section-label theme-extra">다이어리 스티커 팩</div>
     <div class="sticker-packs">
       <div v-for="p in stickerPacks" :key="p.id" class="sticker-pack">
         <b>{{ p.label }}</b>
@@ -135,17 +187,104 @@ const stickerPacks = [
 </template>
 
 <style scoped>
-.theme-preview i:nth-child(4) { height: 24%; }
-.accent-chip i + i { margin-left: calc(-1 * var(--space-sm)); box-shadow: 0 0 0 2px var(--color-canvas); }
-.accent-row { align-items: center; }
-.accent-row .accent-custom { display: inline-flex; align-items: center; gap: var(--space-sm); margin: 0; cursor: pointer; }
-/* .setting-content input 공통 규칙(블록·폭 100%)보다 우선하도록 상위 클래스를 붙인다 */
-.accent-row .accent-custom input[type='color'] { display: inline-block; width: 22px; height: 22px; margin: 0; padding: 0; border: 1px solid var(--color-hairline); border-radius: var(--radius-full); background: none; cursor: pointer; }
-.theme-contrast { margin: var(--space-md) 0 0; font-size: 0.8125rem; line-height: 1.6; color: var(--color-muted); }
-.accent-custom input[type='color']::-webkit-color-swatch-wrapper { padding: 0; }
-.accent-custom input[type='color']::-webkit-color-swatch { border: 0; border-radius: var(--radius-full); }
-.accent-custom input[type='color']::-moz-color-swatch { border: 0; border-radius: var(--radius-full); }
-.theme-demo-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-lg); margin-top: var(--space-lg); }
-.theme-demo-link { color: var(--color-accent); font-weight: 600; text-decoration: underline; }
-@media (max-width: 600px) { .theme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.theme-settings .setting-head { align-items: flex-start; }
+.applied { white-space: normal; text-align: right; }
+.theme-layout { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); gap: var(--space-block); margin-top: var(--space-xxl); align-items: start; }
+.option-group { margin: 0 0 var(--space-xxl); padding: 0; border: 0; min-width: 0; }
+.option-group legend { padding: 0; margin-bottom: var(--space-lg); font-size: var(--type-body-sm-size); font-weight: 600; color: var(--color-foreground); }
+.surface-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-md); }
+.accent-options { display: grid; gap: var(--space-md); }
+.option-card {
+  position: relative; display: flex; flex-direction: column; gap: var(--space-md); min-width: 0; padding: var(--space-lg);
+  border: 1px solid var(--color-hairline); border-radius: var(--radius-lg); background: var(--color-card); cursor: pointer;
+  transition: border-color var(--motion-fast), background-color var(--motion-fast);
+}
+.option-card:hover { border-color: var(--color-control-border); }
+/* 선택: accent 경계 + 옅은 accent 바탕 + 체크(DESIGN.md 2장 Color roles). 포커스는 전역 링과 다르게 보인다 */
+.option-card.selected { border-color: var(--color-accent); background: var(--color-accent-soft); box-shadow: inset 0 0 0 1px var(--color-accent); }
+.option-card:has(.option-input:focus-visible) { outline: var(--focus-ring-width) solid var(--color-accent); outline-offset: var(--focus-ring-offset); }
+.option-input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; pointer-events: none; }
+.option-text { display: grid; gap: 2px; min-width: 0; }
+.option-text b { font-size: var(--type-body-sm-size); font-weight: 600; }
+.option-text small { color: var(--color-muted); font-size: var(--type-caption-size); }
+.option-check { position: absolute; top: var(--space-md); right: var(--space-md); width: 18px; height: 18px; color: var(--color-accent); }
+.surface-swatch { position: relative; display: block; height: 56px; border: 1px solid; border-radius: var(--radius-sm); overflow: hidden; }
+.swatch-card { position: absolute; left: var(--space-md); top: var(--space-md); right: 36%; bottom: var(--space-md); display: grid; align-content: center; gap: var(--space-xs); padding: 0 var(--space-sm); border: 1px solid; border-radius: var(--radius-xs); }
+.swatch-card em { display: block; height: 4px; border-radius: var(--radius-xs); }
+.swatch-card em + em { width: 60%; }
+.swatch-button { position: absolute; right: var(--space-md); bottom: var(--space-md); width: 22%; height: 12px; border-radius: var(--radius-xs); }
+.accent-card { flex-direction: row; align-items: center; padding-right: var(--space-block); }
+.accent-chips { display: flex; flex: none; }
+.accent-chips i { width: 22px; height: 22px; border-radius: var(--radius-full); box-shadow: 0 0 0 2px var(--color-card); }
+.accent-chips i + i { margin-left: calc(var(--space-sm) * -1); }
+.follow-system { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm); margin-top: var(--space-lg); font-size: var(--type-body-sm-size); cursor: pointer; }
+.follow-system small { flex-basis: 100%; padding-left: 26px; color: var(--color-muted); }
+.custom-accent { margin-top: var(--space-lg); }
+.custom-accent summary { cursor: pointer; font-size: var(--type-body-sm-size); font-weight: 600; color: var(--color-foreground); min-height: 32px; }
+.custom-row > span { min-width: 0; overflow-wrap: anywhere; }
+.custom-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-md); margin-top: var(--space-md); padding: var(--space-md) var(--space-lg); border: 1px solid var(--color-hairline); border-radius: var(--radius-md); font-size: var(--type-body-sm-size); cursor: pointer; }
+.custom-row.selected { border-color: var(--color-accent); background: var(--color-accent-soft); }
+.custom-row input[type='color'] { width: 28px; height: 28px; padding: 0; border: 1px solid var(--color-control-border); border-radius: var(--radius-full); background: none; cursor: pointer; flex: none; }
+.custom-row input[type='color']::-webkit-color-swatch-wrapper { padding: 0; }
+.custom-row input[type='color']::-webkit-color-swatch { border: 0; border-radius: var(--radius-full); }
+.custom-accent .input-field-help { margin: var(--space-sm) 0 0; }
+
+.live-col { position: sticky; top: 0; display: grid; gap: var(--space-lg); min-width: 0; }
+.preview-state { margin: 0; font-size: var(--type-body-sm-size); font-weight: 600; color: var(--color-foreground); }
+.live-preview { border: 1px solid var(--color-hairline); border-radius: var(--radius-xl); overflow: hidden; background: var(--color-canvas); color: var(--color-foreground); font-size: var(--type-body-sm-size); }
+.pv-shell { display: grid; grid-template-columns: 112px minmax(0, 1fr); min-height: 300px; }
+.pv-side { display: grid; align-content: start; gap: var(--space-xs); padding: var(--space-lg) var(--space-sm); background: var(--color-surface); border-right: 1px solid var(--color-hairline); }
+.pv-brand { display: flex; align-items: center; gap: var(--space-xs); margin-bottom: var(--space-md); font-weight: 600; font-size: var(--type-caption-size); }
+.pv-brand svg { width: 18px; height: 18px; color: var(--color-accent); }
+.pv-nav { padding: var(--space-sm) var(--space-md); border-radius: var(--radius-sm); color: var(--color-body); font-size: var(--type-caption-size); }
+.pv-nav.active { background: var(--color-accent-soft); color: var(--color-foreground); font-weight: 600; box-shadow: inset 2px 0 0 var(--color-accent); }
+.pv-main { display: grid; align-content: start; gap: var(--space-lg); padding: var(--space-lg); min-width: 0; }
+.pv-head { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--space-md); }
+.pv-head small { display: block; color: var(--color-muted); font-size: var(--type-caption-size); }
+.pv-head b { font-size: var(--type-title-md-size); }
+.pv-primary { padding: var(--space-sm) var(--space-lg); border-radius: var(--radius-md); background: var(--color-accent); color: var(--color-on-accent); font-weight: 600; font-size: var(--type-caption-size); white-space: nowrap; }
+.pv-card { display: grid; gap: var(--space-md); padding: var(--space-lg); border: 1px solid var(--color-hairline); border-radius: var(--radius-lg); background: var(--color-card); }
+.pv-card p { margin: 0; color: var(--color-body); font-size: var(--type-caption-size); }
+.pv-card-head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-sm); }
+.pv-tag { padding: 2px var(--space-sm); border-radius: var(--radius-xs); background: var(--color-surface); font-size: var(--type-caption-size); }
+.pv-block { padding: var(--space-xs) var(--space-md); border-radius: var(--radius-sm); background: var(--color-card); font-size: var(--type-caption-size); }
+.pv-block.pv-plan { border: 1px dashed var(--color-control-border); color: var(--color-body); }
+.pv-block.pv-actual { border: 1px solid var(--color-hairline); border-left: 3px solid var(--color-data); }
+.pv-progress { height: 6px; border-radius: var(--radius-full); background: var(--color-hairline); overflow: hidden; }
+.pv-progress em { display: block; width: 62%; height: 100%; background: var(--color-data); }
+.pv-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm); }
+.pv-input { flex: 1; min-width: 120px; padding: var(--space-sm) var(--space-md); border: 1px solid var(--color-control-border); border-radius: var(--radius-md); background: var(--color-card); color: var(--color-muted); font-size: var(--type-caption-size); }
+.pv-secondary { padding: var(--space-sm) var(--space-lg); border: 1px solid var(--color-control-border); border-radius: var(--radius-md); background: var(--color-card); font-size: var(--type-caption-size); font-weight: 600; }
+.pv-seg { display: inline-flex; gap: 2px; padding: 2px; border-radius: var(--radius-md); background: var(--color-surface); }
+.pv-seg i { padding: 2px var(--space-md); border: 1px solid transparent; border-radius: var(--radius-sm); font-style: normal; font-size: var(--type-caption-size); color: var(--color-body); }
+.pv-seg i.on { background: var(--color-card); border-color: var(--color-control-border); color: var(--color-foreground); font-weight: 600; }
+.pv-link { color: var(--color-accent); font-weight: 600; text-decoration: underline; font-size: var(--type-caption-size); }
+.pv-status { color: var(--color-status-danger); font-weight: 600; font-size: var(--type-caption-size); }
+
+.contrast-list { display: grid; gap: var(--space-xs); margin: 0; padding: 0; list-style: none; font-size: var(--type-caption-size); }
+.contrast-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: var(--space-md); align-items: baseline; padding: var(--space-xs) 0; border-bottom: 1px solid var(--color-hairline); }
+.contrast-list span { color: var(--color-body); }
+.contrast-list em { font-style: normal; color: var(--color-status-success); font-weight: 600; }
+.contrast-list em.fail { color: var(--color-status-danger); }
+
+.theme-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-lg); margin-top: var(--space-xxl); padding-top: var(--space-xxl); border-top: 1px solid var(--color-hairline); }
+.theme-action-buttons { display: flex; gap: var(--space-md); margin-left: auto; }
+.theme-message { margin: 0; font-size: var(--type-body-sm-size); font-weight: 600; color: var(--color-body); }
+.theme-message.saved { color: var(--color-status-success); }
+.theme-message.error { color: var(--color-status-danger); }
+.storage-note { margin: var(--space-sm) 0 0; font-size: var(--type-caption-size); color: var(--color-muted); text-align: right; }
+.theme-extra { margin-top: var(--space-block); }
+
+@media (max-width: 1000px) {
+  .theme-layout { grid-template-columns: minmax(0, 1fr); }
+  .live-col { position: static; }
+}
+@media (max-width: 600px) {
+  .surface-options { grid-template-columns: minmax(0, 1fr); }
+  .pv-shell { grid-template-columns: minmax(0, 1fr); }
+  .pv-side { display: none; }
+  .theme-action-buttons { width: 100%; margin-left: 0; }
+  .theme-action-buttons button { flex: 1; }
+  .storage-note { text-align: left; }
+}
 </style>
