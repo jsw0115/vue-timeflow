@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import ListFilterBar from '../../components/ListFilterBar.vue'
 import { notifications, unreadNotifications, markRead, markAllRead, removeNotification } from '../../store/people'
+import PageActions from '../../components/PageActions.vue'
 
 /** 알림 — 헤더 우측 패널과 같은 people 스토어를 공유한다. */
 const router = useRouter()
@@ -44,10 +45,9 @@ function open(n) {
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 1rem">알림</b>
     <span class="form-note" style="margin: 0">안 읽음 {{ unreadNotifications }}건</span>
     <span></span>
-    <button class="primary" :disabled="!unreadNotifications" @click="markAllRead">모두 읽음 처리</button>
+    <PageActions><button class="primary" :disabled="!unreadNotifications" @click="markAllRead">모두 읽음 처리</button></PageActions>
   </div>
 
   <ListFilterBar

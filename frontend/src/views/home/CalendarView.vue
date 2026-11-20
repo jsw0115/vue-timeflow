@@ -19,10 +19,11 @@ const cursor = ref(new Date(TODAY))
 const selected = ref(TODAY)
 
 const KINDS = [
-  { id: 'event', label: '일정', color: 'var(--color-accent)' },
+  // 종류 색은 콘텐츠 색 토큰이다(서비스 accent와 따로). 모양도 함께 달라 색만으로 구분하지 않는다
+  { id: 'event', label: '일정', color: 'var(--color-content-sage)' },
   { id: 'dday', label: 'D-Day', color: 'var(--color-foreground)' },
-  { id: 'task', label: '할 일', color: '#43596b' },
-  { id: 'post', label: '내 기록', color: '#8a6a3c' },
+  { id: 'task', label: '할 일', color: 'var(--color-content-slate)' },
+  { id: 'post', label: '내 기록', color: 'var(--color-content-ochre)' },
 ]
 const on = ref({ event: true, dday: true, task: true, post: true })
 function toggleKind(id) {
@@ -94,71 +95,133 @@ const upcomingDdays = computed(() => ddays.value.filter((d) => !isPast(d.dday)).
 function colorOf(kind) {
   return KINDS.find((k) => k.id === kind)?.color ?? 'var(--color-hairline)'
 }
+const dayFormat = new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })
+const dayName = (c) => dayFormat.format(new Date(c.key + 'T12:00:00')) + (c.today ? ', 오늘' : '')
+const selectedLabel = computed(() => dayFormat.format(new Date(selected.value + 'T12:00:00')) + (selected.value === TODAY ? ' · 오늘' : ''))
 function labelOf(kind) {
   return KINDS.find((k) => k.id === kind)?.label ?? kind
 }
 </script>
 
 <template>
-  <div class="page-tools">
-    <button class="review" style="margin: 0" aria-label="이전 달" @click="shiftMonth(-1)">‹</button>
-    <b style="font-size: 1rem">{{ monthLabel }}</b>
-    <button class="review" style="margin: 0" aria-label="다음 달" @click="shiftMonth(1)">›</button>
-    <button class="review" style="margin: 0" @click="goToday">오늘</button>
-    <span class="form-note" style="margin: 0">이 달 항목 {{ monthCount }}개</span>
-    <span></span>
-    <div class="filter">
-      <button v-for="k in KINDS" :key="k.id" :class="{ selected: on[k.id] }" @click="toggleKind(k.id)">{{ k.label }}</button>
+  <!-- 달 이동(왼쪽)과 종류 켜기·끄기(오른쪽)를 한 줄에 둔다. 종류는 색과 모양(동그라미·마름모·네모·고리)을 함께 쓴다 -->
+  <div class="cal-toolbar">
+    <div class="cal-period" role="group" aria-label="달 이동">
+      <button type="button" class="icon-button" aria-label="이전 달" title="이전 달" @click="shiftMonth(-1)">‹</button>
+      <h2 class="cal-month" aria-live="polite">{{ monthLabel }}</h2>
+      <button type="button" class="icon-button" aria-label="다음 달" title="다음 달" @click="shiftMonth(1)">›</button>
+      <button type="button" class="button-text" @click="goToday">오늘</button>
+      <span class="cal-count">이 달 <b class="figure">{{ monthCount }}</b>개</span>
+    </div>
+    <div class="segmented-tab cal-kinds" role="group" aria-label="보일 종류">
+      <button v-for="k in KINDS" :key="k.id" type="button" :aria-pressed="on[k.id]" @click="toggleKind(k.id)"><i class="kind-mark" :class="'kind-' + k.id" :style="{ '--kind-color': k.color }" aria-hidden="true"></i>{{ k.label }}</button>
     </div>
   </div>
 
   <div class="cal-layout">
-    <section class="card">
-      <div class="cal-grid cal-head">
+    <section class="card cal-board" aria-label="월간 캘린더">
+      <div class="cal-grid cal-head" aria-hidden="true">
         <span v-for="w in WEEKDAYS" :key="w">{{ w }}</span>
       </div>
       <div class="cal-grid">
         <button
           v-for="c in grid"
           :key="c.key"
+          type="button"
           class="cal-cell"
           :class="{ out: c.out, today: c.today, selected: selected === c.key }"
+          :aria-pressed="selected === c.key"
+          :aria-label="dayName(c) + (c.items.length ? `, 항목 ${c.items.length}개` : '')"
           @click="selected = c.key"
         >
-          <b>{{ c.date }}</b>
-          <span class="cal-dots">
-            <i v-for="(it, i) in c.items.slice(0, 4)" :key="i" :style="{ background: colorOf(it.kind) }"></i>
-            <em v-if="c.items.length > 4">+{{ c.items.length - 4 }}</em>
+          <b class="cal-date">{{ c.date }}</b>
+          <ul class="cal-items" aria-hidden="true">
+            <li v-for="(it, i) in c.items.slice(0, 2)" :key="i"><i class="kind-mark" :class="'kind-' + it.kind" :style="{ '--kind-color': colorOf(it.kind) }"></i><span>{{ it.title }}</span></li>
+          </ul>
+          <span v-if="c.items.length" class="cal-dots" aria-hidden="true">
+            <i v-for="(it, i) in c.items.slice(0, 4)" :key="i" class="kind-mark" :class="'kind-' + it.kind" :style="{ '--kind-color': colorOf(it.kind) }"></i>
           </span>
+          <em v-if="c.items.length > 2" class="cal-more" aria-hidden="true">+{{ c.items.length - 2 }}</em>
         </button>
-      </div>
-      <div class="cal-legend">
-        <span v-for="k in KINDS" :key="k.id" :class="{ off: !on[k.id] }">
-          <i :style="{ background: k.color }"></i>{{ k.label }}
-        </span>
       </div>
     </section>
 
-    <aside class="card">
-      <div class="head">
-        <div><h3 style="margin: 0">{{ selected }}</h3><p style="margin: 4px 0 0">{{ selectedItems.length }}개 항목</p></div>
-      </div>
-      <div class="event" v-for="(it, i) in selectedItems" :key="i" @click="router.push(it.link)" style="cursor: pointer">
-        <i :style="{ background: colorOf(it.kind) }"></i>
-        <span style="flex: 1">
-          <b :class="{ done: it.done }">{{ it.title }}</b>
-          <small>{{ labelOf(it.kind) }} · {{ it.meta }}</small>
-        </span>
-      </div>
-      <p v-if="!selectedItems.length" class="empty-state">이 날에는 기록이 없어요. 다른 날짜를 고르거나 '＋ 새 글 작성'으로 남겨 보세요.</p>
+    <aside class="card cal-side" aria-labelledby="cal-day-title">
+      <h3 id="cal-day-title">{{ selectedLabel }}</h3>
+      <p class="cal-side-count">{{ selectedItems.length ? `항목 ${selectedItems.length}개` : '항목 없음' }}</p>
+      <ul v-if="selectedItems.length" class="cal-day-list">
+        <li v-for="(it, i) in selectedItems" :key="i">
+          <RouterLink :to="it.link">
+            <i class="kind-mark" :class="'kind-' + it.kind" :style="{ '--kind-color': colorOf(it.kind) }" aria-hidden="true"></i>
+            <span><b :class="{ done: it.done }">{{ it.title }}</b><small>{{ labelOf(it.kind) }}{{ it.meta ? ' · ' + it.meta : '' }}</small></span>
+          </RouterLink>
+        </li>
+      </ul>
+      <p v-else class="empty-state">이 날에는 기록이 없어요. 다른 날짜를 고르거나 '새 글 작성'으로 남겨 보세요.</p>
 
-      <div class="section-label" style="margin-top: 20px">다가오는 D-Day</div>
-      <div class="event" v-for="d in upcomingDdays" :key="d.id" @click="router.push('/dday/' + d.id)" style="cursor: pointer">
-        <i></i>
-        <span style="flex: 1"><b>{{ d.title }}</b><small>{{ d.date }}</small></span>
-        <b class="figure">{{ d.dday }}</b>
-      </div>
-      <p v-if="!upcomingDdays.length" class="empty-state">예정된 D-Day가 없어요. D-Day 관리에서 기념일을 추가해 보세요.</p>
+      <h4 class="cal-side-sub">다가오는 D-Day</h4>
+      <ul v-if="upcomingDdays.length" class="cal-day-list">
+        <li v-for="d in upcomingDdays" :key="d.id">
+          <RouterLink :to="'/dday/' + d.id">
+            <i class="kind-mark kind-dday" :style="{ '--kind-color': colorOf('dday') }" aria-hidden="true"></i>
+            <span><b>{{ d.title }}</b><small class="figure">{{ d.date }}</small></span>
+            <b class="figure cal-dday">{{ d.dday }}</b>
+          </RouterLink>
+        </li>
+      </ul>
+      <p v-else class="empty-state">예정된 D-Day가 없어요. D-Day 관리에서 기념일을 추가해 보세요.</p>
     </aside>
   </div>
 </template>
+
+<style scoped>
+.cal-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-lg) var(--space-xl); margin-bottom: var(--space-xxl); }
+.cal-period { display: flex; align-items: center; gap: var(--space-sm); }
+.cal-month { margin: 0 var(--space-xs); font-size: var(--type-title-md-size); white-space: nowrap; }
+.cal-count { margin-left: var(--space-sm); font-size: var(--type-body-sm-size); color: var(--color-muted); }
+.cal-kinds > button { display: inline-flex; align-items: center; gap: var(--space-sm); }
+.cal-kinds > button[aria-pressed='false'] { color: var(--color-muted); text-decoration: line-through; }
+/* 종류 표식: 색 + 모양. 일정 동그라미, D-Day 마름모, 할 일 네모, 내 기록 고리 */
+.kind-mark { display: inline-block; flex: none; width: 8px; height: 8px; border-radius: var(--radius-full); background: var(--kind-color); }
+.kind-mark.kind-dday { border-radius: 1px; transform: rotate(45deg) scale(.85); }
+.kind-mark.kind-task { border-radius: 2px; }
+.kind-mark.kind-post { background: transparent; box-shadow: inset 0 0 0 2px var(--kind-color); }
+.cal-layout { grid-template-columns: minmax(0, 1fr) minmax(280px, 320px); }
+.cal-board { padding: var(--space-lg); }
+.cal-grid { gap: 0; }
+.cal-head span { padding: 0 0 var(--space-sm); }
+.cal-cell { position: relative; min-height: 104px; gap: var(--space-xs); padding: var(--space-sm); border: 0; border-top: 1px solid var(--color-hairline); border-radius: 0; background: transparent; text-align: left; overflow: hidden; }
+.cal-cell:hover { background: var(--color-surface); }
+.cal-cell.out { opacity: 1; color: var(--color-muted); }
+.cal-cell.out .cal-date { font-weight: 400; }
+.cal-date { display: grid; place-items: center; width: 26px; height: 26px; border-radius: var(--radius-full); font-family: var(--font-mono); font-size: var(--type-time-size); font-weight: 600; }
+.cal-cell.today { border-color: var(--color-hairline); }
+.cal-cell.today .cal-date { background: transparent; color: var(--color-accent); box-shadow: inset 0 0 0 2px var(--color-accent); width: 26px; height: 26px; }
+.cal-cell.selected { background: var(--color-accent-soft); border-color: var(--color-hairline); outline: 0; box-shadow: inset 0 2px 0 var(--color-accent); }
+.cal-items { display: grid; gap: 2px; width: 100%; min-width: 0; margin: 0; padding: 0; list-style: none; }
+.cal-items li { display: flex; align-items: center; gap: var(--space-xs); min-width: 0; font-size: var(--type-caption-size); line-height: 1.4; color: var(--color-foreground); }
+.cal-items span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cal-dots { display: none; }
+.cal-more { font-style: normal; font-size: var(--type-caption-size); color: var(--color-muted); }
+.cal-side h3 { font-size: var(--type-title-md-size); }
+.cal-side-count { margin: var(--space-xs) 0 var(--space-md); color: var(--color-muted); }
+.cal-side-sub { margin: var(--space-xxl) 0 var(--space-sm); padding-top: var(--space-xl); border-top: 1px solid var(--color-hairline); font-size: var(--type-body-sm-size); font-weight: 600; }
+.cal-day-list { margin: 0; padding: 0; list-style: none; }
+.cal-day-list a { display: flex; align-items: center; gap: var(--space-md); min-height: 52px; padding: var(--space-sm) var(--space-md); margin: 0 calc(var(--space-md) * -1); border-radius: var(--radius-sm); color: var(--color-foreground); text-decoration: none; }
+.cal-day-list a:hover { background: var(--color-surface); }
+.cal-day-list a > span { display: grid; gap: 2px; flex: 1; min-width: 0; }
+.cal-day-list b { font-size: var(--type-body-sm-size); font-weight: 500; overflow-wrap: anywhere; }
+.cal-day-list small { font-size: var(--type-caption-size); color: var(--color-muted); }
+.cal-day-list .cal-dday { flex: none; font-weight: 600; }
+.cal-side .empty-state { padding: var(--space-md) 0; }
+@media (max-width: 1150px) { .cal-layout { grid-template-columns: minmax(0, 1fr); } }
+/* 좁은 화면: 칸 안 제목 대신 모양 점만 보이고, 고른 날 목록은 아래 패널에서 읽는다 */
+@media (max-width: 760px) {
+  .cal-board { padding: var(--space-sm); }
+  .cal-cell { min-height: 56px; padding: var(--space-xs); align-items: center; }
+  .cal-items, .cal-more { display: none; }
+  .cal-dots { display: flex; flex-wrap: wrap; justify-content: center; gap: 3px; }
+  .cal-date { width: 24px; height: 24px; }
+  .cal-kinds { width: 100%; }
+}
+</style>

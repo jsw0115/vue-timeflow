@@ -5,6 +5,7 @@ import ListFilterBar from '../../components/ListFilterBar.vue'
 import RichText from '../../components/RichText.vue'
 import PersonTag from '../../components/PersonTag.vue'
 import { mentions, unreadMentions, markMentionRead, markAllMentionsRead, removeMention } from '../../store/tagging'
+import PageActions from '../../components/PageActions.vue'
 
 /** 멘션함 — 나를 @로 언급한 글을 한곳에 모아 확인한다. */
 const router = useRouter()
@@ -50,10 +51,9 @@ function onRemove(m) {
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 1rem">멘션함</b>
     <span class="form-note" style="margin: 0">나를 언급한 글 {{ mentions.length }}건 · 안 읽음 {{ unreadMentions }}건</span>
     <span></span>
-    <button class="primary" :disabled="!unreadMentions" @click="markAllMentionsRead">모두 읽음 처리</button>
+    <PageActions><button class="primary" :disabled="!unreadMentions" @click="markAllMentionsRead">모두 읽음 처리</button></PageActions>
   </div>
 
   <ListFilterBar

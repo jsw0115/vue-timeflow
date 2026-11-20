@@ -14,9 +14,10 @@ const heroInput = ref('')
 function submitHero() { openPostComposer('할 일', heroInput.value.trim()); heroInput.value = '' }
 /* 통계 포틀릿용 데이터 — 통계 화면과 같은 지표를 홈에서도 본다 */
 const CATEGORIES = [
-  { label: '업무', minutes: 252, color: 'var(--color-accent)' },
+  // 데이터 색 하나 + 중립 단계(DESIGN.md 2장 Category and chart colors). 범례 글자·비율이 함께 있어 색만으로 구분하지 않는다.
+  { label: '업무', minutes: 252, color: 'var(--color-data)' },
   { label: '공부', minutes: 132, color: 'var(--color-foreground)' },
-  { label: '건강', minutes: 108, color: '#8a6a3c' },
+  { label: '건강', minutes: 108, color: 'var(--color-control-border)' },
   { label: '휴식', minutes: 108, color: 'var(--color-hairline)' },
 ]
 const totalMinutes = CATEGORIES.reduce((s, c) => s + c.minutes, 0)
@@ -73,19 +74,32 @@ function onDrop(id) {
 </script>
 
 <template>
-  <section>
-    <div class="hero">
-      <div>
-        <span class="pill">{{ content.heroLabel }}</span>
-        <h2 v-html="content.heroTitle"></h2>
-        <input v-model="heroInput" :placeholder="content.heroPlaceholder" @keyup.enter="submitHero" />
-        <button @click="submitHero">{{ content.heroCta }}</button>
+  <section class="home">
+    <!-- 오늘 띠: 빠른 할 일 입력(주요 행동)과 오늘 수치를 한 구획에 둔다. 안에 카드를 겹치지 않는다(DESIGN.md 4장 Cards). -->
+    <div class="today-band">
+      <form class="quick-capture" @submit.prevent="submitHero">
+        <h2 class="today-question" v-html="content.heroTitle"></h2>
+        <label for="quick-capture-input" class="quick-label">빠른 할 일</label>
+        <div class="quick-row">
+          <input id="quick-capture-input" v-model="heroInput" :placeholder="content.heroPlaceholder" aria-describedby="quick-capture-help" />
+          <!-- 저장이 아니라 작성 창을 여는 버튼이라 '저장하기' 대신 실제 동작을 쓴다(DESIGN.md 1장 신뢰) -->
+          <button type="submit" class="button-secondary">할 일로 적기</button>
+        </div>
+        <p id="quick-capture-help" class="input-field-help">적은 내용으로 할 일 작성 창을 열어요. 저장은 작성 창에서 해요.</p>
+      </form>
+      <div class="today-side">
+        <dl class="today-glance" aria-label="오늘 한눈에">
+          <div><dt>오늘 일정</dt><dd class="figure">{{ todayEvents.length }}</dd></div>
+          <div><dt>남은 할 일</dt><dd class="figure">{{ pendingTasks }}</dd></div>
+          <div><dt>오늘 루틴</dt><dd class="figure">{{ routineDone }}<small>/{{ todayRoutines.length }}</small></dd></div>
+        </dl>
+        <div class="today-links"><button type="button" class="button-text" @click="openPostComposer('일정')">일정 추가</button><button type="button" class="button-text" @click="router.push('/routines')">루틴 확인</button><button type="button" class="button-text" @click="openPostComposer('다이어리')">하루 회고</button></div>
       </div>
-      <div class="home-summary"><span class="eyebrow">TODAY AT A GLANCE</span><p><b>{{ todayEvents.length }}</b> 오늘 일정 <span>·</span> <b>{{ pendingTasks }}</b> 남은 할 일</p><div class="quick-actions"><button @click="openPostComposer('일정')">일정 추가</button><button @click="router.push('/routines')">루틴 확인</button><button @click="openPostComposer('다이어리')">하루 회고</button></div></div>
     </div>
 
+    <section class="dashboard" aria-labelledby="dashboard-title">
     <div class="widget-toolbar">
-      <div class="widget-toolbar-copy"><h3>나의 대시보드</h3><p>{{ dashboardState.editing ? '이동 버튼이나 드래그로 순서를 바꾸세요. 숨긴 카드는 위젯 관리에서 복원할 수 있어요.' : '오늘의 할 일을 한눈에 보고 바로 실행하세요.' }}</p></div>
+      <div class="widget-toolbar-copy"><h2 id="dashboard-title">나의 대시보드</h2><p>{{ dashboardState.editing ? '이동 버튼이나 드래그로 순서를 바꾸세요. 숨긴 카드는 위젯 관리에서 복원할 수 있어요.' : '오늘의 할 일을 한눈에 보고 바로 실행하세요.' }}</p></div>
       <div class="filter">
         <button :class="{ selected: !dashboardState.editing }" @click="dashboardState.editing = false">보기</button>
         <button :class="{ selected: dashboardState.editing }" @click="dashboardState.editing = true">화면 편집</button>
@@ -131,22 +145,22 @@ function onDrop(id) {
         </template>
 
         <template v-else-if="w.id === 'tasksProgress'">
-          <i>✓</i><span>할 일 진행</span><b>{{ doneRate }}<small>%</small></b>
+          <span>할 일 진행</span><b>{{ doneRate }}<small>%</small></b>
           <div class="progress"><em :style="{ width: doneRate + '%' }"></em></div>
           <p>{{ tasks.filter((x) => x.done).length }}/{{ tasks.length }} 완료</p>
         </template>
 
         <template v-else-if="w.id === 'routineRate'">
-          <i>↻</i><span>루틴 달성률</span><b>{{ routinePercent }}<small>%</small></b>
+          <span>루틴 달성률</span><b>{{ routinePercent }}<small>%</small></b>
           <div class="progress green"><em :style="{ width: routinePercent + '%' }"></em></div><p>{{ routineDone }}/{{ todayRoutines.length }} 완료</p>
         </template>
 
         <template v-else-if="w.id === 'focusTime'">
-          <i>◉</i><span>집중 시간</span><b>2<small>h 40m</small></b><p>어제보다 24분 더 집중했어요</p>
+          <span>집중 시간</span><b>2<small>h 40m</small></b><p>어제보다 24분 더 집중했어요</p>
         </template>
 
         <template v-else-if="w.id === 'eventsCount'">
-          <i>◷</i><span>오늘 일정</span><b>{{ todayEvents.length }}<small>개</small></b><p>{{ todayEvents[0] ? todayEvents[0].time + ' · ' + todayEvents[0].title : '등록된 일정이 없어요' }}</p>
+          <span>오늘 일정</span><b>{{ todayEvents.length }}<small>개</small></b><p>{{ todayEvents[0] ? todayEvents[0].time + ' · ' + todayEvents[0].title : '등록된 일정이 없어요' }}</p>
         </template>
 
         <template v-else-if="w.id === 'categoryDonut'">
@@ -175,17 +189,17 @@ function onDrop(id) {
         </template>
 
         <template v-else-if="w.id === 'streak'">
-          <i>◆</i><span>연속 기록</span><b class="figure">{{ bestStreak }}<small>일</small></b>
+          <span>연속 기록</span><b class="figure">{{ bestStreak }}<small>일</small></b>
           <p>가장 긴 루틴 · 최고 {{ bestEver }}일</p>
         </template>
 
         <template v-else-if="w.id === 'godlifeScore'">
-          <i>★</i><span>갓생 점수</span><b class="figure">{{ godlifeScore }}<small>점</small></b>
+          <span>갓생 점수</span><b class="figure">{{ godlifeScore }}<small>점</small></b>
           <p>루틴 50% + 할 일 50%</p>
         </template>
 
         <template v-else-if="w.id === 'dday'">
-          <span class="pill warm">COMING UP</span>
+          <span class="eyebrow">다가오는 날</span>
           <h3>엄마 생신까지</h3>
           <b>D-7</b>
           <p>8월 22일 · 저녁 식사</p>
@@ -193,5 +207,36 @@ function onDrop(id) {
         </template>
       </article>
     </div>
+    </section>
   </section>
 </template>
+
+<style scoped>
+.home { display: grid; gap: var(--space-block); }
+.today-band {
+  display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: var(--space-block); align-items: center;
+  padding: var(--space-xxl) var(--space-block); border-radius: var(--radius-xl); background: var(--color-surface);
+}
+.today-question { margin: 0 0 var(--space-xl); font-size: var(--type-title-lg-size); }
+.quick-label { display: block; margin-bottom: var(--space-sm); font-size: var(--type-body-sm-size); font-weight: 600; color: var(--color-foreground); }
+.quick-row { display: flex; gap: var(--space-md); }
+.quick-row input { flex: 1; min-width: 0; min-height: var(--input-height); padding: 0 var(--input-padding); border: 1px solid var(--color-control-border); font-size: var(--type-body-size); }
+.quick-capture .input-field-help { margin: var(--space-sm) 0 0; }
+.today-side { display: grid; gap: var(--space-xl); padding-left: var(--space-block); border-left: 1px solid var(--color-hairline); }
+.today-glance { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-xl); margin: 0; }
+.today-glance dt { font-size: var(--type-body-sm-size); color: var(--color-body); }
+.today-glance dd { margin: var(--space-xs) 0 0; font-size: 1.75rem; font-weight: 500; line-height: 1.2; color: var(--color-foreground); }
+.today-glance dd small { font-size: var(--type-body-sm-size); color: var(--color-muted); }
+.dashboard { display: grid; gap: var(--space-xl); }
+.dashboard .widget-toolbar { margin: 0; }
+.widget-toolbar-copy h2 { font-size: var(--type-title-md-size); }
+.today-links { display: flex; flex-wrap: wrap; gap: var(--space-xs); margin-left: calc(var(--space-lg) * -1); }
+@media (max-width: 1000px) {
+  .today-band { grid-template-columns: minmax(0, 1fr); padding: var(--space-xxl); }
+  .today-side { padding-left: 0; padding-top: var(--space-xl); border-left: 0; border-top: 1px solid var(--color-hairline); }
+}
+@media (max-width: 600px) {
+  .today-band { padding: var(--space-xl); }
+  .quick-row { flex-direction: column; }
+}
+</style>
