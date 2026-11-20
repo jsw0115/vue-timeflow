@@ -1,4 +1,4 @@
-// 화면 수명과 계정을 구분해 실제 기록을 복구하고 저장 상태를 표시한다.
+// 화면 수명과 계정을 구분해 실제 기록을 복구하고 저장 상태를 표시한다. 집중 타이머의 시작·일시정지·재개·종료·취소도 같은 상태로 다룬다(PR-09).
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { session } from '../auth/session.js'
 import { apiRequest } from '../auth/apiRequest.js'
@@ -11,15 +11,18 @@ export function useRecording() {
   const ticker = setInterval(() => { now.value = Date.now() }, 1000)
   onBeforeUnmount(() => { clearInterval(ticker); generation += 1 })
   function readPending() { pending.value = client?.pending() || null }
+  /** 진행 중 기록과 기록 목록을 서버에서 다시 읽는다. 오류 문구는 부른 쪽이 정한다. */
+  async function load(current, expected) {
+    const [state, items] = await Promise.all([current.recover(), apiRequest('/api/planner/recordings')])
+    if (expected !== generation) return
+    active.value = state.active; records.value = items; offset.value = Date.parse(state.serverTime) - Date.now(); loaded.value = true; readPending()
+  }
   async function refresh() {
     const expected = generation, current = client
     if (!current) return
     busy.value = true; error.value = ''
-    try {
-      const [state, items] = await Promise.all([current.recover(), apiRequest('/api/planner/recordings')])
-      if (expected !== generation) return
-      active.value = state.active; records.value = items; offset.value = Date.parse(state.serverTime) - Date.now(); loaded.value = true; readPending()
-    } catch (e) { if (expected === generation) error.value = e.message }
+    try { await load(current, expected) }
+    catch (e) { if (expected === generation) error.value = e.message }
     finally { if (expected === generation) busy.value = false }
   }
   watch(() => session.userId, owner => {
@@ -28,28 +31,53 @@ export function useRecording() {
     if (client) refresh()
     else error.value = '실제 기록을 저장하려면 먼저 로그인해주세요.'
   }, { immediate: true })
-  async function toggle(title) {
-    if (!client || busy.value || !loaded.value) return
+  /**
+   * 명령 하나를 보내고 결과로 화면 상태를 바꾼다. 결과가 { cancelled }면 기록을 지운다.
+   * 다른 곳에서 상태가 바뀌어 409·404면 서버 상태를 다시 읽고 오류 문구는 남긴다.
+   */
+  async function run(action) {
+    if (!client || busy.value || !loaded.value) return null
     const current = client, expected = generation
     busy.value = true; error.value = ''; saved.value = null
     try {
-      const result = pending.value?.kind === 'finish' ? await current.retryFinish()
-        : active.value ? await current.finish(active.value, offset.value)
-          : await current.start(title, Intl.DateTimeFormat().resolvedOptions().timeZone)
-      if (expected !== generation) return
-      active.value = result.state === 'RUNNING' ? result : null
-      records.value = [result, ...records.value.filter(row => row.id !== result.id)]
-      if (result.state === 'COMPLETED') saved.value = result
-    } catch (e) { if (expected === generation) error.value = e.message }
-    finally {
+      const result = await action(current)
+      if (expected !== generation) return null
+      if (result?.cancelled) {
+        active.value = null; records.value = records.value.filter(row => row.id !== result.id)
+      } else {
+        active.value = result.state === 'COMPLETED' ? null : result
+        records.value = [result, ...records.value.filter(row => row.id !== result.id)]
+        if (result.state === 'COMPLETED') saved.value = result
+      }
+      return result
+    } catch (e) {
+      if (expected !== generation) return null
+      error.value = e.message
+      if (e.status === 409 || e.status === 404) await load(current, expected).catch(() => {})
+      return null
+    } finally {
       if (expected === generation) {
         busy.value = false
         try { readPending() } catch (e) { error.value = e.message }
       }
     }
   }
-  const elapsed = computed(() => recordingSeconds(active.value, pending.value?.kind === 'finish' ? Date.parse(pending.value.body.endedAt) : now.value + offset.value))
-  return { active, records, pending, error, busy, loaded, saved, elapsed, refresh, toggle }
+  const zone = () => Intl.DateTimeFormat().resolvedOptions().timeZone
+  /** 플래너의 "지금부터 기록" 버튼. 진행 중이면 끝내고, 보관된 종료 요청이 있으면 다시 보낸다. */
+  const toggle = (title) => run(current => pending.value?.kind === 'finish' ? current.retryFinish()
+    : active.value ? current.finish(active.value, offset.value)
+      : current.start(title, zone()))
+  /** 집중 타이머 시작. timer는 { mode, targetMinutes }다. */
+  const startTimer = (title, timer) => run(current => current.start(title, zone(), undefined, timer))
+  const pause = () => run(current => current.pause(active.value))
+  const resume = () => run(current => current.resume(active.value))
+  /** endedAt을 주면 그 시각(목표 도달 시각)으로 끝낸다. */
+  const finish = (endedAt) => run(current => current.finish(active.value, offset.value, endedAt))
+  const retry = () => run(current => current.retryFinish())
+  const cancel = () => run(async current => { const id = active.value.id; await current.cancel(active.value); return { cancelled: true, id } })
+  const serverNow = computed(() => now.value + offset.value)
+  const elapsed = computed(() => recordingSeconds(active.value, pending.value?.kind === 'finish' ? Date.parse(pending.value.body.endedAt) : serverNow.value))
+  return { active, records, pending, error, busy, loaded, saved, elapsed, serverNow, refresh, toggle, startTimer, pause, resume, finish, retry, cancel }
 }
 
 /**

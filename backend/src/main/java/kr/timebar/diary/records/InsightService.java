@@ -60,12 +60,17 @@ public class InsightService {
         List<Map<String,Object>> focus = store.all(user, FeatureType.FOCUS).stream().filter(row -> {
             LocalDate date = FeatureInput.date(row.get("date").toString()); return !date.isBefore(start) && !date.isAfter(end);
         }).toList();
-        for (var block : actualBlocks(user, clock, start, end)) {
-            long minutes = ((Number)block.get("minutes")).longValue();
+        for (var piece : actualPieces(user, clock, start, end)) {
+            var block = piece.block();
+            long minutes = piece.minutes();
             actual += minutes;
             categories.computeIfAbsent("미분류", key -> new long[2])[1] += minutes;
             blocks.add(block);
-            if (minutes > 0) actualSources.add(source("recording", block.get("id") + "@" + block.get("date"), block.get("id"), block.get("title").toString(), FeatureInput.date(block.get("date").toString()), minutes, "미분류"));
+            if (minutes <= 0) continue;
+            var row = source("recording", block.get("id") + "@" + block.get("date"), block.get("id"), block.get("title").toString(), piece.day(), minutes, "미분류");
+            actualSources.add(row);
+            // 집중 타이머로 남긴 기록은 집중 시간에도 더한다(PR-09, 2026-11-20 사용자 결정). 모드 없는 플래너 기록은 실제 시간에만 들어간다
+            if (!FeatureInput.text(piece.record(), "mode").isEmpty()) { focused += minutes; focusSources.add(row); }
         }
         for (var row : focus) if (row.get("endedAt") != null) {
             long minutes = Math.max(0, Duration.between(FeatureInput.instant(row.get("startedAt").toString()), FeatureInput.instant(row.get("endedAt").toString())).toMinutes());
@@ -90,22 +95,25 @@ public class InsightService {
     public List<Map<String,Object>> timeBlocks(String user, String date, String category) {
         LocalDate day = FeatureInput.date(date);
         var result = new ArrayList<>(planner.find(user, day, null, category, null).stream().map(item -> Map.<String,Object>of("id", item.id(), "title", item.title(), "date", day.toString(), "minutes", minutes(item.startTime(), item.endTime()), "type", item.type().name())).toList());
-        if (category == null || category.equals("미분류")) result.addAll(actualBlocks(user, days.of(user), day, day));
+        if (category == null || category.equals("미분류")) result.addAll(actualPieces(user, days.of(user), day, day).stream().map(Piece::block).toList());
         return result;
+    }
+    /** 실제 기록 하나가 하루에 차지한 조각. record는 원래 기록, minutes는 그날 일시정지를 뺀 분이다. */
+    private record Piece(Map<String,Object> record, LocalDate day, long minutes) {
+        Map<String,Object> block() { return Map.of("id", record.get("id"), "title", record.get("title"), "date", day.toString(), "minutes", minutes, "type", "ACTUAL"); }
     }
     /**
      * 실제 기록을 날짜별로 나눈다. 기록에 저장한 시간대가 아니라 사용자 시간대와 하루 경계를 쓴다(Q-06). 저장된 시작·종료 시각은 바꾸지 않는다.
      * 그날 구간에 겹친 일시정지는 뺀다(PR-09 UF-122).
      */
-    private List<Map<String,Object>> actualBlocks(String user, DayPolicy.Day clock, LocalDate from, LocalDate to) {
-        var result = new ArrayList<Map<String,Object>>();
+    private List<Piece> actualPieces(String user, DayPolicy.Day clock, LocalDate from, LocalDate to) {
+        var result = new ArrayList<Piece>();
         for (var row : store.all(user, FeatureType.ACTUAL_SESSION)) {
             if (!"COMPLETED".equals(row.get("state"))) continue;
             Instant start = Instant.parse(row.get("startedAt").toString()), end = Instant.parse(row.get("endedAt").toString());
             for (LocalDate day = from; !day.isAfter(to); day = day.plusDays(1)) {
                 Instant dayStart = clock.start(day), dayEnd = clock.end(day);
-                if (start.isBefore(dayEnd) && end.isAfter(dayStart))
-                    result.add(Map.of("id", row.get("id"), "title", row.get("title"), "date", day.toString(), "minutes", RecordingTime.seconds(row, dayStart, dayEnd) / 60, "type", "ACTUAL"));
+                if (start.isBefore(dayEnd) && end.isAfter(dayStart)) result.add(new Piece(row, day, RecordingTime.seconds(row, dayStart, dayEnd) / 60));
             }
         }
         return result;

@@ -58,18 +58,20 @@ export function checkinState(c, today) {
 
 /**
  * 인증에 쓸 수 있는 실제 기록과 그 분. 서버와 같은 규칙이다. 실시간으로 시작·종료한 완료 기록(finishKey)만 쓰고,
- * 시간대가 있으면 그 날짜의 시간대와 겹친 분, 없으면 그 날짜에 시작한 기록 전체 분을 센다.
+ * 시간대가 있으면 그 날짜의 시간대와 겹친 분, 없으면 그 날짜에 시작한 기록 전체 분을 센다. 어느 경우든 일시정지한 시간은 뺀다(PR-09).
  * 브라우저 시간대로 계산하므로 프로필 시간대·하루 시작 시각이 다르면 서버가 거절할 수 있다.
  */
 export function sessionsForCheckin(sessions, c, date) {
   const need = c?.verify === 'record' ? c.minMinutes : 1
+  // [lo, hi) 안에서 기록한 시간. 끝낸 기록의 일시정지는 모두 끝(to)이 있다
+  const recorded = (s, lo, hi) => Math.max(0, (s.pauses ?? []).reduce((ms, p) => ms - Math.max(0, Math.min(Date.parse(p.to), hi) - Math.max(Date.parse(p.from), lo)), hi - lo))
   return (sessions ?? []).filter((s) => s.state === 'COMPLETED' && s.finishKey && s.startedAt && s.endedAt).map((s) => {
     const from = new Date(s.startedAt).getTime(), to = new Date(s.endedAt).getTime()
     let ms
     if (c?.windowStart && c?.windowEnd) {
       const open = new Date(`${date}T${c.windowStart}:00`).getTime(), close = new Date(`${date}T${c.windowEnd}:00`).getTime()
-      ms = Math.max(0, Math.min(to, close) - Math.max(from, open))
-    } else ms = localDate(new Date(from)) === date ? to - from : 0
+      ms = Math.min(to, close) > Math.max(from, open) ? recorded(s, Math.max(from, open), Math.min(to, close)) : 0
+    } else ms = localDate(new Date(from)) === date ? recorded(s, from, to) : 0
     const minutes = Math.floor(ms / 60000)
     return { id: s.id, title: s.title ?? '', startedAt: s.startedAt, endedAt: s.endedAt, minutes, need, eligible: ms > 0 && minutes >= need, relevant: ms > 0 }
   }).filter((s) => s.relevant).sort((a, b) => a.startedAt.localeCompare(b.startedAt))

@@ -96,12 +96,36 @@ class TimerRecordingTest {
         assertEquals(50, ((Number)done.get("targetMinutes")).intValue());
         var stats = insight().stats(user, "2026-11-18", "2026-11-18");
         assertEquals(13L, stats.get("actualMinutes"));
-        assertEquals(0L, stats.get("focusMinutes"), "타이머 기록을 집중 세션으로 중복 생성하지 않는다.");
+        assertEquals(13L, stats.get("focusMinutes"), "타이머 기록은 집중 시간에도 들어간다(2026-11-20 사용자 결정).");
+        assertTrue(store.all(user, FeatureType.FOCUS).isEmpty(), "집중 세션(FOCUS)을 따로 만들지 않는다.");
+    }
+
+    /** 집중 시간에는 타이머 기록만 더한다. 모드 없는 플래너 기록은 실제 시간에만 들어간다. 원본 행 합계는 수치와 같다(UF-118). */
+    @Test void focusMinutesCountTimerRecordsButNotPlannerRecords() {
+        store.create(user, FeatureType.ACTUAL_SESSION, Map.of("title", "플래너 기록", "state", "COMPLETED", "timeZone", "Asia/Seoul",
+                "startedAt", T.toString(), "endedAt", T.plusSeconds(20 * 60).toString(), "elapsedSeconds", 1200));
+        // 서울 11-18 23:50 시작, 00:05~00:10 일시정지, 00:20 종료. 집중은 11-18에 10분, 11-19에 15분
+        Instant late = Instant.parse("2026-11-18T14:50:00Z");
+        String timer = store.create(user, FeatureType.ACTUAL_SESSION, Map.of("title", "야간 집중", "state", "COMPLETED", "timeZone", "Asia/Seoul", "mode", "stopwatch",
+                "startedAt", late.toString(), "endedAt", late.plusSeconds(30 * 60).toString(), "elapsedSeconds", 1500,
+                "pauses", List.of(pause(late.plusSeconds(15 * 60), late.plusSeconds(20 * 60))))).get("id").toString();
+        var day = insight().stats(user, "2026-11-18", "2026-11-18");
+        assertEquals(30L, day.get("actualMinutes"));
+        assertEquals(10L, day.get("focusMinutes"));
+        var rows = (List<?>)((Map<?,?>)day.get("sources")).get("focus");
+        assertEquals(1, rows.size());
+        var row = (Map<?,?>)rows.get(0);
+        assertEquals("recording", row.get("kind"));
+        assertEquals(timer, row.get("recordId"));
+        assertEquals(10L, row.get("minutes"));
+        var both = insight().stats(user, "2026-11-18", "2026-11-19");
+        assertEquals(25L, both.get("focusMinutes"));
+        assertEquals(25L, ((List<?>)((Map<?,?>)both.get("sources")).get("focus")).stream().mapToLong(item -> ((Number)((Map<?,?>)item).get("minutes")).longValue()).sum());
     }
 
     /** UT-214: 20분 진행, 5분 일시정지, 10분 진행 후 끝내면 실제 30분이다. 일시정지·재개 시각은 서버가 찍는다. */
     @Test void pausedTimeIsExcludedFromActualMinutes() {
-        Instant before = Instant.now();
+        Instant before = Instant.now().truncatedTo(java.time.temporal.ChronoUnit.MILLIS);
         var row = service.start(user, body("countdown", 60));
         String id = row.get("id").toString();
         var paused = service.pause(user, id, Map.of("version", version(row)));
@@ -172,6 +196,26 @@ class TimerRecordingTest {
         var done = finish(service.start(user, body("stopwatch", null)), Instant.now());
         assertEquals(ErrorCode.CONFLICT, error(() -> cancel(done)));
         assertEquals(1, service.list(user).size());
+    }
+
+    /**
+     * 서버가 찍는 시작·일시정지·재개 시각은 밀리초까지다. 화면(JavaScript)은 밀리초까지만 계산하므로,
+     * 화면이 계산한 목표 도달 시각(시작 + 목표 + 일시정지)으로 끝내면 목표 시간과 정확히 같아야 한다(PR-09 2단계 브라우저 점검에서 59초로 저장된 결함).
+     */
+    @Test void serverInstantsAreMillisecondsSoTargetEndIsExact() {
+        var row = service.start(user, body("countdown", 1));
+        var paused = service.pause(user, row.get("id").toString(), Map.of("version", version(row)));
+        var resumed = service.resume(user, row.get("id").toString(), Map.of("version", version(paused)));
+        var pause = (Map<?,?>)((List<?>)resumed.get("pauses")).get(0);
+        for (Object value : List.of(resumed.get("startedAt"), pause.get("from"), pause.get("to")))
+            assertEquals(0, Instant.parse(value.toString()).getNano() % 1_000_000, "밀리초 아래 자리가 없어야 한다: " + value);
+        // 화면처럼 밀리초 수로 목표 도달 시각을 만든다
+        long startMs = Instant.parse(resumed.get("startedAt").toString()).toEpochMilli();
+        long pausedMs = Instant.parse(pause.get("to").toString()).toEpochMilli() - Instant.parse(pause.get("from").toString()).toEpochMilli();
+        var timed = rewrite(resumed, Map.of("startedAt", Instant.ofEpochMilli(startMs - 120_000).toString(),
+                "pauses", List.of(pause(Instant.ofEpochMilli(startMs - 90_000), Instant.ofEpochMilli(startMs - 90_000 + pausedMs)))));
+        long end = Instant.parse(timed.get("startedAt").toString()).toEpochMilli() + 60_000 + pausedMs;
+        assertEquals(60L, elapsed(finish(timed, Instant.ofEpochMilli(end))));
     }
 
     /** 일시정지는 한 기록에 100번까지다. 기록 하나의 저장 크기를 묶는다. */

@@ -91,7 +91,7 @@ watch(() => [reviewDate.value, plannerReviews.value.find(item => item.id === rev
       </div>
       <label for="actual-record-title">기록할 활동</label>
       <input id="actual-record-title" v-model="recordTitle" maxlength="200" :disabled="!!recording || recordBusy || !!pending" />
-      <p v-if="recording" role="status">{{ recording.title }} · {{ pending?.kind === 'finish' ? '종료 저장 대기' : '기록 중' }} · {{ clock(elapsed) }}</p>
+      <p v-if="recording" role="status">{{ recording.title }} · {{ pending?.kind === 'finish' ? '종료 저장 대기' : recording.state === 'PAUSED' ? '일시정지' : '기록 중' }} · {{ clock(elapsed) }}</p>
       <button class="record" :class="{ 'record-on': recording }" :disabled="recordBusy || !recordLoaded" @click="toggleRecord(recordTitle)">
         {{ recordBusy ? '서버 확인 중…' : pending ? '기록 저장 다시 시도' : recording ? '기록 종료' : '지금부터 기록' }}
       </button>
@@ -106,7 +106,8 @@ watch(() => [reviewDate.value, plannerReviews.value.find(item => item.id === rev
         <h3>{{ selectedRecord.title }}</h3>
         <p>시작 {{ new Date(selectedRecord.startedAt).toLocaleString('ko-KR') }}</p>
         <p v-if="selectedRecord.endedAt">종료 {{ new Date(selectedRecord.endedAt).toLocaleString('ko-KR') }} · {{ clock(recordingSeconds(selectedRecord)) }}</p>
-        <p>상태 {{ selectedRecord.state === 'COMPLETED' ? '서버 저장 완료' : '기록 중' }}</p>
+        <p>상태 {{ selectedRecord.state === 'COMPLETED' ? '서버 저장 완료' : selectedRecord.state === 'PAUSED' ? '일시정지' : '기록 중' }}</p>
+        <p v-if="selectedRecord.pauses?.length">일시정지 {{ selectedRecord.pauses.length }}번 · 기록 시간에서 뺐어요</p>
         <LinkedRecords kind="actual" :id="selectedRecord.id" :record="selectedRecord" />
       </section>
     </section>

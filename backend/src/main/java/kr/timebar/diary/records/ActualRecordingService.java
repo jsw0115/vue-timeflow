@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.*;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Service
@@ -54,7 +55,7 @@ public class ActualRecordingService {
         if (!sourceKind.isEmpty()) links.requireTitle(user, sourceKind, sourceId);
         if (list(user).stream().anyMatch(ActualRecordingService::active))
             throw new ApiException(ErrorCode.CONFLICT, "진행 중인 기록을 먼저 복구해 종료해주세요.");
-        var data = new LinkedHashMap<String,Object>(Map.of("title", title, "timeZone", zone, "state", "RUNNING", "startedAt", Instant.now().toString()));
+        var data = new LinkedHashMap<String,Object>(Map.of("title", title, "timeZone", zone, "state", "RUNNING", "startedAt", stamp().toString()));
         if (!mode.isEmpty()) data.put("mode", mode);
         if (target != null) data.put("targetMinutes", target);
         if (sourceKind.isEmpty()) return store.create(user, FeatureType.ACTUAL_SESSION, id, data);
@@ -90,7 +91,7 @@ public class ActualRecordingService {
         var row = command(user, id, body, "RUNNING", "진행 중인 기록만 일시정지할 수 있습니다.");
         var pauses = new ArrayList<Object>(row.get("pauses") instanceof List<?> list ? list : List.of());
         if (pauses.size() >= RecordingTime.MAX_PAUSES) FeatureInput.fail("일시정지는 한 기록에 " + RecordingTime.MAX_PAUSES + "번까지입니다.");
-        Instant now = Instant.now();
+        Instant now = stamp();
         if (now.isBefore(RecordingTime.lastBoundary(row))) conflict();
         pauses.add(new LinkedHashMap<>(Map.of("from", now.toString())));
         var data = FeatureStore.payload(row);
@@ -100,7 +101,7 @@ public class ActualRecordingService {
     /** 일시정지한 기록을 서버 시각으로 다시 시작한다. */
     public Map<String,Object> resume(String user, String id, Map<String,Object> body) {
         var row = command(user, id, body, "PAUSED", "일시정지한 기록만 다시 시작할 수 있습니다.");
-        Instant now = Instant.now();
+        Instant now = stamp();
         if (now.isBefore(RecordingTime.lastBoundary(row))) conflict();
         var data = FeatureStore.payload(row);
         data.put("pauses", closeLast(row, now)); data.put("state", "RUNNING");
@@ -129,6 +130,11 @@ public class ActualRecordingService {
         pauses.set(pauses.size() - 1, last);
         return pauses;
     }
+    /**
+     * 서버가 기록에 찍는 시각. 화면(JavaScript)은 밀리초까지만 계산하므로 밀리초로 자른다.
+     * 그래야 화면이 계산한 목표 도달 시각·마지막 일시정지 시각으로 끝낼 때 1초 모자라거나 400이 되지 않는다(PR-09 2단계).
+     */
+    private static Instant stamp() { return Instant.now().truncatedTo(ChronoUnit.MILLIS); }
     /** 진행 중이거나 일시정지한 기록. 한 계정에 하나만 있을 수 있다. */
     private static boolean active(Map<String,Object> row) { return "RUNNING".equals(row.get("state")) || "PAUSED".equals(row.get("state")); }
     private void lockAccount(String user) {

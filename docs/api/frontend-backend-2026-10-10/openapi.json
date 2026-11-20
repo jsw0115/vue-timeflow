@@ -46831,7 +46831,7 @@
           "updatedAt"
         ],
         "additionalProperties": false,
-        "description": "서버가 시작·일시정지·재개 시각을 저장한다. 종료는 version·요청 식별자·시각으로 멱등 처리하며 일시정지를 뺀 초 단위로 집계한다. FOCUS나 planner_item에 같은 시간을 중복 생성하지 않는다."
+        "description": "서버가 시작·일시정지·재개 시각을 저장한다. 종료는 version·요청 식별자·시각으로 멱등 처리하며 일시정지를 뺀 초 단위로 집계한다. FOCUS나 planner_item에 같은 시간을 중복 생성하지 않는다. mode가 있는 기록(집중 타이머)은 통계의 집중 시간에도 센다."
       },
       "BackupRecord": {
         "oneOf": [
@@ -47518,7 +47518,8 @@
           },
           "focusMinutes": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "description": "집중 세션(FOCUS)과 집중 타이머(mode가 있는 실제 기록)의 분. 타이머 기록은 actualMinutes에도 들어가고, sources.focus에는 kind recording 행으로 온다."
           },
           "completedTasks": {
             "type": "integer",

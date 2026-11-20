@@ -1,65 +1,56 @@
 <script setup>
-import { computed, ref, watch, onBeforeUnmount } from 'vue'
+// 집중 타이머 세 가지(포모도로·카운트다운·스톱워치)를 실제 기록 API로 서버 시각에 맞춰 돌리고(PR-09 2단계), 화면 공유·녹화를 제공한다.
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import ShareConsentModal from '../../components/ShareConsentModal.vue'
+import ShareSignIn from '../../components/share/ShareSignIn.vue'
+import { session } from '../../features/auth/session.js'
+import { useRecording } from '../../features/recording/useRecording.js'
+import { recordingSeconds, targetEndAt } from '../../features/recording/recordingClient.mjs'
+import { MODES, POMODORO_MINUTES, modeLabel, minutesError, clockText, timerStatus, dateIn, todayTimerRecords } from '../../features/recording/timer.mjs'
+import { formatMinutes } from '../../features/stats/statsClient.mjs'
 import { mediaState, currentStream, startRecording, stopRecording, stopShare, formatElapsed } from '../../store/mediaShare'
 
-const mode = ref('포모도로')
-const sessions = ref([])
+const { active, records, pending, error, busy, loaded, saved, elapsed, serverNow, startTimer, pause, resume, finish, retry, cancel } = useRecording()
+const zone = Intl.DateTimeFormat().resolvedOptions().timeZone
+const mode = ref('pomodoro')
+const countdownMinutes = ref(30)
+const title = ref('')
 
-/* 집중 타이머 — 실제로 흐르고, 끝나면 세션 기록에 남는다 */
-const DURATION = computed(() => (mode.value === '포모도로' ? 25 * 60 : 50 * 60))
-const remain = ref(25 * 60)
-const running = ref(false)
-const doneCount = ref(0)
-const sessionTitle = ref('기획안 초안 작성')
-let ticker = null
+// 진행 중 기록이 있으면 그 기록의 종류·목표를 보인다. 플래너에서 시작한 기록은 모드가 없어 목표 없는 기록이다
+const shownMode = computed(() => (active.value ? active.value.mode ?? null : mode.value))
+const plannedMinutes = computed(() => (mode.value === 'pomodoro' ? POMODORO_MINUTES : mode.value === 'countdown' ? countdownMinutes.value : null))
+const target = computed(() => (active.value ? active.value.targetMinutes ?? null : plannedMinutes.value))
+const inputError = computed(() => (!active.value && mode.value === 'countdown' ? minutesError(countdownMinutes.value) : ''))
+// 포모도로·카운트다운은 남은 시간을, 스톱워치·플래너 기록은 기록한 시간을 보인다. 분 입력이 틀리면 시계를 비운다
+const timed = computed(() => (active.value ? !!active.value.targetMinutes : mode.value !== 'stopwatch'))
+const clock = computed(() => (inputError.value ? '--:--' : clockText(timed.value ? target.value * 60 - elapsed.value : elapsed.value)))
+const clockLabel = computed(() => (timed.value ? '남은 시간' : '기록한 시간'))
+const goal = computed(() => (!timed.value ? '목표 없음' : inputError.value ? '목표를 정해 주세요' : '목표 ' + clockText(target.value * 60)))
+const status = computed(() => timerStatus(active.value, pending.value))
+const finishing = computed(() => pending.value?.kind === 'finish')
 
-watch(mode, () => {
-  stop()
-  remain.value = DURATION.value
+// 목표에 닿으면 목표 도달 시각으로 끝낸다. 화면을 닫았다가 늦게 열어도 그 뒤 시간은 기록하지 않는다(UF-121)
+let autoFinished = ''
+watch(serverNow, (at) => {
+  const end = targetEndAt(active.value)
+  if (!end || busy.value || pending.value || autoFinished === active.value.id || at < Date.parse(end)) return
+  autoFinished = active.value.id
+  finish(end)
 })
 
-function tick() {
-  if (remain.value <= 1) {
-    finish()
-    return
-  }
-  remain.value -= 1
+function onStart() {
+  if (inputError.value) return
+  startTimer(title.value.trim() || '집중 시간', { mode: mode.value, targetMinutes: plannedMinutes.value ?? undefined })
 }
-function start() {
-  if (running.value) return
-  running.value = true
-  ticker = setInterval(tick, 1000)
+function onCancel() {
+  if (window.confirm('기록하지 않고 타이머를 취소할까요? 지금까지 잰 시간은 남지 않아요.')) cancel()
 }
-function pause() {
-  running.value = false
-  if (ticker) clearInterval(ticker)
-  ticker = null
-}
-function stop() {
-  pause()
-}
-function reset() {
-  pause()
-  remain.value = DURATION.value
-}
-function finish() {
-  pause()
-  doneCount.value += 1
-  sessions.value.unshift({
-    min: Math.round(DURATION.value / 60),
-    title: sessionTitle.value || '집중 세션',
-    time: new Date().toTimeString().slice(0, 5),
-  })
-  remain.value = DURATION.value
-}
-const clock = computed(() => String(Math.floor(remain.value / 60)).padStart(2, '0') + ':' + String(remain.value % 60).padStart(2, '0'))
-const goalClock = computed(() => String(Math.floor(DURATION.value / 60)).padStart(2, '0') + ':00')
-const totalMinutes = computed(() => sessions.value.reduce((a, s) => a + s.min, 0))
-function hm(min) {
-  return Math.floor(min / 60) + '시간 ' + (min % 60) + '분'
-}
-onBeforeUnmount(() => ticker && clearInterval(ticker))
+
+const today = computed(() => dateIn(serverNow.value, zone))
+const sessions = computed(() => todayTimerRecords(records.value, today.value, zone))
+const minutesOf = (row) => Math.floor(recordingSeconds(row) / 60)
+const totalMinutes = computed(() => sessions.value.reduce((sum, row) => sum + minutesOf(row), 0))
+const timeOf = (value) => new Date(value).toTimeString().slice(0, 5)
 
 const showConsent = ref(false)
 const videoEl = ref(null)
@@ -86,33 +77,47 @@ onBeforeUnmount(() => stopShare())
 <template>
   <div class="toolbar">
     <span></span>
-    <div class="tabs">
-      <button :class="{ selected: mode === '포모도로' }" @click="mode = '포모도로'">포모도로</button>
-      <button :class="{ selected: mode === '자유 타이머' }" @click="mode = '자유 타이머'">자유 타이머</button>
+    <div class="tabs" role="group" aria-label="타이머 종류">
+      <button v-for="item in MODES" :key="item.id" type="button" :class="{ selected: shownMode === item.id }" :aria-pressed="shownMode === item.id ? 'true' : 'false'" :disabled="!!active || busy" @click="mode = item.id">{{ item.label }}</button>
     </div>
   </div>
   <div class="focus">
-    <div style="text-align: center">
-      <span class="pill" style="margin-bottom: 20px">{{ running ? '집중 중' : '집중 대기' }} · 이 화면에서 {{ doneCount }}세션</span>
-      <div class="orb">
-        <span>남은 시간</span>
-        <b>{{ clock }}</b>
-        <small>목표 {{ goalClock }}</small>
-        <div class="form-row" style="justify-content: center; margin-top: 16px">
-          <button v-if="!running" @click="start">시작</button>
-          <button v-else @click="pause">일시정지</button>
-          <button @click="reset">초기화</button>
+    <ShareSignIn v-if="!session.userId" message="집중 타이머는 잰 시간을 계정에 실제 기록으로 남겨요. 로그인하면 시작할 수 있어요." />
+    <div v-else class="timer">
+      <span class="pill" role="status">{{ status }}{{ active && !active.mode ? ' · 플래너에서 시작한 기록' : '' }}</span>
+      <div class="orb" :aria-busy="busy ? 'true' : undefined">
+        <span>{{ clockLabel }}</span>
+        <b role="timer">{{ clock }}</b>
+        <small>{{ goal }}</small>
+        <div class="form-row orb-actions">
+          <button v-if="finishing" type="button" :disabled="busy" @click="retry">{{ busy ? '저장하는 중' : '기록 저장 다시 시도' }}</button>
+          <button v-else-if="!active" type="button" :disabled="busy || !loaded || !!inputError" @click="onStart">{{ busy || !loaded ? '서버 확인 중' : '시작' }}</button>
+          <template v-else>
+            <button v-if="active.state === 'PAUSED'" type="button" :disabled="busy" @click="resume">다시 시작</button>
+            <button v-else type="button" :disabled="busy" @click="pause">일시정지</button>
+            <button type="button" :disabled="busy" @click="finish()">{{ busy ? '저장하는 중' : '끝내고 저장' }}</button>
+          </template>
         </div>
       </div>
-      <label class="orb-title"><input v-model="sessionTitle" placeholder="무엇에 집중할까요?" /></label>
-      <p style="margin-top: 12px">{{ running ? '집중 타이머 실행 중' : '시작을 누르면 타이머가 흘러요' }}</p>
+      <p v-if="active" class="timer-title">{{ active.title }}</p>
+      <label v-else class="orb-title"><input v-model="title" maxlength="200" placeholder="무엇에 집중할까요?" aria-label="집중할 일" /></label>
+      <label v-if="!active && mode === 'countdown'" class="input-field timer-minutes">카운트다운 시간(분)
+        <input v-model.number="countdownMinutes" type="number" min="1" max="1440" step="1" inputmode="numeric" :aria-invalid="inputError ? 'true' : undefined" aria-describedby="countdown-help" />
+        <span id="countdown-help" class="input-field-help" :data-state="inputError ? 'error' : undefined">{{ inputError || '1분부터 1,440분까지 정할 수 있어요.' }}</span>
+      </label>
+      <button v-if="active && !finishing" type="button" class="button-secondary timer-cancel" :disabled="busy" @click="onCancel">기록하지 않고 취소</button>
+      <p v-if="error" class="form-error" role="alert">{{ error }}</p>
+      <p v-if="saved" role="status">{{ saved.title }} {{ formatMinutes(minutesOf(saved)) }}을 실제 기록으로 저장했어요. <RouterLink :to="{ path: '/planner/daily', query: { date: dateIn(Date.parse(saved.startedAt), zone), recording: saved.id } }">플래너에서 보기</RouterLink></p>
       <p>OS 방해 금지 제어는 지원하지 않습니다. 필요한 경우 기기 설정에서 직접 켜주세요.</p>
     </div>
     <div>
-      <h3>이 화면의 임시 집중 세션</h3>
-      <p>시연 기능입니다. 이 목록은 서버에 저장되지 않으며 화면을 나가면 사라집니다. 실제 활동은 플래너의 기록 기능으로 저장해주세요.</p>
-      <p>누적 {{ hm(totalMinutes) }} · {{ sessions.length }}세션</p>
-      <div class="session" v-for="(s, i) in sessions" :key="i"><b>{{ s.min }}분</b><span>{{ s.title }}</span><small>{{ s.time }}</small></div>
+      <h3>오늘 집중 기록</h3>
+      <p>타이머로 잰 시간은 일시정지를 빼고 계정에 실제 기록으로 저장돼요. 통계의 실제 기록 시간과 집중 시간에 함께 들어가요.</p>
+      <template v-if="session.userId && loaded">
+        <p v-if="sessions.length">합계 <span class="figure-text">{{ formatMinutes(totalMinutes) }}</span> · {{ sessions.length }}회</p>
+        <div class="session" v-for="row in sessions" :key="row.id"><b>{{ minutesOf(row) }}분</b><span>{{ row.title }} · {{ modeLabel(row.mode) }}</span><small>{{ timeOf(row.startedAt) }}</small></div>
+        <div v-if="!sessions.length" class="empty-state" role="status"><p>오늘 남긴 집중 기록이 아직 없어요. 타이머를 시작해 보세요.</p></div>
+      </template>
 
       <section class="card" style="margin-top: 20px">
         <div class="head">
@@ -146,3 +151,16 @@ onBeforeUnmount(() => stopShare())
 
   <ShareConsentModal v-if="showConsent" @close="showConsent = false" @started="onStarted" />
 </template>
+
+<style scoped>
+.timer { text-align: center; min-width: 0; }
+.timer .pill { margin-bottom: var(--space-xxl); }
+.orb-actions { justify-content: center; margin-top: var(--space-xl); }
+/* DESIGN.md 4장 공통 규칙: 비활성은 0.45 불투명도, 처리 중은 progress 커서 */
+.orb-actions button:disabled { opacity: var(--opacity-disabled); cursor: not-allowed; }
+.orb[aria-busy='true'] .orb-actions button { cursor: progress; }
+.timer-title { margin-top: var(--space-lg); font-weight: 600; word-break: keep-all; overflow-wrap: anywhere; }
+.timer-minutes { width: min(260px, 100%); margin: var(--space-lg) auto 0; text-align: left; }
+.timer-cancel { margin-top: var(--space-lg); }
+.session b, .session small, .figure-text { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+</style>

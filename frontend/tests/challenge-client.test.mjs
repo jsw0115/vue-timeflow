@@ -79,6 +79,13 @@ test('인증에 쓸 실제 기록은 실시간으로 끝낸 기록만 고르고 
   assert.deepEqual(allDay.map((s) => [s.id, s.minutes, s.eligible]), [['other-day', 60, true]])
 })
 
+test('일시정지한 시간은 인증 후보의 분에서 뺀다(서버와 같은 규칙, PR-09)', () => {
+  const at = (time) => new Date(`2026-11-20T${time}:00`).toISOString()
+  const paused = { id: 'timer', title: '러닝', state: 'COMPLETED', finishKey: 'k', mode: 'stopwatch', startedAt: at('06:30'), endedAt: at('07:00'), pauses: [{ from: at('06:40'), to: at('06:55') }] }
+  assert.deepEqual(sessionsForCheckin([paused], { verify: 'record', minMinutes: 20 }, '2026-11-20').map((s) => [s.minutes, s.eligible]), [[15, false]])
+  assert.deepEqual(sessionsForCheckin([paused], { verify: 'record', minMinutes: 5, windowStart: '06:00', windowEnd: '06:45' }, '2026-11-20').map((s) => [s.minutes, s.eligible]), [[10, true]])
+})
+
 test('순위는 인증 일수, 같으면 기록 확인 일수로 정하고 둘 다 같으면 같은 순위다', () => {
   const rows = rankRows([
     { userId: 'a', nickname: '가', doneDays: 3, verifiedDays: 1 },
