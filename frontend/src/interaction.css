@@ -1,7 +1,7 @@
 /* 작성/관리 화면 공통 보정: 최소 320px, 모달 스크롤, 입력과 체크 컨트롤 분리 */
 .workspace-switcher { position: relative; margin-bottom: 20px; flex: none; }
 .workspace-switcher .workspace { width: 100%; margin-bottom: 0; }
-.workspace-options { padding: 8px; border: 1px solid var(--color-hairline); border-radius: var(--radius-md); margin-top: 8px; background: var(--color-canvas); }
+.workspace-options { padding: 8px; border: 1px solid var(--color-hairline); border-radius: var(--radius-md); margin-top: 8px; background: var(--color-card); }
 .workspace-options p { font-size: 0.8125rem; margin: 4px 4px 8px; }
 .workspace-options button { display: flex; justify-content: space-between; gap: 8px; width: 100%; padding: 10px 8px; border-radius: var(--radius-sm); text-align: left; }
 .workspace-options button[aria-pressed="true"] { background: var(--color-surface); color: var(--color-accent); }
@@ -30,7 +30,7 @@
 .compose-tabs button { flex: 1; min-width: 60px; }
 .date-end { display: block; margin-top: 4px; line-height: 1.6; }
 .tag-input { width: 100%; min-width: 0; }
-.tag-input textarea { width: 100%; padding: 12px; border: 1px solid var(--color-hairline); border-radius: var(--radius-sm); background: var(--color-canvas); color: var(--color-foreground); font: inherit; resize: vertical; }
+.tag-input textarea { width: 100%; padding: 12px; border: 1px solid var(--color-hairline); border-radius: var(--radius-sm); background: var(--color-card); color: var(--color-foreground); font: inherit; resize: vertical; }
 .tag-suggest button[aria-selected="true"] { background: var(--color-surface); outline: 2px solid var(--color-accent); outline-offset: -2px; }
 .message-modal { display: flex; flex-direction: column; min-width: 0; }
 .message-modal .side-panel-body { max-height: 45dvh; min-height: 120px; overflow-y: auto; padding: 12px 0; }
@@ -41,7 +41,7 @@
 .hero { gap: 24px; align-items: center; }
 .hero > div { min-width: 0; }
 .hero input { width: 100%; max-width: 400px; font-size: 0.875rem; padding: 12px; }
-.home-summary { padding: 20px; border: 1px solid var(--color-hairline); border-radius: var(--radius-md); background: var(--color-canvas); }
+.home-summary { padding: 20px; border: 1px solid var(--color-hairline); border-radius: var(--radius-md); background: var(--color-card); }
 .home-summary b { font-family: ui-monospace, monospace; font-size: 1.5rem; color: var(--color-foreground); }
 .home-summary p { margin: 8px 0; }
 .home-summary p span { padding: 0 8px; }

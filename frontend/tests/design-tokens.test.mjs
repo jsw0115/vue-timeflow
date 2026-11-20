@@ -1,7 +1,7 @@
-// DESIGN.md의 토큰 값과 design-system CSS가 같은지, 공통 컴포넌트가 토큰만 쓰는지 검사한다(PR-11, IM-11).
+// DESIGN.md(2026-11-20 판) 앞머리 토큰·CSS 매핑과 design-system CSS가 같은지, 공통 컴포넌트가 토큰만 쓰는지 검사한다.
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { readFileSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import postcss from 'postcss'
@@ -12,54 +12,80 @@ const design = read('DESIGN.md')
 const tokensCss = read('frontend/src/design-system/tokens.css')
 const componentsCss = read('frontend/src/design-system/components.css')
 
-// DESIGN.md 부록 B에 적힌, 아직 화면을 맞추지 않은 토큰. 코드를 목표 값으로 바꾸면 여기와 부록 B에서 함께 지운다.
-const KNOWN_GAPS = { '--color-hairline': 'color.hairline', '--shadow-card': 'shadow.card', '--shadow-raised': 'shadow.raised' }
+/**
+ * DESIGN.md 앞머리 이름 → tokens.css 변수. 기존 변수 이름을 유지해서(DESIGN.md 2장) 간격 이름은 한 칸씩 어긋난다.
+ * 예: DESIGN spacing.xs(8px)는 코드 --space-md다. 이 표가 두 이름의 유일한 대응표다.
+ */
+export const MAP = {
+  colors: {
+    primary: '--color-accent', 'primary-hover': '--color-accent-hover', 'on-primary': '--color-on-accent', ink: '--color-foreground',
+    body: '--color-body', muted: '--color-muted', canvas: '--color-canvas', 'surface-soft': '--color-surface', 'surface-card': '--color-card',
+    hairline: '--color-hairline', 'control-border': '--color-control-border', focus: '--color-accent', data: '--color-data', 'on-data': '--color-on-data',
+    success: '--color-status-success', warning: '--color-status-warning', error: '--color-status-danger', info: '--color-status-info',
+  },
+  rounded: { xs: '--radius-xs', sm: '--radius-sm', md: '--radius-md', lg: '--radius-lg', xl: '--radius-xl', pill: '--radius-full' },
+  spacing: { xxs: '--space-xs', xs: '--space-md', sm: '--space-lg', md: '--space-xl', lg: '--space-xxl', xl: '--space-block', xxl: '--space-gutter', section: '--space-section' },
+}
 
 const section = (start, end) => {
   const from = design.indexOf(start)
   assert.ok(from >= 0, `DESIGN.md에 ${start} 절이 없다`)
-  const to = end ? design.indexOf(end, from) : design.length
+  const to = end ? design.indexOf(end, from + start.length) : design.length
   return design.slice(from, to < 0 ? design.length : to)
 }
-const normalize = value => value.replace(/\s+/g, '').replace(/(^|[^\d])0\./g, '$1.').toLowerCase()
+const normalize = value => value.replace(/\s+/g, '').replace(/(^|[^\d])0\./g, '$1.').replace(/^"|"$/g, '').toLowerCase()
 
+/** 앞머리 YAML에서 colors·rounded·spacing 묶음의 이름: 값을 읽는다(들여쓰기 2칸 한 줄 값만 쓴다). */
+export function frontMatter(text) {
+  const yaml = text.match(/^---\n([\s\S]*?)\n---/)?.[1] ?? ''
+  const groups = {}
+  let current = null
+  for (const line of yaml.split('\n')) {
+    const top = line.match(/^([\w-]+):\s*$/)
+    if (top) { current = top[1]; groups[current] = {}; continue }
+    const item = line.match(/^ {2}([\w-]+):\s*"?([^"\n]+?)"?\s*$/)
+    if (item && current) groups[current][item[1]] = item[2]
+    else if (/^\S/.test(line)) current = null
+  }
+  return groups
+}
 function designTokens() {
-  const tokens = {}
-  const cssBlock = section('### CSS 변수', '## 3.').match(/```css([\s\S]*?)```/)[1]
-  for (const [, name, value] of cssBlock.matchAll(/--([\w-]+):\s*([^;]+);/g)) tokens['--' + name] = value.trim()
-  for (const [, group, name, value] of section('## 5.', '## 6.').matchAll(/^\| (space|radius)\.([\w-]+) \| (\d+px) \|/gm)) tokens[`--${group}-${name}`] = value
-  for (const [, name, value] of section('## 6.', '## 7.').matchAll(/^\| shadow\.([\w-]+) \| `([^`]+)` \|/gm)) tokens['--shadow-' + name] = value
+  const tokens = {}, groups = frontMatter(design.replace(/\r\n/g, '\n'))
+  for (const [group, map] of Object.entries(MAP)) for (const [name, variable] of Object.entries(map)) {
+    assert.ok(groups[group]?.[name], `DESIGN.md 앞머리에 ${group}.${name}이 없다`)
+    tokens[variable] = groups[group][name]
+  }
+  // 2장 CSS token mapping 블록의 변수도 같은 값이어야 한다
+  const block = section('### CSS token mapping', '## 3.').match(/```css([\s\S]*?)```/)[1]
+  for (const [, name, value] of block.matchAll(/--([\w-]+):\s*([^;]+);/g)) tokens['--' + name] = value.trim()
   return tokens
 }
 function codeTokens(css) {
   const tokens = {}
-  postcss.parse(css).walkRules(':root', rule => rule.walkDecls(/^--/, decl => { tokens[decl.prop] = decl.value }))
+  postcss.parse(css).walkRules(':root', rule => rule.walkDecls(/^--/, decl => { tokens[decl.prop] ??= decl.value }))
   return tokens
 }
-function tokenErrors(expected, actual, gaps) {
+function tokenErrors(expected, actual) {
   const errors = []
   for (const [name, value] of Object.entries(expected)) {
     if (!(name in actual)) errors.push(`${name} 없음`)
-    else if (name in gaps) { if (normalize(actual[name]) === normalize(value)) errors.push(`${name}은 목표 값과 같아졌다. KNOWN_GAPS와 부록 B에서 지운다`) }
     else if (normalize(actual[name]) !== normalize(value)) errors.push(`${name}: DESIGN.md ${value}, 코드 ${actual[name]}`)
   }
   return errors
 }
 
-test('비교 도우미는 값 차이·누락·이미 맞춘 예외를 찾는다', () => {
-  assert.deepEqual(tokenErrors({ '--a': '#000', '--b': '1px' }, { '--a': '#000', '--b': '1px' }, {}), [])
-  assert.equal(tokenErrors({ '--a': '#000' }, { '--a': '#111' }, {}).length, 1)
-  assert.equal(tokenErrors({ '--a': '#000' }, {}, {}).length, 1)
-  assert.equal(tokenErrors({ '--a': '#000' }, { '--a': '#000' }, { '--a': 'a' }).length, 1)
-  assert.equal(normalize('0 24px 70px rgba(0,0,0,0.1)'), normalize('0 24px 70px rgba(0, 0, 0, .1)'))
+test('비교 도우미는 값 차이·누락을 찾고 앞머리 YAML을 읽는다', () => {
+  assert.deepEqual(tokenErrors({ '--a': '#000', '--b': '1px' }, { '--a': '#000', '--b': '1px' }), [])
+  assert.equal(tokenErrors({ '--a': '#000' }, { '--a': '#111' }).length, 1)
+  assert.equal(tokenErrors({ '--a': '#000' }, {}).length, 1)
+  assert.equal(normalize('"#2F5D46"'), normalize('#2f5d46'))
+  assert.deepEqual(frontMatter('---\ncolors:\n  primary: "#2F5D46"\nrounded:\n  sm: 8px\n---\n'), { colors: { primary: '#2F5D46' }, rounded: { sm: '8px' } })
 })
 
-test('tokens.css의 색·간격·모서리·그림자 값이 DESIGN.md와 같다(부록 B 예외 제외)', () => {
+test('tokens.css의 색·간격·모서리 값이 DESIGN.md 앞머리·CSS 매핑과 같다', () => {
   const expected = designTokens()
-  assert.ok(Object.keys(expected).length >= 25, '파싱한 DESIGN.md 토큰 수가 너무 적다')
-  assert.deepEqual(tokenErrors(expected, codeTokens(tokensCss), KNOWN_GAPS), [])
-  const appendixB = section('## 부록 B')
-  for (const name of Object.values(KNOWN_GAPS)) assert.ok(appendixB.includes(name), `부록 B에 ${name} 항목이 없다`)
+  assert.ok(Object.keys(expected).length >= 30, '파싱한 DESIGN.md 토큰 수가 너무 적다')
+  assert.deepEqual(tokenErrors(expected, codeTokens(tokensCss)), [])
 })
 
 test('토큰은 tokens.css 한 곳에서만 정의한다', () => {
@@ -72,20 +98,17 @@ test('공통 컴포넌트는 색 코드·임의 px 없이 정의된 토큰만 �
   const defined = new Set(Object.keys(codeTokens(tokensCss)))
   postcss.parse(componentsCss).walkDecls(decl => {
     assert.doesNotMatch(decl.value, /#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(/i, `${decl.prop}: ${decl.value}`)
-    for (const [px] of decl.value.matchAll(/\d*\.?\d+px/g)) assert.equal(px, '1px', `${decl.prop}: ${decl.value}`)
+    for (const [px] of decl.value.matchAll(/\d*\.?\d+px/g)) assert.ok(['1px', '2px'].includes(px), `${decl.prop}: ${decl.value}`)
     for (const [, name] of decl.value.matchAll(/var\((--[\w-]+)/g)) assert.ok(defined.has(name), `정의되지 않은 토큰 ${name}`)
   })
 })
 
-test('DESIGN.md 4장 클래스 표의 공통 클래스가 실제로 정의되어 있고, 채운 상태에 미정이 남지 않았다', () => {
+test('DESIGN.md 4장 호환 클래스 표의 공통 클래스가 실제로 정의되어 있다', () => {
   const css = componentsCss + read('frontend/src/styles.css') + read('frontend/src/typography.css')
-  const table = section('### 코드 클래스', '### button-primary')
+  const table = section('### Existing class compatibility', '### Navigation')
   const classes = [...table.matchAll(/`\.([\w-]+)`/g)].map(match => match[1])
-  assert.ok(classes.length >= 7)
+  assert.ok(classes.length >= 12)
   for (const name of classes) assert.match(css, new RegExp(`\\.${name}\\b`), name)
-  const components = section('## 4.', '## 5.')
-  for (const state of ['hover', 'disabled', 'loading']) assert.doesNotMatch(components, new RegExp(`^\\| ${state} \\| 미정`, 'm'), state)
-  assert.match(components, /### empty-state/)
 })
 
 test('토큰은 가장 먼저, 공통 컴포넌트는 가장 나중에 불러온다', () => {
@@ -95,54 +118,48 @@ test('토큰은 가장 먼저, 공통 컴포넌트는 가장 나중에 불러온
   assert.deepEqual([...order].sort((a, b) => a - b), order)
 })
 
-// DESIGN.md 2장 색 역할 나눔. accent 채움은 단일 강조(실제 기록), 상태 점(성공 표시), 사용자 콘텐츠 색(템플릿·카테고리)에만 남긴다.
+const walk = dir => readdirSync(dir, { withFileTypes: true }).flatMap(e => e.isDirectory() ? walk(path.join(dir, e.name)) : [path.join(dir, e.name)])
+const src = path.join(repo, 'frontend/src')
+
+// DESIGN.md 2장 상태 색. 상태 표시는 --color-status-* 변수로만 쓰고, 기준 hex는 테마 계산(colorTheme.mjs)에만 둔다.
+test('상태 색 기준 hex는 colorTheme.mjs·tokens.css에만 있다', () => {
+  const found = {}
+  for (const file of walk(src).filter(f => /\.(vue|css|js|mjs)$/.test(f))) {
+    const name = path.relative(src, file).split(path.sep).join('/')
+    const n = (readFileSync(file, 'utf8').match(/#(356b49|815e26|a83f3a|3c617b)\b/gi) ?? []).length
+    if (n) found[name] = n
+  }
+  assert.deepEqual(found, { 'design-system/tokens.css': 4, 'utils/colorTheme.mjs': 4 })
+})
+
+// DESIGN.md 4장 Buttons·Navigation. accent 채움은 주 버튼, 현재 위치·선택 표식, 상태 점, 사용자 콘텐츠 색에만 쓴다. 넓은 장식 배경에는 쓰지 않는다.
 const ACCENT_FILL_ALLOWED = new Set([
+  'design-system/components.css :: .primary',
+  'design-system/components.css :: nav button.active::before',
+  // 테마 설정 미리보기의 주 버튼 견본(실제 주 버튼과 같은 규칙)
+  'views/settings/SettingsThemeView.vue :: .pv-primary',
+  // 대화의 주 행동(새 대화·보내기)은 앱 주 버튼과 같은 accent 채움이다(2026-11-20 리뉴얼)
+  'features/chat/styles/chat.css :: .chat-primary',
   'features/chat/styles/chat.css :: .chat-status-dot.connected',
   'features/chat/styles/chat.css :: .chat-presence-dot',
   'styles.css :: .tpl-dot.mint',
   'styles.css :: .tpl-bar.mint',
   'styles.css :: .cat>strong',
   'views/share/FriendsView.vue :: template',
-  // 플래너의 "실제 기록" 버튼(기록 중). DESIGN.md가 포인트 컬러를 쓰라고 정한 화면의 단일 강조다.
   'styles.css :: .record.record-on',
 ])
-test('accent를 채움색으로 쓰는 곳은 상태 점과 콘텐츠 색뿐이다(선택 상태는 foreground, 데이터는 color.data)', async () => {
-  const { readdirSync } = await import('node:fs')
+test('accent 채움은 주 버튼·현재 위치·선택 표식·상태 점·콘텐츠 색에만 쓴다', async () => {
   const { parse } = await import('@vue/compiler-sfc')
-  const src = path.join(repo, 'frontend/src')
-  const walk = dir => readdirSync(dir, { withFileTypes: true }).flatMap(e => e.isDirectory() ? walk(path.join(dir, e.name)) : [path.join(dir, e.name)])
   const found = []
   for (const file of walk(src).filter(f => /\.(css|vue)$/.test(f))) {
     const name = path.relative(src, file).split(path.sep).join('/')
     const source = readFileSync(file, 'utf8')
     const styles = file.endsWith('.vue') ? parse(source).descriptor.styles.map(s => s.content) : [source]
-    for (const css of styles) postcss.parse(css).walkDecls(/^(background(-color)?|accent-color|fill|stroke)$/, decl => {
+    for (const css of styles) postcss.parse(css).walkDecls(/^(background(-color)?|fill|stroke)$/, decl => {
       if (decl.value.includes('var(--color-accent)')) found.push(`${name} :: ${decl.parent.selector}`)
     })
     const template = file.endsWith('.vue') ? parse(source).descriptor.template?.content ?? '' : ''
     if (/(background|fill|stroke)\s*[:=]\s*[^>]*?var\(--color-accent\)/.test(template)) found.push(`${name} :: template`)
   }
   assert.deepEqual(found.filter(entry => !ACCENT_FILL_ALLOWED.has(entry)), [])
-  assert.ok(found.length >= 4, '허용 목록이 실제 사용처와 맞는지 확인한다')
-})
-
-// 상태 색과 같은 hex를 쓰는 콘텐츠 색(시간 블록·템플릿·단계 배지·달력 종류·카테고리 스와치·아이콘 대용 글자). 상태 표시는 --color-status-* 변수를 쓴다.
-const STATUS_HEX_CONTENT_USES = {
-  'styles.css': 9, 'views/auth/SocialLoginView.vue': 1, 'views/home/CalendarView.vue': 2,
-  'views/home/HomeView.vue': 1, 'views/settings/SettingsCategoryView.vue': 6, 'views/stats/StatsBoardView.vue': 1,
-  // 테마 계산의 상태 색 기준 값(DESIGN.md 2장 상태 색). 표면에 맞춘 값을 --color-status-*로 내보낸다.
-  'utils/colorTheme.mjs': 3,
-}
-test('상태 표시는 상태 색 변수를 쓰고, 같은 hex는 콘텐츠 색 자리에만 남는다', async () => {
-  const { readdirSync } = await import('node:fs')
-  const src = path.join(repo, 'frontend/src')
-  const walk = dir => readdirSync(dir, { withFileTypes: true }).flatMap(e => e.isDirectory() ? walk(path.join(dir, e.name)) : [path.join(dir, e.name)])
-  const counts = {}
-  for (const file of walk(src).filter(f => /\.(vue|css|js|mjs)$/.test(f))) {
-    const name = path.relative(src, file).split(path.sep).join('/')
-    if (name.startsWith('design-system/')) continue
-    const n = (readFileSync(file, 'utf8').match(/#(b23b3b|8a6a3c|43596b)\b/gi) ?? []).length
-    if (n) counts[name] = n
-  }
-  assert.deepEqual(counts, STATUS_HEX_CONTENT_USES)
 })

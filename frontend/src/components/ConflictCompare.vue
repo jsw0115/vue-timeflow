@@ -32,7 +32,7 @@ const shown = (value) => (value === '' || value == null ? '비어 있음' : valu
   </section>
 </template>
 <style>
-.conflict-compare { margin: var(--space-lg) 0; padding: var(--space-lg); border: 1px solid var(--color-hairline); border-radius: var(--radius-md); background: var(--color-canvas); }
+.conflict-compare { margin: var(--space-lg) 0; padding: var(--space-lg); border: 1px solid var(--color-hairline); border-radius: var(--radius-md); background: var(--color-card); }
 .conflict-compare h3 { margin: 0 0 var(--space-xs); font-size: var(--type-body-size); font-weight: 600; }
 .conflict-compare h3:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
 .conflict-compare > p { margin: 0 0 var(--space-lg); font-size: var(--type-caption-size); color: var(--color-muted); }
