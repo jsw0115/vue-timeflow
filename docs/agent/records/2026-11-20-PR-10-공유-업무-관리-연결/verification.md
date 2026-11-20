@@ -114,3 +114,12 @@
 | `frontend`: Node 테스트 전체, `npm run build:web` | 0 | PASS. 212개, 빌드 성공 |
 | `backend`: `gradlew.bat test --console=plain` | 0 | PASS. 284개 |
 | `node frontend/scripts/api-inventory.mjs --check`, `node frontend/scripts/frontend-api-contract.mjs --check` | 0 | PASS. 295개 operation, 204개 schema |
+
+## 6-2 통계 보드·원본 목록 화면(2026-11-20)
+
+| 명령 | 종료 코드 | 결과 |
+| --- | --- | --- |
+| `frontend`: Node 테스트 전체, `npm run build:web` | 0 | PASS. 212개, 빌드 성공 |
+| `python scripts/docs/build_screen_catalog.py` | 0 | PASS. `/stats/sources` 추가 |
+| 로컬 격리 MySQL·chat-local 백엔드·Vite·Chrome 점검(작업 폴더 밖 `check-6.mjs`) | 0 | PASS. 20/20(첫 실행) |
+| `python -B scripts/verify_agent_kit.py`, `python scripts/docs/verify_documentation.py`, `git diff --check`(사용자 파일 제외) | 0 | PASS |

@@ -2,7 +2,7 @@
 
 작성일 2026-10-31. 수정일 2026-10-31. Vue 라우터의 명시적 경로와 플래너 매핑을 정적으로 추출한 생성 문서입니다.
 
-경로 86개입니다. 동일 컴포넌트의 여러 경로·선택 파라미터를 별개 목록 행으로 표시합니다. 라우트 개수는 기능 완성도나 실제 접근 권한·서버 연결 검증 수가 아닙니다. 설정의 section별 탭과 모달은 별도 경로로 세지 않습니다.
+경로 87개입니다. 동일 컴포넌트의 여러 경로·선택 파라미터를 별개 목록 행으로 표시합니다. 라우트 개수는 기능 완성도나 실제 접근 권한·서버 연결 검증 수가 아닙니다. 설정의 section별 탭과 모달은 별도 경로로 세지 않습니다.
 
 상세 입력·레이아웃·상태·흐름은 [화면 명세](screen-design.md)에 관리합니다. 화면 카탈로그 데이터의 기획 항목과 실제 라우트는 다를 수 있습니다.
 
@@ -89,6 +89,7 @@
 | `/stats/compare` | 비교 분석 | [StatsCompareView](../../frontend/src/views/stats/StatsCompareView.vue) | 로컬 store·API·소유권·갱신 실패를 실제 호출로 확인 |
 | `/stats/daily` | 일간 통계 | [StatsDailyView](../../frontend/src/views/stats/StatsDailyView.vue) | 로컬 store·API·소유권·갱신 실패를 실제 호출로 확인 |
 | `/stats/godlife` | 갓생 리포트 | [StatsGodlifeView](../../frontend/src/views/stats/StatsGodlifeView.vue) | 로컬 store·API·소유권·갱신 실패를 실제 호출로 확인 |
+| `/stats/sources` | 통계 원본 | [StatsSourcesView](../../frontend/src/views/stats/StatsSourcesView.vue) | 로컬 store·API·소유권·갱신 실패를 실제 호출로 확인 |
 | `/sync` | 동기화 | [SyncStatusView](../../frontend/src/views/sync/SyncStatusView.vue) | 화면 존재와 제공자 실행 가능 여부 구분 |
 | `/system/maintenance` | 점검/업데이트 안내 | [MaintenanceView](../../frontend/src/views/system/MaintenanceView.vue) | 로컬 store·API·소유권·갱신 실패를 실제 호출로 확인 |
 | `/system/permission` | 권한 요청 | [PermissionRequestView](../../frontend/src/views/system/PermissionRequestView.vue) | 로컬 store·API·소유권·갱신 실패를 실제 호출로 확인 |

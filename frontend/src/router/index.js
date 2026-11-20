@@ -39,6 +39,7 @@ import StatsBoardView from '../views/stats/StatsBoardView.vue'
 import StatsCategoryView from '../views/stats/StatsCategoryView.vue'
 import StatsCompareView from '../views/stats/StatsCompareView.vue'
 import StatsGodlifeView from '../views/stats/StatsGodlifeView.vue'
+import StatsSourcesView from '../views/stats/StatsSourcesView.vue'
 import AiInsightView from '../views/insight/AiInsightView.vue'
 import WorkReportView from '../views/work/WorkReportView.vue'
 import WorkHistoryView from '../views/work/WorkHistoryView.vue'
@@ -309,6 +310,12 @@ const routes = [
     name: '커뮤니티 가입 신청',
     component: JoinRequestView,
     meta: { label: '커뮤니티 가입 신청', title: '커뮤니티 가입을 신청해요' },
+  },
+  {
+    path: '/stats/sources',
+    name: '통계 원본',
+    component: StatsSourcesView,
+    meta: { label: '통계 원본', title: '수치를 만든 기록을 확인해요' },
   },
   {
     path: '/community/approvals',

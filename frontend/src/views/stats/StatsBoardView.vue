@@ -1,6 +1,10 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import Modal from '../../components/Modal.vue'
+import { session } from '../../features/auth/session.js'
+import { statsClient } from '../../features/stats/stats.js'
+import { FIGURES, RANGES as SERVER_RANGES, figureSummary, sourcePath, statsErrorText } from '../../features/stats/statsClient.mjs'
 import {
   STATS_CATALOG,
   statsState,
@@ -21,6 +25,24 @@ const showConfig = ref(false)
 const visible = computed(() => statsState.portlets.filter((p) => p.visible))
 const scale = computed(() => ({ '이번 주': 1, '이번 달': 4.3, 올해: 52 })[range.value])
 const unit = computed(() => ({ '이번 주': '주', '이번 달': '월', 올해: '년' })[range.value])
+
+// 한눈에 보기는 로그인 계정의 실제 기록으로 서버가 집계한 수치다. 수치를 누르면 그 수치를 만든 원본 목록으로 간다(PR-10 6단계, UF-118)
+const router = useRouter()
+const serverRange = computed(() => SERVER_RANGES.find((r) => r.label === range.value)?.id ?? 'week')
+const stats = ref(null)
+const statsStatus = ref('idle')
+const statsError = ref('')
+async function loadStats() {
+  if (!session.userId) { stats.value = null; statsStatus.value = 'idle'; return }
+  statsStatus.value = 'loading'
+  statsError.value = ''
+  try { stats.value = await statsClient.dashboard(serverRange.value); statsStatus.value = 'ready' } catch (e) { statsError.value = statsErrorText(e); statsStatus.value = 'error' }
+}
+watch(() => [session.userId, serverRange.value], loadStats, { immediate: true })
+const figures = computed(() => (stats.value ? FIGURES.map((f) => figureSummary(stats.value, f.key)) : []))
+function openSource(key) {
+  router.push(sourcePath(key, serverRange.value, stats.value))
+}
 
 const CATEGORIES = [
   { label: '업무', minutes: 252, color: 'var(--color-accent)' },
@@ -82,18 +104,26 @@ const focusPath = FOCUS_TREND.map((v, i) => (i * 100) / (FOCUS_TREND.length - 1)
     </span>
     <button class="primary" @click="showConfig = true">포틀릿 구성</button>
   </div>
+  <p class="input-field-help stat-demo-note" role="note">한눈에 보기 밖의 포틀릿은 아직 시연 데이터예요. 실제 기록으로 계산한 수치는 한눈에 보기에 있어요.</p>
 
   <div class="stats-board">
     <template v-for="p in visible" :key="p.id">
       <!-- 한눈에 보기 -->
       <section v-if="p.id === 'summary'" class="card stats-portlet wide">
         <h3>{{ STATS_CATALOG.summary.title }}</h3>
-        <div class="metrics" style="--metric-cols: 4; margin-top: 12px">
-          <article><span>총 기록 시간</span><b class="figure">{{ hm(totalMinutes) }}</b></article>
-          <article><span>계획 달성률</span><b class="figure">87<small>%</small></b></article>
-          <article><span>완료 할 일</span><b class="figure">{{ Math.round(41 * scale) }}<small>건</small></b></article>
-          <article><span>기록한 날</span><b class="figure">{{ Math.round(6 * scale) }}<small>일</small></b></article>
-        </div>
+        <p v-if="!session.userId" class="form-note">로그인하면 내 계정의 실제 기록으로 계산한 수치를 볼 수 있어요. 수치를 누르면 그 수치를 만든 기록이 보여요.</p>
+        <p v-else-if="statsStatus === 'loading' && !stats" class="input-field-help" role="status">수치를 불러오는 중이에요.</p>
+        <p v-else-if="statsStatus === 'error'" class="input-field-help" data-state="error" role="alert">{{ statsError }} <button type="button" class="button-secondary" @click="loadStats">다시 시도</button></p>
+        <template v-else-if="stats">
+          <div class="stat-figures">
+            <button v-for="f in figures" :key="f.key" type="button" class="stat-figure" :aria-label="f.label + ' ' + f.text + ', 원본 ' + f.count + '건 보기'" @click="openSource(f.key)">
+              <span>{{ f.label }}</span>
+              <b class="figure">{{ f.text }}</b>
+              <small>기록 <span class="figure">{{ f.count }}</span>건 · 원본 보기</small>
+            </button>
+          </div>
+          <p class="input-field-help stat-meta">집계 기간 <span class="figure">{{ figures[0].period }}</span> · {{ figures[0].zone }}</p>
+        </template>
       </section>
 
       <!-- 카테고리 도넛 -->
@@ -213,3 +243,16 @@ const focusPath = FOCUS_TREND.map((v, i) => (i * 100) / (FOCUS_TREND.length - 1)
     </template>
   </Modal>
 </template>
+
+<style scoped>
+.stat-demo-note { margin: 0 0 var(--space-lg); }
+.stat-figures { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-lg); margin-top: var(--space-lg); }
+.stat-figure { display: grid; gap: var(--space-sm); align-content: start; text-align: left; padding: var(--space-lg); background: var(--color-canvas); border: 1px solid var(--color-hairline); border-radius: var(--radius-md); color: var(--color-foreground); cursor: pointer; transition: border-color .15s; }
+.stat-figure:hover { border-color: var(--color-foreground); }
+.stat-figure > span { color: var(--color-muted); font-size: var(--type-body-size); }
+.stat-figure b { font-size: 1.375rem; font-weight: var(--type-figure-weight); line-height: 1.2; }
+.stat-figure small { color: var(--color-muted); font-size: var(--type-caption-size); }
+.stat-meta { margin: var(--space-lg) 0 0; }
+@media (max-width: 1150px) { .stat-figures { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 420px) { .stat-figures { grid-template-columns: minmax(0, 1fr); } }
+</style>
