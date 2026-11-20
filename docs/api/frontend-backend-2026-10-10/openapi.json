@@ -46908,6 +46908,133 @@
         ],
         "additionalProperties": false
       },
+      "StatSource": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "schedule",
+              "planner",
+              "recording",
+              "focus"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "recordId": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "minutes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "category": {
+            "type": "string",
+            "maxLength": 200
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "recordId",
+          "title",
+          "date",
+          "minutes",
+          "category"
+        ],
+        "additionalProperties": false
+      },
+      "StatTaskSource": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "const": "task"
+          },
+          "id": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "recordId": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "date": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "done": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "recordId",
+          "title",
+          "date",
+          "done"
+        ],
+        "additionalProperties": false
+      },
+      "StatSources": {
+        "type": "object",
+        "properties": {
+          "planned": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StatSource"
+            },
+            "maxItems": 500
+          },
+          "actual": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StatSource"
+            },
+            "maxItems": 500
+          },
+          "focus": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StatSource"
+            },
+            "maxItems": 500
+          },
+          "tasks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StatTaskSource"
+            },
+            "maxItems": 500
+          }
+        },
+        "required": [
+          "planned",
+          "actual",
+          "focus",
+          "tasks"
+        ],
+        "additionalProperties": false
+      },
       "Stats": {
         "type": "object",
         "properties": {
@@ -46918,6 +47045,15 @@
           "to": {
             "type": "string",
             "format": "date"
+          },
+          "timeZone": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "dayStartHour": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 6
           },
           "plannedMinutes": {
             "type": "integer",
@@ -46959,11 +47095,16 @@
               "$ref": "#/components/schemas/FOCUSResponse"
             },
             "maxItems": 500
+          },
+          "sources": {
+            "$ref": "#/components/schemas/StatSources"
           }
         },
         "required": [
           "from",
           "to",
+          "timeZone",
+          "dayStartHour",
           "plannedMinutes",
           "actualMinutes",
           "focusMinutes",
@@ -46971,7 +47112,8 @@
           "totalTasks",
           "categories",
           "timeBlocks",
-          "focusSessions"
+          "focusSessions",
+          "sources"
         ],
         "additionalProperties": false
       },
@@ -46983,6 +47125,10 @@
             "maxLength": 200
           },
           "ownerId": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "ownerName": {
             "type": "string",
             "maxLength": 200
           },
@@ -47007,6 +47153,10 @@
               "null"
             ],
             "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
           }
         },
         "required": [
@@ -47015,7 +47165,8 @@
           "groupId",
           "name",
           "sizeBytes",
-          "expiresAt"
+          "expiresAt",
+          "createdAt"
         ],
         "additionalProperties": false
       },

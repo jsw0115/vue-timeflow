@@ -120,6 +120,60 @@ class InsightServiceTest {
         assertEquals("신형 스트레칭", ((Map<?, ?>) routines.get(0)).get("title"));
     }
 
+    /** UT-200(서비스): 이번 주 수치마다 원본 행이 있고, 원본 분 합계가 수치와 같다. 기간·시간대·하루 시작 시각도 함께 온다(PR-10 6단계, UF-118). */
+    @Test
+    void everyFigureCarriesSourceRowsThatAddUpToIt() {
+        when(aggregation.range(eq(user), any(), any())).thenReturn(new PlannerViewResponse(List.of(), List.of(), List.of()));
+        createSchedule("신형 회의", "2026-11-18", null);
+        var actualBlock = new PlannerItem(2L, PlannerItem.ItemType.ACTUAL, "보고서 작성", "업무", DAY, LocalTime.of(14, 0), LocalTime.of(14, 45),
+                PlannerItem.ItemStatus.DONE, false, null, 1L);
+        var planBlock = new PlannerItem(3L, PlannerItem.ItemType.EVENT, "회고 준비", "업무", DAY.plusDays(1), LocalTime.of(9, 0), LocalTime.of(9, 30),
+                PlannerItem.ItemStatus.SCHEDULED, false, null, 1L);
+        var outside = new PlannerItem(4L, PlannerItem.ItemType.ACTUAL, "다음 주 기록", "업무", LocalDate.of(2026, 11, 25), LocalTime.of(9, 0), LocalTime.of(10, 0),
+                PlannerItem.ItemStatus.DONE, false, null, 1L);
+        when(planner.find(eq(user), isNull(), isNull(), isNull(), isNull())).thenReturn(List.of(actualBlock, planBlock, outside));
+        // 실제 기록 30분(KST 11-18 14:00~14:30)과 주 마지막 날 자정을 넘는 기록(KST 11-22 23:50~11-23 00:20, 이번 주에는 10분)
+        store.create(user, FeatureType.ACTUAL_SESSION, Map.of("title", "독서", "state", "COMPLETED", "timeZone", "Asia/Seoul", "startedAt", "2026-11-18T05:00:00Z", "endedAt", "2026-11-18T05:30:00Z", "elapsedSeconds", 1800));
+        store.create(user, FeatureType.ACTUAL_SESSION, Map.of("title", "밤 산책", "state", "COMPLETED", "timeZone", "Asia/Seoul", "startedAt", "2026-11-22T14:50:00Z", "endedAt", "2026-11-22T15:20:00Z", "elapsedSeconds", 1800));
+        store.create(user, FeatureType.FOCUS, Map.of("title", "집중", "date", "2026-11-18", "mode", "pomodoro", "duration", 25, "startedAt", "2026-11-18T01:00:00Z", "endedAt", "2026-11-18T01:25:00Z"));
+
+        var stats = insight.stats(user, "2026-11-16", "2026-11-22");
+
+        assertEquals("2026-11-16", stats.get("from"));
+        assertEquals("2026-11-22", stats.get("to"));
+        assertEquals("Asia/Seoul", stats.get("timeZone"));
+        assertEquals(0, stats.get("dayStartHour"));
+        var sources = (Map<?, ?>) stats.get("sources");
+        assertEquals(85L, stats.get("actualMinutes"));
+        assertEquals(85L, sum(sources.get("actual")));
+        assertEquals(3, ((List<?>) sources.get("actual")).size());
+        assertEquals(90L, stats.get("plannedMinutes"));
+        assertEquals(90L, sum(sources.get("planned")));
+        assertEquals(List.of("schedule", "planner"), ((List<?>) sources.get("planned")).stream().map(row -> ((Map<?, ?>) row).get("kind")).toList());
+        assertEquals(25L, stats.get("focusMinutes"));
+        assertEquals(25L, sum(sources.get("focus")));
+        var night = ((List<?>) sources.get("actual")).stream().map(row -> (Map<?, ?>) row).filter(row -> "밤 산책".equals(row.get("title"))).findFirst().orElseThrow();
+        assertEquals("2026-11-22", night.get("date"));
+        assertEquals(10L, night.get("minutes"));
+    }
+
+    /** UT-201(서버): 기록이 없는 주는 수치가 0이고 원본 목록이 비어 있다. 화면은 이 응답으로 "기록이 아직 없어요"를 보인다. */
+    @Test
+    void emptyWeekHasNoSources() {
+        when(aggregation.range(eq(user), any(), any())).thenReturn(new PlannerViewResponse(List.of(), List.of(), List.of()));
+        when(planner.find(eq(user), isNull(), isNull(), isNull(), isNull())).thenReturn(List.of());
+
+        var stats = insight.stats(user, "2026-11-16", "2026-11-22");
+
+        assertEquals(0L, stats.get("actualMinutes"));
+        var sources = (Map<?, ?>) stats.get("sources");
+        for (String key : List.of("planned", "actual", "focus", "tasks")) assertTrue(((List<?>) sources.get(key)).isEmpty(), key);
+    }
+
+    private static long sum(Object rows) {
+        return ((List<?>) rows).stream().mapToLong(row -> ((Number) ((Map<?, ?>) row).get("minutes")).longValue()).sum();
+    }
+
     private void createSchedule(String title, String date, Map<String, Object> recurrence) {
         var body = new LinkedHashMap<String, Object>(Map.of("title", title, "category", title.contains("운동") ? "건강" : "업무",
                 "startDate", date, "endDate", date, "startTime", "10:00", "endTime", "11:00"));

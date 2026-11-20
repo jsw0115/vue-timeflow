@@ -34,6 +34,8 @@ public class InsightService {
         var view = aggregation.range(user, start, end);
         long planned = 0, actual = 0, focused = 0;
         Map<String,long[]> categories = new TreeMap<>();
+        // 통계 수치마다 그 수치를 만든 원본 행을 함께 준다. 각 목록의 분 합계는 수치와 같다(PR-10 6단계, UF-118)
+        List<Map<String,Object>> plannedSources = new ArrayList<>(), actualSources = new ArrayList<>(), focusSources = new ArrayList<>(), taskSources = new ArrayList<>();
         // 일정 시각은 사용자 시간대의 벽시계 시각이다. 기간은 첫날 경계부터 마지막 날 다음 경계까지이고, 경계가 0시가 아니면 다음 날 새벽 회차도 들어온다
         Instant rangeStart = clock.start(start), rangeEnd = clock.end(end);
         for (var event : schedules.occurrences(user, start.toString(), end.plusDays(1).toString())) {
@@ -43,6 +45,7 @@ public class InsightService {
             if (eventEnd.isAfter(rangeEnd)) eventEnd = rangeEnd;
             long minutes = Math.max(0, Duration.between(eventStart, eventEnd).toMinutes()); planned += minutes;
             categories.computeIfAbsent(FeatureInput.text(event, "category"), key -> new long[2])[0] += minutes;
+            if (minutes > 0) plannedSources.add(source("schedule", event.get("occurrenceKey"), event.get("sourceId"), FeatureInput.text(event, "title"), clock.dateOf(eventStart), minutes, FeatureInput.text(event, "category")));
         }
         List<Map<String,Object>> blocks = new ArrayList<>();
         for (PlannerItem item : planner.find(user, null, null, null, null)) {
@@ -51,6 +54,7 @@ public class InsightService {
             boolean isActual = item.type() == PlannerItem.ItemType.ACTUAL;
             if (isActual) actual += minutes; else planned += minutes;
             categories.computeIfAbsent(Objects.toString(item.category(), "미분류"), key -> new long[2])[isActual ? 1 : 0] += minutes;
+            if (minutes > 0) (isActual ? actualSources : plannedSources).add(source("planner", item.id(), item.id(), item.title(), item.date(), minutes, Objects.toString(item.category(), "미분류")));
             blocks.add(Map.of("id", item.id(), "title", item.title(), "date", item.date().toString(), "minutes", minutes, "type", item.type().name()));
         }
         List<Map<String,Object>> focus = store.all(user, FeatureType.FOCUS).stream().filter(row -> {
@@ -61,12 +65,27 @@ public class InsightService {
             actual += minutes;
             categories.computeIfAbsent("미분류", key -> new long[2])[1] += minutes;
             blocks.add(block);
+            if (minutes > 0) actualSources.add(source("recording", block.get("id") + "@" + block.get("date"), block.get("id"), block.get("title").toString(), FeatureInput.date(block.get("date").toString()), minutes, "미분류"));
         }
-        for (var row : focus) if (row.get("endedAt") != null) focused += Math.max(0, Duration.between(FeatureInput.instant(row.get("startedAt").toString()), FeatureInput.instant(row.get("endedAt").toString())).toMinutes());
+        for (var row : focus) if (row.get("endedAt") != null) {
+            long minutes = Math.max(0, Duration.between(FeatureInput.instant(row.get("startedAt").toString()), FeatureInput.instant(row.get("endedAt").toString())).toMinutes());
+            focused += minutes;
+            if (minutes > 0) focusSources.add(source("focus", row.get("id"), row.get("id"), FeatureInput.text(row, "title"), FeatureInput.date(row.get("date").toString()), minutes, FeatureInput.text(row, "category")));
+        }
         List<Map<String,Object>> categoryRows = categories.entrySet().stream().map(e -> Map.<String,Object>of("category", e.getKey(), "plannedMinutes", e.getValue()[0], "actualMinutes", e.getValue()[1])).toList();
         long done = view.tasks().stream().filter(task -> task.status() == TaskStatus.DONE).count();
-        return Map.of("from", start.toString(), "to", end.toString(), "plannedMinutes", planned, "actualMinutes", actual, "focusMinutes", focused, "completedTasks", done,
-                "totalTasks", view.tasks().size(), "categories", categoryRows, "timeBlocks", blocks, "focusSessions", focus);
+        for (var task : view.tasks()) {
+            var row = new LinkedHashMap<String,Object>(); row.put("kind", "task"); row.put("id", task.id()); row.put("recordId", task.id()); row.put("title", task.title());
+            row.put("date", task.due() == null ? null : task.due().toString()); row.put("done", task.status() == TaskStatus.DONE); taskSources.add(row);
+        }
+        var result = new LinkedHashMap<String,Object>();
+        result.put("from", start.toString()); result.put("to", end.toString());
+        // 화면이 집계 기간과 함께 시간대·하루 시작 시각을 보이도록 준다(UF-118)
+        result.put("timeZone", clock.zone().getId()); result.put("dayStartHour", clock.startHour());
+        result.put("plannedMinutes", planned); result.put("actualMinutes", actual); result.put("focusMinutes", focused); result.put("completedTasks", done); result.put("totalTasks", view.tasks().size());
+        result.put("categories", categoryRows); result.put("timeBlocks", blocks); result.put("focusSessions", focus);
+        result.put("sources", Map.of("planned", plannedSources, "actual", actualSources, "focus", focusSources, "tasks", taskSources));
+        return result;
     }
     public List<Map<String,Object>> timeBlocks(String user, String date, String category) {
         LocalDate day = FeatureInput.date(date);
@@ -89,6 +108,13 @@ public class InsightService {
             }
         }
         return result;
+    }
+    /** 통계 원본 행. id는 목록 안에서 겹치지 않는 값, recordId는 원래 기록의 ID다. */
+    private static Map<String,Object> source(String kind, Object id, Object recordId, String title, LocalDate date, long minutes, String category) {
+        var row = new LinkedHashMap<String,Object>();
+        row.put("kind", kind); row.put("id", String.valueOf(id)); row.put("recordId", String.valueOf(recordId)); row.put("title", title == null ? "" : title);
+        row.put("date", date.toString()); row.put("minutes", minutes); row.put("category", category == null || category.isEmpty() ? "미분류" : category);
+        return row;
     }
     private long minutes(LocalTime from, LocalTime to) { return from == null || to == null ? 0 : Math.max(0, Duration.between(from, to).toMinutes()); }
 }

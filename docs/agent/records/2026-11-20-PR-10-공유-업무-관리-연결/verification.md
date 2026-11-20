@@ -103,3 +103,14 @@
 | `backend`: `gradlew.bat test --console=plain` | 0 | PASS. 282개 |
 | `node frontend/scripts/api-inventory.mjs --check`, `node frontend/scripts/frontend-api-contract.mjs --check` | 0 | PASS. 295개 operation, 201개 schema |
 | 로컬 격리 MySQL·chat-local 백엔드·Vite·Chrome 세 계정 점검(작업 폴더 밖 `check-5.mjs`) | 0 | PASS. 30/30. 앞선 실행에서 결함 2건(관리자 목록 100명 제한, 올린 사람 이름의 로컬 프로필)을 찾아 고침. 프록시 404 안내는 이 실행 뒤에 더해 Node 테스트로만 확인 |
+
+## 6-1 통계 원본 행·시간대(2026-11-20)
+
+| 명령 | 종료 코드 | 결과 |
+| --- | --- | --- |
+| `backend`: `gradlew.bat test --tests "kr.timebar.diary.records.InsightServiceTest"`(서비스 수정 파일만 `git stash`로 되돌림) | 1 | FAIL(의도). 새 테스트 2개 실패(`sources`·`timeZone` 없음) |
+| `backend`: `gradlew.bat test --tests "kr.timebar.diary.records.*" --tests "kr.timebar.diary.feature.*"`(수정 후) | 0 | PASS |
+| `frontend`: `node --test tests/stats-client.test.mjs` | 0 | PASS. 5개 |
+| `frontend`: Node 테스트 전체, `npm run build:web` | 0 | PASS. 212개, 빌드 성공 |
+| `backend`: `gradlew.bat test --console=plain` | 0 | PASS. 284개 |
+| `node frontend/scripts/api-inventory.mjs --check`, `node frontend/scripts/frontend-api-contract.mjs --check` | 0 | PASS. 295개 operation, 204개 schema |

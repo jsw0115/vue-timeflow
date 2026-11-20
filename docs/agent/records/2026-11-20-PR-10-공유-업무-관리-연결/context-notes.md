@@ -49,3 +49,8 @@
 - 5단계 검증: FeatureHttpTest 새 단언이 서버 수정 전 실패, 수정 후 통과. 백엔드 282개, 프런트 207개, 빌드, 계약 295개·201개. 브라우저 점검 30/30(scratchpad pw/check-5.mjs). 점검 중 찾은 결함 2개는 고쳤다(관리자 목록이 100명까지만 와서 계정 106개 DB에서 사용자를 못 찾음 → 끝까지 이어 부름, 첨부 올린 사람의 PersonTag가 로컬 시연 프로필을 엶 → 일반 글자). 404 내부 경로 안내는 Node 테스트로만 확인했다.
 - 5단계 문서 갱신 완료(01 v1.27, 03 v1.18, 04 v1.17, 06 v1.34, 07 v1.33, 09 v1.29, 10 v1.25, README v1.30, runbook). 관리 화면 8개(CS·결제·커뮤니티 관리·콘텐츠·공지·모니터링·감사 로그·관리자 설정)는 시연으로 남았고 결제 외에는 서버 API가 있어 이후 화면별로 연결한다.
 - 다음 작업: 6단계 통계에서 원본으로 이동(UF-118, UT-200, UT-201). 첫 명령은 `grep -rln "stat" frontend/src/views/stats`와 `grep -n "Mapping" backend/src/main/java/kr/timebar/diary/records/InsightService.java`다.
+- 6단계는 두 단계로 나눴다. 6-1은 서버와 화면 논리, 6-2는 화면 연결과 브라우저 점검이다. 통계 화면 5개는 모두 고정 시연 값이고 서버를 부르지 않는다.
+- 6-1 결정: 통계 응답(`InsightService.stats`)에 `timeZone`·`dayStartHour`와 `sources`(planned·actual·focus·tasks)를 더했다. 기존 `timeBlocks`에는 일정 회차가 없어 계획 시간의 원본이 모자랐기 때문이다. 일정 회차는 기간 경계로 자른 분과 자른 시작 시각의 사용자 날짜로 넣고, 실제 기록은 하루 경계로 나눈 조각마다 한 행이다. 0분 행은 수치에 영향이 없어 넣지 않는다. 할 일 수치는 완료 개수라 화면은 완료한 할 일만 원본으로 보인다. 기존 응답 필드는 그대로 두었다.
+- 6-1에서 5단계 누락을 고쳤다. API 계약의 `Attachment` 스키마가 추가 필드를 막아(`additionalProperties: false`) 5단계에서 더한 `ownerName`·`createdAt`과 맞지 않았다.
+- 6-2 할 일: 통계 보드 상단에 서버 수치 4개(실제 기록·계획·집중·완료한 할 일)를 기간·시간대·기록 수와 함께 보이고, 누르면 `/stats/sources?figure=&range=&date=` 원본 목록으로 간다(`statsClient.sourcePath`). 원본이 없으면 "기록이 아직 없어요."(UT-201). 로그아웃 상태의 표시 방식을 정해야 한다.
+- 이 PC에서 `python -I -`로 표준 입력 스크립트를 넘기면 cp949로 읽혀 한글이 깨진다. 임시 스크립트는 파일로 써서 실행한다.
