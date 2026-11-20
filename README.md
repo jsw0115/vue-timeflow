@@ -2,22 +2,28 @@
 
 계획과 실제 기록을 같은 시간축에서 비교하고 일정·할 일·루틴·개인 기록·업무·경력을 연결하는 Vue·Spring 프로젝트입니다.
 
-작성일 2026-10-31. 수정일 2026-10-31. 현재 웹·API 선언 버전은 **0.1.0**입니다. Git 릴리스 태그·실제 운영 배포·매출은 확인된 상태가 아닙니다.
+프로젝트 개요 작성일은 2026-10-31이며, UI 디자인 문서 개정일은 **2026-11-20**입니다. 현재 웹·API 선언 버전은 **0.1.0**입니다. Git 릴리스 태그·실제 운영 배포·매출은 확인된 상태가 아닙니다.
 
-## 목차
+## 문서 읽기 순서
 
-- [처음 읽는 순서](#처음-읽는-순서)
-- [빠른 실행](#빠른-실행)
-- [현재 구현과 다음 범위](#현재-구현과-다음-범위)
-- [기술·구조·명세](#기술구조명세)
-- [품질·변경·기여](#품질변경기여)
-- [저장소와 포트폴리오](#저장소와-포트폴리오)
+| 역할 | 먼저 읽을 문서 |
+|---|---|
+| 모든 개발 에이전트 | `AGENTS.md` → `README.md` → 관련 프로젝트 문서 |
+| Claude Code | `CLAUDE.md` → `AGENTS.md` → UI 작업이면 `DESIGN.md` 전체 |
+| UI/UX·프론트엔드 | `DESIGN.md` → `docs/design/UI_TASK_TEMPLATE.md` → 실제 화면·토큰·스토어·테스트 |
+| 신규 개발자 | [도구·서버 준비](docs/development/environments.md) → [로컬 실행](docs/handbook/source/01-로컬-실행-가이드.md) → [프로젝트 구조](docs/handbook/source/03-프로젝트-구조.md) → [API](docs/api/README.md) |
+| 기획자 | [범위·RFP](docs/planning/project-definition.md) · [요구](docs/planning/requirements.md) · [사업](docs/planning/business-plan.md) · [WBS](docs/planning/wbs.md) |
+| 운영자 | [배포 검수](docs/deployment/release-plan.md) · [운영 매뉴얼](docs/operations/runbook.md) |
 
-## 처음 읽는 순서
+## UI/UX 디자인 기준
 
-[전체 문서 목차](docs/README.md)에서 역할별 경로를 선택합니다. 신규 개발자는 [도구·서버 준비](docs/development/environments.md) → [로컬 실행](docs/handbook/source/01-로컬-실행-가이드.md) → [프로젝트 구조](docs/handbook/source/03-프로젝트-구조.md) → [API](docs/api/README.md)를 읽습니다.
+`DESIGN.md`는 Timebar Diary의 디자인 목표 계약입니다. 색상 토큰, 테마 분위기, 타이포그래피, 컴포넌트 상태, 레이아웃, Elevation, 브랜드·아이콘, 반응형·접근성, Claude/Codex용 작업 프롬프트를 정의합니다.
 
-기획자는 [범위·RFP](docs/planning/project-definition.md)·[요구](docs/planning/requirements.md)·[사업](docs/planning/business-plan.md)·[WBS](docs/planning/wbs.md), 운영자는 [배포 검수](docs/deployment/release-plan.md)·[운영 매뉴얼](docs/operations/runbook.md)로 시작합니다.
+- 기본 화면은 **라이트 + 포레스트**입니다.
+- 표면 모드는 라이트·다크·세피아·고대비, 색상 분위기는 포레스트·잉크·플럼·클레이·모스의 독립 선택입니다.
+- 로고는 기존 저장소 자산이 있는지 먼저 확인합니다. 문서의 신규 심볼 설명은 기존 자산이 없을 때 적용할 제안이지, 운영 로고가 이미 교체되었다는 뜻은 아닙니다.
+- 디자인 문서는 구현을 자동 변경하지 않습니다. 실제 반영 시 `frontend/src/design-system/tokens.css`, `components.css`, `frontend/src/store/theme.js`, `frontend/src/utils/colorTheme.mjs`와 관련 화면·테스트를 함께 확인해야 합니다.
+- 화면 작업 프롬프트는 [UI 작업 템플릿](docs/design/UI_TASK_TEMPLATE.md)을 사용합니다.
 
 ## 빠른 실행
 
@@ -49,12 +55,12 @@ npm run dev
 
 Vue 3·Vue Router·Vite, Java 17·Spring Boot 3.5.16·JPA/Querydsl/JDBC, MySQL 8.4·Flyway, Redis 7.4·REST/SSE, Docker Compose·Nginx·Caddy·GitLab CI를 사용합니다. Capacitor·Electron 포장 구성이 있으며 네이티브 설치·서명·실기기 검수는 별도입니다.
 
-- [시스템 구성도·기술 스택](docs/architecture/system-architecture.md).
-- [모듈·인터페이스](docs/architecture/modules-and-interfaces.md).
-- [현재 ERD·전체 테이블 정의](docs/database/current-database.md).
-- [API 목록·필드·OpenAPI](docs/api/README.md).
-- [화면 명세·와이어프레임·흐름](docs/product/screen-design.md).
-- [기능 명세](docs/handbook/source/05-기능-명세서.md)와 [요구사항 추적](docs/planning/requirements.md).
+- [시스템 구성도·기술 스택](docs/architecture/system-architecture.md)
+- [모듈·인터페이스](docs/architecture/modules-and-interfaces.md)
+- [현재 ERD·전체 테이블 정의](docs/database/current-database.md)
+- [API 목록·필드·OpenAPI](docs/api/README.md)
+- [화면 명세·와이어프레임·흐름](docs/product/screen-design.md)
+- [기능 명세](docs/handbook/source/05-기능-명세서.md)와 [요구사항 추적](docs/planning/requirements.md)
 
 ## 품질·변경·기여
 
