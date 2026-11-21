@@ -113,6 +113,8 @@ async function reloadAfterConflict() { replying.value = null; await load() }
 </template>
 
 <style scoped>
+/* 지표 카드의 설명 문구는 숫자 아래 줄에 둔다(숫자 단위 small은 그대로 숫자 옆) */
+.metrics article > small { display: block; margin-top: var(--space-xs); color: var(--color-muted); }
 .cs-row { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, .9fr) minmax(0, .9fr) minmax(0, 1.3fr); }
 .cs-title { overflow-wrap: anywhere; }
 .cs-title small, .cs-over { display: block; color: var(--color-muted); font-size: var(--type-caption-size); }

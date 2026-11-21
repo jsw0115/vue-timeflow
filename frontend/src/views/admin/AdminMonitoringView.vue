@@ -1,49 +1,49 @@
 <script setup>
-import { computed } from 'vue'
-import { monitoring, ackIncident, toggleAlertRule } from '../../store/adminOps'
+// 시스템 모니터링. 서버가 주는 값(가동 시간·힙 메모리·CPU 수)만 보인다(PR-10 UF-117 7-6).
+// API 성공률·응답 시간·오류 수·장애 기록·알림 규칙은 서버가 모으지 않아 보이지 않는다고 알린다.
+import { computed, onMounted, ref } from 'vue'
+import { apiRequest } from '../../features/auth/apiRequest.js'
+import { adminErrorText } from '../../features/admin/adminClient.mjs'
+import { heapPercent, loadMonitoring, mib, uptimeLabel } from '../../features/admin/monitoring.mjs'
 
-const openIncidents = computed(() => monitoring.incidents.filter((i) => !i.ack && i.level !== 'info'))
-const activeRules = computed(() => monitoring.alertRules.filter((r) => r.on).length)
+const data = ref(null)
+const status = ref('loading')
+const loadError = ref('')
+const checkedAt = ref('')
+async function load() {
+  status.value = 'loading'
+  loadError.value = ''
+  try {
+    data.value = await loadMonitoring(apiRequest)
+    checkedAt.value = new Intl.DateTimeFormat('ko-KR', { timeStyle: 'medium' }).format(new Date())
+    status.value = 'ready'
+  } catch (error) { loadError.value = adminErrorText(error); status.value = 'error' }
+}
+onMounted(load)
+const percent = computed(() => heapPercent(data.value?.heapUsedBytes, data.value?.heapMaxBytes))
 </script>
 
 <template>
   <div class="admin-page-head">
-    <div><h2>시스템 모니터링</h2><p>지표·장애·알림 규칙을 한 화면에서 확인해요</p></div>
-    <span class="badge" :class="openIncidents.length ? 'danger' : 'ok'">
-      {{ openIncidents.length ? '확인 필요 ' + openIncidents.length + '건' : '미확인 장애 없음' }}
-    </span>
+    <div><h2>시스템 모니터링</h2><p>지금 응답한 API 서버 한 대의 상태예요</p></div>
+    <button type="button" class="button-secondary" :disabled="status === 'loading'" @click="load">새로 불러오기</button>
   </div>
 
-  <div class="metrics" style="--metric-cols: 4; margin-bottom: 16px">
-    <article><span>API 성공률</span><b class="figure">{{ monitoring.apiSuccess }}<small>%</small></b></article>
-    <article><span>평균 응답시간</span><b class="figure">{{ monitoring.latencyMs }}<small>ms</small></b></article>
-    <article><span>오늘 에러</span><b class="figure">{{ monitoring.errorsToday }}<small>건</small></b></article>
-    <article><span>서버 상태</span><b class="figure" style="font-size: 1.1875rem">{{ monitoring.status }}</b></article>
-  </div>
-
-  <h3 style="margin: 0 0 12px">최근 이벤트</h3>
-  <section class="card list">
-    <div class="list-head" style="grid-template-columns: 1.4fr .7fr 2fr 1.4fr 1fr">
-      <span>시각</span><span>레벨</span><span>메시지</span><span>API</span><span>처리</span>
+  <p v-if="status === 'loading' && !data" class="input-field-help" role="status">서버 상태를 불러오는 중이에요.</p>
+  <div v-else-if="status === 'error'" class="empty-state" role="status"><p>{{ loadError }}</p><button type="button" class="button-secondary" @click="load">다시 시도</button></div>
+  <template v-else-if="data">
+    <div class="metrics" style="--metric-cols: 3; margin-bottom: 16px">
+      <article><span>가동 시간</span><b class="figure">{{ uptimeLabel(data.uptimeMs) }}</b><small>이 서버 프로세스가 시작된 뒤</small></article>
+      <article><span>힙 메모리</span><b class="figure">{{ mib(data.heapUsedBytes) }}<small>MiB</small></b><small>최대 {{ mib(data.heapMaxBytes) }} MiB 중<template v-if="percent !== null"> · {{ percent }}%</template></small></article>
+      <article><span>CPU</span><b class="figure">{{ data.processors }}<small>개</small></b><small>서버가 쓸 수 있는 프로세서 수</small></article>
     </div>
-    <div class="row" style="grid-template-columns: 1.4fr .7fr 2fr 1.4fr 1fr" v-for="l in monitoring.incidents" :key="l.id">
-      <label class="figure">{{ l.at }}</label>
-      <span class="badge" :class="l.level">{{ l.label }}</span>
-      <span>{{ l.msg }}</span>
-      <span class="tag">{{ l.api }}</span>
-      <span>
-        <button v-if="!l.ack" class="review" style="margin: 0" @click="ackIncident(l)">확인 처리</button>
-        <span v-else class="badge ok">확인됨</span>
-      </span>
-    </div>
-  </section>
-
-  <h3 style="margin: 24px 0 12px">알림 규칙 · {{ activeRules }}개 켜짐</h3>
-  <section class="card">
-    <div class="trow" v-for="r in monitoring.alertRules" :key="r.id">
-      <span style="flex: 1"><b>{{ r.label }}</b><small style="display: block; color: var(--color-muted)">발송 채널: {{ r.channel }}</small></span>
-      <button type="button" role="switch" class="toggle" :aria-label="r.label" :aria-checked="r.on" :class="{ on: r.on }" @click="toggleAlertRule(r)"><em></em></button>
-    </div>
-    <p class="form-note">규칙을 켜고 끄면 감사 로그에 기록돼요. 구독 결제 실패와 CS 미답변도 여기서 감시합니다.</p>
-  </section>
+    <p class="input-field-help monitor-checked" role="status">{{ checkedAt }}에 확인했어요. 값은 자동으로 바뀌지 않으니 새로 불러오기를 눌러 주세요.</p>
+    <p class="callout">API 성공률·응답 시간·오류 수·장애 기록·알림 규칙은 서버가 모으지 않아 보이지 않아요. 여러 서버를 운영하면 각 서버의 값이 다를 수 있어요.</p>
+  </template>
 </template>
+
+<style scoped>
+/* 지표 카드의 설명 문구는 숫자 아래 줄에 둔다(숫자 단위 small은 그대로 숫자 옆) */
+.metrics article > small { display: block; margin-top: var(--space-xs); color: var(--color-muted); }
+.monitor-checked { display: block; margin: 0 0 var(--space-md); }
+</style>

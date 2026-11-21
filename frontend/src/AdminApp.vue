@@ -27,7 +27,7 @@ function toggleGroup(label) {
 watch(() => session.userId, (id) => refreshAdminAccess(Boolean(id)), { immediate: true })
 const allowed = computed(() => adminAccess.state === 'allowed')
 // 서버에 연결한 관리 화면. 나머지는 아직 시연 데이터라 화면 위에 알린다
-const SERVER_PATHS = new Set(['/admin', '/admin/stats', '/admin/cs', '/admin/notices', '/admin/content', '/admin/audit'])
+const SERVER_PATHS = new Set(['/admin', '/admin/stats', '/admin/cs', '/admin/notices', '/admin/content', '/admin/audit', '/admin/logs'])
 const demo = computed(() => route.path.startsWith('/admin') && !SERVER_PATHS.has(route.path))
 const accountName = computed(() => session.nickname || session.email || '관리자')
 

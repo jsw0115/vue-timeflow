@@ -1,4 +1,4 @@
-// 관리자 조치가 감사 로그에 조치한 관리자·동작·대상으로 남고, 일반 계정은 감사 로그를 볼 수 없는지 검증한다(PR-10 UF-117 7-4).
+// 관리자 조치가 감사 로그에 남는지, 감사 로그·모니터링을 관리자만 보는지 검증한다(PR-10 UF-117 7-4·7-6).
 package kr.timebar.diary.operations;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -68,6 +68,17 @@ class AuditLogTest {
                 .andExpect(jsonPath("$.data.items[0].target").value(noticeId));
         authenticate(member, "USER");
         mvc.perform(get("/api/admin/audit")).andExpect(status().isForbidden());
+    }
+
+    /** 모니터링은 관리자만 보고, 서버가 실제로 재는 네 값만 준다(PR-10 7-6). */
+    @Test void monitoringIsAdminOnlyAndReportsMeasuredValues() throws Exception {
+        authenticate(operator, "ADMIN");
+        mvc.perform(get("/api/admin/monitoring")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.uptimeMs").isNumber()).andExpect(jsonPath("$.data.heapUsedBytes").isNumber())
+                .andExpect(jsonPath("$.data.heapMaxBytes").isNumber()).andExpect(jsonPath("$.data.processors").isNumber())
+                .andExpect(jsonPath("$.data.length()").value(4));
+        authenticate(member, "USER");
+        mvc.perform(get("/api/admin/monitoring")).andExpect(status().isForbidden());
     }
 
     private void authenticate(String user, String role) {
