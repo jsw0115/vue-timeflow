@@ -117,3 +117,31 @@ test('사이드바는 커리어를 메인 다음 묶음으로 두고 기존 경�
   assert.match(app, /v-if="canOpenAdmin"[^>]*openAdmin\('\/admin'\)/)
   assert.match(app, /adminAccess\.state === 'allowed'/)
 })
+
+test('지원 달력은 월요일 시작 주로 만들고 마감·면접을 날짜 칸에 넣으며 끝난 지원을 표시한다', async () => {
+  const { calendarMonth, shiftMonth } = await import('../src/features/career/careerModel.mjs')
+  const weeks = calendarMonth([
+    { id: 'a', company: 'A', title: 'FE', status: 'applied', deadline: '2026-11-25', interviewDate: '2026-11-27' },
+    { id: 'b', company: 'B', title: 'BE', status: 'rejected', deadline: '2026-11-02' },
+  ], '2026-11')
+  assert.equal(weeks.length, 6)
+  assert.deepEqual([weeks[0][0].date, weeks[0][0].inMonth, weeks[0][6].date], ['2026-10-26', false, '2026-11-01'])
+  const filled = weeks.flat().filter((cell) => cell.items.length).map((cell) => [cell.date, cell.items.map((item) => item.label + (item.closed ? '(끝)' : ''))])
+  assert.deepEqual(filled, [['2026-11-02', ['마감(끝)']], ['2026-11-25', ['마감']], ['2026-11-27', ['면접']]])
+  assert.deepEqual([shiftMonth('2026-01', -1), shiftMonth('2026-12', 1)], ['2025-12', '2027-01'])
+})
+
+test('지원 관리에 달력 보기가 있고 홈에는 커리어 요약 위젯이 모든 모드 기본 배치에 있다', async () => {
+  assert.match(read('frontend/src/views/career/JobApplicationsView.vue'), /view === 'calendar'/)
+  const { WIDGET_CATALOG, MODE_LAYOUTS } = await import('../src/store/dashboard.js').catch(() => ({}))
+  // dashboard.js는 브라우저 저장소를 쓰므로 Node에서 읽히지 않으면 원문으로 확인한다
+  if (WIDGET_CATALOG) {
+    assert.ok(WIDGET_CATALOG.career)
+    for (const mode of Object.keys(MODE_LAYOUTS)) assert.ok(MODE_LAYOUTS[mode].some((w) => w.id === 'career' && w.visible))
+  } else {
+    const source = read('frontend/src/store/dashboard.js')
+    assert.match(source, /career: \{ title: '커리어 요약'/)
+    assert.equal((source.match(/\{ id: 'career', size: 'md', visible: true \}/g) ?? []).length, 3)
+  }
+  assert.match(read('frontend/src/views/home/HomeView.vue'), /w\.id === 'career'/)
+})

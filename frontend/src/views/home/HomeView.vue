@@ -7,8 +7,14 @@ import { eventOccurrences } from '../../utils/recurrence.mjs'
 import { modeState, modeContent } from '../../store/modeProfiles'
 import { dashboardState, WIDGET_CATALOG, cycleSize, toggleVisible, moveWidget, resetLayout } from '../../store/dashboard'
 import QuickCapture from '../../components/QuickCapture.vue'
+import { session } from '../../features/auth/session.js'
+import { activityStore, applicationStore } from '../../store/careerLedger'
+import { activityTypeLabel, dueLabel, recentActivities, upcomingDates } from '../../features/career/careerModel.mjs'
 
 const router = useRouter()
+// 커리어 요약 위젯: 로그인 계정의 서버 지원·활동 기록만 쓴다. 로그아웃이면 안내만 보인다
+const careerUpcoming = computed(() => (session.userId ? upcomingDates(applicationStore.list.value, localDate(), 14).slice(0, 3) : []))
+const careerRecent = computed(() => (session.userId ? recentActivities(activityStore.list.value, 1)[0] ?? null : null))
 
 /* 통계 포틀릿용 데이터 — 통계 화면과 같은 지표를 홈에서도 본다 */
 const CATEGORIES = [
@@ -191,6 +197,15 @@ function onDrop(id) {
           <p>루틴 50% + 할 일 50%</p>
         </template>
 
+        <template v-else-if="w.id === 'career'">
+          <div class="head"><div><h3>커리어 요약</h3><p>14일 안 지원 마감·면접과 최근 활동</p></div><button @click="router.push('/career')">커리어 대시보드 →</button></div>
+          <p v-if="!session.userId" class="empty-state">로그인하면 지원 마감과 최근 활동을 볼 수 있어요. 로그아웃 상태에서는 커리어 기록을 저장하지 않아요.</p>
+          <template v-else>
+            <div v-for="row in careerUpcoming" :key="row.id" class="event"><time class="figure">{{ row.date.slice(5) }}</time><i></i><span><b>{{ row.company }} · {{ row.title }}</b><small>{{ row.label }} · {{ dueLabel(row.days) }}</small></span></div>
+            <p v-if="!careerUpcoming.length" class="empty-state">14일 안에 다가오는 지원 마감이나 면접이 없어요. 취업·이직 지원에서 마감 날짜를 넣으면 여기에 보여요.</p>
+            <p v-if="careerRecent" class="career-recent"><span class="tag">{{ activityTypeLabel(careerRecent.activityType) }}</span> 최근 활동 · {{ careerRecent.title }} <span class="figure">{{ careerRecent.date }}</span></p>
+          </template>
+        </template>
         <template v-else-if="w.id === 'dday'">
           <span class="eyebrow">다가오는 날</span>
           <h3>엄마 생신까지</h3>
@@ -227,4 +242,5 @@ function onDrop(id) {
 @media (max-width: 600px) {
   .today-band { padding: var(--space-xl); }
 }
+.career-recent { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-xs); margin: var(--space-sm) 0 0; color: var(--color-body); font-size: var(--type-body-sm-size); overflow-wrap: anywhere; }
 </style>

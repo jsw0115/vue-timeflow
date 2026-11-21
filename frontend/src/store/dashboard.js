@@ -6,6 +6,8 @@ const SIZE_ORDER = ['sm', 'md', 'lg']
 
 export const WIDGET_CATALOG = {
   events: { title: '오늘의 흐름', desc: '계획과 실제 기록을 확인해요' },
+  // Career OS(docs/design 03 §4 MN-01): 홈에 커리어 요약을 더한다. 서버 기록만 쓰고 시연 자료를 보이지 않는다
+  career: { title: '커리어 요약', desc: '다가오는 지원 마감·면접과 최근 활동' },
   routine: { title: '오늘의 루틴', desc: '작은 반복이 하루를 만들어요' },
   tasksProgress: { title: '할 일 진행률', desc: '오늘 완료한 할 일 비율' },
   routineRate: { title: '루틴 달성률', desc: '오늘 루틴 체크 비율' },
@@ -28,6 +30,7 @@ export const WIDGET_CATALOG = {
 export const MODE_LAYOUTS = {
   J: [
     { id: 'events', size: 'lg', visible: true },
+    { id: 'career', size: 'md', visible: true },
     { id: 'tasksProgress', size: 'sm', visible: true },
     { id: 'routineRate', size: 'sm', visible: true },
     { id: 'eventsCount', size: 'sm', visible: true },
@@ -42,6 +45,7 @@ export const MODE_LAYOUTS = {
   ],
   P: [
     { id: 'routine', size: 'lg', visible: true },
+    { id: 'career', size: 'md', visible: true },
     { id: 'events', size: 'md', visible: true },
     { id: 'focusTime', size: 'sm', visible: true },
     { id: 'dday', size: 'sm', visible: true },
@@ -56,6 +60,7 @@ export const MODE_LAYOUTS = {
   ],
   B: [
     { id: 'events', size: 'lg', visible: true },
+    { id: 'career', size: 'md', visible: true },
     { id: 'routine', size: 'md', visible: true },
     { id: 'tasksProgress', size: 'sm', visible: true },
     { id: 'routineRate', size: 'sm', visible: true },

@@ -8,7 +8,7 @@ import PageActions from '../../components/PageActions.vue'
 import { session } from '../../features/auth/session.js'
 import { applicationStore } from '../../store/careerLedger'
 import { createSaveState, saveFailureMessage } from '../../features/records/saveState.mjs'
-import { APPLICATION_STATUSES, applicationStatusLabel, daysUntil, dueLabel, isClosedStatus, isWebUrl } from '../../features/career/careerModel.mjs'
+import { APPLICATION_STATUSES, applicationStatusLabel, calendarMonth, daysUntil, dueLabel, isClosedStatus, isWebUrl, shiftMonth } from '../../features/career/careerModel.mjs'
 import { localDate } from '../../utils/postValidation.mjs'
 
 const signedIn = computed(() => Boolean(session.userId))
@@ -23,6 +23,13 @@ const columns = computed(() => APPLICATION_STATUSES
 // 목록은 마감이 가까운 순, 마감이 없으면 뒤로 보낸다
 const sorted = computed(() => [...visible.value].sort((a, b) => (a.deadline || '9999-12-31').localeCompare(b.deadline || '9999-12-31') || a.company.localeCompare(b.company)))
 const closedCount = computed(() => items.value.filter((item) => isClosedStatus(item.status)).length)
+// 달력 보기(docs/design 11 §4.5). 끝난 지원도 날짜 기록이라 함께 보이되 "끝남"으로 표시한다
+const month = ref(today.slice(0, 7))
+const weeks = computed(() => calendarMonth(items.value, month.value))
+const monthTitle = computed(() => `${month.value.slice(0, 4)}년 ${Number(month.value.slice(5))}월`)
+const agenda = computed(() => weeks.value.flat().filter((cell) => cell.inMonth && cell.items.length))
+const WEEK_HEAD = ['월', '화', '수', '목', '금', '토', '일']
+function openApp(appId) { const app = items.value.find((item) => item.id === appId); if (app) open(app) }
 function nextDate(item) {
   const parts = []
   const deadline = daysUntil(item.deadline, today), interview = daysUntil(item.interviewDate, today)
@@ -87,6 +94,7 @@ async function remove(item) {
       <div class="segmented-tab" role="group" aria-label="보기 방식">
         <button type="button" :class="{ selected: view === 'board' }" :aria-pressed="view === 'board'" @click="view = 'board'">단계별</button>
         <button type="button" :class="{ selected: view === 'list' }" :aria-pressed="view === 'list'" @click="view = 'list'">마감순 목록</button>
+        <button type="button" :class="{ selected: view === 'calendar' }" :aria-pressed="view === 'calendar'" @click="view = 'calendar'">달력</button>
       </div>
       <label class="apply-closed"><input v-model="showClosed" type="checkbox" />끝난 지원도 보기 ({{ closedCount }}건)</label>
     </div>
@@ -113,6 +121,35 @@ async function remove(item) {
         </article>
       </section>
     </div>
+
+    <section v-else-if="view === 'calendar'" class="apply-calendar" aria-labelledby="apply-month">
+      <div class="apply-month-bar">
+        <button type="button" class="button-secondary" aria-label="이전 달" @click="month = shiftMonth(month, -1)">‹</button>
+        <h2 id="apply-month">{{ monthTitle }}</h2>
+        <button type="button" class="button-secondary" aria-label="다음 달" @click="month = shiftMonth(month, 1)">›</button>
+        <button type="button" class="button-text" :disabled="month === today.slice(0, 7)" @click="month = today.slice(0, 7)">이번 달</button>
+      </div>
+      <table class="apply-month-grid">
+        <caption class="sr-only">{{ monthTitle }} 지원 마감·면접 달력</caption>
+        <thead><tr><th v-for="d in WEEK_HEAD" :key="d" scope="col">{{ d }}</th></tr></thead>
+        <tbody>
+          <tr v-for="(week, w) in weeks" :key="w">
+            <td v-for="cell in week" :key="cell.date" :class="{ out: !cell.inMonth, today: cell.date === today }">
+              <span class="figure apply-day" :aria-label="cell.date === today ? cell.day + '일, 오늘' : undefined">{{ cell.day }}</span>
+              <button v-for="item in cell.items" :key="item.id" type="button" class="apply-event" :class="{ closed: item.closed }" :aria-label="`${cell.date} ${item.label}: ${item.company} ${item.title}${item.closed ? ', 끝난 지원' : ''}`" @click="openApp(item.appId)">{{ item.label }} · {{ item.company }}</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <ul class="apply-agenda" aria-label="이번 달 마감·면접">
+        <li v-for="cell in agenda" :key="cell.date">
+          <span class="figure">{{ cell.date }}</span>
+          <button v-for="item in cell.items" :key="item.id" type="button" class="apply-event" :class="{ closed: item.closed }" @click="openApp(item.appId)">{{ item.label }} · {{ item.company }} · {{ item.title }}<template v-if="item.closed"> (끝남)</template></button>
+        </li>
+        <li v-if="!agenda.length" class="input-field-help">이 달에는 지원 마감이나 면접이 없어요. 다른 달로 넘겨 보세요.</li>
+      </ul>
+      <p class="input-field-help apply-cal-note">마감·면접 날짜가 있는 지원만 보여요. 끝난 지원은 흐리게 "끝남"으로 표시해요.</p>
+    </section>
 
     <section v-else class="card list apply-list">
       <div class="list-head apply-row"><span>회사 · 포지션</span><span>상태</span><span>마감</span><span>면접</span><span>관리</span></div>
@@ -175,6 +212,24 @@ async function remove(item) {
 .apply-actions { display: flex; flex-wrap: wrap; gap: var(--space-xs); }
 .apply-row { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1fr) auto; }
 .apply-list .tag { justify-self: start; padding: 0 var(--space-xs); }
+.apply-calendar { display: grid; gap: var(--space-md); }
+.apply-month-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm); }
+.apply-month-bar h2 { margin: 0; min-width: 7em; text-align: center; font-size: var(--type-title-md-size); }
+.apply-month-grid { width: 100%; border-collapse: collapse; table-layout: fixed; background: var(--color-card); border: 1px solid var(--color-hairline); border-radius: var(--radius-lg); }
+.apply-month-grid th { padding: var(--space-xs); color: var(--color-muted); font-size: var(--type-caption-size); font-weight: 500; border-bottom: 1px solid var(--color-hairline); }
+.apply-month-grid td { height: 5.5rem; padding: var(--space-xs); vertical-align: top; border-top: 1px solid var(--color-hairline); border-left: 1px solid var(--color-hairline); }
+.apply-month-grid td:first-child { border-left: 0; }
+.apply-month-grid td.out { background: var(--color-surface); }
+.apply-month-grid td.out .apply-day { color: var(--color-muted); }
+.apply-month-grid td.today .apply-day { font-weight: 700; text-decoration: underline; text-underline-offset: 0.2em; }
+.apply-day { display: block; margin-bottom: var(--space-xs); }
+.apply-event { display: block; width: 100%; margin: 0 0 var(--space-xs); padding: 0 var(--space-xs); border: 1px solid var(--color-control-border); border-left: 3px solid var(--color-accent); border-radius: var(--radius-xs); background: var(--color-card); color: var(--color-foreground); font-size: var(--type-caption-size); text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+.apply-event.closed { border-left-style: dashed; border-left-color: var(--color-control-border); color: var(--color-muted); }
+.apply-agenda { display: none; margin: 0; padding: 0; list-style: none; }
+.apply-agenda li { display: grid; gap: var(--space-xs); padding: var(--space-sm) 0; border-top: 1px solid var(--color-hairline); }
+.apply-agenda .apply-event { white-space: normal; font-size: var(--type-body-sm-size); padding: var(--space-xs) var(--space-sm); }
+.apply-cal-note { margin: 0; }
+@media (max-width: 760px) { .apply-month-grid { display: none; } .apply-agenda { display: block; } }
 .figure, .figure-line { font-family: var(--font-mono); font-size: var(--type-time-size); font-variant-numeric: tabular-nums; }
 .figure-line { word-break: keep-all; }
 </style>

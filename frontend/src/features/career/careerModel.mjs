@@ -154,3 +154,39 @@ export function groupByMonth(activities) {
   }
   return [...groups].map(([month, items]) => ({ month, label: /^\d{4}-\d{2}$/.test(month) ? `${month.slice(0, 4)}년 ${Number(month.slice(5))}월` : month, items }))
 }
+
+/**
+ * 지원 캘린더(docs/design 11 §4.5). yearMonth(YYYY-MM)의 달력을 월요일 시작 주 단위로 만든다.
+ * 칸마다 그날의 지원 마감·면접을 담는다. 끝난 지원도 기록이라 함께 보이되 closed로 표시한다.
+ */
+export function calendarMonth(applications, yearMonth) {
+  const [y, m] = yearMonth.split('-').map(Number)
+  const first = Date.UTC(y, m - 1, 1)
+  const startOffset = (new Date(first).getUTCDay() + 6) % 7
+  const lastDay = new Date(Date.UTC(y, m, 0)).getUTCDate()
+  const cells = Math.ceil((startOffset + lastDay) / 7) * 7
+  const iso = (ms) => new Date(ms).toISOString().slice(0, 10)
+  const byDate = new Map()
+  for (const app of applications) {
+    for (const [field, label] of [['deadline', '마감'], ['interviewDate', '면접']]) {
+      const date = app[field]
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date ?? '')) continue
+      if (!byDate.has(date)) byDate.set(date, [])
+      byDate.get(date).push({ id: `${app.id}:${field}`, appId: app.id, label, company: app.company, title: app.title, closed: isClosedStatus(app.status) })
+    }
+  }
+  const weeks = []
+  for (let index = 0; index < cells; index += 1) {
+    const date = iso(first + (index - startOffset) * DAY)
+    if (index % 7 === 0) weeks.push([])
+    weeks.at(-1).push({ date, day: +date.slice(8, 10), inMonth: date.slice(0, 7) === yearMonth, items: byDate.get(date) ?? [] })
+  }
+  return weeks
+}
+
+/** 앞뒤 달(YYYY-MM). */
+export function shiftMonth(yearMonth, delta) {
+  const [y, m] = yearMonth.split('-').map(Number)
+  const d = new Date(Date.UTC(y, m - 1 + delta, 1))
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`
+}
