@@ -9386,6 +9386,9 @@
                           "verifiedDays": {
                             "type": "integer",
                             "minimum": 0
+                          },
+                          "rankingHidden": {
+                            "type": "boolean"
                           }
                         },
                         "required": [
@@ -9397,7 +9400,7 @@
                         "additionalProperties": false
                       },
                       "maxItems": 500,
-                      "description": "참여 중이면서 커뮤니티 활성 회원인 사람. 인증 일수와 그중 실제 기록으로 확인한 일수만 집계하고 개인 기록은 집계하지 않는다. 서로 차단한 사람은 빠진다."
+                      "description": "참여 중이면서 커뮤니티 활성 회원인 사람. 인증 일수와 그중 실제 기록으로 확인한 일수만 집계하고 개인 기록은 집계하지 않는다. 서로 차단한 사람은 빠진다. 계정 설정 share-visibility의 rankingVisible이 false인 회원은 다른 회원의 응답에서 빠지고, 본인 응답에는 rankingHidden: true로 남는다(PR-19 UF-136)."
                     },
                     "message": {
                       "type": [

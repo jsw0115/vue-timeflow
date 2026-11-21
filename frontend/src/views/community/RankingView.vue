@@ -9,6 +9,8 @@ import { session } from '../../features/auth/session.js'
 import { challengeClient } from '../../features/community/community.js'
 import { useCommunity } from '../../features/community/useCommunity.js'
 import { challengeErrorText, challengeRule, rankRows } from '../../features/community/challengeClient.mjs'
+import { apiRequest } from '../../features/auth/apiRequest.js'
+import { createRankingVisibility, visibilityErrorText } from '../../features/community/rankingVisibility.mjs'
 
 const route = useRoute()
 const router = useRouter()
@@ -43,6 +45,32 @@ async function loadLog() {
 }
 watch(() => [status.value, isMember.value, id.value, challengeId.value], () => { who.value = ''; loadChallenges() }, { immediate: true })
 watch(who, () => { if (current.value) loadLog() })
+
+// 랭킹 참여(UF-136): 계정 설정이라 모든 챌린지·기기에 같이 적용된다. 끄면 서버가 다른 회원의 랭킹 응답에서 뺀다
+const visibility = createRankingVisibility({ request: apiRequest })
+const rankingVisible = ref(true)
+const visibilityState = ref('idle')
+const visibilityMessage = ref('')
+async function loadVisibility() {
+  if (!session.userId) return
+  try { rankingVisible.value = await visibility.load(); visibilityState.value = 'ready' } catch { visibilityState.value = 'error'; visibilityMessage.value = '랭킹 참여 설정을 불러오지 못했어요.' }
+}
+watch(() => session.userId, loadVisibility, { immediate: true })
+// 저장 중에도 체크박스를 disabled로 만들지 않는다. 그러면 키보드 포커스가 페이지 처음으로 빠져나간다. 대신 겹친 요청만 막는다
+async function changeVisibility(event) {
+  const next = event.target.checked
+  if (visibilityState.value === 'saving') { event.target.checked = !next; return }
+  visibilityState.value = 'saving'; visibilityMessage.value = ''
+  try {
+    rankingVisible.value = await visibility.save(next)
+    visibilityState.value = 'saved'
+    visibilityMessage.value = rankingVisible.value ? '다른 회원의 랭킹에 다시 보여요.' : '다른 회원의 랭킹에서 빠졌어요. 내 인증 기록은 그대로예요.'
+    if (current.value) ranking.value = (await challengeClient.ranking(id.value, challengeId.value)) ?? []
+  } catch (e) {
+    event.target.checked = rankingVisible.value
+    visibilityState.value = 'error'; visibilityMessage.value = visibilityErrorText(e)
+  }
+}
 
 function pick(event) { router.push({ path: '/community/ranking', query: { id: id.value, ...(event.target.value ? { challenge: event.target.value } : {}) } }) }
 function clock(iso) {
@@ -86,9 +114,13 @@ function clock(iso) {
 
           <section class="card ranking">
             <h3>순위</h3>
+            <label class="ranking-visibility">
+              <input type="checkbox" :checked="rankingVisible" :disabled="visibilityState === 'idle'" :aria-busy="visibilityState === 'saving' ? 'true' : undefined" aria-describedby="ranking-visibility-help" @change="changeVisibility" />랭킹에 나를 보이기
+            </label>
+            <p id="ranking-visibility-help" class="input-field-help" role="status" :data-state="visibilityState === 'error' ? 'error' : visibilityState === 'saved' ? 'success' : undefined">{{ visibilityState === 'saving' ? '저장하는 중이에요.' : visibilityMessage || '끄면 다른 회원의 랭킹에 내 이름과 인증 일수가 보이지 않아요. 계정 설정이라 모든 챌린지에 같이 적용돼요.' }}</p>
             <div v-for="r in rows" :key="r.userId" class="event ranking-row" :class="{ mine: r.me }">
-              <b class="figure ranking-rank">{{ r.rank }}</b>
-              <span class="ranking-name">{{ r.nickname || '이름 없음' }}<small v-if="r.me"> · 나</small></span>
+              <b class="figure ranking-rank">{{ r.rank ?? '–' }}</b>
+              <span class="ranking-name">{{ r.nickname || '이름 없음' }}<small v-if="r.me"> · 나</small><small v-if="r.rankingHidden"> · 순위에서 빠짐(다른 회원에게 안 보여요)</small></span>
               <span class="ranking-count"><b class="figure">{{ r.doneDays }}</b>일 인증<small> · 기록 확인 <span class="figure">{{ r.verifiedDays }}</span>일</small></span>
             </div>
             <p v-if="!rows.length" class="empty-state">아직 참여한 회원이 없어요. 챌린지 탭에서 참여하면 순위에 보여요.</p>
@@ -126,6 +158,8 @@ function clock(iso) {
 <style scoped>
 .ranking-pick { display: inline-flex; flex-wrap: wrap; gap: var(--space-md); align-items: center; font-weight: 600; margin-bottom: var(--space-lg); }
 .ranking-pick select { min-width: 0; max-width: 100%; }
+.ranking-visibility { display: inline-flex; align-items: center; gap: var(--space-sm); margin: 0; font-weight: 600; }
+.ranking-visibility input { margin: 0; }
 .ranking-rule { margin: 0 0 var(--space-xs); }
 .ranking { margin-top: var(--space-xl); }
 .ranking h3 { margin: 0 0 var(--space-md); }

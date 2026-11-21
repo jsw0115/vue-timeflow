@@ -34,6 +34,8 @@ public class SettingsService {
         if (section.equals("security") && data.get("value") instanceof Map<?,?> value && Boolean.TRUE.equals(value.get("twoFactor"))) throw new ApiException(ErrorCode.SERVICE_UNAVAILABLE, "2단계 인증 제공자를 설정해야 합니다.");
         if (section.equals("work-privacy") && data.get("value") instanceof Map<?,?> value && value.containsKey("portfolioVisibility") && !Set.of("private", "link").contains(value.get("portfolioVisibility"))) FeatureInput.fail("포트폴리오 공개 설정은 private/link입니다. 링크는 별도 발급이 필요합니다.");
         if (section.equals("career") && data.get("value") instanceof Map<?,?> value && value.get("goal") != null && !CAREER_GOALS.contains(value.get("goal"))) FeatureInput.fail("커리어 목표 값을 확인해주세요.");
+        // 랭킹 참여(PR-19 UF-136). false면 다른 회원의 챌린지 랭킹 응답에서 빠진다(ChallengeService.ranking)
+        if (section.equals("share-visibility") && data.get("value") instanceof Map<?,?> value && value.containsKey("rankingVisible") && !(value.get("rankingVisible") instanceof Boolean)) FeatureInput.fail("랭킹 참여 값은 true 또는 false입니다.");
         if (store.optional(user, FeatureType.SETTING, section).isEmpty()) return store.create(user, FeatureType.SETTING, section, data);
         return store.replace(user, FeatureType.SETTING, section, FeatureInput.version(body), data);
     }

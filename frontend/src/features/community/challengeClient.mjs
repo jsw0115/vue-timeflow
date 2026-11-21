@@ -79,12 +79,15 @@ export function sessionsForCheckin(sessions, c, date) {
 
 /** 인증 일수, 같으면 기록 확인 일수 순. 둘 다 같으면 같은 순위다. */
 export function rankRows(rows, me) {
-  const sorted = [...(rows ?? [])].sort((a, b) => b.doneDays - a.doneDays || b.verifiedDays - a.verifiedDays)
-  return sorted.map((row, i) => {
+  // 랭킹 참여를 끈 본인 행(rankingHidden)은 순위 번호 없이 맨 뒤에 둔다. 다른 회원 응답에는 서버가 이미 빼 준다(PR-19 UF-136)
+  const list = rows ?? []
+  const sorted = list.filter((row) => !row.rankingHidden).sort((a, b) => b.doneDays - a.doneDays || b.verifiedDays - a.verifiedDays)
+  const ranked = sorted.map((row, i) => {
     let rank = i + 1
     for (let j = i - 1; j >= 0 && sorted[j].doneDays === row.doneDays && sorted[j].verifiedDays === row.verifiedDays; j--) rank = j + 1
     return { ...row, rank, me: row.userId === me }
   })
+  return [...ranked, ...list.filter((row) => row.rankingHidden).map((row) => ({ ...row, rank: null, me: row.userId === me }))]
 }
 
 export function challengeErrorText(error) {

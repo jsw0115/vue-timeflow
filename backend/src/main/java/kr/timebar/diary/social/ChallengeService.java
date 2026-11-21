@@ -131,17 +131,21 @@ public class ChallengeService {
         return result;
     }
 
-    /** 참여자별 인증 일수와 그중 실제 기록으로 확인한 일수. 개인 기록 자체는 집계하지 않는다. */
+    /**
+     * 참여자별 인증 일수와 그중 실제 기록으로 확인한 일수. 개인 기록 자체는 집계하지 않는다.
+     * 랭킹 참여를 끈 회원(share-visibility.rankingVisible=false)은 다른 회원의 응답에서 뺀다. 본인 응답에는 rankingHidden과 함께 남긴다(PR-19 UF-136).
+     */
     public List<Map<String,Object>> ranking(String user, String community, String id) {
         social.require(user, FeatureType.COMMUNITY, community, false);
         store.get(community, FeatureType.CHALLENGE, id);
         var counts = new HashMap<String,int[]>();
         for (var row : jdbc.queryForList("SELECT user_id, COUNT(*) AS done, SUM(CASE WHEN method='record' THEN 1 ELSE 0 END) AS verified FROM challenge_checkin WHERE challenge_id=? GROUP BY user_id", id))
             counts.put(row.get("user_id").toString(), new int[] { ((Number)row.get("done")).intValue(), ((Number)row.get("verified")).intValue() });
-        return participants(community, id).stream().filter(person -> !social.blocked(user, person)).map(person -> {
+        return participants(community, id).stream().filter(person -> !social.blocked(user, person)).filter(person -> person.equals(user) || !rankingHidden(person)).map(person -> {
             int[] count = counts.getOrDefault(person, new int[2]);
             var item = new LinkedHashMap<String,Object>();
             item.put("userId", person); item.put("nickname", nickname(person)); item.put("doneDays", count[0]); item.put("verifiedDays", count[1]);
+            if (person.equals(user) && rankingHidden(person)) item.put("rankingHidden", true);
             return (Map<String,Object>) item;
         }).sorted(Comparator.<Map<String,Object>>comparingInt(row -> -(int)row.get("doneDays")).thenComparingInt(row -> -(int)row.get("verifiedDays")).thenComparing(row -> row.get("nickname").toString())).toList();
     }
@@ -183,6 +187,11 @@ public class ChallengeService {
     private static boolean open(Map<String,Object> challenge) { return Boolean.TRUE.equals(challenge.get("openRecords")); }
     private static LocalDate lastDay(Map<String,Object> challenge) {
         return FeatureInput.date(challenge.get("startDate").toString()).plusDays(((Number)challenge.get("days")).longValue() - 1);
+    }
+    /** 계정 설정 share-visibility의 rankingVisible이 false일 때만 숨긴다. 설정이 없으면 기존처럼 참여한다. */
+    private boolean rankingHidden(String person) {
+        return store.optional(person, FeatureType.SETTING, "share-visibility").map(row -> row.get("value")).filter(Map.class::isInstance)
+            .map(value -> Boolean.FALSE.equals(((Map<?,?>) value).get("rankingVisible"))).orElse(false);
     }
     private String nickname(String user) { return users.findById(user).map(UserEntity::getNickname).orElse(""); }
     private String title(String user, String session) { return store.optional(user, FeatureType.ACTUAL_SESSION, session).map(row -> Objects.toString(row.get("title"), "")).orElse(""); }

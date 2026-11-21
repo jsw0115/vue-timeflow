@@ -97,7 +97,7 @@ WBS 부모는 같은 사용자의 노드여야 하며 순환·100단계 초과 �
 
 ## 설정·검색·내보내기.
 
-설정 section은 `general/categories/notifications/share-visibility/theme-sticker/appearance/mode-profiles/form-style/dashboard/stats-portlets/automation/ai/work-privacy/security/widgets/integrations`만 허용한다. 본문은 `{value:object|array,version?}`다. 중첩 위치에서도 apiKey/password/secret/cardNumber/accessToken/refreshToken 필드를 거부한다. 2FA 활성화는 제공자 미설정 상태에서 503이다. UI 설정과 관리자 설정 저장은 서버 작업 스케줄·인프라 제한을 적용하는 명령이 아니다.
+설정 section은 `general/categories/notifications/share-visibility/theme-sticker/appearance/mode-profiles/form-style/dashboard/stats-portlets/automation/ai/work-privacy/security/widgets/integrations/career`만 허용한다. `career.goal`은 커리어 목표 4종만, `share-visibility.rankingVisible`은 참·거짓만 받는다. `rankingVisible`이 false인 회원은 다른 회원의 챌린지 랭킹 응답에서 빠진다(PR-19 UF-136). 본문은 `{value:object|array,version?}`다. 중첩 위치에서도 apiKey/password/secret/cardNumber/accessToken/refreshToken 필드를 거부한다. 2FA 활성화는 제공자 미설정 상태에서 503이다. UI 설정과 관리자 설정 저장은 서버 작업 스케줄·인프라 제한을 적용하는 명령이 아니다.
 
 프로필은 실제 users의 nickname/timeZone을 수정하고 intro/mode는 개인 설정으로 저장한다. 개인 검색은 본인의 새로운 기록·업무·레거시 할 일·루틴과 현재 ±1년의 레거시 일정을 조회한다. 별도의 채팅 검색은 기존 채팅 API를 이용한다. 커뮤니티 전체 내용은 개인 검색에 포함하지 않는다. 태그는 본문/제목 해시태그와 일기·메모의 tags 배열에서 추출한다.
 

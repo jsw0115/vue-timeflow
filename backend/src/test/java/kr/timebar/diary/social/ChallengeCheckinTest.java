@@ -27,6 +27,7 @@ class ChallengeCheckinTest {
     @Autowired FeatureStore store;
     @Autowired JdbcTemplate jdbc;
     @Autowired UserRepository users;
+    @Autowired kr.timebar.diary.operations.SettingsService settings;
     String owner, runner, outsider, community;
     LocalDate yesterday;
 
@@ -148,5 +149,28 @@ class ChallengeCheckinTest {
         assertEquals(ErrorCode.FORBIDDEN, error(() -> challenges.ranking(outsider, community, c)));
         social.removeMember(owner, FeatureType.COMMUNITY, community, runner);
         assertEquals(1, challenges.ranking(owner, community, c).size());
+    }
+
+    /** UT-242: 랭킹 참여를 끈 회원은 다른 회원의 랭킹 응답에서 빠지고, 본인 응답에는 숨김 표시와 함께 남는다. 다시 켜면 돌아온다(PR-19 UF-136). */
+    @Test void rankingLeavesOutMembersWhoTurnedParticipationOff() {
+        String c = challenge(Map.of());
+        challenges.join(owner, community, c, Map.of());
+        challenges.join(runner, community, c, Map.of());
+        challenges.checkin(runner, community, c, yesterday.toString(), Map.of());
+        var saved = settings.save(runner, "share-visibility", new HashMap<>(Map.of("value", Map.of("rankingVisible", false))));
+        var others = challenges.ranking(owner, community, c);
+        assertEquals(List.of(owner), others.stream().map(row -> row.get("userId")).toList());
+        assertFalse(others.get(0).containsKey("rankingHidden"));
+        var mine = challenges.ranking(runner, community, c);
+        var me = mine.stream().filter(row -> runner.equals(row.get("userId"))).findFirst().orElseThrow();
+        assertEquals(true, me.get("rankingHidden"));
+        assertEquals(1, ((Number)me.get("doneDays")).intValue());
+        settings.save(runner, "share-visibility", new HashMap<>(Map.of("value", Map.of("rankingVisible", true), "version", saved.get("version"))));
+        assertEquals(2, challenges.ranking(owner, community, c).size());
+    }
+
+    /** 랭킹 참여 값은 참·거짓만 받는다. */
+    @Test void rankingParticipationAcceptsOnlyBooleans() {
+        assertEquals(ErrorCode.VALIDATION_FAILED, error(() -> settings.save(runner, "share-visibility", new HashMap<>(Map.of("value", Map.of("rankingVisible", "off"))))));
     }
 }
