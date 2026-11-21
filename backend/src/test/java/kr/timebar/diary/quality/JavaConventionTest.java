@@ -35,7 +35,8 @@ class JavaConventionTest {
                 () -> assertTrue(typeName.matches("[A-Z][A-Za-z0-9]*"), "Use PascalCase type names: " + file),
                 () -> assertTrue(packageName.matches("[a-z][a-z0-9]*(?:\\.[a-z][a-z0-9]*)*"),
                         "Use lowercase package names: " + file),
-                () -> assertTrue(source.startsWith("package " + packageName + ";\n"),
+                // 저장소 규칙(AGENTS.md 5절)의 한국어 역할 주석 한 줄은 package 앞에 둘 수 있다(IMP-003). 그 밖의 내용은 package 앞에 올 수 없다
+                () -> assertTrue(source.replaceFirst("^// [^\\n]*\\n", "").startsWith("package " + packageName + ";\n"),
                         "Package must match the source directory: " + file),
                 () -> assertTrue(declaration.matcher(source).find(),
                         "Public type must match its filename: " + file));
