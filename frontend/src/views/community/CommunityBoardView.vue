@@ -52,6 +52,17 @@ async function remove(post) {
   if (!window.confirm('이 글을 삭제할까요? 댓글과 좋아요도 함께 지워져요.')) return
   if (await run('delete:' + post.id, () => communityClient.deletePost(id.value, post), '글을 삭제했어요.')) await loadPosts()
 }
+/* 다른 사람 글 신고. 사유는 운영자만 보고, 처리 결과는 신고한 사람에게 따로 알리지 않는다(서버에 알림이 없다) */
+const reporting = reactive({})
+function openReport(post) {
+  if (post.id in reporting) delete reporting[post.id]
+  else reporting[post.id] = ''
+}
+async function sendReport(post) {
+  const reason = String(reporting[post.id] ?? '').trim()
+  if (!reason) { error.value = '신고 사유를 적어 주세요.'; return }
+  if (await run('report:' + post.id, () => communityClient.report(id.value, post.id, reason), '신고했어요. 운영자가 확인해요.')) delete reporting[post.id]
+}
 async function toggleComments(post) {
   if (open[post.id]) { delete open[post.id]; return }
   open[post.id] = { status: 'loading', items: [] }
@@ -103,7 +114,12 @@ const canDelete = (post) => post.authorId === session.userId || isOwner.value
             <button type="button" class="button-secondary" :disabled="!!busy" @click="toggleLike(p)">{{ p.liked ? '좋아요 취소' : '좋아요' }} <span class="figure">{{ p.likes }}</span></button>
             <button type="button" class="button-secondary" :aria-expanded="!!open[p.id]" @click="toggleComments(p)">댓글 <span class="figure">{{ p.comments }}</span></button>
             <button v-if="canDelete(p)" type="button" class="button-secondary" :disabled="!!busy" @click="remove(p)">삭제</button>
+            <button v-if="p.authorId !== session.userId" type="button" class="button-text" :aria-expanded="reporting[p.id] !== undefined" @click="openReport(p)">신고</button>
           </div>
+          <form v-if="reporting[p.id] !== undefined" class="board-reply" @submit.prevent="sendReport(p)">
+            <label class="input-field">신고 사유(운영자만 봐요)<input v-model="reporting[p.id]" maxlength="200" required placeholder="예: 광고성 게시물" /></label>
+            <button type="submit" class="button-secondary" :disabled="!!busy || !String(reporting[p.id] ?? '').trim()">신고하기</button>
+          </form>
           <div v-if="open[p.id]" class="board-comments">
             <p v-if="open[p.id].status === 'loading'" class="input-field-help" role="status">댓글을 불러오는 중이에요.</p>
             <p v-else-if="open[p.id].status === 'error'" class="input-field-help" data-state="error" role="alert">댓글을 불러오지 못했어요. 댓글 버튼을 다시 눌러 주세요.</p>

@@ -79,6 +79,8 @@ export function createCommunityClient({ request }) {
     comments: (id, postId) => request(`${base(id)}/posts/${q(postId)}/comments`),
     comment: (id, postId, body) => send(`${base(id)}/posts/${q(postId)}/comments`, 'POST', { body }),
     like: (id, postId, liked) => send(`${base(id)}/posts/${q(postId)}/like`, 'PUT', { liked }),
+    /** 글 신고. 사유는 200자까지이고 운영자만 본다(PR-10 7-7). */
+    report: (id, postId, reason) => send(`${base(id)}/posts/${q(postId)}/report`, 'POST', { reason: String(reason ?? '').trim() }),
     /** 커뮤니티 채팅방을 열고 멤버를 커뮤니티 회원과 맞춘다. 여러 번 불러도 같은 방이다(PR-10 3b-3). */
     chatRoom: (id) => send(`/api/chat/communities/${q(id)}/room`, 'PUT'),
   }

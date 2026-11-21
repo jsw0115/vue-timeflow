@@ -92,7 +92,20 @@ public class AdminService {
         audit("SETTINGS_SAVE", "admin", Map.of()); return row;
     }
     private void audit(String action, String target, Map<String,Object> detail) { store.create(FeatureStore.SYSTEM, FeatureType.AUDIT, Map.of("action", action, "target", target, "actor", CurrentUser.id(), "detail", detail)); }
-    public List<Map<String,Object>> moderation() { requireAdmin(); return store.allOwners(FeatureType.MODERATION); }
+    /**
+     * 신고 목록. 관리자는 커뮤니티 회원이 아니라 글을 따로 볼 수 없으므로, 조회 시점의 글 내용(postBody)과 커뮤니티 이름(communityTitle)을 붙인다.
+     * 신고 기록에 글을 복사하지 않는다. 글이 지워졌으면 postBody는 null이다(PR-10 7-7).
+     */
+    public List<Map<String,Object>> moderation() {
+        requireAdmin();
+        return store.allOwners(FeatureType.MODERATION).stream().map(report -> {
+            Map<String,Object> row = new LinkedHashMap<>(report);
+            String community = FeatureInput.text(report, "communityId"), post = FeatureInput.text(report, "postId");
+            row.put("postBody", store.optional(community, FeatureType.POST, post).map(item -> item.get("body")).orElse(null));
+            row.put("communityTitle", store.optional(FeatureStore.SYSTEM, FeatureType.COMMUNITY, community).map(item -> item.get("title")).orElse(null));
+            return row;
+        }).toList();
+    }
     public Map<String,Object> moderate(String id, Map<String,Object> body) {
         requireAdmin(); FeatureInput.keys(body, Set.of("userId", "version", "action")); FeatureInput.choice(body, "action", "REMOVE", "IGNORE");
         String user = FeatureInput.requiredText(body, "userId"); var report = store.lock(user, FeatureType.MODERATION, id);
