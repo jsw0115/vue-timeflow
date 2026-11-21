@@ -13,7 +13,9 @@ import java.util.*;
 @Service
 @Transactional
 public class SettingsService {
-    public static final Set<String> SECTIONS = Set.of("general", "categories", "notifications", "share-visibility", "theme-sticker", "appearance", "mode-profiles", "form-style", "dashboard", "stats-portlets", "automation", "ai", "work-privacy", "security", "widgets", "integrations");
+    public static final Set<String> SECTIONS = Set.of("general", "categories", "notifications", "share-visibility", "theme-sticker", "appearance", "mode-profiles", "form-style", "dashboard", "stats-portlets", "automation", "ai", "work-privacy", "security", "widgets", "integrations", "career");
+    /** 커리어 목표(docs/design 03 §5). 첫 화면 위젯 순서만 바꾸고 권한·공개 범위는 바꾸지 않는다. */
+    public static final Set<String> CAREER_GOALS = Set.of("job-seeker", "job-changer", "employee", "project-member");
     private final FeatureStore store;
     private final UserRepository users;
     private final PasswordEncoder encoder;
@@ -31,6 +33,7 @@ public class SettingsService {
         if (!(data.get("value") instanceof Map<?,?>) && !(data.get("value") instanceof List<?>)) FeatureInput.fail("value는 설정 객체 또는 배열이어야 합니다.");
         if (section.equals("security") && data.get("value") instanceof Map<?,?> value && Boolean.TRUE.equals(value.get("twoFactor"))) throw new ApiException(ErrorCode.SERVICE_UNAVAILABLE, "2단계 인증 제공자를 설정해야 합니다.");
         if (section.equals("work-privacy") && data.get("value") instanceof Map<?,?> value && value.containsKey("portfolioVisibility") && !Set.of("private", "link").contains(value.get("portfolioVisibility"))) FeatureInput.fail("포트폴리오 공개 설정은 private/link입니다. 링크는 별도 발급이 필요합니다.");
+        if (section.equals("career") && data.get("value") instanceof Map<?,?> value && value.get("goal") != null && !CAREER_GOALS.contains(value.get("goal"))) FeatureInput.fail("커리어 목표 값을 확인해주세요.");
         if (store.optional(user, FeatureType.SETTING, section).isEmpty()) return store.create(user, FeatureType.SETTING, section, data);
         return store.replace(user, FeatureType.SETTING, section, FeatureInput.version(body), data);
     }

@@ -27,6 +27,10 @@ public enum FeatureType {
     RESUME("name headline years skills education", "name"),
     PORTFOLIO("title body kind", "title kind"),
     PORTFOLIO_LINK("itemIds", "itemIds"),
+    // 커리어 활동 원장(docs/design 04 FD-85 후보). 기존 경력(CAREER)을 experienceId로 참조하고 원천 기록을 복제하지 않는다
+    CAREER_ACTIVITY("title body activityType date endDate experienceId role skillTags achievements links visibility tags", "title activityType date"),
+    // 취업·이직 지원 관리(docs/design 04 FD-88 후보). 공고 자동 수집·자동 지원은 하지 않는다
+    JOB_APPLICATION("title company postingUrl employmentType workType salaryRange deadline appliedDate interviewDate status body", "title company status"),
     CONTACT("name relation email favorite", "name"),
     NOTIFICATION("title kind link read", "title kind link"),
     REPORT("title body date category parentId", "title date"),

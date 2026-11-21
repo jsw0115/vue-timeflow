@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
 @RestController
 @RequestMapping("/api/search")
 public class SearchController {
-    private static final Set<FeatureType> TYPES = Set.of(FeatureType.SCHEDULE, FeatureType.ROUTINE_RECORD, FeatureType.DIARY, FeatureType.MEMO, FeatureType.DDAY, FeatureType.MONEY, FeatureType.REVIEW, FeatureType.WORK_RECORD, FeatureType.WIKI, FeatureType.WBS, FeatureType.CAREER, FeatureType.PORTFOLIO, FeatureType.REPORT);
+    private static final Set<FeatureType> TYPES = Set.of(FeatureType.SCHEDULE, FeatureType.ROUTINE_RECORD, FeatureType.DIARY, FeatureType.MEMO, FeatureType.DDAY, FeatureType.MONEY, FeatureType.REVIEW, FeatureType.WORK_RECORD, FeatureType.WIKI, FeatureType.WBS, FeatureType.CAREER, FeatureType.PORTFOLIO, FeatureType.REPORT, FeatureType.CAREER_ACTIVITY, FeatureType.JOB_APPLICATION);
     private final FeatureStore store;
     private final TaskService tasks;
     private final RoutineService routines;

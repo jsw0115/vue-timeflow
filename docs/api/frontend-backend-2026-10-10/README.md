@@ -25,6 +25,7 @@
 | `store/plannerReviews.js`, `plannerPreferences.js`, `canvas.js`, `views/planner/` | 개인 플래너, 기본 뷰, 회고, 캔버스, 템플릿 적용 | `/planner/items`, `/planner/preferences`, `/planner/reviews/{date}`, `/planner/canvas`, `/planner/templates`, `/events/templates` | `planner/`, `records/RecordActionsController` |
 | `store/workRecords.js`, `wiki.js`, `views/work/WbsView.vue` | 업무 유형별 기록, 계층형 WBS와 가중 진행률, 위키 이력 | `/work/records`, `/work/wbs`, `/work/wbs/nodes`, `/work/wiki`, `/work/wiki/{id}/history` | `work/WorkController`, `WorkService` |
 | `views/work/CareerDocsView.vue`, `store/workPrivacy.js` | 경력 프로젝트·이력서·포트폴리오, 선택 항목 공개 링크 | `/work/career/projects`, `/work/resume`, `/work/portfolio`, `/work/portfolio-links`, `/public/portfolios/{token}` | `work/WorkController`, `PortfolioLinkController` |
+| `views/career/CareerActivitiesView.vue`, `views/career/JobApplicationsView.vue`, `views/career/CareerDashboardView.vue`, `store/careerLedger.js`, `store/careerGoal.js` | 커리어 활동 원장, 취업·이직 지원 관리, 커리어 목표 | `/career/activities`, `/career/applications`, `/settings/career` | `career/CareerController`, `contract/SettingsController` |
 | `views/work/WorkReportView.vue`, `LaborReportView.vue` | 시간 블록 조회, 규칙 기반 초안, 리포트 저장 | `/reports/time-blocks`, `/reports/draft`, `/reports/{reportKey}`, `/reports/{reportKey}/sub-reports` | `contract/ReportController`, `records/InsightService` |
 | `store/people.js`, `sharePermissions.js`, `views/share/` | 친구 요청·수락·거절, 차단, 공유 그룹·초대 수락 | `/share/friends`, `/share/blocks`, `/share/groups` | `contract/ShareController`, `social/SocialService` |
 | `store/communities.js`, `communityPosts.js`, `views/community/` | 공개/비공개 커뮤니티, 가입 승인·정원, 게시글·댓글·좋아요·신고, 챌린지·인증·랭킹 | `/communities` 및 하위 경로, `/admin/moderation` | `social/CommunityController`, `ModerationController`, `SocialService` |
@@ -80,7 +81,7 @@
 
 WBS 부모는 같은 사용자의 노드여야 하며 순환·100단계 초과 계층은 거부한다. leaf의 md·progress로 상위 노드의 가중 진행률을 계산하며 부모 md는 별도로 합산하지 않는다. md 합계 0이면 가중 진행률도 0이다. 노드 삭제 시 하위 노드도 삭제한다. 위키 수정 시 이전 payload를 서버 이력으로 보관하고 이력 자체의 수정/삭제는 거부한다. 부모 문서 삭제 시 자식을 상위 부모로 올린다.
 
-업무 기록·위키·WBS·경력·이력서는 항상 사용자 범위다. 친구·커뮤니티·첨부 권한으로 노출하지 않는다. 포트폴리오 공개는 `/work/portfolio-links`에 본인이 소유한 itemIds를 명시하는 방식이다. 32바이트 랜덤 토큰을 한 번 반환하고 DB에는 SHA-256 해시를 저장한다. 7일 후 만료하며 DELETE로 즉시 폐기할 수 있다. 공개 조회는 선택한 PORTFOLIO payload만 반환하며 경력·이력서·업무 기록은 포함하지 않는다. 선택 항목을 삭제하면 링크 응답에서 빠지고 계정이 정지/삭제되면 링크는 404다. `portfolioVisibility=link` 설정만으로 링크가 발급되지 않는다.
+업무 기록·위키·WBS·경력·이력서·커리어 활동·지원 기록은 항상 사용자 범위다. 커리어 활동의 `experienceId`는 본인 경력 ID만 받고(없거나 다른 계정이면 400), `links`·지원의 `postingUrl`은 http·https 주소만 저장하며 서버가 호출하지 않는다. 활동 `visibility`는 `private`만 받는다. 친구·커뮤니티·첨부 권한으로 노출하지 않는다. 포트폴리오 공개는 `/work/portfolio-links`에 본인이 소유한 itemIds를 명시하는 방식이다. 32바이트 랜덤 토큰을 한 번 반환하고 DB에는 SHA-256 해시를 저장한다. 7일 후 만료하며 DELETE로 즉시 폐기할 수 있다. 공개 조회는 선택한 PORTFOLIO payload만 반환하며 경력·이력서·업무 기록은 포함하지 않는다. 선택 항목을 삭제하면 링크 응답에서 빠지고 계정이 정지/삭제되면 링크는 404다. `portfolioVisibility=link` 설정만으로 링크가 발급되지 않는다.
 
 ## 소셜·관리자·파일 규약.
 

@@ -90,14 +90,14 @@ schemas.BoardColumn = object({ id: string(), title: string(), wip: integer(0, 50
 schemas.BoardCard = object({ id: string(), columnId: string(), title: string(), assignee: string(), due: { type: 'string' }, priority: choice('low', 'normal', 'high'), labels: array(string()), checklist: array(object({ text: string(), done: boolean }, ['text', 'done'])), plannerBlock: string(), order: integer(0, 10000) }, ['id', 'columnId', 'title', 'priority', 'order'])
 const booleans = new Set('pinned actionable open favorite read live published popup paused notify completed openRecords'.split(' '))
 const numbers = { amount: integer(-1e12, 1e12), duration: integer(1, 1440), alarm: integer(0, 10080), leaveDays: { type: 'number', minimum: 0.5, maximum: 365, multipleOf: 0.5 }, expense: { type: 'number', minimum: 0, maximum: 1e8 }, md: { type: 'number', minimum: 0, maximum: 100000 }, progress: { type: 'number', minimum: 0, maximum: 100 }, years: integer(0, 100), days: integer(3, 100), capacity: integer(2, 500), reminderMinutes: integer(0, 1440), minMinutes: integer(1, 600) }
-const arrays = { tags: array(string()), achievements: array(string()), notifyDays: array(integer(0, 365)), attendeeIds: array(string(36)), itemIds: array(string(100)), blocks: array(ref('TemplateBlock')), columns: array(ref('BoardColumn')), cards: array(ref('BoardCard')) }
+const arrays = { tags: array(string()), achievements: array(string()), skillTags: array(string()), links: { ...array(string(2000)), maxItems: 10 }, notifyDays: array(integer(0, 365)), attendeeIds: array(string(36)), itemIds: array(string(100)), blocks: array(ref('TemplateBlock')), columns: array(ref('BoardColumn')), cards: array(ref('BoardCard')) }
 const featureSource = java.find(source => source.includes('public enum FeatureType'))
 for (const match of featureSource.matchAll(/(\w+)\("([^"]*)",\s*"([^"]*)"\)/g)) {
   const [_, name, fields, required] = match
   if (['ACTUAL_SESSION', 'BACKUP_JOB'].includes(name)) continue // 서버 명령 전용 저장 종류는 일반 CRUD 입력을 노출하지 않는다.
   const properties = {}
   for (const field of fields.split(' ')) {
-    properties[field] = booleans.has(field) ? boolean : numbers[field] ?? arrays[field] ?? (['date', 'startDate', 'endDate', 'from', 'to', 'deadline'].includes(field) ? date : ['startedAt', 'endedAt'].includes(field) ? { type: 'string', format: 'date-time' } : field === 'value' ? { oneOf: [{ type: 'object', additionalProperties: true }, { type: 'array', items: {} }] } : field === 'recurrence' ? ref('Recurrence') : field === 'goal' ? ref('Goal') : string(['body', 'handover'].includes(field) ? 20000 : 200))
+    properties[field] = booleans.has(field) ? boolean : numbers[field] ?? arrays[field] ?? (['date', 'startDate', 'endDate', 'from', 'to', 'deadline', 'appliedDate', 'interviewDate'].includes(field) ? date : ['startedAt', 'endedAt'].includes(field) ? { type: 'string', format: 'date-time' } : field === 'value' ? { oneOf: [{ type: 'object', additionalProperties: true }, { type: 'array', items: {} }] } : field === 'recurrence' ? ref('Recurrence') : field === 'goal' ? ref('Goal') : string(['body', 'handover'].includes(field) ? 20000 : 200))
   }
   if (name === 'ROUTINE_RECORD') properties.days = { ...array(integer(0, 6)), minItems: 1 }
   if (name === 'FOCUS') properties.mode = choice('pomodoro', 'stopwatch', 'free')
@@ -105,6 +105,8 @@ for (const match of featureSource.matchAll(/(\w+)\("([^"]*)",\s*"([^"]*)"\)/g)) 
   if (name === 'WORK_RECORD') { properties.type = choice('연차', '반차', '외근', '출장', '이직'); properties.half = choice('오전', '오후') }
   if (name === 'COMMUNITY') { properties.joinPolicy = choice('open', 'approval'); properties.visibility = choice('public', 'private') }
   if (name === 'CHALLENGE') { properties.verify = choice('self', 'record'); properties.windowStart = clock; properties.windowEnd = clock }
+  if (name === 'CAREER_ACTIVITY') { properties.activityType = choice('work', 'intern', 'part-time', 'freelance', 'project', 'study', 'community'); properties.visibility = choice('private') }
+  if (name === 'JOB_APPLICATION') { properties.status = choice('interested', 'preparing', 'applied', 'screening-passed', 'interview', 'accepted', 'rejected', 'on-hold', 'withdrawn'); properties.postingUrl = string(2000) }
   for (const field of required.split(' ')) if (properties[field]?.type === 'string') properties[field] = { ...properties[field], minLength: 1 }
   for (const [field, definition] of Object.entries(properties)) if (!required.split(' ').includes(field)) properties[field] = { anyOf: [definition, { type: 'null' }] }
   schemas[name + 'Create'] = object(properties, required.split(' '))
@@ -115,12 +117,14 @@ for (const match of featureSource.matchAll(/(\w+)\("([^"]*)",\s*"([^"]*)"\)/g)) 
 schemas.MONEYCreate.description = 'KRW 정수. type=in은 양수, out은 음수. 0은 거부한다.'
 schemas.WORK_RECORDCreate.description = '종료 일시는 시작 이후. 반차는 같은 날짜와 half 필수. 연차는 leaveDays 0.5일 단위. 외근·출장은 location, 출장은 expense, 이직은 toCompany/role 필수.'
 schemas.CHALLENGECreate.description = 'verify는 self(직접 인증, 기본) 또는 record(실시간 실제 기록으로 확인). record이면 minMinutes(1~600) 필수. windowStart·windowEnd(HH:mm)는 record에서만 함께 정하며 끝이 시작보다 늦어야 한다(자정을 넘지 않음). openRecords=true(기록 공개 챌린지)는 record여야 한다. 만든 뒤에는 규칙을 바꾸지 않는다.'
+schemas.CAREER_ACTIVITYCreate.description = 'activityType은 회사 업무(work)·인턴(intern)·아르바이트(part-time)·프리랜서(freelance)·개인 프로젝트(project)·학습(study)·커뮤니티 활동(community). endDate는 date 이후. experienceId는 본인 경력(/api/work/career/projects)의 ID만 받고, 없거나 다른 계정 경력이면 400. links는 http/https 절대 주소 최대 10개이며 서버가 호출하지 않는다. visibility는 private만 받고 빼면 private로 저장한다.'
+schemas.JOB_APPLICATIONCreate.description = 'status는 관심(interested)·준비 중(preparing)·지원 완료(applied)·서류 통과(screening-passed)·면접 예정(interview)·최종 합격(accepted)·불합격(rejected)·보류(on-hold)·철회(withdrawn). 상태 전이 제한은 없다. postingUrl은 http/https 절대 주소(최대 2000자)이며 서버가 공고를 가져오지 않는다.'
 schemas.SCHEDULECreate.description = '종료 일시는 시작 이후, 최대 366일. 참석자 ID는 메타데이터이며 공유 권한을 만들지 않는다.'
 schemas.SETTINGCreate.description = 'JSON 최대 깊이 8, 객체 100필드, 배열 500항목, 저장 크기 128 KiB. apiKey/password/secret/cardNumber/accessToken/refreshToken은 중첩 위치에서도 거부한다. 자동화·AI 설정 저장은 실행을 의미하지 않는다.'
 
 for (const [name, schema] of Object.entries(schemas)) if (name.endsWith('Create') && schema.description) for (const suffix of ['Update', 'Upsert']) schemas[name.slice(0, -6) + suffix].description = schema.description
 for (const name of ['DIARY', 'REVIEW']) { schemas[name + 'DateUpsert'] = object(schemas[name + 'Upsert'].properties, schemas[name + 'Upsert'].required.filter(field => field !== 'date')) }
-const resources = { '/api/schedules': 'SCHEDULE', '/api/routine-records': 'ROUTINE_RECORD', '/api/diaries': 'DIARY', '/api/memos': 'MEMO', '/api/ddays': 'DDAY', '/api/money/entries': 'MONEY', '/api/focus/sessions': 'FOCUS', '/api/events/templates': 'EVENT_TEMPLATE', '/api/planner/templates': 'PLANNER_TEMPLATE', '/api/work/records': 'WORK_RECORD', '/api/work/wiki': 'WIKI', '/api/work/wbs/nodes': 'WBS', '/api/work/career/projects': 'CAREER', '/api/work/portfolio': 'PORTFOLIO', '/api/contacts': 'CONTACT', '/api/share/groups': 'GROUP', '/api/communities': 'COMMUNITY', '/api/admin/content': 'CONTENT', '/api/admin/notices': 'NOTICE' }
+const resources = { '/api/schedules': 'SCHEDULE', '/api/routine-records': 'ROUTINE_RECORD', '/api/diaries': 'DIARY', '/api/memos': 'MEMO', '/api/ddays': 'DDAY', '/api/money/entries': 'MONEY', '/api/focus/sessions': 'FOCUS', '/api/events/templates': 'EVENT_TEMPLATE', '/api/planner/templates': 'PLANNER_TEMPLATE', '/api/work/records': 'WORK_RECORD', '/api/work/wiki': 'WIKI', '/api/work/wbs/nodes': 'WBS', '/api/work/career/projects': 'CAREER', '/api/work/portfolio': 'PORTFOLIO', '/api/career/activities': 'CAREER_ACTIVITY', '/api/career/applications': 'JOB_APPLICATION', '/api/contacts': 'CONTACT', '/api/share/groups': 'GROUP', '/api/communities': 'COMMUNITY', '/api/admin/content': 'CONTENT', '/api/admin/notices': 'NOTICE' }
 const custom = {
   'POST /api/planner/items': ref('PlannerItemCreate'),
   'PUT /api/planner/items/{id}': ref('PlannerItemUpdate'),

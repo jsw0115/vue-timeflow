@@ -13,8 +13,14 @@ import java.util.*;
 public final class FeatureInput {
     private static final Set<String> BOOLEANS = Set.of("pinned", "actionable", "open", "favorite", "read", "live", "published", "popup", "paused", "notify", "completed", "openRecords");
     private static final Set<String> NUMBERS = Set.of("amount", "duration", "alarm", "leaveDays", "expense", "md", "progress", "years", "capacity", "reminderMinutes", "days", "minMinutes");
-    private static final Set<String> ARRAYS = Set.of("tags", "notifyDays", "blocks", "columns", "cards", "achievements", "attendeeIds", "itemIds");
-    private static final Set<String> DATES = Set.of("date", "startDate", "endDate", "from", "to", "deadline");
+    private static final Set<String> ARRAYS = Set.of("tags", "notifyDays", "blocks", "columns", "cards", "achievements", "attendeeIds", "itemIds", "skillTags", "links");
+    private static final Set<String> DATES = Set.of("date", "startDate", "endDate", "from", "to", "deadline", "appliedDate", "interviewDate");
+    /** 커리어 활동 유형. 회사 업무·인턴·아르바이트·프리랜서·개인 프로젝트·학습·커뮤니티 활동(docs/design 04 FD-85). */
+    public static final List<String> ACTIVITY_TYPES = List.of("work", "intern", "part-time", "freelance", "project", "study", "community");
+    /** 지원 상태. 관심·준비 중·지원 완료·서류 통과·면접 예정·최종 합격·불합격·보류·철회(docs/design 04 FD-88). 상태 전이 제한은 문서에 정해지지 않아 두지 않는다. */
+    public static final List<String> APPLICATION_STATUSES = List.of("interested", "preparing", "applied", "screening-passed", "interview", "accepted", "rejected", "on-hold", "withdrawn");
+    private static final int URL_LIMIT = 2000;
+    private static final int LINK_COUNT = 10;
 
     private FeatureInput() { }
 
@@ -40,7 +46,7 @@ public final class FeatureInput {
             else {
                 if (!(value instanceof String)) fail(key + "는 문자열이어야 합니다.");
                 String text = (String) value;
-                if (text.length() > (key.equals("body") || key.equals("handover") ? 20000 : 200)) fail(key + " 길이가 너무 깁니다.");
+                if (text.length() > (key.equals("body") || key.equals("handover") ? 20000 : key.equals("postingUrl") ? URL_LIMIT : 200)) fail(key + " 길이가 너무 깁니다.");
                 if (key.equals("title") || key.equals("name")) body.put(key, text.trim());
                 if (DATES.contains(key) && !text.isEmpty()) date(text);
                 if (key.equals("startTime") || key.equals("endTime")) time(text);
@@ -48,7 +54,7 @@ public final class FeatureInput {
                 if (key.equals("email") && !text.isEmpty() && !text.matches("[^\\s@]+@[^\\s@]+\\.[^\\s@]+")) fail("이메일을 확인해주세요.");
             }
         }
-        for (String key : List.of("tags", "achievements")) {
+        for (String key : List.of("tags", "achievements", "skillTags")) {
             if (body.get(key) instanceof List<?> list && list.stream().anyMatch(v -> !(v instanceof String s) || s.length() > 200)) fail(key + "는 문자열 배열입니다.");
         }
         if (body.get("notifyDays") instanceof List<?> days) for (Object day : days) number(Map.of("day", day), "day", 0, 365, true);
@@ -93,6 +99,11 @@ public final class FeatureInput {
             case RESUME -> { if (body.get("years") != null) number(body, "years", 0, 100, true); }
             case COMMUNITY -> { choice(body, "joinPolicy", "open", "approval"); choice(body, "visibility", "public", "private"); number(body, "capacity", 2, 500, true); }
             case CHALLENGE -> validateChallenge(body);
+            case CAREER_ACTIVITY -> validateActivity(body);
+            case JOB_APPLICATION -> {
+                choice(body, "status", APPLICATION_STATUSES.toArray(String[]::new));
+                if (!text(body, "postingUrl").isEmpty()) webUrl(text(body, "postingUrl"));
+            }
             case NOTICE -> { if (!text(body, "from").isEmpty() && !text(body, "to").isEmpty()) range(text(body, "from"), text(body, "to")); }
             default -> { }
         }
@@ -113,6 +124,34 @@ public final class FeatureInput {
         if (from.isEmpty()) return;
         if (!record) fail("인증 시간대는 기록 확인 챌린지에만 정합니다.");
         if (!time(from).isBefore(time(to))) fail("인증 시간대의 끝은 시작보다 늦어야 합니다. 자정을 넘는 시간대는 정할 수 없습니다.");
+    }
+
+    /**
+     * 커리어 활동은 기본 비공개다. 공유 기능이 아직 없어 private만 받는다(docs/design 09 §3).
+     * 근거 링크는 http/https 주소만 저장하고 서버가 그 주소를 호출하지 않는다(docs/design 07 §1-4).
+     */
+    private static void validateActivity(Map<String, Object> body) {
+        choice(body, "activityType", ACTIVITY_TYPES.toArray(String[]::new));
+        if (!text(body, "endDate").isEmpty()) range(text(body, "date"), text(body, "endDate"));
+        if (text(body, "visibility").isEmpty()) body.put("visibility", "private");
+        choice(body, "visibility", "private");
+        if (body.get("links") instanceof List<?> links) {
+            if (links.size() > LINK_COUNT) fail("근거 링크는 최대 " + LINK_COUNT + "개입니다.");
+            for (Object link : links) {
+                if (!(link instanceof String url)) { fail("links는 문자열 배열입니다."); return; }
+                if (url.length() > URL_LIMIT) fail("링크 길이가 너무 깁니다.");
+                webUrl(url);
+            }
+        }
+    }
+
+    /** http·https 절대 주소만 받는다. javascript: 같은 스킴과 호스트 없는 주소를 거부한다. */
+    public static void webUrl(String value) {
+        try {
+            var uri = new java.net.URI(value.trim());
+            String scheme = uri.getScheme() == null ? "" : uri.getScheme().toLowerCase(Locale.ROOT);
+            if (!Set.of("http", "https").contains(scheme) || uri.getHost() == null || uri.getHost().isBlank()) throw new IllegalArgumentException();
+        } catch (java.net.URISyntaxException | IllegalArgumentException e) { fail("링크는 http 또는 https 주소여야 합니다."); }
     }
 
     private static void validateBlocks(Map<String, Object> body) {

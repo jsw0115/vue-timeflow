@@ -45,6 +45,7 @@ public class FeatureTestConfig {
     @Bean ScheduleService schedules(FeatureStore store) { return new ScheduleService(store); }
     @Bean DayPolicy days(UserRepository users, FeatureStore store) { return new DayPolicy(users, store); }
     @Bean WorkService work(FeatureStore store, kr.timebar.diary.common.IdempotencyKeys idempotency) { return new WorkService(store, idempotency); }
+    @Bean kr.timebar.diary.career.CareerService career(FeatureStore store, kr.timebar.diary.common.IdempotencyKeys idempotency) { return new kr.timebar.diary.career.CareerService(store, idempotency); }
     @Bean UserRepository users() { return mock(UserRepository.class); }
     @Bean RefreshTokenRepository tokens() { return mock(RefreshTokenRepository.class); }
     @Bean PasswordEncoder encoder() { return new BCryptPasswordEncoder(); }

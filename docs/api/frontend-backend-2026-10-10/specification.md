@@ -433,6 +433,186 @@ file을 multipart/form-data로 전달한다. boundary는 HTTP 클라이언트가
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 
+## GET /api/career/activities
+
+인증은 JWT이며 소스는 CareerController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| query | from | String | 아니오 | 없음 |
+| query | to | String | 아니오 | 없음 |
+| query | q | String | 아니오 | 없음 |
+| query | category | String | 아니오 | 없음 |
+| query | page | int | 아니오 | 0 |
+| query | size | int | 아니오 | 20 |
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## POST /api/career/activities
+
+인증은 JWT이며 소스는 CareerController.java다. 성공 HTTP는 201다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| header | Idempotency-Key | String | 아니오 | 없음 |
+
+| 본문 필드 | 타입 | 필수 | 제약 |
+|---|---|---|---|
+| title | string | 예 | 길이 ≤ 200 |
+| body | string 또는 null | 아니오 | 기능 규약 참조 |
+| activityType | string | 예 | work/intern/part-time/freelance/project/study/community |
+| date | string | 예 | date |
+| endDate | string 또는 null | 아니오 | 기능 규약 참조 |
+| experienceId | string 또는 null | 아니오 | 기능 규약 참조 |
+| role | string 또는 null | 아니오 | 기능 규약 참조 |
+| skillTags | array 또는 null | 아니오 | 기능 규약 참조 |
+| achievements | array 또는 null | 아니오 | 기능 규약 참조 |
+| links | array 또는 null | 아니오 | 기능 규약 참조 |
+| visibility | string 또는 null | 아니오 | 기능 규약 참조 |
+| tags | array 또는 null | 아니오 | 기능 규약 참조 |
+
+activityType은 회사 업무(work)·인턴(intern)·아르바이트(part-time)·프리랜서(freelance)·개인 프로젝트(project)·학습(study)·커뮤니티 활동(community). endDate는 date 이후. experienceId는 본인 경력(/api/work/career/projects)의 ID만 받고, 없거나 다른 계정 경력이면 400. links는 http/https 절대 주소 최대 10개이며 서버가 호출하지 않는다. visibility는 private만 받고 빼면 private로 저장한다.
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## DELETE /api/career/activities/{id}
+
+인증은 JWT이며 소스는 CareerController.java다. 성공 HTTP는 204다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | id | String | 예 | 없음 |
+| query | version | long | 예 | 없음 |
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## GET /api/career/activities/{id}
+
+인증은 JWT이며 소스는 CareerController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | id | String | 예 | 없음 |
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## PUT /api/career/activities/{id}
+
+인증은 JWT이며 소스는 CareerController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | id | String | 예 | 없음 |
+
+| 본문 필드 | 타입 | 필수 | 제약 |
+|---|---|---|---|
+| title | string | 예 | 길이 ≤ 200 |
+| body | string 또는 null | 아니오 | 기능 규약 참조 |
+| activityType | string | 예 | work/intern/part-time/freelance/project/study/community |
+| date | string | 예 | date |
+| endDate | string 또는 null | 아니오 | 기능 규약 참조 |
+| experienceId | string 또는 null | 아니오 | 기능 규약 참조 |
+| role | string 또는 null | 아니오 | 기능 규약 참조 |
+| skillTags | array 또는 null | 아니오 | 기능 규약 참조 |
+| achievements | array 또는 null | 아니오 | 기능 규약 참조 |
+| links | array 또는 null | 아니오 | 기능 규약 참조 |
+| visibility | string 또는 null | 아니오 | 기능 규약 참조 |
+| tags | array 또는 null | 아니오 | 기능 규약 참조 |
+| version | integer | 예 | 최소 1 |
+
+activityType은 회사 업무(work)·인턴(intern)·아르바이트(part-time)·프리랜서(freelance)·개인 프로젝트(project)·학습(study)·커뮤니티 활동(community). endDate는 date 이후. experienceId는 본인 경력(/api/work/career/projects)의 ID만 받고, 없거나 다른 계정 경력이면 400. links는 http/https 절대 주소 최대 10개이며 서버가 호출하지 않는다. visibility는 private만 받고 빼면 private로 저장한다.
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## GET /api/career/applications
+
+인증은 JWT이며 소스는 CareerController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| query | from | String | 아니오 | 없음 |
+| query | to | String | 아니오 | 없음 |
+| query | q | String | 아니오 | 없음 |
+| query | category | String | 아니오 | 없음 |
+| query | page | int | 아니오 | 0 |
+| query | size | int | 아니오 | 20 |
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## POST /api/career/applications
+
+인증은 JWT이며 소스는 CareerController.java다. 성공 HTTP는 201다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| header | Idempotency-Key | String | 아니오 | 없음 |
+
+| 본문 필드 | 타입 | 필수 | 제약 |
+|---|---|---|---|
+| title | string | 예 | 길이 ≤ 200 |
+| company | string | 예 | 길이 ≤ 200 |
+| postingUrl | string 또는 null | 아니오 | 기능 규약 참조 |
+| employmentType | string 또는 null | 아니오 | 기능 규약 참조 |
+| workType | string 또는 null | 아니오 | 기능 규약 참조 |
+| salaryRange | string 또는 null | 아니오 | 기능 규약 참조 |
+| deadline | string 또는 null | 아니오 | 기능 규약 참조 |
+| appliedDate | string 또는 null | 아니오 | 기능 규약 참조 |
+| interviewDate | string 또는 null | 아니오 | 기능 규약 참조 |
+| status | string | 예 | interested/preparing/applied/screening-passed/interview/accepted/rejected/on-hold/withdrawn |
+| body | string 또는 null | 아니오 | 기능 규약 참조 |
+
+status는 관심(interested)·준비 중(preparing)·지원 완료(applied)·서류 통과(screening-passed)·면접 예정(interview)·최종 합격(accepted)·불합격(rejected)·보류(on-hold)·철회(withdrawn). 상태 전이 제한은 없다. postingUrl은 http/https 절대 주소(최대 2000자)이며 서버가 공고를 가져오지 않는다.
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## DELETE /api/career/applications/{id}
+
+인증은 JWT이며 소스는 CareerController.java다. 성공 HTTP는 204다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | id | String | 예 | 없음 |
+| query | version | long | 예 | 없음 |
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## GET /api/career/applications/{id}
+
+인증은 JWT이며 소스는 CareerController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | id | String | 예 | 없음 |
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## PUT /api/career/applications/{id}
+
+인증은 JWT이며 소스는 CareerController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | id | String | 예 | 없음 |
+
+| 본문 필드 | 타입 | 필수 | 제약 |
+|---|---|---|---|
+| title | string | 예 | 길이 ≤ 200 |
+| company | string | 예 | 길이 ≤ 200 |
+| postingUrl | string 또는 null | 아니오 | 기능 규약 참조 |
+| employmentType | string 또는 null | 아니오 | 기능 규약 참조 |
+| workType | string 또는 null | 아니오 | 기능 규약 참조 |
+| salaryRange | string 또는 null | 아니오 | 기능 규약 참조 |
+| deadline | string 또는 null | 아니오 | 기능 규약 참조 |
+| appliedDate | string 또는 null | 아니오 | 기능 규약 참조 |
+| interviewDate | string 또는 null | 아니오 | 기능 규약 참조 |
+| status | string | 예 | interested/preparing/applied/screening-passed/interview/accepted/rejected/on-hold/withdrawn |
+| body | string 또는 null | 아니오 | 기능 규약 참조 |
+| version | integer | 예 | 최소 1 |
+
+status는 관심(interested)·준비 중(preparing)·지원 완료(applied)·서류 통과(screening-passed)·면접 예정(interview)·최종 합격(accepted)·불합격(rejected)·보류(on-hold)·철회(withdrawn). 상태 전이 제한은 없다. postingUrl은 http/https 절대 주소(최대 2000자)이며 서버가 공고를 가져오지 않는다.
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
 ## PUT /api/chat/communities/{communityId}/room
 
 인증은 JWT이며 소스는 ChatController.java다. 성공 HTTP는 200다.
