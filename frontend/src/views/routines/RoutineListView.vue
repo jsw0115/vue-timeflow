@@ -90,8 +90,10 @@ const draft = ref(emptyDraft())
 function emptyDraft() {
   return { startDate: localDate(), recurrence: makeRecurrence({ frequency: 'weekly', weekdays: [0,1,2,3,4,5,6] }), title: '', time: '19:00', duration: 30, reminderMinutes: 10, body: '', category: '건강', days: [0, 1, 2, 3, 4, 5, 6], goalCount: 1, goalUnit: '회', notify: true }
 }
+// 수정 창을 연 순간의 모드로 필드를 고정한다(UF-133). 열려 있는 동안 하루 모드가 바뀌어도 입력 항목이 그대로다
+const formMode = ref(modeState.activeMode)
 function on(key) {
-  return isFieldOn(modeState.activeMode, 'routine', key)
+  return isFieldOn(formMode.value, 'routine', key)
 }
 function openModal() { openPostComposer('루틴') }
 function openEdit(r) {
@@ -112,6 +114,7 @@ function openEdit(r) {
     goalUnit: r.goal?.unit ?? '회',
     notify: r.notify !== false,
   }
+  formMode.value = modeState.activeMode
   showModal.value = true
 }
 watch(() => route.query.new, (v) => { if (v) openModal() }, { immediate: true })
@@ -317,7 +320,7 @@ function removeRoutine(r) {
   </section>
 
   <Modal v-if="showModal" :title="editingId ? '루틴 수정' : '새 루틴 만들기'" :edit-resource="editingId ? 'routine:' + editingId : ''" wide @close="showModal = false">
-    <p class="form-note" style="margin: 0 0 4px">{{ modeMeta(modeState.activeMode).name }} 글양식이 적용돼요</p>
+    <p class="form-note" style="margin: 0 0 4px">{{ modeMeta(formMode).name }} 글양식이 적용돼요</p>
     <label>루틴 이름<input v-model="draft.title" placeholder="예: 저녁 러닝 30분" autofocus /></label>
     <div class="form-row">
       <label style="flex: 1">시작 시간<input v-model="draft.time" type="time" /></label>

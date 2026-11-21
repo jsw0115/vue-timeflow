@@ -33,7 +33,9 @@ const categories = computed(() => kind.value === '머니로그' ? ['식비', '�
 const workTypes = WORK_TYPES
 watch(composerKind, value => { if (kinds.includes(value)) kind.value = value })
 watch(kind, async () => { saving.reset(); await nextTick(); formRoot.value?.closest('.modal-body')?.scrollTo({ top: 0 }) })
-function on(section, field) { return isFieldOn(modeState.activeMode, section, field) }
+// 작성 창을 연 순간의 모드로 필드를 고정한다. 그 사이 하루 모드가 바뀌어도(요일별 모드, UF-133) 열린 초안은 그대로다
+const composeMode = modeState.activeMode
+function on(section, field) { return isFieldOn(composeMode, section, field) }
 function toggleValue(list, value) { const index = list.indexOf(value); if (index < 0) list.push(value); else list.splice(index, 1) }
 function setHalf() {
   if (draft.value.type !== '반차') return
@@ -64,7 +66,7 @@ async function save() {
       <label class="composer-kind-select" :for="tabsId + '-kind'">작성 종류<select :id="tabsId + '-kind'" v-model="kind"><option v-for="option in kinds" :key="option">{{ option }}</option></select></label>
     </template>
     <form ref="formRoot" :id="formId" :aria-label="kind + ' 작성'" @submit.prevent="save">
-      <p class="form-note">{{ modeMeta(modeState.activeMode).name }} 글양식 · 종류를 바꿔도 작성 중인 내용이 유지돼요.</p>
+      <p class="form-note">{{ modeMeta(composeMode).name }} 글양식 · 종류를 바꿔도 작성 중인 내용이 유지돼요.<template v-if="modeState.activeMode !== composeMode"> 하루 모드가 {{ modeMeta(modeState.activeMode).name }}으로 바뀌었지만, 이 글은 처음 열었을 때의 양식을 그대로 써요.</template></p>
       <label v-if="kind !== '회고'">제목<input v-model="draft.title" required maxlength="200" placeholder="무엇을 남기고 싶으세요?" :aria-invalid="saving.state.field === 'title' ? 'true' : undefined" :aria-describedby="saving.state.field === 'title' ? formId + '-title-error' : undefined" /><span v-if="saving.state.field === 'title'" :id="formId + '-title-error'" class="input-field-help" data-state="error">{{ saving.state.fieldMessage }}</span></label>
       <EventDateFields v-if="kind === '일정'" :draft="draft" />
       <RepeatSettings v-if="kind === '일정'" v-model="draft.recurrence" :start-date="draft.startDate" />

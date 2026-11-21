@@ -555,6 +555,8 @@ p{font-size:var(--type-body-sm-size);color:var(--color-body);line-height:1.6;fon
 .mode-picker b{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--color-foreground);color:var(--color-on-primary);font-size:0.875rem;flex:none}
 .mode-picker span{display:grid;gap:2px;font-size:0.875rem;font-weight:600;min-width:0}
 .mode-picker small{font-size:0.75rem;font-weight:400;color:var(--color-muted);overflow:hidden;text-overflow:ellipsis}
+/* 좁은 화면에서는 선택지를 1열로 쌓는다. 3열을 유지하면 모드 이름이 한 글자씩 줄바꿈된다(UF-133 화면 확인) */
+@media(max-width:760px){.mode-picker{grid-template-columns:minmax(0,1fr)}}
 .domain-tabs{display:flex;align-items:center;gap:8px;margin:18px 0 12px;border-bottom:1px solid var(--color-hairline);padding-bottom:10px}
 .domain-tabs button{padding:7px 14px;border:1px solid var(--color-hairline);border-radius:var(--radius-full);background:var(--color-card);font-size:0.8125rem;font-weight:500;cursor:pointer}
 .domain-tabs button.selected{background:var(--color-foreground);color:var(--color-on-primary);border-color:var(--color-foreground)}

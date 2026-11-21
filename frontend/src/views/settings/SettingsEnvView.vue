@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { modeState, modeMeta } from '../../store/modeProfiles'
+import { modeState, modeMeta, setWeekdaySchedule } from '../../store/modeProfiles'
 import { appearance, DENSITIES, FONT_SIZES } from '../../store/appearance'
 import DayBoundarySettings from '../../components/DayBoundarySettings.vue'
 import { careerGoal, chooseCareerGoal } from '../../store/careerGoal'
@@ -48,6 +48,17 @@ function save() {
         <span>{{ modeMeta(m).name }}<small>{{ modeMeta(m).desc }}</small></span>
       </button>
     </div>
+
+    <!-- 평일·주말 기본 모드(PR-19 UF-133). 하루 모드와 같이 이 브라우저에만 저장한다 -->
+    <label class="task weekday-mode-toggle">
+      <input type="checkbox" :checked="modeState.weekdaySchedule.enabled" aria-describedby="weekday-mode-help" @change="setWeekdaySchedule({ enabled: $event.target.checked })" />
+      <span><b>평일과 주말에 다른 모드 쓰기</b><small id="weekday-mode-help">날짜가 바뀌면 그날 모드로 바꿔요. 그날 직접 고른 모드와 작성 중인 글은 그대로예요.</small></span>
+    </label>
+    <div v-if="modeState.weekdaySchedule.enabled" class="form-row weekday-mode-pick">
+      <label>평일(월~금)<select :value="modeState.weekdaySchedule.weekday" @change="setWeekdaySchedule({ weekday: $event.target.value })"><option v-for="m in modes" :key="m" :value="m">{{ modeMeta(m).name }}</option></select></label>
+      <label>주말(토·일)<select :value="modeState.weekdaySchedule.weekend" @change="setWeekdaySchedule({ weekend: $event.target.value })"><option v-for="m in modes" :key="m" :value="m">{{ modeMeta(m).name }}</option></select></label>
+    </div>
+    <p v-if="modeState.weekdaySchedule.enabled" class="form-note weekday-mode-note">켜거나 바꾸면 오늘 모드도 바로 맞춰요. 날짜가 바뀌는 시각은 아래 '하루의 기준'을 따르고, 설정은 이 브라우저에 저장돼요.</p>
 
     <div class="form-style-cta">
       <div>
@@ -100,4 +111,8 @@ function save() {
 .career-goal-picker { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .career-goal-picker span { display: grid; gap: var(--space-xs); }
 @media (max-width: 760px) { .career-goal-picker { grid-template-columns: minmax(0, 1fr); } }
+.weekday-mode-toggle { display: inline-flex; margin-top: var(--space-lg); border: 0; }
+.weekday-mode-toggle span { flex: 1; }
+.weekday-mode-note { margin-top: 0; }
+@media (max-width: 480px) { .weekday-mode-pick { flex-direction: column; } }
 </style>

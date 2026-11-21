@@ -1,4 +1,5 @@
 import { reactive, watch } from 'vue'
+import { cleanSchedule, nextMode } from '../features/mode/weekdayMode.mjs'
 
 const STORAGE_KEY = 'timeflow.modeProfiles.v1'
 
@@ -112,7 +113,26 @@ const saved = loadState()
 export const modeState = reactive({
   activeMode: saved?.activeMode ?? 'J',
   profiles: saved?.profiles ?? buildInitialProfiles(),
+  // 평일·주말 기본 모드(PR-19 UF-133). 하루 모드와 같이 이 브라우저에만 저장한다
+  weekdaySchedule: cleanSchedule(saved?.weekdaySchedule),
 })
+
+/**
+ * 계정 하루 기준 오늘(today)에 처음 확인할 때만 평일·주말 모드로 바꾼다. 같은 날 직접 바꾼 모드는 두고,
+ * 이미 열린 작성 창은 열 때의 모드를 쓰므로 영향을 받지 않는다(PostComposer·루틴 수정 창).
+ */
+export function applyWeekdayMode(today) {
+  const next = nextMode({ activeMode: modeState.activeMode, schedule: modeState.weekdaySchedule }, today)
+  if (!next) return false
+  modeState.weekdaySchedule.appliedFor = next.appliedFor
+  if (next.changed) modeState.activeMode = next.activeMode
+  return next.changed
+}
+
+/** 설정을 바꾸면 오늘 다시 적용되도록 적용 날짜를 비운다. */
+export function setWeekdaySchedule(patch) {
+  Object.assign(modeState.weekdaySchedule, cleanSchedule({ ...modeState.weekdaySchedule, ...patch, appliedFor: '' }))
+}
 
 watch(
   modeState,

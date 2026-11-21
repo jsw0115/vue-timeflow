@@ -1,5 +1,5 @@
 <script setup>
-import { computed, provide, reactive, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, provide, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { navGroups } from './router'
 import { composer, openPostComposer } from './store/appState'
@@ -11,7 +11,9 @@ import './store/postIndex'
 import { storageWarning } from './store/localCollection'
 import { communityComposer } from './store/communities'
 import CommunityCreateModal from './components/CommunityCreateModal.vue'
-import { modeState, modeMeta } from './store/modeProfiles'
+import { modeState, modeMeta, applyWeekdayMode } from './store/modeProfiles'
+import { dayBoundary } from './features/records/dayBoundary.mjs'
+import { accountToday } from './features/quickInput/parseQuickInput.mjs'
 import GlobalSearchModal from './components/GlobalSearchModal.vue'
 import ProfileModal from './components/ProfileModal.vue'
 import SidePanel from './components/SidePanel.vue'
@@ -147,6 +149,13 @@ function openAdmin(path) {
 
 const workspaceOpen = ref(false)
 function changeMode(mode) { modeState.activeMode = mode; workspaceOpen.value = false }
+// 평일·주말 기본 모드(UF-133): 앱을 열 때, 1분마다, 화면으로 돌아올 때, 계정 하루 기준을 불러온 뒤 확인한다
+const checkWeekdayMode = () => applyWeekdayMode(accountToday({ timeZone: dayBoundary.state.timeZone, startHour: dayBoundary.state.startHour }))
+const onVisible = () => { if (document.visibilityState === 'visible') checkWeekdayMode() }
+let weekdayTimer
+onMounted(() => { checkWeekdayMode(); weekdayTimer = setInterval(checkWeekdayMode, 60000); document.addEventListener('visibilitychange', onVisible) })
+onBeforeUnmount(() => { clearInterval(weekdayTimer); document.removeEventListener('visibilitychange', onVisible) })
+watch(() => [dayBoundary.state.timeZone, dayBoundary.state.startHour, modeState.weekdaySchedule.appliedFor, modeState.weekdaySchedule.enabled], checkWeekdayMode)
 function openComposer() {
   const kind = route.path.startsWith('/tasks') ? '할 일' : route.path.startsWith('/diary') ? '다이어리' : route.path.startsWith('/memos') ? '메모' : route.path.startsWith('/routines') ? '루틴' : route.path.startsWith('/money') ? '머니로그' : route.path.startsWith('/dday') || route.path === '/events/dday' ? 'D-Day' : route.path === '/work/wiki' ? '업무 위키' : route.path === '/work/wbs' ? '업무 기록' : '일정'
   openPostComposer(kind)
