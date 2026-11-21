@@ -72,6 +72,7 @@ export const ICONS = {
 // 사이드바 경로 → 아이콘. 없는 경로는 라우터의 글자 아이콘을 그대로 쓴다.
 export const NAV_ICONS = {
   '/': 'home', '/notifications': 'bell', '/calendar': 'calendar', '/dday': 'flag', '/mentions': 'at',
+  '/career': 'briefcase', '/career/activities': 'pen', '/career/applications': 'mail',
   '/planner': 'timeline', '/planner/templates': 'layers', '/planner/canvas': 'board', '/focus': 'target', '/focus/together': 'users',
   '/events': 'clock', '/events/dday': 'flag', '/events/templates': 'layers', '/tasks': 'check', '/routines': 'repeat', '/routines/history': 'history',
   '/diary': 'book', '/diary/summary': 'doc', '/memos': 'note', '/tags': 'hash', '/my-posts': 'list', '/money': 'wallet',

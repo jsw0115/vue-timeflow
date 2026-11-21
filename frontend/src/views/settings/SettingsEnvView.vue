@@ -4,6 +4,9 @@ import { useRouter } from 'vue-router'
 import { modeState, modeMeta } from '../../store/modeProfiles'
 import { appearance, DENSITIES, FONT_SIZES } from '../../store/appearance'
 import DayBoundarySettings from '../../components/DayBoundarySettings.vue'
+import { careerGoal, chooseCareerGoal } from '../../store/careerGoal'
+import { CAREER_GOALS, DEFAULT_GOAL } from '../../features/career/careerModel.mjs'
+import { session } from '../../features/auth/session.js'
 
 const router = useRouter()
 const modes = ['J', 'P', 'B']
@@ -28,7 +31,17 @@ function save() {
       <span v-if="saved" class="badge ok">저장했어요</span>
     </div>
 
-    <div class="section-label">기본 모드</div>
+    <!-- 커리어 목표(docs/design 03 §5). 고르면 바로 저장하고, 저장이 끝난 뒤에만 완료 문구를 보인다 -->
+    <div class="section-label">커리어 목표</div>
+    <p class="form-note" style="margin-top: 0">커리어 대시보드에서 먼저 볼 내용을 정해요. 공개 범위나 권한은 바뀌지 않아요.</p>
+    <div class="mode-picker career-goal-picker" role="group" aria-label="커리어 목표">
+      <button v-for="g in CAREER_GOALS" :key="g.id" type="button" :class="{ selected: (careerGoal.goal || DEFAULT_GOAL) === g.id }" :aria-pressed="(careerGoal.goal || DEFAULT_GOAL) === g.id" :disabled="careerGoal.status === 'saving'" @click="chooseCareerGoal(g.id)">
+        <span>{{ g.label }}<small>{{ g.desc }}</small></span>
+      </button>
+    </div>
+    <p class="input-field-help" role="status" :data-state="careerGoal.status === 'failed' ? 'error' : careerGoal.status === 'saved' ? 'success' : undefined">{{ careerGoal.status === 'saving' ? '저장하는 중이에요.' : careerGoal.message || (careerGoal.goal ? '' : '아직 고르지 않아 기본 목표(취업 준비) 순서로 보여요.') + (session.userId ? '' : ' 로그아웃 상태에서는 이 브라우저에 저장해요.') }}</p>
+
+    <div class="section-label" style="margin-top: var(--space-lg)">기본 모드</div>
     <div class="mode-picker">
       <button v-for="m in modes" :key="m" :class="{ selected: modeState.activeMode === m }" @click="modeState.activeMode = m">
         <b>{{ m }}</b>
@@ -81,3 +94,10 @@ function save() {
     <button class="primary" @click="save">저장하기</button>
   </section>
 </template>
+
+<style scoped>
+/* 커리어 목표는 4개라 2열로 둔다. 좁은 화면은 공통 mode-picker 규칙처럼 1열로 쌓는다 */
+.career-goal-picker { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.career-goal-picker span { display: grid; gap: var(--space-xs); }
+@media (max-width: 760px) { .career-goal-picker { grid-template-columns: minmax(0, 1fr); } }
+</style>

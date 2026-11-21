@@ -2,7 +2,7 @@
 
 작성일 2026-10-31. 수정일 2026-10-31. Vue 라우터의 명시적 경로와 플래너 매핑을 정적으로 추출한 생성 문서입니다.
 
-경로 87개입니다. 동일 컴포넌트의 여러 경로·선택 파라미터를 별개 목록 행으로 표시합니다. 라우트 개수는 기능 완성도나 실제 접근 권한·서버 연결 검증 수가 아닙니다. 설정의 section별 탭과 모달은 별도 경로로 세지 않습니다.
+경로 90개입니다. 동일 컴포넌트의 여러 경로·선택 파라미터를 별개 목록 행으로 표시합니다. 라우트 개수는 기능 완성도나 실제 접근 권한·서버 연결 검증 수가 아닙니다. 설정의 section별 탭과 모달은 별도 경로로 세지 않습니다.
 
 상세 입력·레이아웃·상태·흐름은 [화면 명세](screen-design.md)에 관리합니다. 화면 카탈로그 데이터의 기획 항목과 실제 라우트는 다를 수 있습니다.
 
@@ -34,6 +34,9 @@
 | `/auth/signup` | 회원가입 | [SignupView](../../frontend/src/features/auth/views/SignupView.vue) | 가입·로그인 서버 연결과 화면별 실제 저장 확인 |
 | `/auth/social` | 소셜 로그인 연동 | [SocialLoginView](../../frontend/src/views/auth/SocialLoginView.vue) | 화면 존재와 제공자 실행 가능 여부 구분 |
 | `/calendar` | 캘린더 | [CalendarView](../../frontend/src/views/home/CalendarView.vue) | 로컬 store·API·소유권·갱신 실패를 실제 호출로 확인 |
+| `/career` | 커리어 대시보드 | [CareerDashboardView](../../frontend/src/views/career/CareerDashboardView.vue) | 로컬 store·API·소유권·갱신 실패를 실제 호출로 확인 |
+| `/career/activities` | 활동 타임라인 | [CareerActivitiesView](../../frontend/src/views/career/CareerActivitiesView.vue) | 로컬 store·API·소유권·갱신 실패를 실제 호출로 확인 |
+| `/career/applications` | 취업·이직 지원 | [JobApplicationsView](../../frontend/src/views/career/JobApplicationsView.vue) | 로컬 store·API·소유권·갱신 실패를 실제 호출로 확인 |
 | `/chat` | 채팅 | [ChatListView](../../frontend/src/features/chat/views/ChatWorkspace.vue) | 인증 API·채팅 시연·개인 기록 출처 구분 |
 | `/chat/mentions` | 채팅 멘션 | [ChatInbox](../../frontend/src/features/inbox/views/UnifiedInbox.vue) | 인증 API·채팅 시연·개인 기록 출처 구분 |
 | `/chat/room` | 채팅방 | [ChatRoomView](../../frontend/src/views/chat/ChatRoomView.vue) | 인증 API·채팅 시연·개인 기록 출처 구분 |

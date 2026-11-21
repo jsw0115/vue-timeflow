@@ -26,6 +26,7 @@ import { apiRequest } from './features/auth/apiRequest.js'
 import { themeState, THEMES, ACCENTS } from './store/theme'
 import { createThemeAccount, sameTheme } from './features/settings/themeAccount.mjs'
 import { unreadMentions as unreadPostMentions } from './store/tagging'
+import { adminAccess, refreshAdminAccess } from './features/admin/admin.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -53,7 +54,9 @@ const pageDesc = computed(() => {
 })
 const pageGroup = computed(() => {
   if (route.path.startsWith('/settings')) return '환경설정'
-  return navGroups.find((group) => group.items.some((item) => isNavActive(item) || route.path.startsWith(item.path + '/')))?.label ?? ''
+  // 정확히 일치하는 메뉴의 묶음을 먼저 찾는다. 상세 화면처럼 메뉴에 없는 경로만 접두어로 찾는다(/work/history가 /work 묶음으로 잡히지 않게)
+  return (navGroups.find((group) => group.items.some((item) => isNavActive(item)))
+    ?? navGroups.find((group) => group.items.some((item) => route.path.startsWith(item.path + '/'))))?.label ?? ''
 })
 // 사이드바 계정 영역은 로그인한 계정만 보인다. 로그아웃이면 로그인 안내다(시연 계정을 실제 계정처럼 보이지 않는다).
 const accountName = computed(() => session.nickname || session.email || '내 계정')
@@ -68,6 +71,9 @@ watch(() => session.userId, async (id) => {
     if (saved && session.userId === id && !sameTheme(saved, themeState)) Object.assign(themeState, saved)
   } catch { /* 이 브라우저 테마를 그대로 쓴다 */ }
 }, { immediate: true })
+// 관리자 콘솔 진입 버튼은 서버가 관리자 권한을 확인한 계정에만 보인다. 메뉴 숨김은 보안 통제가 아니며 관리자 API는 서버가 매 요청 검사한다(docs/design 03 §8-5, 09 §2)
+watch(() => session.userId, (id) => refreshAdminAccess(Boolean(id)), { immediate: true })
+const canOpenAdmin = computed(() => adminAccess.state === 'allowed')
 function isNavActive(item) {
   if (item.path === '/planner') return ['/planner', '/planner/daily', '/planner/weekly', '/planner/monthly', '/planner/yearly'].includes(route.path)
   return route.path === item.path
@@ -184,7 +190,7 @@ watch(() => route.path, () => { mobileNav.value = false; workspaceOpen.value = f
           </button>
         </router-link>
         <!-- 관리자 콘솔은 사용자 화면과 분리된 별도 창으로 연다 -->
-        <button class="nav-link" @click="openAdmin('/admin'); mobileNav = false">
+        <button v-if="canOpenAdmin" class="nav-link" @click="openAdmin('/admin'); mobileNav = false">
           <span class="nav-icon"><AppIcon name="shield" /></span><span class="nav-text">관리자 콘솔</span><small class="nav-ext" aria-label="새 창"><AppIcon name="external" :size="14" /></small>
         </button>
       </div>

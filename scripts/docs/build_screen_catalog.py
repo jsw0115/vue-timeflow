@@ -18,7 +18,7 @@ def render():
         route, body, component = match.groups()
         label = re.search(r"name:\s*'([^']+)'", body)
         routes[route] = (label.group(1) if label else {'/chat/mentions': '채팅 멘션', '/chat/tags': '채팅 태그'}.get(route, '하위 화면'), component)
-    for route, component in re.findall(r"\['(/planner/[^']+)',\s*(\w+)\]", source):
+    for route, component in re.findall(r"\['(/planner/[^']+)',\s*(\w+)(?:,\s*'[^']*')?\]", source):
         routes[route] = ('플래너 ' + {'daily': '일간', 'weekly': '주간', 'monthly': '월간', 'yearly': '연간'}[route.rsplit('/', 1)[1]], component)
     if not {'/', '/auth/signup', '/settings/:section?', '/planner/yearly', '/tasks/:id'} <= routes.keys():
         raise SystemExit('라우터 형식이 변경되었습니다. 추출 규칙을 검토하세요.')

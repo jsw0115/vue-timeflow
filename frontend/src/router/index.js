@@ -48,6 +48,11 @@ import WorkWikiView from '../views/work/WorkWikiView.vue'
 import WbsView from '../views/work/WbsView.vue'
 import CareerDocsView from '../views/work/CareerDocsView.vue'
 
+// 커리어(docs/design 03 §2·§3 MN-130·131·133 후보)
+import CareerDashboardView from '../views/career/CareerDashboardView.vue'
+import CareerActivitiesView from '../views/career/CareerActivitiesView.vue'
+import JobApplicationsView from '../views/career/JobApplicationsView.vue'
+
 // 소셜
 import FriendsView from '../views/share/FriendsView.vue'
 import ShareGroupsView from '../views/share/ShareGroupsView.vue'
@@ -118,6 +123,16 @@ export const navGroups = [
     ],
   },
   {
+    // 주축 기능(docs/design 01 §1). 경력·포트폴리오(MN-51)는 기존 /work/career 경로를 그대로 둔다(03 §4)
+    label: '커리어',
+    items: [
+      { path: '/career', name: '커리어 대시보드', icon: '◆', component: CareerDashboardView, title: '목표와 다음 마감, 최근 활동을 한눈에' },
+      { path: '/career/activities', name: '활동 타임라인', icon: '▤', component: CareerActivitiesView, title: '업무·학습·프로젝트 활동을 경력 자산으로 남겨요' },
+      { path: '/work/career', name: '경력·포트폴리오', icon: '🔒', component: CareerDocsView, title: '나만 보는 경력 기록이에요' },
+      { path: '/career/applications', name: '취업·이직 지원', icon: '✉', component: JobApplicationsView, title: '공고와 지원 단계, 마감·면접을 관리해요' },
+    ],
+  },
+  {
     label: '플래너',
     items: [
       { path: '/planner', name: '플래너', icon: '▦', component: PlannerDailyView, title: '계획과 실제를 나란히' },
@@ -125,6 +140,16 @@ export const navGroups = [
       { path: '/planner/canvas', name: '프로젝트 캔버스', icon: '▨', component: ProjectCanvasView, title: '프로젝트를 보드로 관리해요' },
       { path: '/focus', name: '집중 모드', icon: '◉', component: FocusView, title: '지금 이 순간에 몰입해요' },
       { path: '/focus/together', name: '같이 집중', icon: '◎', component: CoFocusView, title: '함께라서 더 잘 되는 집중' },
+    ],
+  },
+  {
+    // 업무·프로젝트(docs/design 03 §2). 경로는 기존 /work/* 그대로다. 내 프로젝트 허브(MN-136 후보)는 아직 없다
+    label: '업무·프로젝트',
+    items: [
+      { path: '/work/wbs', name: 'WBS', icon: '⊞', component: WbsView, title: '작업을 분해하고 진척을 굴려요' },
+      { path: '/work', name: '업무 리포트', icon: '▧', component: WorkReportView, title: '업무 시간을 정리해요' },
+      { path: '/work/wiki', name: '업무 위키', icon: '▤', component: WorkWikiView, title: '업무 지식을 문서로 쌓아요' },
+      { path: '/work/labor', name: '공수 계산', icon: '◔', component: LaborReportView, title: '인원·기간·투입률로 공수를 계산해요' },
     ],
   },
   {
@@ -153,12 +178,7 @@ export const navGroups = [
       { path: '/stats/compare', name: '비교 분석', icon: '⇄', component: StatsCompareView, title: '계획 대비 실제를 깊게 비교해요' },
       { path: '/stats/godlife', name: '갓생 리포트', icon: '★', component: StatsGodlifeView, title: '이번 주 갓생 점수' },
       { path: '/insight', name: 'AI 리포트', icon: '✦', component: AiInsightView, title: 'AI가 발견한 나의 패턴' },
-      { path: '/work', name: '업무 리포트', icon: '▧', component: WorkReportView, title: '업무 시간을 정리해요' },
       { path: '/work/history', name: '업무 히스토리', icon: '▤', component: WorkHistoryView, title: '업무 인수인계 기록' },
-      { path: '/work/labor', name: '공수 계산', icon: '◔', component: LaborReportView, title: '인원·기간·투입률로 공수를 계산해요' },
-      { path: '/work/wbs', name: 'WBS', icon: '⊞', component: WbsView, title: '작업을 분해하고 진척을 굴려요' },
-      { path: '/work/wiki', name: '업무 위키', icon: '▤', component: WorkWikiView, title: '업무 지식을 문서로 쌓아요' },
-      { path: '/work/career', name: '경력·포트폴리오', icon: '🔒', component: CareerDocsView, title: '나만 보는 경력 기록이에요' },
     ],
   },
   {
