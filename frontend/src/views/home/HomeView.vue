@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { appearance } from '../../store/appearance'
 import { tasks, routines, events, openPostComposer, toggle, toggleRoutine, isRoutineToday, routineStore } from '../../store/appState'
 import { localDate } from '../../utils/postValidation.mjs'
 import { eventOccurrences } from '../../utils/recurrence.mjs'
@@ -66,7 +67,8 @@ const godlifeScore = computed(() => {
 
 const content = computed(() => modeContent(modeState.activeMode).home)
 
-const visibleWidgets = computed(() => dashboardState.layout.filter((w) => w.visible))
+// 점수 숨기기(UF-136)를 켜면 갓생 점수 위젯을 빼고 보인다. 저장된 배치는 바꾸지 않는다
+const visibleWidgets = computed(() => dashboardState.layout.filter((w) => w.visible && !(appearance.hideScores && w.id === 'godlifeScore')))
 const draggingId = ref(null)
 function onDragStart(id) {
   draggingId.value = id

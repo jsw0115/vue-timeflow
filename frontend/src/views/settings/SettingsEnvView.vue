@@ -95,6 +95,12 @@ function save() {
       <span style="flex: 1"><b>동작 줄이기</b><small>전환 효과와 애니메이션을 최소화해요</small></span>
     </label>
 
+    <!-- 점수 숨기기(PR-19 UF-136). 이 브라우저에만 저장한다. 랭킹 참여는 계정 설정이라 랭킹 화면에서 바꾼다 -->
+    <label class="task weekday-mode-toggle">
+      <input type="checkbox" v-model="appearance.hideScores" aria-describedby="hide-scores-help" />
+      <span><b>점수 숨기기</b><small id="hide-scores-help">홈·통계의 갓생 점수를 보이지 않게 해요. 기록과 계산은 그대로이고, 이 브라우저에만 저장돼요. 랭킹에서 빠지려면 랭킹 화면의 '랭킹에 나를 보이기'를 끄세요.</small></span>
+    </label>
+
     <DayBoundarySettings />
 
     <div class="section-label" style="margin-top: 22px">기본값</div>

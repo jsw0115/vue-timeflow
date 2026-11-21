@@ -26,13 +26,15 @@ function load() {
       density: DENSITIES[parsed.density] ? parsed.density : 'cozy',
       fontSize: FONT_SIZES[parsed.fontSize] ? parsed.fontSize : 'md',
       reduceMotion: !!parsed.reduceMotion,
+      // 점수 숨기기(PR-19 UF-136). 갓생 점수를 홈·통계에서 보이지 않게 한다. 계산이나 기록은 바꾸지 않는다
+      hideScores: parsed.hideScores === true,
     }
   } catch {
     return null
   }
 }
 
-export const appearance = reactive(load() ?? { density: 'cozy', fontSize: 'md', reduceMotion: false })
+export const appearance = reactive(load() ?? { density: 'cozy', fontSize: 'md', reduceMotion: false, hideScores: false })
 
 export function applyAppearance() {
   const root = typeof document !== 'undefined' ? document.documentElement : null

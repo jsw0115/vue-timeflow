@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { appearance } from '../../store/appearance'
 import Modal from '../../components/Modal.vue'
 import { session } from '../../features/auth/session.js'
 import { statsClient } from '../../features/stats/stats.js'
@@ -23,7 +24,8 @@ const RANGES = ['이번 주', '이번 달', '올해']
 const range = ref('이번 주')
 const showConfig = ref(false)
 
-const visible = computed(() => statsState.portlets.filter((p) => p.visible))
+// 점수 숨기기(UF-136)를 켜면 갓생 점수 포틀릿을 빼고 보인다. 저장된 구성은 바꾸지 않는다
+const visible = computed(() => statsState.portlets.filter((p) => p.visible && !(appearance.hideScores && p.id === 'godlifeScore')))
 const scale = computed(() => ({ '이번 주': 1, '이번 달': 4.3, 올해: 52 })[range.value])
 const unit = computed(() => ({ '이번 주': '주', '이번 달': '월', 올해: '년' })[range.value])
 

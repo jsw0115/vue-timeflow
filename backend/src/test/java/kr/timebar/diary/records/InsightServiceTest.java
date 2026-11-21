@@ -170,6 +170,21 @@ class InsightServiceTest {
         for (String key : List.of("planned", "actual", "focus", "tasks")) assertTrue(((List<?>) sources.get(key)).isEmpty(), key);
     }
 
+    /** UT-241(서버): 계획 없이 남긴 실제 기록 2시간도 실제 기록 시간에 그대로 들어가고, 계획 시간은 0으로 따로 센다(PR-19 UF-136). */
+    @Test
+    void unplannedRecordCountsTowardActualTotalWithoutPlan() {
+        when(aggregation.range(eq(user), any(), any())).thenReturn(new PlannerViewResponse(List.of(), List.of(), List.of()));
+        when(planner.find(eq(user), isNull(), isNull(), isNull(), isNull())).thenReturn(List.of());
+        store.create(user, FeatureType.ACTUAL_SESSION, Map.of("title", "가족 돌봄", "state", "COMPLETED", "timeZone", "Asia/Seoul", "startedAt", "2026-11-18T09:00:00Z", "endedAt", "2026-11-18T11:00:00Z", "elapsedSeconds", 7200));
+
+        var stats = insight.stats(user, "2026-11-18", "2026-11-18");
+
+        assertEquals(120L, stats.get("actualMinutes"));
+        assertEquals(0L, stats.get("plannedMinutes"));
+        var actual = (List<?>) ((Map<?, ?>) stats.get("sources")).get("actual");
+        assertEquals(List.of("가족 돌봄"), actual.stream().map(row -> ((Map<?, ?>) row).get("title")).toList());
+    }
+
     private static long sum(Object rows) {
         return ((List<?>) rows).stream().mapToLong(row -> ((Number) ((Map<?, ?>) row).get("minutes")).longValue()).sum();
     }

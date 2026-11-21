@@ -2,6 +2,7 @@
 import AppIcon from '../../components/icons/AppIcon.vue'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { appearance } from '../../store/appearance'
 import { isAutomationOn, toggleAutomation } from '../../store/automations'
 import { routines, tasks, routineRate } from '../../store/appState'
 import HelpPopover from '../../components/HelpPopover.vue'
@@ -94,6 +95,12 @@ const summary = computed(() => {
     </div>
   </div>
 
+  <!-- 점수 숨기기(UF-136): 점수와 점수 구성만 감춘다. 골든타임·뱃지는 점수가 아니라 그대로 둔다 -->
+  <section v-if="appearance.hideScores" class="card empty-state" style="margin-bottom: 16px" role="status">
+    <p>점수를 숨겨 두었어요. 기록과 계산은 그대로예요.</p>
+    <button type="button" class="button-secondary" @click="router.push('/settings/env')">환경 설정에서 다시 켜기</button>
+  </section>
+  <template v-else>
   <section class="card hero" style="margin-bottom: 16px; align-items: center">
     <div>
       <span class="pill">지난주 대비 {{ delta >= 0 ? '+' : '' }}{{ delta }}점</span>
@@ -110,8 +117,9 @@ const summary = computed(() => {
       <b class="figure">{{ b.score }}/{{ b.max }}</b>
     </div>
   </section>
+  </template>
 
-  <div class="three" style="grid-template-columns: 1.3fr 0.7fr">
+  <div class="three godlife-grid">
     <section class="card">
       <h3>골든 타임 존</h3>
       <div class="chart">
@@ -145,3 +153,9 @@ const summary = computed(() => {
     <template v-if="workPrivacy.excludeFromRanking"> 보안 설정에서 ‘랭킹·비교에서 제외’도 켜져 있어요.</template>
   </p>
 </template>
+
+<style scoped>
+/* 넓은 화면은 골든타임을 넓게, 760px 이하는 전역 .three 규칙처럼 1열로 쌓는다. 인라인 열 지정이 좁은 화면 규칙을 덮어 뱃지 글자가 한두 자씩 줄바꿈되던 문제를 고쳤다 */
+.godlife-grid { grid-template-columns: 1.3fr 0.7fr; }
+@media (max-width: 760px) { .godlife-grid { grid-template-columns: minmax(0, 1fr); } }
+</style>
