@@ -6,12 +6,10 @@ import { localDate } from '../../utils/postValidation.mjs'
 import { eventOccurrences } from '../../utils/recurrence.mjs'
 import { modeState, modeContent } from '../../store/modeProfiles'
 import { dashboardState, WIDGET_CATALOG, cycleSize, toggleVisible, moveWidget, resetLayout } from '../../store/dashboard'
+import QuickCapture from '../../components/QuickCapture.vue'
 
 const router = useRouter()
 
-// 히어로 입력 — 적은 내용을 바로 할 일로 만들고 목록으로 보낸다
-const heroInput = ref('')
-function submitHero() { openPostComposer('할 일', heroInput.value.trim()); heroInput.value = '' }
 /* 통계 포틀릿용 데이터 — 통계 화면과 같은 지표를 홈에서도 본다 */
 const CATEGORIES = [
   // 데이터 색 하나 + 중립 단계(DESIGN.md 2장 Category and chart colors). 범례 글자·비율이 함께 있어 색만으로 구분하지 않는다.
@@ -77,16 +75,11 @@ function onDrop(id) {
   <section class="home">
     <!-- 오늘 띠: 빠른 할 일 입력(주요 행동)과 오늘 수치를 한 구획에 둔다. 안에 카드를 겹치지 않는다(DESIGN.md 4장 Cards). -->
     <div class="today-band">
-      <form class="quick-capture" @submit.prevent="submitHero">
+      <div class="quick-capture">
         <h2 class="today-question" v-html="content.heroTitle"></h2>
-        <label for="quick-capture-input" class="quick-label">빠른 할 일</label>
-        <div class="quick-row">
-          <input id="quick-capture-input" v-model="heroInput" :placeholder="content.heroPlaceholder" aria-describedby="quick-capture-help" />
-          <!-- 저장이 아니라 작성 창을 여는 버튼이라 '저장하기' 대신 실제 동작을 쓴다(DESIGN.md 1장 신뢰) -->
-          <button type="submit" class="button-secondary">할 일로 적기</button>
-        </div>
-        <p id="quick-capture-help" class="input-field-help">적은 내용으로 할 일 작성 창을 열어요. 저장은 작성 창에서 해요.</p>
-      </form>
+        <!-- 빠른 기록(PR-09 3단계): 해석 미리보기를 확인한 뒤 바로 저장한다. 오전·오후가 모호하면 고르기 전에는 일정으로 저장하지 않는다 -->
+        <QuickCapture :placeholder="content.heroPlaceholder" />
+      </div>
       <div class="today-side">
         <dl class="today-glance" aria-label="오늘 한눈에">
           <div><dt>오늘 일정</dt><dd class="figure">{{ todayEvents.length }}</dd></div>
@@ -218,10 +211,6 @@ function onDrop(id) {
   padding: var(--space-xxl) var(--space-block); border-radius: var(--radius-xl); background: var(--color-surface);
 }
 .today-question { margin: 0 0 var(--space-xl); font-size: var(--type-title-lg-size); }
-.quick-label { display: block; margin-bottom: var(--space-sm); font-size: var(--type-body-sm-size); font-weight: 600; color: var(--color-foreground); }
-.quick-row { display: flex; gap: var(--space-md); }
-.quick-row input { flex: 1; min-width: 0; min-height: var(--input-height); padding: 0 var(--input-padding); border: 1px solid var(--color-control-border); font-size: var(--type-body-size); }
-.quick-capture .input-field-help { margin: var(--space-sm) 0 0; }
 .today-side { display: grid; gap: var(--space-xl); padding-left: var(--space-block); border-left: 1px solid var(--color-hairline); }
 .today-glance { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-xl); margin: 0; }
 .today-glance dt { font-size: var(--type-body-sm-size); color: var(--color-body); }
@@ -237,6 +226,5 @@ function onDrop(id) {
 }
 @media (max-width: 600px) {
   .today-band { padding: var(--space-xl); }
-  .quick-row { flex-direction: column; }
 }
 </style>
