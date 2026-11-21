@@ -54,9 +54,10 @@ export const FIELD_CATALOG = {
  * - B(밸런스): 둘을 고루 섞은 중간값.
  */
 const MODE_META = {
-  J: { name: 'J형 · 계획형', desc: '촘촘히 계획하고 그대로 실행하는 걸 선호해요' },
-  P: { name: 'P형 · 즉흥형', desc: '큰 흐름만 잡고 유연하게 움직이는 걸 선호해요' },
-  B: { name: '밸런스형', desc: '계획과 즉흥함을 고루 섞어서 관리해요' },
+  // 표시 이름만 쉬운 말로 바꾼다. 저장값 J·P·B는 그대로다(PR-19 UF-132, CF-002)
+  J: { name: '계획 중심', desc: '촘촘히 계획하고 그대로 실행하는 걸 선호해요' },
+  P: { name: '자유 기록', desc: '큰 흐름만 잡고 유연하게 움직이는 걸 선호해요' },
+  B: { name: '균형', desc: '계획과 즉흥함을 고루 섞어서 관리해요' },
 }
 
 function defaultFieldsFor(mode, domain) {

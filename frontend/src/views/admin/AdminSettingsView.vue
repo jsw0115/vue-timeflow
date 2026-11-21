@@ -73,7 +73,7 @@ const recentAudits = computed(() => auditLogs.value.slice(0, 3))
       <template v-if="section === 'service'">
         <label>서비스 이름<input v-model="draft.serviceName" /></label>
         <label>신규 가입 기본 모드
-          <select v-model="draft.defaultMode"><option value="J">J형 · 계획형</option><option value="P">P형 · 즉흥형</option><option value="B">밸런스형</option></select>
+          <select v-model="draft.defaultMode"><option value="J">계획 중심(J)</option><option value="P">자유 기록(P)</option><option value="B">균형(B)</option></select>
         </label>
         <label>사용자당 그룹 개수 제한<input type="number" min="1" max="100" v-model.number="draft.maxGroupsPerUser" /></label>
         <label class="task" style="border: 0;display: inline-flex;">
