@@ -3,6 +3,7 @@ import SettingsEnvView from '../views/settings/SettingsEnvView.vue'
 import SettingsFormStyleView from '../views/settings/SettingsFormStyleView.vue'
 import SettingsThemeView from '../views/settings/SettingsThemeView.vue'
 import SettingsWidgetsView from '../views/settings/SettingsWidgetsView.vue'
+import SettingsMenuView from '../views/settings/SettingsMenuView.vue'
 import SettingsAutomationView from '../views/settings/SettingsAutomationView.vue'
 import SettingsNotificationsView from '../views/settings/SettingsNotificationsView.vue'
 import SettingsSecurityView from '../views/settings/SettingsSecurityView.vue'
@@ -34,6 +35,7 @@ export const SETTINGS_GROUPS = [
       { id: 'forms', label: '글양식 · 화면 구성', icon: '✎', desc: '모드별 작성 항목과 포틀릿', component: SettingsFormStyleView },
       { id: 'theme', label: '테마 · 디자인', icon: '◑', desc: '표면 테마와 포인트 컬러', component: SettingsThemeView },
       { id: 'widgets', label: '위젯 설정', icon: '▦', desc: '홈 위젯 표시와 크기', component: SettingsWidgetsView },
+      { id: 'menu', label: '메뉴 · 즐겨찾기', icon: '☆', desc: '사이드바 맨 위에 둘 메뉴', component: SettingsMenuView },
     ],
   },
   {

@@ -347,6 +347,11 @@ p{font-size:var(--type-body-sm-size);color:var(--color-body);line-height:1.6;fon
 .nav-section:first-child{padding-top:0}
 .nav-section .chev{display:grid;place-items:center;font-style:normal;transform:none;transition:transform .15s;color:var(--color-muted)}
 .nav-section.collapsed .chev{transform:rotate(-90deg)}
+/* 즐겨찾기 묶음 머리(UF-131). 접지 않는 고정 묶음이라 버튼이 아니고, 편집은 설정의 메뉴 · 즐겨찾기로 간다 */
+.nav-favorites-head{cursor:default}
+.nav-favorites-edit{font-weight:500;color:var(--color-muted);text-decoration:underline;text-underline-offset:var(--space-xs)}
+.nav-favorites-edit:hover{color:var(--color-foreground)}
+.nav-favorites-edit:focus-visible{outline:var(--focus-ring-width) solid var(--color-accent);outline-offset:var(--focus-ring-offset);border-radius:var(--radius-xs)}
 
 /* 토글 스위치 + 설정 행 공통 */
 .toggle{width:40px;height:24px;cursor:pointer;border-radius:var(--radius-full);background:var(--color-surface);display:inline-flex;align-items:center;padding:2px;flex:none;vertical-align:middle;border:1px solid var(--color-control-border);transition:background-color var(--motion-fast)}

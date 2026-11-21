@@ -12,6 +12,7 @@ import { storageWarning } from './store/localCollection'
 import { communityComposer } from './store/communities'
 import CommunityCreateModal from './components/CommunityCreateModal.vue'
 import { modeState, modeMeta, applyWeekdayMode } from './store/modeProfiles'
+import { favoriteMenus, initNavFavorites } from './store/navFavorites'
 import { dayBoundary } from './features/records/dayBoundary.mjs'
 import { accountToday } from './features/quickInput/parseQuickInput.mjs'
 import GlobalSearchModal from './components/GlobalSearchModal.vue'
@@ -81,6 +82,10 @@ function isNavActive(item) {
   if (item.path === '/planner') return ['/planner', '/planner/daily', '/planner/weekly', '/planner/monthly', '/planner/yearly'].includes(route.path)
   return route.path === item.path
 }
+
+// 메뉴 즐겨찾기(UF-131): 사이드바 맨 위 바로가기. 원래 묶음의 메뉴는 그대로 둔다
+initNavFavorites(navGroups)
+const favorites = computed(() => favoriteMenus())
 
 const COLLAPSED_GROUPS_KEY = 'timeflow.nav.collapsedGroups'
 function loadCollapsedGroups() {
@@ -175,6 +180,14 @@ watch(() => route.path, () => { mobileNav.value = false; workspaceOpen.value = f
         <button v-for="mode in ['J', 'P', 'B']" :key="mode" :aria-pressed="modeState.activeMode === mode" @click="changeMode(mode)">{{ modeMeta(mode).name }}<span v-if="modeState.activeMode === mode">선택됨</span></button>
       </div></div>
       <nav>
+        <template v-if="favorites.length">
+          <div class="nav-section nav-favorites-head">즐겨찾기<router-link to="/settings/menu" class="nav-favorites-edit" aria-label="즐겨찾기 편집" @click="mobileNav = false">편집</router-link></div>
+          <router-link v-for="item in favorites" :key="'fav:' + item.path" :to="item.path" custom v-slot="{ navigate }">
+            <button :class="{ active: isNavActive(item) }" :aria-current="isNavActive(item) ? 'page' : undefined" @click="navigate(); mobileNav = false">
+              <span class="nav-icon"><AppIcon :name="NAV_ICONS[item.path]" :fallback="item.icon" /></span><span class="nav-text">{{ item.name }}</span>
+            </button>
+          </router-link>
+        </template>
         <template v-for="group in navGroups" :key="group.label">
           <button type="button" class="nav-section" :class="{ collapsed: isGroupCollapsed(group.label) }" @click="toggleGroup(group.label)">
             {{ group.label }}<i class="chev" aria-hidden="true"><AppIcon name="chevronDown" :size="14" /></i>
