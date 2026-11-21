@@ -24,6 +24,7 @@
 | [11-ui-ux-guidelines.md](11-ui-ux-guidelines.md) | 웹·모바일 UX 및 DESIGN.md 적용 | UI/UX 리뉴얼 |
 | [12-decisions-and-open-issues.md](12-decisions-and-open-issues.md) | 충돌·결정 대기·추가 확인사항 | 착수 전 검토 |
 | [13-source-reconciliation.md](13-source-reconciliation.md) | 제공 문서 간 기준일·상태 충돌 정리 | 문서 통합·정합성 점검 |
+| [14-baseline-reconciliation.md](14-baseline-reconciliation.md) | 현재 소스와의 대조 결과, 1단계(IA·커리어 원장) 적용 범위 | 구현 상태 확인 |
 
 ## 적용 원칙
 
@@ -74,3 +75,4 @@ flowchart TD
 | 버전 | 날짜 | 내용 |
 |---|---|---|
 | v2.1 | 2026-11-20 | 제공된 설계·메뉴·요구·기능개발·DB·외부 인터페이스 자료를 커리어 플랫폼 확장 기준으로 분리 정리 |
+| v2.1 보완 | 2026-11-21 | 14번 문서 추가: 소스 대조 결과와 커리어 메뉴·활동 원장·지원 관리·커리어 목표 1차 반영 범위 기록 |
