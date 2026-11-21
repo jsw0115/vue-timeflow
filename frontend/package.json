@@ -26,7 +26,8 @@
     "dev:lan": "vite --host 0.0.0.0",
     "check:preview": "node --test tests/device-preview.test.mjs",
     "docs:api": "node scripts/api-inventory.mjs",
-    "check:writing": "node --test tests/writing-flows.test.mjs"
+    "check:writing": "node --test tests/writing-flows.test.mjs",
+    "check:node": "node scripts/check-node.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.3",
