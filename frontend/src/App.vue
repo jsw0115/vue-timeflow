@@ -6,6 +6,7 @@ import { composer, openPostComposer } from './store/appState'
 import PostComposer from './components/PostComposer.vue'
 import LocalMigrationPrompt from './components/LocalMigrationPrompt.vue'
 import OutboxPanel from './components/OutboxPanel.vue'
+import NoticeBanner from './components/NoticeBanner.vue'
 import './store/postIndex'
 import { storageWarning } from './store/localCollection'
 import { communityComposer } from './store/communities'
@@ -222,6 +223,7 @@ watch(() => route.path, () => { mobileNav.value = false; workspaceOpen.value = f
           <div id="page-actions" class="page-actions"></div>
         </div>
       </header>
+      <NoticeBanner v-if="!isChat" />
       <p v-if="storageWarning" class="callout" role="alert">{{ storageWarning }}</p>
       <OutboxPanel />
       <PlannerViewSettings v-if="['/planner/daily', '/planner/weekly', '/planner/monthly', '/planner/yearly'].includes(route.path)" />
