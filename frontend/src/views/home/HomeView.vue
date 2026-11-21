@@ -184,7 +184,7 @@ function onDrop(id) {
           <div class="chart" style="height: 150px">
             <div v-for="b in PLAN_ACTUAL" :key="b.label"><i :style="{ height: b.plan + '%' }"></i><b :style="{ height: b.actual + '%' }"></b><small>{{ b.label }}</small></div>
           </div>
-          <div class="chart-legend"><span><i class="swatch plan"></i>계획</span><span><i class="swatch actual"></i>실제</span></div>
+          <div class="chart-legend"><span><i class="swatch plan"></i>계획</span><span><i class="swatch actual"></i>실제 기록</span></div>
         </template>
 
         <template v-else-if="w.id === 'streak'">

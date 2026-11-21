@@ -140,7 +140,7 @@ async function copyDraft() {
     </div>
     <div class="chart-legend">
       <span><i class="swatch plan"></i>계획</span>
-      <span><i class="swatch actual"></i>실제</span>
+      <span><i class="swatch actual"></i>실제 기록</span>
     </div>
   </section>
 

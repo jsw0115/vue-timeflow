@@ -37,7 +37,7 @@ export const FIELD_CATALOG = {
       { key: 'due', label: '마감일', locked: true },
       { key: 'priority', label: '우선순위' },
       { key: 'category', label: '카테고리' },
-      { key: 'planTime', label: 'Plan 시간대' },
+      { key: 'planTime', label: '계획 시간대' },
       { key: 'memo', label: '메모' },
       { key: 'subtasks', label: '서브태스크' },
       { key: 'reviewCard', label: '복습 카드 자동 생성' },

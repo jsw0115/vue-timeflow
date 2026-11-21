@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import Modal from '../../components/Modal.vue'
 import HelpPopover from '../../components/HelpPopover.vue'
+import TermHint from '../../components/TermHint.vue'
 import PageActions from '../../components/PageActions.vue'
 
 /**
@@ -78,7 +79,7 @@ function fixAll() {
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 1rem">공수 계산 · 8월</b>
+    <b style="font-size: 1rem"><TermHint term="공수" /> 계산 · 8월</b>
     <HelpPopover
       title="공수 계산 사용법"
       summary="투입 인원과 기간으로 필요한 공수를 산정하고, 실제 투입과 비교해 편차와 비용을 확인하는 화면이에요."
@@ -100,7 +101,7 @@ function fixAll() {
         '겸업으로 두 프로젝트를 함께 했다면 투입률을 나눠 각각 등록하세요.',
       ]"
     />
-    <span class="form-note" style="margin: 0">MD = 인원 × 기간(일) × 투입률 · 1 MM = {{ MD_PER_MM }} MD</span>
+    <span class="form-note" style="margin: 0"><TermHint term="MD" /> = 인원 × 기간(일) × 투입률 · 1 <TermHint term="MM" /> = {{ MD_PER_MM }} MD</span>
     <div class="form-row" style="margin: 0">
       <button class="review" style="margin: 0" @click="showAdd = true">+ 공수 항목</button>
       <PageActions><button class="primary" @click="fixAll">이번 달 확정하기</button></PageActions>

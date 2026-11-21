@@ -135,7 +135,7 @@ function hm(min) {
     <div class="head">
       <div>
         <h3 style="margin: 0">계획 대비 실제 · {{ activeRange.label }}</h3>
-        <p style="margin: 4px 0 0">막대는 계획/실제 시간, 아래 선은 달성률 추이예요</p>
+        <p style="margin: 4px 0 0">막대는 계획·실제 기록 시간, 아래 선은 달성률 추이예요</p>
       </div>
       <span class="badge ok">계획 {{ hm(totalPlanned) }} · 실제 {{ hm(totalActual) }}</span>
     </div>
@@ -158,7 +158,7 @@ function hm(min) {
     </div>
     <div class="chart-legend">
       <span><i class="swatch plan"></i>계획</span>
-      <span><i class="swatch actual"></i>실제</span>
+      <span><i class="swatch actual"></i>실제 기록</span>
       <span><i class="swatch dashed"></i>목표선 {{ target }}%</span>
     </div>
   </section>
@@ -166,7 +166,7 @@ function hm(min) {
   <section class="card">
     <h3>카테고리별 오차 드릴다운</h3>
     <div class="list" style="margin-top: 10px">
-      <div class="list-head" style="grid-template-columns: 1fr 1fr 1fr 1.2fr"><span>카테고리</span><span>계획</span><span>실제</span><span>달성률</span></div>
+      <div class="list-head" style="grid-template-columns: 1fr 1fr 1fr 1.2fr"><span>카테고리</span><span>계획</span><span>실제 기록</span><span>달성률</span></div>
       <div class="row" style="grid-template-columns: 1fr 1fr 1fr 1.2fr" v-for="d in drill" :key="d.name">
         <label>{{ d.name }}</label>
         <span class="figure">{{ hm(d.planned) }}</span>

@@ -8,6 +8,7 @@ import { createSaveState } from '../../features/records/saveState.mjs'
 import { syncPostCollection } from '../../store/tagging'
 import Modal from '../../components/Modal.vue'
 import HelpPopover from '../../components/HelpPopover.vue'
+import TermHint from '../../components/TermHint.vue'
 import { isFeatureOn } from '../../store/aiSettings'
 import { useCapabilityStatus } from '../../features/integrations/useCapabilityStatus.mjs'
 import PageActions from '../../components/PageActions.vue'
@@ -134,7 +135,7 @@ async function addNode() {
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 1rem">WBS · 작업 분해</b>
+    <b style="font-size: 1rem"><TermHint term="WBS" /> · 작업 분해</b>
     <HelpPopover
       title="WBS 사용법"
       summary="큰 일을 작은 작업으로 쪼개고, 공수와 진척이 위로 자동 합산되게 관리하는 화면이에요."
@@ -175,7 +176,7 @@ async function addNode() {
   </div>
 
   <section class="card list wbs-list">
-    <div class="list-head wbs-grid"><span>작업</span><span>담당</span><span>공수(MD)</span><span>진척</span><span>관리</span></div>
+    <div class="list-head wbs-grid"><span>작업</span><span>담당</span><span><TermHint term="공수" />(<TermHint term="MD" />)</span><span>진척</span><span>관리</span></div>
     <div class="row wbs-grid" v-for="n in rows" :key="n.id">
       <label :style="{ paddingLeft: depthOf(n) * 18 + 'px' }">
         <button class="wbs-caret" :class="{ leaf: isLeaf(n) }" @click="toggleOpen(n)">{{ isLeaf(n) ? '·' : n.open === false ? '›' : '⌄' }}</button>
