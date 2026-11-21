@@ -184,6 +184,7 @@ function labelOf(kind) {
 /* 종류 표식: 색 + 모양. 일정 동그라미, D-Day 마름모, 할 일 네모, 내 기록 고리 */
 .kind-mark { display: inline-block; flex: none; width: 8px; height: 8px; border-radius: var(--radius-full); background: var(--kind-color); }
 .kind-mark.kind-dday { border-radius: 1px; transform: rotate(45deg) scale(.85); }
+/* 종류 표식은 모양(원·마름모·사각형)으로 구분한다. 8px 칸에 radius-xs(4px)를 주면 원이 되어 구분이 사라지므로 사각형만 2px로 둔다(DESIGN.md 색만으로 구분하지 않기) */
 .kind-mark.kind-task { border-radius: 2px; }
 .kind-mark.kind-post { background: transparent; box-shadow: inset 0 0 0 2px var(--kind-color); }
 .cal-layout { grid-template-columns: minmax(0, 1fr) minmax(280px, 320px); }
