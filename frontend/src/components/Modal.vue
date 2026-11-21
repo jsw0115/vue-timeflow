@@ -41,12 +41,17 @@ function backdrop(event) {
 .app-dialog::backdrop { background: rgb(0 0 0 / 40%); }
 .app-dialog .modal-card, .app-dialog .modal-card.wide { width: 100%; height: 100%; max-width: none; max-height: none; box-shadow: none; display: flex; flex-direction: column; padding: 0; overflow: hidden; }
 .app-dialog .modal-head { flex-shrink: 0; padding: 20px 24px; margin: 0; border-bottom: 1px solid var(--color-hairline); }
-.modal-toolbar { padding: 16px 24px 0; flex-shrink: 0; }
+.modal-toolbar { padding: 16px 24px; flex-shrink: 0; }
 .modal-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 20px 24px; }
 .modal-footer { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 12px; flex-shrink: 0; padding: 16px 24px; border-top: 1px solid var(--color-hairline); background: var(--color-canvas); }
 .app-dialog .modal-footer .primary { width: auto; margin: 0; }
 .modal-footer>.form-row { width: 100%; margin: 0; }
 .modal-footer .chat-leave { margin-top: 0; }
 .modal-secondary { padding: 10px 18px; border: 1px solid var(--color-hairline); border-radius: var(--radius-full); background: var(--color-canvas); color: var(--color-foreground); font-size: 13px; }
-@media(max-width: 480px) { .app-dialog .modal-head, .modal-body, .modal-footer { padding: 16px; }.modal-toolbar { padding: 12px 16px 0; } }
+/* 색 선택은 전역 .modal-card input의 width:100%를 따르지 않고 견본 크기로 둔다. 높이는 입력 높이 토큰(44px)과 같다 */
+.modal-card input[type=color] { width: auto; min-width: var(--input-height); height: var(--input-height); padding: var(--space-xs); cursor: pointer; }
+@media(max-width: 480px) {
+  .app-dialog .modal-head, .modal-body, .modal-footer { padding: 16px; }
+  .modal-toolbar { padding: 12px 16px; }
+}
 </style>
