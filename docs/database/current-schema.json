@@ -1,5 +1,5 @@
 {
-  "capturedOn": "2026-11-19",
+  "capturedOn": "2026-11-22",
   "sourceHashNormalization": "UTF8_LF",
   "scope": "격리 개발 DB 메타데이터만 조회. 사용자 데이터 미조회.",
   "sourceHashes": {
@@ -10,11 +10,16 @@
     "backend/src/main/resources/db/chat/V2__mentions_and_tags.sql": "3a4fccdcdf4c181e390e9ce9f58419cba5a1af62390ef8a7719fdc6564e5d36c",
     "backend/src/main/resources/db/chat/V3__message_search.sql": "68718577b8ee764aaed518f348b97ea00bce9a177d5c88a5f09ae87397fcef31",
     "backend/src/main/resources/db/chat/V4__legacy_account_ids.sql": "a07812beff2bbba2d3eef7285e0e0866f8dfd42587016d0dd317cc5eb627f7a5",
+    "backend/src/main/resources/db/chat/V5__community_rooms.sql": "81ae6f4ecb3938a1ce3e187dc37283a8ace58b1168bc6908a33f7e5437fc7679",
     "backend/src/main/resources/db/chat-local-core/V1__isolated_local_core.sql": "47fefe9f4a6ac19bffb8be7045806276adcd8656abcbd6e59f673b06b03617de",
     "backend/src/main/resources/db/chat-local-core/V2__align_local_jpa_types.sql": "693f09990b11ad932ab06fb3501a37a157731d9c5e8b43e5cb2c93ddeda7cd9c",
     "backend/src/main/resources/db/core/V3__safe_core_schema.sql": "06937a228a4d263fb818d4a94c11d611cd181c39122f6aa5a02318e15374af37",
     "backend/src/main/resources/db/migration/V1__initial_schema.sql": "6f70f353bb20a4e19085db5d05cfe88690fcd6723d0ebaf043c29a0bc0a21d74",
     "backend/src/main/resources/db/timeflow_events.sql": "ca7a51a5f85b7a427047f83234ed504f1de615342ad45e54e3da0ef79239fbf7",
+    "backend/src/main/resources/db/workspace/V10__record_link.sql": "5d5084a76253f98311b60a01204442a6e3039b2510a6a1ff626c5403e27c662f",
+    "backend/src/main/resources/db/workspace/V11__group_share_level.sql": "f2cbbc20f5840f62f383eee688d1650ad4dcd9c8bc5db8e1628a8c95e12cae4f",
+    "backend/src/main/resources/db/workspace/V12__challenge_checkin.sql": "77effffc0cbf96719111e094f1ae41b44eb8e5c2c420af0f67dfbf6ae9b007a3",
+    "backend/src/main/resources/db/workspace/V13__task_due_time.sql": "c28609ef9070af4e0859344a6ec9ba23c248b40076e6b2ee2acddb48f9cef47b",
     "backend/src/main/resources/db/workspace/V4__task_checklist_and_planner_preferences.sql": "998dd947cc422c2f06af163cc52ba7067bb19b6d8572e6cd38e5df7c03c26b29",
     "backend/src/main/resources/db/workspace/V6__frontend_feature_records.sql": "e96b710e4a0f790f2671ac5d8392d575a69e18fcefd07a4bf8e94828643ea197",
     "backend/src/main/resources/db/workspace/V7__planner_item_version.sql": "8d407b2109b1f1a5327b2997b18fdf3ed499380bb9c2b2f5f01c781067d069ef",
@@ -26,6 +31,12 @@
       "schema": "timeflow_chat_dev",
       "section": "server",
       "mysqlVersion": "8.4.11"
+    },
+    {
+      "name": "challenge_checkin",
+      "engine": "InnoDB",
+      "section": "table",
+      "collation": "utf8mb4_0900_ai_ci"
     },
     {
       "name": "chat_member",
@@ -160,6 +171,12 @@
       "collation": "utf8mb4_unicode_ci"
     },
     {
+      "name": "record_link",
+      "engine": "InnoDB",
+      "section": "table",
+      "collation": "utf8mb4_0900_ai_ci"
+    },
+    {
       "name": "refresh_token",
       "engine": "InnoDB",
       "section": "table",
@@ -200,6 +217,126 @@
       "engine": "InnoDB",
       "section": "table",
       "collation": "utf8mb4_unicode_ci"
+    },
+    {
+      "key": "PRI",
+      "name": "challenge_id",
+      "type": "varchar(100)",
+      "extra": "",
+      "table": "challenge_checkin",
+      "comment": "",
+      "default": null,
+      "ordinal": 1,
+      "section": "column",
+      "nullable": "NO"
+    },
+    {
+      "key": "PRI",
+      "name": "user_id",
+      "type": "varchar(36)",
+      "extra": "",
+      "table": "challenge_checkin",
+      "comment": "",
+      "default": null,
+      "ordinal": 2,
+      "section": "column",
+      "nullable": "NO"
+    },
+    {
+      "key": "PRI",
+      "name": "check_date",
+      "type": "date",
+      "extra": "",
+      "table": "challenge_checkin",
+      "comment": "",
+      "default": null,
+      "ordinal": 3,
+      "section": "column",
+      "nullable": "NO"
+    },
+    {
+      "key": "",
+      "name": "method",
+      "type": "varchar(10)",
+      "extra": "",
+      "table": "challenge_checkin",
+      "comment": "",
+      "default": null,
+      "ordinal": 4,
+      "section": "column",
+      "nullable": "NO"
+    },
+    {
+      "key": "",
+      "name": "session_id",
+      "type": "varchar(100)",
+      "extra": "",
+      "table": "challenge_checkin",
+      "comment": "",
+      "default": null,
+      "ordinal": 5,
+      "section": "column",
+      "nullable": "YES"
+    },
+    {
+      "key": "",
+      "name": "session_title",
+      "type": "varchar(200)",
+      "extra": "",
+      "table": "challenge_checkin",
+      "comment": "",
+      "default": null,
+      "ordinal": 6,
+      "section": "column",
+      "nullable": "YES"
+    },
+    {
+      "key": "",
+      "name": "started_at",
+      "type": "datetime(6)",
+      "extra": "",
+      "table": "challenge_checkin",
+      "comment": "",
+      "default": null,
+      "ordinal": 7,
+      "section": "column",
+      "nullable": "YES"
+    },
+    {
+      "key": "",
+      "name": "ended_at",
+      "type": "datetime(6)",
+      "extra": "",
+      "table": "challenge_checkin",
+      "comment": "",
+      "default": null,
+      "ordinal": 8,
+      "section": "column",
+      "nullable": "YES"
+    },
+    {
+      "key": "",
+      "name": "minutes",
+      "type": "int",
+      "extra": "",
+      "table": "challenge_checkin",
+      "comment": "",
+      "default": null,
+      "ordinal": 9,
+      "section": "column",
+      "nullable": "YES"
+    },
+    {
+      "key": "",
+      "name": "created_at",
+      "type": "datetime(6)",
+      "extra": "",
+      "table": "challenge_checkin",
+      "comment": "",
+      "default": null,
+      "ordinal": 10,
+      "section": "column",
+      "nullable": "NO"
     },
     {
       "key": "PRI",
@@ -608,6 +745,18 @@
       "ordinal": 8,
       "section": "column",
       "nullable": "NO"
+    },
+    {
+      "key": "UNI",
+      "name": "community_id",
+      "type": "char(26)",
+      "extra": "",
+      "table": "chat_room",
+      "comment": "",
+      "default": null,
+      "ordinal": 9,
+      "section": "column",
+      "nullable": "YES"
     },
     {
       "key": "PRI",
@@ -1146,6 +1295,18 @@
       "comment": "",
       "default": null,
       "ordinal": 7,
+      "section": "column",
+      "nullable": "NO"
+    },
+    {
+      "key": "",
+      "name": "share_level",
+      "type": "varchar(10)",
+      "extra": "",
+      "table": "feature_member",
+      "comment": "",
+      "default": "none",
+      "ordinal": 8,
       "section": "column",
       "nullable": "NO"
     },
@@ -1859,6 +2020,78 @@
     },
     {
       "key": "PRI",
+      "name": "owner_id",
+      "type": "varchar(36)",
+      "extra": "",
+      "table": "record_link",
+      "comment": "",
+      "default": null,
+      "ordinal": 1,
+      "section": "column",
+      "nullable": "NO"
+    },
+    {
+      "key": "PRI",
+      "name": "source_kind",
+      "type": "varchar(20)",
+      "extra": "",
+      "table": "record_link",
+      "comment": "",
+      "default": null,
+      "ordinal": 2,
+      "section": "column",
+      "nullable": "NO"
+    },
+    {
+      "key": "PRI",
+      "name": "source_id",
+      "type": "varchar(100)",
+      "extra": "",
+      "table": "record_link",
+      "comment": "",
+      "default": null,
+      "ordinal": 3,
+      "section": "column",
+      "nullable": "NO"
+    },
+    {
+      "key": "PRI",
+      "name": "target_kind",
+      "type": "varchar(20)",
+      "extra": "",
+      "table": "record_link",
+      "comment": "",
+      "default": null,
+      "ordinal": 4,
+      "section": "column",
+      "nullable": "NO"
+    },
+    {
+      "key": "PRI",
+      "name": "target_id",
+      "type": "varchar(100)",
+      "extra": "",
+      "table": "record_link",
+      "comment": "",
+      "default": null,
+      "ordinal": 5,
+      "section": "column",
+      "nullable": "NO"
+    },
+    {
+      "key": "",
+      "name": "created_at",
+      "type": "datetime(6)",
+      "extra": "",
+      "table": "record_link",
+      "comment": "",
+      "default": null,
+      "ordinal": 6,
+      "section": "column",
+      "nullable": "NO"
+    },
+    {
+      "key": "PRI",
       "name": "id",
       "type": "varchar(26)",
       "extra": "",
@@ -2446,6 +2679,18 @@
       "nullable": "NO"
     },
     {
+      "key": "",
+      "name": "due_time",
+      "type": "time",
+      "extra": "",
+      "table": "task",
+      "comment": "",
+      "default": null,
+      "ordinal": 20,
+      "section": "column",
+      "nullable": "YES"
+    },
+    {
       "key": "PRI",
       "name": "id",
       "type": "varchar(26)",
@@ -2758,6 +3003,54 @@
       "nullable": "NO"
     },
     {
+      "name": "PRIMARY",
+      "table": "challenge_checkin",
+      "column": "challenge_id",
+      "section": "index",
+      "position": 1,
+      "nonUnique": 0
+    },
+    {
+      "name": "PRIMARY",
+      "table": "challenge_checkin",
+      "column": "user_id",
+      "section": "index",
+      "position": 2,
+      "nonUnique": 0
+    },
+    {
+      "name": "PRIMARY",
+      "table": "challenge_checkin",
+      "column": "check_date",
+      "section": "index",
+      "position": 3,
+      "nonUnique": 0
+    },
+    {
+      "name": "uk_challenge_checkin_session",
+      "table": "challenge_checkin",
+      "column": "challenge_id",
+      "section": "index",
+      "position": 1,
+      "nonUnique": 0
+    },
+    {
+      "name": "uk_challenge_checkin_session",
+      "table": "challenge_checkin",
+      "column": "user_id",
+      "section": "index",
+      "position": 2,
+      "nonUnique": 0
+    },
+    {
+      "name": "uk_challenge_checkin_session",
+      "table": "challenge_checkin",
+      "column": "session_id",
+      "section": "index",
+      "position": 3,
+      "nonUnique": 0
+    },
+    {
       "name": "ix_chat_member_user",
       "table": "chat_member",
       "column": "user_id",
@@ -3025,6 +3318,14 @@
       "name": "uk_chat_direct",
       "table": "chat_room",
       "column": "direct_key",
+      "section": "index",
+      "position": 1,
+      "nonUnique": 0
+    },
+    {
+      "name": "uk_chat_room_community",
+      "table": "chat_room",
+      "column": "community_id",
       "section": "index",
       "position": 1,
       "nonUnique": 0
@@ -3411,6 +3712,70 @@
       "column": "user_id",
       "section": "index",
       "position": 1,
+      "nonUnique": 0
+    },
+    {
+      "name": "ix_record_link_target",
+      "table": "record_link",
+      "column": "owner_id",
+      "section": "index",
+      "position": 1,
+      "nonUnique": 1
+    },
+    {
+      "name": "ix_record_link_target",
+      "table": "record_link",
+      "column": "target_kind",
+      "section": "index",
+      "position": 2,
+      "nonUnique": 1
+    },
+    {
+      "name": "ix_record_link_target",
+      "table": "record_link",
+      "column": "target_id",
+      "section": "index",
+      "position": 3,
+      "nonUnique": 1
+    },
+    {
+      "name": "PRIMARY",
+      "table": "record_link",
+      "column": "owner_id",
+      "section": "index",
+      "position": 1,
+      "nonUnique": 0
+    },
+    {
+      "name": "PRIMARY",
+      "table": "record_link",
+      "column": "source_kind",
+      "section": "index",
+      "position": 2,
+      "nonUnique": 0
+    },
+    {
+      "name": "PRIMARY",
+      "table": "record_link",
+      "column": "source_id",
+      "section": "index",
+      "position": 3,
+      "nonUnique": 0
+    },
+    {
+      "name": "PRIMARY",
+      "table": "record_link",
+      "column": "target_kind",
+      "section": "index",
+      "position": 4,
+      "nonUnique": 0
+    },
+    {
+      "name": "PRIMARY",
+      "table": "record_link",
+      "column": "target_id",
+      "section": "index",
+      "position": 5,
       "nonUnique": 0
     },
     {
@@ -3911,6 +4276,12 @@
       "expression": "(`attempts` >= 0)"
     },
     {
+      "name": "ck_chat_room_community",
+      "table": "chat_room",
+      "section": "check",
+      "expression": "((`community_id` is null) or (`kind` = _utf8mb4\\'GROUP\\'))"
+    },
+    {
       "name": "ck_chat_room_kind",
       "table": "chat_room",
       "section": "check",
@@ -3992,6 +4363,34 @@
       "description": "idempotency key"
     },
     {
+      "history": "core",
+      "section": "migration",
+      "success": 1,
+      "version": "10",
+      "description": "record link"
+    },
+    {
+      "history": "core",
+      "section": "migration",
+      "success": 1,
+      "version": "11",
+      "description": "group share level"
+    },
+    {
+      "history": "core",
+      "section": "migration",
+      "success": 1,
+      "version": "12",
+      "description": "challenge checkin"
+    },
+    {
+      "history": "core",
+      "section": "migration",
+      "success": 1,
+      "version": "13",
+      "description": "task due time"
+    },
+    {
       "history": "chat",
       "section": "migration",
       "success": 1,
@@ -4025,6 +4424,13 @@
       "success": 1,
       "version": "4",
       "description": "legacy account ids"
+    },
+    {
+      "history": "chat",
+      "section": "migration",
+      "success": 1,
+      "version": "5",
+      "description": "community rooms"
     }
   ]
 }

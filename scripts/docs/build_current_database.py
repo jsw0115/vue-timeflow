@@ -31,6 +31,7 @@ PURPOSES = {
     'feature_file': '첨부 파일의 실제 바이트·소유권·보관 기한',
     'idempotency_key': '계정별 생성 요청 멱등 키와 처음 만든 기록 ID(7일 보관)',
     'record_link': '할 일·일정·실제 기록 사이의 계정별 연결',
+    'challenge_checkin': '커뮤니티 챌린지의 날짜별 직접 인증과 실제 기록 인증',
     'chat_user': '통합 계정과 연결되는 채팅 사용자 표시 정보',
     'chat_room': 'DM·그룹 대화방과 방별 순번',
     'chat_member': '대화방 참여·탈퇴와 읽음 위치',
@@ -91,6 +92,17 @@ MEANINGS = {
     'script': '마이그레이션 스크립트 이름', 'checksum': 'Flyway 체크섬',
     'installed_by': '적용 DB 계정', 'installed_on': '적용 시각',
     'execution_time': '적용 소요 밀리초', 'success': '적용 성공 여부',
+    'due_time': '마감 시각(선택). NULL이면 시각 없음', 'share_level': '그룹에 내 일정을 보이는 범위(none·busy·title·detail)',
+    'source_kind': '연결 출발 기록 종류(task·schedule·actual)', 'source_id': '연결 출발 기록 식별자',
+    'target_kind': '연결 도착 기록 종류(task·schedule·actual)',
+    'challenge_id': '챌린지 식별자', 'check_date': '인증 날짜', 'method': '인증 방식(self 직접·record 실제 기록)',
+    'session_id': '인증에 쓴 실제 기록 식별자', 'session_title': '인증에 쓴 실제 기록 제목 스냅샷',
+    'started_at': '실제 기록 서버 시작 시각', 'ended_at': '실제 기록 서버 종료 시각', 'minutes': '실제 기록 분',
+    'community_id': '커뮤니티 채팅방의 커뮤니티 식별자. 그룹 방만 가능',
+}
+# 같은 컬럼 이름이 테이블마다 다른 뜻일 때 쓴다.
+TABLE_MEANINGS = {
+    ('record_link', 'target_id'): '연결 도착 기록 식별자',
 }
 
 
@@ -185,7 +197,7 @@ def render(data):
                   '| 컬럼 | DB 타입 | NULL 허용 | 기본값 | 키·추가 속성 | 의미 |', '| --- | --- | --- | --- | --- | --- |']
         for col in sections['column']:
             if col['table'] == name:
-                meaning = col['comment'] or MEANINGS.get(col['name'], '해당 도메인의 저장 필드. 아래 소스와 API 계약 참조')
+                meaning = col['comment'] or TABLE_MEANINGS.get((name, col['name'])) or MEANINGS.get(col['name'], '해당 도메인의 저장 필드. 아래 소스와 API 계약 참조')
                 lines.append('| ' + ' | '.join(cell(v) for v in [f"`{col['name']}`", col['type'], col['nullable'], col['default'], (col['key']+' '+col['extra']).strip() or '없음', meaning]) + ' |')
         indices = defaultdict(list)
         for idx in sections['index']:
@@ -204,11 +216,11 @@ def render(data):
     lines += ['## 마이그레이션과 재생성', '', '| 이력 | 버전 | 설명 | 성공 |', '| --- | --- | --- | --- |']
     for row in sections['migration']:
         lines.append(f"| {row['history']} | {row['version']} | {row['description']} | {row['success']} |")
-    lines += ['', '기준은 Core V3, workspace V4·V6, Java Core V5, Chat V1~V4입니다. V2 baseline은 과거 V1을 재실행하지 않기 위한 이력이며 마이그레이션 SQL을 수동 실행하라는 뜻이 아닙니다.', '',
+    lines += ['', '기준은 Core V3, workspace V4·V6~V13, Java Core V5, Chat V1~V5입니다. V2 baseline은 과거 V1을 재실행하지 않기 위한 이력이며 마이그레이션 SQL을 수동 실행하라는 뜻이 아닙니다.', '',
               '[스키마 메타데이터](current-schema.json)에 수집일·마이그레이션 소스의 UTF-8·LF 정규화 SHA-256을 함께 보관합니다. 운영체제 개행 차이는 해시 차이로 취급하지 않습니다. 생성기는 DB 사용자 행을 조회하거나 DDL을 실행하지 않습니다.', '',
               '```powershell', 'python scripts/docs/build_current_database.py --check',
               '# 격리 MySQL이 실행 중일 때만 메타데이터를 다시 캡처합니다.',
-              'python scripts/docs/build_current_database.py --capture-container timeflow-chat-mysql-1 --as-of 2026-10-31', '```', '',
+              f'python scripts/docs/build_current_database.py --capture-container timeflow-chat-mysql-1 --as-of {date}', '```', '',
               '기존 DB의 변경·복구는 [DB 환경과 마이그레이션 안내](environment.md)를 따릅니다. 운영 스키마와 자동 동기화하거나 과거 검토용 DDL을 적용하지 않습니다.', '']
     return '\n'.join(lines)
 
