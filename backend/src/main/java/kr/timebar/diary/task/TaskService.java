@@ -40,9 +40,11 @@ public class TaskService {
         if (request.version() != null && request.version() != 0) {
             throw new ApiException(ErrorCode.VALIDATION_FAILED, "새 할 일의 버전은 생략하거나 0이어야 합니다.");
         }
+        requireDueForTime(request);
         TaskEntity entity = new TaskEntity(userId, request.title(), request.note(), request.priority(),
                 request.energyLevel(), request.durationMin() == null ? 30 : request.durationMin(), request.due(),
                 request.categoryId(), request.categoryName(), request.categoryColor(), request.categoryIcon());
+        entity.changeDueTime(request.dueTime());
         return TaskResponse.from(taskRepository.saveAndFlush(entity));
     }
 
@@ -56,9 +58,12 @@ public class TaskService {
     public TaskResponse update(String userId, String taskId, TaskRequest request) {
         TaskEntity entity = lockOwned(userId, taskId);
         requireVersion(request.version(), entity);
+        requireDueForTime(request);
         entity.applyUpdate(request.title(), request.note(), request.priority(), request.energyLevel(),
                 request.durationMin() == null ? entity.getDurationMin() : request.durationMin(), request.due(),
                 request.categoryId(), request.categoryName(), request.categoryColor(), request.categoryIcon());
+        // 수정은 전체 교체라 보내지 않은 마감 시각은 지운다(마감 날짜와 같은 규칙)
+        entity.changeDueTime(request.dueTime());
         taskRepository.flush();
         return TaskResponse.from(entity);
     }
@@ -96,6 +101,7 @@ public class TaskService {
         TaskEntity copy = new TaskEntity(userId, original.getTitle() + " (복제)", original.getNote(), original.getPriority(),
                 original.getEnergyLevel(), original.getDurationMin(), original.getDue(),
                 original.getCategoryId(), original.getCategoryName(), original.getCategoryColor(), original.getCategoryIcon());
+        copy.changeDueTime(original.getDueTime());
         return TaskResponse.from(taskRepository.save(copy));
     }
 
@@ -117,5 +123,12 @@ public class TaskService {
     private TaskEntity lockOwned(String userId, String taskId) {
         return taskRepository.findOwnedForUpdate(taskId, userId)
                 .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND, "할 일을 찾을 수 없습니다."));
+    }
+
+    /** 마감 시각은 선택 입력이지만 마감 날짜 없이 시각만 둘 수는 없다(Q-31). */
+    private static void requireDueForTime(TaskRequest request) {
+        if (request.dueTime() != null && request.due() == null) {
+            throw new ApiException(ErrorCode.VALIDATION_FAILED, "마감 시각은 마감 날짜와 함께 정해 주세요.");
+        }
     }
 }

@@ -88,7 +88,7 @@ watch(() => route.query.new, (v) => { if (v) openModal() }, { immediate: true })
     </section>
     <aside class="card detail" v-if="activeTask">
       <h3>{{ activeTask.title }}</h3>
-      <p>{{ activeTask.date || '마감일 없음' }} · {{ activeTask.category }}</p>
+      <p>{{ activeTask.date ? activeTask.date + (activeTask.dueTime ? ' ' + activeTask.dueTime : '') : '마감일 없음' }} · {{ activeTask.category }}</p>
       <label>체크리스트 {{ activeChecklist.items.filter(item => item.done).length }}/{{ activeChecklist.items.length }}</label>
       <ul class="task-checklist-preview"><li v-for="item in activeChecklist.items" :key="item.id"><label><input type="checkbox" :checked="item.done" :aria-busy="taskStore.isItemBusy(item) ? 'true' : undefined" @click.prevent="taskStore.setItemDone(activeTask, item, !item.done)" /><span :class="{ done: item.done }">{{ item.title }}</span></label><small>{{ assigneeLabel(item) }}</small></li></ul>
       <p v-if="activeChecklist.status === 'loading'" class="input-field-help" role="status">체크리스트를 불러오는 중이에요.</p>

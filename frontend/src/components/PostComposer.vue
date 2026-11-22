@@ -73,6 +73,8 @@ async function save() {
       <ChecklistEditor v-if="kind === '할 일'" v-model="draft.subtasks" :account-only="storageMode === 'server'" />
       <div v-if="['할 일', '다이어리', 'D-Day', '머니로그', '회고'].includes(kind)" class="form-row">
         <label>{{ kind === '할 일' ? '마감일 (선택)' : '기록 날짜' }}<input v-model="draft.date" type="date" :required="kind !== '할 일'" /></label>
+        <label v-if="kind === '할 일'">마감 시각 (선택)<input v-model="draft.dueTime" type="time" :disabled="!draft.date" aria-describedby="composer-due-time-help" /></label>
+        <span v-if="kind === '할 일'" id="composer-due-time-help" class="input-field-help">마감일을 고르면 시각도 정할 수 있어요. 비워 두면 그날 안이 마감이에요.</span>
         <label v-if="kind === '할 일'">우선순위<select v-model="draft.priority"><option>높음</option><option>보통</option><option>낮음</option></select></label>
         <label v-if="kind === '다이어리'">기분<select v-model="draft.mood"><option v-for="mood in MOODS" :key="mood.code" :value="mood.code">{{ mood.label }}</option></select></label>
       </div>

@@ -767,6 +767,7 @@ Core·workspace 마이그레이션 이력.
 | `energy_lvl` | varchar(20) | NO | NULL | 없음 | 필요 에너지 수준 |
 | `duration_min` | int | NO | 30 | 없음 | 예상 소요 분 |
 | `due` | date | YES | NULL | 없음 | 마감 날짜 |
+| `due_time` | time | YES | NULL | 없음 | 마감 시각(선택, Q-31). V13 소스 기준으로 손으로 넣은 행이며 격리 DB 캡처 전이다(2026-11-22, Docker 데몬 없음). 다음 캡처 때 생성기가 다시 만든다 |
 | `cat_id` | varchar(26) | YES | NULL | 없음 | 분류 식별자 |
 | `cat_name` | varchar(60) | YES | NULL | 없음 | 분류 이름 스냅샷 |
 | `cat_color` | varchar(7) | YES | NULL | 없음 | 분류 색상 스냅샷 |

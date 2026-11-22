@@ -8,7 +8,7 @@ const KEPT = ['energyLevel', 'durationMin', 'categoryId', 'categoryColor', 'cate
 
 export function taskFromServer(row) {
   return {
-    id: row.id, version: row.version, title: row.title, body: row.note ?? '', date: row.due ?? '',
+    id: row.id, version: row.version, title: row.title, body: row.note ?? '', date: row.due ?? '', dueTime: row.dueTime ?? '',
     category: row.categoryName ?? '', priority: PRIORITY_LABEL[row.priority] ?? '보통',
     status: row.status, done: row.status === 'DONE',
     server: Object.fromEntries(KEPT.map((key) => [key, row[key] ?? null])),
@@ -19,12 +19,14 @@ export function taskBody(fields) {
   return {
     ...(fields.server ?? {}),
     title: (fields.title ?? '').trim(), note: fields.body ?? '', due: fields.date || null,
+    // 마감 시각은 선택 입력이고 마감일이 있을 때만 보낸다(Q-31). 보내지 않으면 서버가 지운다
+    dueTime: fields.date && fields.dueTime ? fields.dueTime : null,
     priority: PRIORITY[fields.priority] ?? 'MEDIUM', categoryName: fields.category || null,
   }
 }
 
 /** 화면이 고치는 할 일 필드. 이 값이 그대로면 할 일 본문 요청을 보내지 않는다. */
-export const TASK_FIELDS = ['title', 'body', 'date', 'category', 'priority']
+export const TASK_FIELDS = ['title', 'body', 'date', 'dueTime', 'category', 'priority']
 export const taskFieldsChanged = (task, draft) => TASK_FIELDS.some((key) => (task[key] ?? '') !== (key === 'title' ? draft.title.trim() : draft[key] ?? ''))
 
 /** 서버 담당자는 계정 ID다. 화면의 "나"(self)는 로그인 계정 ID와 같다(Q-21). */

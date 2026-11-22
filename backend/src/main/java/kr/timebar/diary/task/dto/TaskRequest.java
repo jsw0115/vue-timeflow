@@ -17,6 +17,12 @@ public record TaskRequest(
         String categoryName,
         String categoryColor,
         String categoryIcon,
-        Long version
+        Long version,
+        @com.fasterxml.jackson.annotation.JsonFormat(pattern = "HH:mm") java.time.LocalTime dueTime
 ) {
+    /** 마감 시각(Q-31)을 넣기 전의 호출부(메모 → 할 일 변환 등)는 시각 없이 만든다. */
+    public TaskRequest(String title, String note, TaskPriority priority, EnergyLevel energyLevel, Integer durationMin, LocalDate due,
+            String categoryId, String categoryName, String categoryColor, String categoryIcon, Long version) {
+        this(title, note, priority, energyLevel, durationMin, due, categoryId, categoryName, categoryColor, categoryIcon, version, null);
+    }
 }

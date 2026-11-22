@@ -52,7 +52,7 @@ test('할 일 서버 값과 화면 값을 서로 바꾸고, 화면에 없는 서
   const local = taskFromServer(row)
   assert.deepEqual([local.id, local.version, local.title, local.body, local.date, local.category, local.priority, local.done], ['t1', 3, '보고서', '본문', '2026-11-20', '업무', '높음', true])
   const body = taskBody({ ...local, title: ' 보고서 v2 ', priority: '낮음', date: '' })
-  assert.deepEqual(body, { energyLevel: 'LOW', durationMin: 45, categoryId: 'c9', categoryColor: '#43596b', categoryIcon: null, title: '보고서 v2', note: '본문', due: null, priority: 'LOW', categoryName: '업무' })
+  assert.deepEqual(body, { energyLevel: 'LOW', durationMin: 45, categoryId: 'c9', categoryColor: '#43596b', categoryIcon: null, title: '보고서 v2', note: '본문', due: null, dueTime: null, priority: 'LOW', categoryName: '업무' })
   assert.equal('version' in body, false, '본문 version은 어댑터가 붙인다')
   assert.deepEqual(checklistItemFromServer({ id: 'c1', title: '초안', completed: true, assigneeId: ME, version: 2 }, ME), { id: 'c1', version: 2, title: '초안', done: true, assigneeId: 'self' })
 })

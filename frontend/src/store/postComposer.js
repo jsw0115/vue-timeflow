@@ -15,7 +15,7 @@ export const postKinds = ['일정', '할 일', '루틴', '다이어리', '메모
 export function makePostDraft(kind) {
   const today = localDate()
   return { title: '', body: '', category: kind === '머니로그' ? '식비' : '개인', date: today, startDate: today, endDate: today,
-    startTime: '09:00', endTime: kind === '업무 기록' ? '18:00' : '10:00', priority: '보통', mood: 'calm',
+    startTime: '09:00', endTime: kind === '업무 기록' ? '18:00' : '10:00', dueTime: '', priority: '보통', mood: 'calm',
     color: '#2f5d46', attendeeIds: [], time: '19:00', duration: 30, days: [0, 1, 2, 3, 4, 5, 6],
     recurrence: makeRecurrence(kind === '루틴' ? { frequency: 'weekly', weekdays: [0,1,2,3,4,5,6] } : {}), subtasks: [],
     goalCount: 1, goalUnit: '회', notify: true, reminderMinutes: 10, notifyDays: [1],
@@ -34,6 +34,8 @@ export function postDraftError(kind, draft) {
   if (kind === '업무 기록') return workRecordError(draft)
   if (['다이어리', 'D-Day', '머니로그', '회고'].includes(kind) && !validDate(draft.date)) return '올바른 날짜를 입력해주세요.'
   if (kind === '할 일' && draft.date && !validDate(draft.date)) return '올바른 마감일을 입력해주세요.'
+  if (kind === '할 일' && draft.dueTime && !draft.date) return '마감 시각은 마감일과 함께 정해 주세요.'
+  if (kind === '할 일' && draft.dueTime && !/^([01]\d|2[0-3]):[0-5]\d$/.test(draft.dueTime)) return '마감 시각을 확인해 주세요.'
   if (kind === '할 일' && draft.subtasks?.some(item => !item.title.trim())) return '체크리스트 항목 이름을 입력해주세요.'
   if (kind === '머니로그' && (!Number.isFinite(draft.amount) || draft.amount <= 0)) return '금액을 0보다 크게 입력해주세요.'
   return ''
@@ -46,7 +48,7 @@ export async function savePostDraft(kind, draft, progress = null) {
   if (postDraftError(kind, draft)) return false
   const title = draft.title.trim(), body = draft.body.trim()
   if (kind === '할 일') {
-    await taskStore.createWithChecklist({ title, body, date: draft.date, category: draft.category, priority: draft.priority }, draft.subtasks ?? [], progress)
+    await taskStore.createWithChecklist({ title, body, date: draft.date, dueTime: draft.date ? draft.dueTime ?? '' : '', category: draft.category, priority: draft.priority }, draft.subtasks ?? [], progress)
     return true
   }
   if (kind === '일정') {

@@ -39862,6 +39862,16 @@
                 "type": "null"
               }
             ]
+          },
+          "dueTime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -39956,6 +39966,16 @@
               {
                 "type": "string",
                 "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "dueTime": {
+            "anyOf": [
+              {
+                "type": "string"
               },
               {
                 "type": "null"

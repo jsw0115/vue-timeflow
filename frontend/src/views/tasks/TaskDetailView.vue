@@ -21,8 +21,8 @@ const router = useRouter()
 const taskMode = taskStore.mode
 const task = computed(() => tasks.value.find((t) => String(t.id) === String(route.params.id)))
 
-const toDraft = (value, items) => ({ title: value.title, category: value.category, body: value.body ?? '', date: value.date ?? '', priority: value.priority ?? '보통', subtasks: items.map(item => ({ ...item })) })
-const draft = ref({ title: '', category: '업무', body: '', date: '', priority: '보통', subtasks: [] })
+const toDraft = (value, items) => ({ title: value.title, category: value.category, body: value.body ?? '', date: value.date ?? '', dueTime: value.dueTime ?? '', priority: value.priority ?? '보통', subtasks: items.map(item => ({ ...item })) })
+const draft = ref({ title: '', category: '업무', body: '', date: '', dueTime: '', priority: '보통', subtasks: [] })
 // 편집을 시작한 할 일과 그때의 서버 체크리스트. 저장은 이 version으로 보내 다른 곳의 변경을 모르고 덮어쓰지 않는다(UF-84)
 const base = ref(null)
 const baseline = ref([])
@@ -83,6 +83,7 @@ const compareRows = computed(() => {
     { label: '제목', mine: mine.title.trim(), latest: latest.title },
     { label: '카테고리', mine: mine.category, latest: latest.category },
     { label: '마감일', mine: mine.date, latest: latest.date },
+    { label: '마감 시각', mine: mine.dueTime ?? '', latest: latest.dueTime ?? '' },
     { label: '우선순위', mine: mine.priority, latest: latest.priority },
     { label: '내용', mine: mine.body, latest: latest.body },
     { label: '체크리스트', mine: summary(mine.subtasks), latest: summary(conflict.value.checklist) },
@@ -180,6 +181,7 @@ async function remove() {
       <label>제목<input v-model="draft.title" :aria-invalid="saving.state.field === 'title' ? 'true' : undefined" :aria-describedby="saving.state.field === 'title' ? 'task-title-error' : undefined" /><span v-if="saving.state.field === 'title'" id="task-title-error" class="input-field-help" data-state="error">{{ saving.state.fieldMessage }}</span></label>
       <label>카테고리<select v-model="draft.category"><option>업무</option><option>공부</option><option>건강</option><option>휴식</option><option>개인</option></select></label>
       <label>마감일<input type="date" v-model="draft.date" :aria-invalid="saving.state.field === 'date' ? 'true' : undefined" :aria-describedby="saving.state.field === 'date' ? 'task-date-error' : undefined" /><span v-if="saving.state.field === 'date'" id="task-date-error" class="input-field-help" data-state="error">{{ saving.state.fieldMessage }}</span></label>
+      <label>마감 시각 (선택)<input type="time" v-model="draft.dueTime" :disabled="!draft.date" /></label>
       <label>우선순위<select v-model="draft.priority"><option>높음</option><option>보통</option><option>낮음</option></select></label>
       <label>내용 · 태그 · 멘션<TagMentionInput v-model="draft.body" /></label>
       <p v-if="checklist.status === 'loading'" class="input-field-help" role="status">체크리스트를 불러오는 중이에요.</p>

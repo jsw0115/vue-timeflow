@@ -31,7 +31,7 @@ export function createTaskStore({ local, request = apiRequest, owner = () => ses
   let generation = 0
   scope.run(() => watch(owner, () => { generation++; checklists.clear(); notice.message = '' }, { flush: 'sync' }))
 
-  const fields = (draft) => ({ title: draft.title.trim(), body: draft.body ?? '', date: draft.date ?? '', category: draft.category ?? '', priority: draft.priority ?? '보통' })
+  const fields = (draft) => ({ title: draft.title.trim(), body: draft.body ?? '', date: draft.date ?? '', dueTime: draft.date ? draft.dueTime ?? '' : '', category: draft.category ?? '', priority: draft.priority ?? '보통' })
   const trimmed = (items) => (items ?? []).map((item) => ({ ...item, title: item.title.trim() }))
   // 요청 사이에 계정이 바뀌면 남은 요청을 보내지 않는다(새 계정의 토큰으로 이전 계정 기록을 고치지 않게)
   const scoped = (expected) => (url, options) => {

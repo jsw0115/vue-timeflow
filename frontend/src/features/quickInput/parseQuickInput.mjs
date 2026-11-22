@@ -120,12 +120,16 @@ export function timeLabel(hhmm) {
 
 /**
  * 고른 종류로 작성 초안 값을 만든다. 일정은 시작 시각부터 1시간(작성 창 기본 길이와 같다).
- * 할 일은 마감 날짜만 서버에 저장된다(시각 필드가 없다). 메모는 원문을 그대로 제목으로 둔다.
+ * 할 일은 마감 날짜와, 시각을 하나로 정했으면 마감 시각까지 넣는다(Q-31). 자정 마감은 그날 안이라 시각을 넣지 않는다. 메모는 원문을 그대로 제목으로 둔다.
  */
 export function draftFor(kind, result) {
   if (kind === '메모') return { title: result.raw.trim() }
   // 자정 마감은 그날이 끝나는 때라 할 일 마감 날짜는 그날(다음 날 00:00의 전날)이다
-  if (kind === '할 일') return { title: result.title, ...(result.date ? { date: result.nextDay ? addDays(result.date, -1) : result.date } : {}) }
+  if (kind === '할 일') {
+    if (!result.date) return { title: result.title }
+    if (result.nextDay) return { title: result.title, date: addDays(result.date, -1) }
+    return { title: result.title, date: result.date, ...(result.timeChosen ? { dueTime: result.timeChosen } : {}) }
+  }
   const start = result.timeChosen
   if (!start || !result.date) return null
   const [h, m] = start.split(':').map(Number)

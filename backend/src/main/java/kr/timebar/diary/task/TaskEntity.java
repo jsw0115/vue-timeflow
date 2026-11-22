@@ -53,6 +53,10 @@ public class TaskEntity {
 
     private LocalDate due;
 
+    /** 선택 입력인 마감 시각(Q-31). 마감 날짜가 있을 때만 둔다. */
+    @Column(name = "due_time")
+    private java.time.LocalTime dueTime;
+
     @Column(name = "cat_id", length = 26)
     private String categoryId;
 
@@ -114,6 +118,14 @@ public class TaskEntity {
         this.categoryName = categoryName;
         this.categoryColor = categoryColor;
         this.categoryIcon = categoryIcon;
+    }
+
+    public java.time.LocalTime getDueTime() {
+        return dueTime;
+    }
+
+    public void changeDueTime(java.time.LocalTime dueTime) {
+        this.dueTime = due == null ? null : dueTime;
     }
 
     public void toggleStatus() {

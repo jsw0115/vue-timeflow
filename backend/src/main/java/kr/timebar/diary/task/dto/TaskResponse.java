@@ -16,6 +16,7 @@ public record TaskResponse(
         EnergyLevel energyLevel,
         int durationMin,
         LocalDate due,
+        @com.fasterxml.jackson.annotation.JsonFormat(pattern = "HH:mm") java.time.LocalTime dueTime,
         String categoryId,
         String categoryName,
         String categoryColor,
@@ -24,7 +25,7 @@ public record TaskResponse(
 ) {
     public static TaskResponse from(TaskEntity entity) {
         return new TaskResponse(entity.getId(), entity.getTitle(), entity.getNote(), entity.getStatus(),
-                entity.getPriority(), entity.getEnergyLevel(), entity.getDurationMin(), entity.getDue(),
+                entity.getPriority(), entity.getEnergyLevel(), entity.getDurationMin(), entity.getDue(), entity.getDueTime(),
                 entity.getCategoryId(), entity.getCategoryName(), entity.getCategoryColor(), entity.getCategoryIcon(),
                 entity.getPublicVersion());
     }

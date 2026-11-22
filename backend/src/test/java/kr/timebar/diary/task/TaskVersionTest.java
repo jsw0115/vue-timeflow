@@ -206,4 +206,31 @@ class TaskVersionTest {
         assertThrows(org.springframework.dao.DataIntegrityViolationException.class,
                 () -> jdbc.update("UPDATE task SET version = NULL WHERE id = '01JTASK0000000000000000000'"));
     }
+
+    /** Q-31: 마감 시각은 선택 입력이고 "HH:mm"으로 오간다. 날짜 없이 시각만은 400, 수정에서 빼면 지워지고, 복제는 시각까지 옮긴다. */
+    @Test void dueTimeIsOptionalNeedsADateAndRoundTripsAsHourMinute() throws Exception {
+        mvc.perform(post("/api/tasks").contentType(MediaType.APPLICATION_JSON).content("{\"title\":\"치과\",\"due\":\"2026-11-23\",\"dueTime\":\"15:00\"}"))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.data.dueTime").value("15:00"));
+        mvc.perform(post("/api/tasks").contentType(MediaType.APPLICATION_JSON).content("{\"title\":\"시각만\",\"dueTime\":\"15:00\"}"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(post("/api/tasks").contentType(MediaType.APPLICATION_JSON).content("{\"title\":\"시각 없음\",\"due\":\"2026-11-23\"}"))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.data.dueTime").doesNotExist());
+        TaskResponse timed = tasks.create(owner, new TaskRequest("회의 준비", null, null, null, null, java.time.LocalDate.parse("2026-11-24"), null, null, null, null, null, java.time.LocalTime.of(9, 30)));
+        assertEquals(java.time.LocalTime.of(9, 30), tasks.duplicate(owner, timed.id()).dueTime());
+        TaskResponse cleared = tasks.update(owner, timed.id(), new TaskRequest("회의 준비", null, null, null, null, java.time.LocalDate.parse("2026-11-24"), null, null, null, null, timed.version()));
+        org.junit.jupiter.api.Assertions.assertNull(cleared.dueTime());
+    }
+
+    /** V13은 기존 할 일을 그대로 두고 마감 시각을 NULL로 시작한다. */
+    @Test void dueTimeMigrationKeepsExistingRows() {
+        var source = new DriverManagerDataSource("jdbc:h2:mem:task_due_time_" + UUID.randomUUID() + ";MODE=MySQL;DB_CLOSE_DELAY=-1", "sa", "");
+        var jdbc = new JdbcTemplate(source);
+        jdbc.execute("CREATE TABLE task (id VARCHAR(26) PRIMARY KEY, title VARCHAR(200), due DATE)");
+        jdbc.update("INSERT INTO task (id, title, due) VALUES (?, ?, ?)", "01JTASK0000000000000000001", "기존 할 일", java.sql.Date.valueOf("2026-11-20"));
+        new ResourceDatabasePopulator(new ClassPathResource("db/workspace/V13__task_due_time.sql")).execute(source);
+        assertEquals("기존 할 일", jdbc.queryForObject("SELECT title FROM task WHERE id = '01JTASK0000000000000000001'", String.class));
+        org.junit.jupiter.api.Assertions.assertNull(jdbc.queryForObject("SELECT due_time FROM task WHERE id = '01JTASK0000000000000000001'", java.sql.Time.class));
+        jdbc.update("UPDATE task SET due_time = '15:00:00' WHERE id = '01JTASK0000000000000000001'");
+        assertEquals(java.sql.Time.valueOf("15:00:00"), jdbc.queryForObject("SELECT due_time FROM task WHERE id = '01JTASK0000000000000000001'", java.sql.Time.class));
+    }
 }

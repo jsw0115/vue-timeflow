@@ -61,5 +61,7 @@ test('홈은 빠른 기록 컴포넌트를 쓰고, 작성 창과 같은 저장 �
   assert.match(read('../src/views/home/HomeView.vue'), /<QuickCapture /)
   const capture = read('../src/components/QuickCapture.vue')
   assert.match(capture, /savePostDraft\(which, full\.value\)/)
-  assert.match(capture, /할 일은 마감 날짜만 저장돼요/)
+  // Q-31 뒤로 할 일도 마감 시각을 저장한다. 오전·오후를 안 고른 경우만 날짜만 저장한다고 알린다
+  assert.match(capture, /오전·오후를 고르지 않으면 마감 날짜만 저장돼요/)
+  assert.doesNotMatch(capture, /적은 시간은 저장되지 않아요/)
 })
