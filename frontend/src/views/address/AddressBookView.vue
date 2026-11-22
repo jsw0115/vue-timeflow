@@ -5,6 +5,8 @@ import Modal from '../../components/Modal.vue'
 import ListFilterBar from '../../components/ListFilterBar.vue'
 import { contacts, groups, membersOf, isBlocked, toggleBlock, toggleMember, contactById } from '../../store/contacts'
 import PageActions from '../../components/PageActions.vue'
+import AccountAddressBook from '../../components/AccountAddressBook.vue'
+import { session } from '../../features/auth/session.js'
 
 const router = useRouter()
 const keyword = ref('')
@@ -55,6 +57,9 @@ function inviteToGroup(g) {
 </script>
 
 <template>
+  <!-- 로그인 상태는 계정 주소록(서버, Q-21). 아래 시연 주소록(그룹·차단·참석자 선택)은 로그아웃 상태에서만 보인다 -->
+  <AccountAddressBook v-if="session.userId" />
+  <template v-else>
   <PageActions><button class="primary" @click="showPicker = true">참석자 선택</button></PageActions>
 
   <ListFilterBar
@@ -120,4 +125,5 @@ function inviteToGroup(g) {
       <button class="primary" @click="inviteFor = null">완료</button>
     </template>
   </Modal>
+  </template>
 </template>

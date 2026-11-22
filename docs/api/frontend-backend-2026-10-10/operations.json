@@ -3685,6 +3685,78 @@
     "externalBoundary": false
   },
   {
+    "method": "DELETE",
+    "route": "/api/contacts/{id}/account",
+    "parameters": [
+      {
+        "name": "id",
+        "type": "String",
+        "location": "path",
+        "required": true
+      },
+      {
+        "name": "version",
+        "type": "long",
+        "location": "query",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "?",
+    "controller": "ContactAccountController",
+    "kind": "서비스 연결",
+    "implementationStatus": "서비스 연결 · 검증 범위 별도",
+    "public": false,
+    "responseSchema": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "externalBoundary": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/contacts/{id}/account",
+    "parameters": [
+      {
+        "name": "id",
+        "type": "String",
+        "location": "path",
+        "required": true
+      },
+      {
+        "name": "body",
+        "type": "Map<String,Object>",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "?",
+    "controller": "ContactAccountController",
+    "kind": "서비스 연결",
+    "implementationStatus": "서비스 연결 · 검증 범위 별도",
+    "public": false,
+    "requestSchema": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "version"
+      ],
+      "additionalProperties": false,
+      "description": "연락처 이메일과 정확히 같은 활성 계정을 찾아 accountId·accountNickname을 넣는다(Q-21). 이메일이 없으면 400, 없는 계정·자기 자신·차단은 같은 404, 사람 찾기와 같은 1분 20번 제한(429). 일반 저장에서는 이 두 값을 받지 않고, 이메일이 바뀌면 연결을 끊는다."
+    },
+    "responseSchema": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "externalBoundary": false
+  },
+  {
     "method": "GET",
     "route": "/api/content",
     "parameters": [],

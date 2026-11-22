@@ -28,6 +28,8 @@ public class RecordService {
         Map<String, Object> data = FeatureInput.validate(type, body);
         if (type == FeatureType.MEMO && !data.containsKey("date")) data.put("date", LocalDate.now(java.time.ZoneId.of("Asia/Seoul")).toString());
         if (type == FeatureType.ROUTINE_RECORD && routines != null) data = routines.prepare(user, null, data);
+        // 연락처의 계정 연결은 연결 API(ContactAccounts.link)로만 정한다(Q-21)
+        if (type == FeatureType.CONTACT) data = ContactAccounts.prepare(null, data);
         return store.create(user, type, data);
     }
     /** 멱등 키가 있으면 같은 키로 다시 온 요청에 처음 만든 기록을 돌려준다(로컬 자료 이전, Q-13). */
@@ -38,6 +40,7 @@ public class RecordService {
         Map<String, Object> data = FeatureInput.validate(type, body);
         // 루틴은 수정 전 저장값과 비교해 지난 날짜 쉬는 날·중지 기간을 서버가 정한다(Q-19·Q-20)
         if (type == FeatureType.ROUTINE_RECORD && routines != null) data = routines.prepare(user, store.get(user, type, id), data);
+        if (type == FeatureType.CONTACT) data = ContactAccounts.prepare(store.get(user, type, id), data);
         return store.replace(user, type, id, FeatureInput.version(body), data);
     }
     /** 멱등 키가 있으면 응답을 잃어 다시 보낸 같은 수정에 처음 결과의 기록을 돌려준다(PR-12). 키는 수정할 기록 ID와 함께 해시한다. */

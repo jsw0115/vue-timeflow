@@ -135,6 +135,7 @@ const custom = {
   'POST /api/planner/recordings/{id}/resume': { ...object({ version: integer(1) }, ['version']), description: '일시정지(PAUSED) 기록의 마지막 일시정지를 서버 현재 시각으로 닫고 다시 시작한다. 상태나 version이 다르면 409.' },
   'POST /api/planner/recordings/{id}/cancel': { ...object({ version: integer(1) }, ['version']), description: '끝내지 않은 기록을 지우고 원본 연결도 지운다. 끝낸 기록은 409, 다른 계정 기록은 404.' },
   'POST /api/memos/{id}/convert-to-task': object({ version: integer(1), due: date, category: string() }, ['version']),
+  'POST /api/contacts/{id}/account': { ...object({ version: integer(1) }, ['version']), description: '연락처 이메일과 정확히 같은 활성 계정을 찾아 accountId·accountNickname을 넣는다(Q-21). 이메일이 없으면 400, 없는 계정·자기 자신·차단은 같은 404, 사람 찾기와 같은 1분 20번 제한(429). 일반 저장에서는 이 두 값을 받지 않고, 이메일이 바뀌면 연결을 끊는다.' },
   'POST /api/events/templates/{id}/apply': object({ date, startTime: string(5) }, ['date', 'startTime']),
   'POST /api/planner/templates/{id}/apply': object({ date }, ['date']),
   'PUT /api/planner/reviews/{date}': ref('REVIEWDateUpsert'), 'PUT /api/planner/canvas': ref('BOARDUpsert'), 'PUT /api/work/resume': ref('RESUMEUpsert'),

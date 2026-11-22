@@ -55,6 +55,7 @@ public class FeatureTestConfig {
     @Bean kr.timebar.diary.social.ShareCalendar shareCalendar(SocialService social, ScheduleService schedules, JdbcTemplate jdbc, UserRepository users) { return new kr.timebar.diary.social.ShareCalendar(social, schedules, jdbc, users); }
     @Bean kr.timebar.diary.social.ChallengeService challenges(FeatureStore store, JdbcTemplate jdbc, SocialService social, DayPolicy days, UserRepository users) { return new kr.timebar.diary.social.ChallengeService(store, jdbc, social, days, users); }
     @Bean kr.timebar.diary.social.PeopleFinder peopleFinder(UserRepository users, SocialService social) { return new kr.timebar.diary.social.PeopleFinder(users, social); }
+    @Bean kr.timebar.diary.records.ContactAccounts contactAccounts(FeatureStore store, kr.timebar.diary.social.PeopleFinder people) { return new kr.timebar.diary.records.ContactAccounts(store, people); }
     @Bean AdminService admin(UserRepository users, FeatureStore store, RefreshTokenRepository tokens, PasswordEncoder encoder, PasswordPolicy passwords) { return new AdminService(users, store, tokens, encoder, passwords); }
     @Bean SettingsService settings(FeatureStore store, UserRepository users, PasswordEncoder encoder, PasswordPolicy passwords, RefreshTokenRepository tokens) { return new SettingsService(store, users, encoder, passwords, tokens); }
 }

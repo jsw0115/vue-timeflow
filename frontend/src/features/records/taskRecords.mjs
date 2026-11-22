@@ -51,9 +51,18 @@ export async function syncChecklist({ request, taskId, baseline, draft, me }) {
     const order = items.map((item) => item.id)
     return { baseline: [...saved.values()].sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id)), draft: items, error }
   }
+  // 다른 계정을 항목 담당자로 정하려면 그 계정이 먼저 할 일 담당자 후보여야 한다(서버 TaskChecklistService). 한 번만 등록한다(Q-21)
+  const ensured = new Set()
+  const ensure = async (assigneeId) => {
+    const id = assigneeBody(assigneeId, me)
+    if (!id || id === me || ensured.has(id)) return
+    await request(`/api/tasks/${encodeURIComponent(taskId)}/assignees/${encodeURIComponent(id)}`, { method: 'PUT' })
+    ensured.add(id)
+  }
   try {
     for (const item of [...items]) {
       let current = saved.get(item.id)
+      if (!current || (current.assigneeId ?? null) !== (item.assigneeId ?? null)) await ensure(item.assigneeId)
       if (!current) {
         current = await send(path, 'POST', { title: item.title, assigneeId: assigneeBody(item.assigneeId, me) })
         saved.set(current.id, current)

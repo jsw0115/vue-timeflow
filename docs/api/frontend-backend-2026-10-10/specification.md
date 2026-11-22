@@ -1239,6 +1239,8 @@ verify는 self(직접 인증, 기본) 또는 record(실시간 실제 기록으�
 | relation | string 또는 null | 아니오 | 기능 규약 참조 |
 | email | string 또는 null | 아니오 | 기능 규약 참조 |
 | favorite | boolean 또는 null | 아니오 | 기능 규약 참조 |
+| accountId | string 또는 null | 아니오 | 기능 규약 참조 |
+| accountNickname | string 또는 null | 아니오 | 기능 규약 참조 |
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 
@@ -1277,7 +1279,36 @@ verify는 self(직접 인증, 기본) 또는 record(실시간 실제 기록으�
 | relation | string 또는 null | 아니오 | 기능 규약 참조 |
 | email | string 또는 null | 아니오 | 기능 규약 참조 |
 | favorite | boolean 또는 null | 아니오 | 기능 규약 참조 |
+| accountId | string 또는 null | 아니오 | 기능 규약 참조 |
+| accountNickname | string 또는 null | 아니오 | 기능 규약 참조 |
 | version | integer | 예 | 최소 1 |
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## DELETE /api/contacts/{id}/account
+
+인증은 JWT이며 소스는 ContactAccountController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | id | String | 예 | 없음 |
+| query | version | long | 예 | 없음 |
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## POST /api/contacts/{id}/account
+
+인증은 JWT이며 소스는 ContactAccountController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | id | String | 예 | 없음 |
+
+| 본문 필드 | 타입 | 필수 | 제약 |
+|---|---|---|---|
+| version | integer | 예 | 최소 1 |
+
+연락처 이메일과 정확히 같은 활성 계정을 찾아 accountId·accountNickname을 넣는다(Q-21). 이메일이 없으면 400, 없는 계정·자기 자신·차단은 같은 404, 사람 찾기와 같은 1분 20번 제한(429). 일반 저장에서는 이 두 값을 받지 않고, 이메일이 바뀌면 연결을 끊는다.
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 
