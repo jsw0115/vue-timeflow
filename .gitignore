@@ -114,3 +114,4 @@ security/private-reports/
 docs/agent/records/*/raw-logs/
 __pycache__/
 *.pyc
+.agents/
