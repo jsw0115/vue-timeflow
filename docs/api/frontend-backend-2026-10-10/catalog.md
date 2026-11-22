@@ -1,6 +1,6 @@
 # API 목록
 
-기준 2026-10-10. 총 313개 매핑이며 wildcard 경로는 허용된 값을 선택한다. 채팅은 CHAT_ENABLED=true 조건부 등록이다. 구현·검증 범위는 [검증 기록](verification.md)을 확인한다.
+기준 2026-10-10. 총 314개 매핑이며 wildcard 경로는 허용된 값을 선택한다. 채팅은 CHAT_ENABLED=true 조건부 등록이다. 구현·검증 범위는 [검증 기록](verification.md)을 확인한다.
 
 | 메서드 | 경로 | 인증 | 처리 | 소스 |
 |---|---|---|---|---|
@@ -158,6 +158,7 @@
 | GET | `/api/notices` | JWT | 실제 처리 소스 있음 | SupportController |
 | GET | `/api/notifications` | JWT | 실제 처리 소스 있음 | RecordActionsController |
 | DELETE | `/api/notifications/{id}` | JWT | 실제 처리 소스 있음 | RecordActionsController |
+| POST | `/api/notifications/{id}/actions/{action}` | JWT | 실제 처리 소스 있음 | NotificationRefreshController |
 | PUT | `/api/notifications/{id}/read` | JWT | 실제 처리 소스 있음 | RecordActionsController |
 | POST | `/api/notifications/due-refresh` | JWT | 실제 처리 소스 있음 | NotificationRefreshController |
 | PUT | `/api/notifications/read-all` | JWT | 실제 처리 소스 있음 | RecordActionsController |

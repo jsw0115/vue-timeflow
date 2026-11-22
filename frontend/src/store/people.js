@@ -1,7 +1,7 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { session } from '../features/auth/session.js'
 import { apiRequest } from '../features/auth/apiRequest.js'
-import { createNotificationClient } from '../features/notifications/notificationClient.mjs'
+import { actionErrorText, createNotificationClient, fromServer, isVisible } from '../features/notifications/notificationClient.mjs'
 import { contacts, isBlocked, toggleBlock, groups } from './contacts'
 
 /**
@@ -77,7 +77,10 @@ const demoNotifications = ref([
 const notificationClient = createNotificationClient(apiRequest)
 const serverNotifications = ref([])
 export const notificationState = reactive({ status: 'idle', message: '' })
-export const notifications = computed(() => (session.userId ? serverNotifications.value : demoNotifications.value))
+// 1분마다 바뀌는 시각으로 "10분 뒤"로 미룬 알림을 다시 보인다
+const clockTick = ref(Date.now())
+if (typeof window !== 'undefined') setInterval(() => { clockTick.value = Date.now() }, 60000)
+export const notifications = computed(() => (session.userId ? serverNotifications.value.filter((n) => isVisible(n, clockTick.value)) : demoNotifications.value))
 export const unreadNotifications = computed(() => notifications.value.filter((n) => !n.read).length)
 /** 앱을 열 때·알림함을 볼 때 부른다. 서버가 마감 알림을 계산한 뒤 목록을 읽는다(같은 사용자는 5분에 한 번만 계산). */
 export async function loadNotifications() {
@@ -103,6 +106,21 @@ export function markAllRead() {
   if (!session.userId) { demoNotifications.value.forEach((n) => (n.read = true)); return }
   serverNotifications.value.forEach((n) => (n.read = true))
   void onServer(() => notificationClient.readAll())
+}
+/** 알림에서 바로 처리(UF-126). action: complete | snooze. 결과는 서버 알림에 남아 다른 기기에서도 처리됨으로 보인다(UF-127) */
+export async function actOnNotification(n, action) {
+  notificationState.message = ''
+  try {
+    const result = await notificationClient.act(n, action)
+    const next = fromServer(result.notification)
+    serverNotifications.value = serverNotifications.value.map((row) => (row.id === n.id ? next : row))
+    notificationState.message = result.result === 'already' ? '이미 완료된 할 일이었어요. 알림을 처리됨으로 바꿨어요.' : result.result === 'snoozed' ? '10분 뒤에 다시 알려 드릴게요.' : '할 일을 완료했어요.'
+    return result.result
+  } catch (error) {
+    notificationState.message = actionErrorText(error)
+    await loadNotifications()
+    return null
+  }
 }
 export function removeNotification(id) {
   if (!session.userId) { demoNotifications.value = demoNotifications.value.filter((n) => n.id !== id); return }

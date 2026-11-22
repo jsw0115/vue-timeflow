@@ -2,7 +2,8 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import ListFilterBar from '../../components/ListFilterBar.vue'
-import { notifications, unreadNotifications, markRead, markAllRead, removeNotification, loadNotifications, notificationState } from '../../store/people'
+import { notifications, unreadNotifications, markRead, markAllRead, removeNotification, loadNotifications, notificationState, actOnNotification } from '../../store/people'
+import { canAct } from '../../features/notifications/notificationClient.mjs'
 import { session } from '../../features/auth/session.js'
 import PageActions from '../../components/PageActions.vue'
 
@@ -64,7 +65,7 @@ function open(n) {
   />
 
   <p v-if="notificationState.status === 'loading' && !notifications.length" class="input-field-help" role="status">알림을 불러오는 중이에요.</p>
-  <p v-if="notificationState.status === 'error' || notificationState.message" class="input-field-help" data-state="error" role="alert">{{ notificationState.message || '알림을 불러오지 못했어요.' }} <button type="button" class="button-text" @click="loadNotifications">다시 시도</button></p>
+  <p v-if="notificationState.status === 'error' || notificationState.message" class="input-field-help" role="status" :data-state="notificationState.status === 'error' ? 'error' : undefined">{{ notificationState.message || '알림을 불러오지 못했어요.' }} <button v-if="notificationState.status === 'error'" type="button" class="button-text" @click="loadNotifications">다시 시도</button></p>
   <p v-if="!session.userId" class="input-field-help">지금 보이는 알림은 예시예요. 로그인하면 계정 알림과 할 일·지원 마감 알림을 받아요.</p>
   <section class="card">
     <div class="notif-row" v-for="n in visible" :key="n.id" :class="{ unread: !n.read }">
@@ -72,6 +73,11 @@ function open(n) {
         <span class="tag">{{ n.kind }}</span>
         <span><b>{{ n.title }}</b><small>{{ n.at }}</small></span>
       </button>
+      <template v-if="canAct(n)">
+        <button type="button" class="button-secondary" :aria-label="n.title + ' 할 일 완료'" @click="actOnNotification(n, 'complete')">완료</button>
+        <button type="button" class="button-text" :aria-label="n.title + ' 10분 뒤 다시 알림'" @click="actOnNotification(n, 'snooze')">10분 뒤</button>
+      </template>
+      <span v-else-if="n.handled" class="badge ok">처리됨</span>
       <button v-if="!n.read" class="review" style="margin: 0" @click="markRead(n)">읽음</button>
       <button class="person-info" title="삭제" aria-label="삭제" @click="removeNotification(n.id)">×</button>
     </div>

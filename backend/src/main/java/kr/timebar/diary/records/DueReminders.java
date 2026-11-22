@@ -60,7 +60,8 @@ public class DueReminders {
                 title = "‘" + task.getTitle() + "’ 오늘 마감이에요";
             }
             if (!now.isBefore(remindAt) && now.isBefore(until))
-                created += create(user, "due:task:" + task.getId() + ":" + task.getDue() + (task.getDueTime() == null ? "" : "T" + task.getDueTime()), title, "/tasks/" + task.getId());
+                created += create(user, "due:task:" + task.getId() + ":" + task.getDue() + (task.getDueTime() == null ? "" : "T" + task.getDueTime()), title, "/tasks/" + task.getId(),
+                        Map.of("action", Map.of("kind", "task", "id", task.getId()), "expiresAt", until.toString()));
         }
         for (var app : store.all(user, FeatureType.JOB_APPLICATION)) {
             if (CLOSED.contains(FeatureInput.text(app, "status"))) continue;
@@ -72,17 +73,20 @@ public class DueReminders {
                 Instant remindAt = day.start(date.minusDays(leadDays)), until = day.start(date.plusDays(1));
                 if (now.isBefore(remindAt) || !now.isBefore(until)) continue;
                 String what = field.equals("deadline") ? "지원 마감" : "면접";
-                created += create(user, "due:" + field + ":" + app.get("id") + ":" + date, "‘" + name + "’ " + what + "이 " + date + "이에요", "/career/applications");
+                created += create(user, "due:" + field + ":" + app.get("id") + ":" + date, "‘" + name + "’ " + what + "이 " + date + "이에요", "/career/applications", Map.of("expiresAt", until.toString()));
             }
         }
         return created;
     }
 
     /** 같은 마감에는 알림을 한 번만 만든다. ID가 같으면 저장소 유일 키로 막힌다. */
-    private int create(String user, String id, String title, String link) {
+    private int create(String user, String id, String title, String link, Map<String,Object> extra) {
         String recordId = id.length() <= 100 ? id : id.substring(0, 100);
+        var data = new LinkedHashMap<String,Object>(Map.of("title", title.length() > 200 ? title.substring(0, 200) : title, "kind", "마감", "link", link, "read", false));
+        // action: 알림에서 바로 처리할 대상(UF-126). expiresAt이 지나면 처리하지 않는다
+        data.putAll(extra);
         try {
-            store.create(user, FeatureType.NOTIFICATION, recordId, Map.of("title", title.length() > 200 ? title.substring(0, 200) : title, "kind", "마감", "link", link, "read", false));
+            store.create(user, FeatureType.NOTIFICATION, recordId, data);
             return 1;
         } catch (ApiException e) {
             if (e.errorCode() == ErrorCode.CONFLICT) return 0;

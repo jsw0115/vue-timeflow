@@ -125,6 +125,19 @@ public class TaskService {
                 .orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND, "할 일을 찾을 수 없습니다."));
     }
 
+    /**
+     * 알림의 "완료"(UF-126). 할 일 행을 잠그고 아직 끝나지 않았을 때만 완료로 바꾼다. 이미 끝났으면 false다.
+     * 지운 할 일은 lockOwned가 404로 막는다.
+     */
+    @Transactional
+    public boolean completeFromReminder(String userId, String taskId) {
+        TaskEntity entity = lockOwned(userId, taskId);
+        if (entity.getStatus() == TaskStatus.DONE) return false;
+        entity.toggleStatus();
+        taskRepository.flush();
+        return true;
+    }
+
     /** 마감 시각은 선택 입력이지만 마감 날짜 없이 시각만 둘 수는 없다(Q-31). */
     private static void requireDueForTime(TaskRequest request) {
         if (request.dueTime() != null && request.due() == null) {

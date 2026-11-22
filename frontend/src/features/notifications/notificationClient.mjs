@@ -15,7 +15,24 @@ export function relativeTime(iso, now = Date.now()) {
   return `${d.getMonth() + 1}월 ${d.getDate()}일`
 }
 
-export const fromServer = (row, now = Date.now()) => ({ id: row.id, version: row.version, kind: row.kind ?? '알림', title: row.title ?? '', link: row.link || '/notifications', read: row.read === true, at: relativeTime(row.createdAt, now), createdAt: row.createdAt ?? '' })
+export const fromServer = (row, now = Date.now()) => ({
+  id: row.id, version: row.version, kind: row.kind ?? '알림', title: row.title ?? '', link: row.link || '/notifications', read: row.read === true,
+  at: relativeTime(row.createdAt, now), createdAt: row.createdAt ?? '',
+  // 알림에서 바로 처리(UF-126): 처리 대상·처리 결과·다시 보일 시각
+  action: row.action && typeof row.action === 'object' ? row.action : null, handled: row.handled ?? null, showAfter: row.showAfter ?? null, expiresAt: row.expiresAt ?? null,
+})
+
+/** 지금 보일 알림인지. "10분 뒤"로 미룬 알림은 그 시각까지 숨긴다. */
+export const isVisible = (n, now = Date.now()) => !n.showAfter || !(Date.parse(n.showAfter) > now)
+/** 바로 처리 버튼을 보일지: 할 일 대상이 있고 아직 처리하지 않았고 기간이 남아 있을 때. */
+export const canAct = (n, now = Date.now()) => n.action?.kind === 'task' && !n.handled && (!n.expiresAt || Date.parse(n.expiresAt) > now)
+
+export function actionErrorText(error) {
+  if (error?.status === 409) return error.message || '이미 처리했거나 기간이 지난 알림이에요.'
+  if (error?.status === 404) return '할 일이 지워져 처리하지 않았어요.'
+  if (error?.status == null || error.status === 0) return '서버에 연결하지 못했어요. 연결을 확인하고 다시 시도해 주세요.'
+  return '처리하지 못했어요. 잠시 뒤 다시 시도해 주세요.'
+}
 
 export function createNotificationClient(request) {
   return {
@@ -28,5 +45,6 @@ export function createNotificationClient(request) {
     read: (n) => request(`${PATH}/${encodeURIComponent(n.id)}/read`, { method: 'PUT' }),
     readAll: () => request(`${PATH}/read-all`, { method: 'PUT' }),
     remove: (n) => request(`${PATH}/${encodeURIComponent(n.id)}?version=${encodeURIComponent(n.version)}`, { method: 'DELETE' }),
+    act: (n, action) => request(`${PATH}/${encodeURIComponent(n.id)}/actions/${action}`, { method: 'POST' }),
   }
 }

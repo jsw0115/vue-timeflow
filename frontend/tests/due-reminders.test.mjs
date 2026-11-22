@@ -45,9 +45,31 @@ test('설정은 같은 구역의 다른 값을 지우지 않고, 지원 알림�
 
 test('화면 연결: 알림 저장소는 로그인이면 서버, 알림함은 열 때 다시 읽고, 설정은 메일·메신저를 준비 중으로 안내한다', () => {
   const store = read('../src/store/people.js')
-  assert.match(store, /session\.userId \? serverNotifications\.value : demoNotifications\.value/)
+  assert.match(store, /session\.userId \? serverNotifications\.value\.filter\(\(n\) => isVisible\(n, clockTick\.value\)\) : demoNotifications\.value/)
   assert.match(read('../src/views/home/NotificationsView.vue'), /onMounted\(\(\) => \{ if \(session\.userId\) void loadNotifications\(\) \}\)/)
   const settings = read('../src/components/DueReminderSettings.vue')
   assert.match(settings, /메일·메신저로 받는 마감 알림은 발송 서비스를 연결한 뒤 켤 수 있어요\(준비 중\)/)
   assert.match(read('../src/views/settings/SettingsNotificationsView.vue'), /<DueReminderSettings v-if="session\.userId" \/>/)
+})
+
+test('UF-126·UF-127: 바로 처리 버튼은 처리 전·기간 안의 할 일 알림에만, 미룬 알림은 그 시각까지 숨기고, 오류는 서버 안내를 보인다', async () => {
+  const { canAct, isVisible, actionErrorText, createNotificationClient: client } = await import('../src/features/notifications/notificationClient.mjs')
+  const now = Date.parse('2026-11-23T05:00:00Z')
+  const base = { action: { kind: 'task', id: 'T1' }, handled: null, expiresAt: '2026-11-24T00:00:00Z' }
+  assert.equal(canAct(base, now), true)
+  assert.equal(canAct({ ...base, handled: 'completed' }, now), false)
+  assert.equal(canAct({ ...base, expiresAt: '2026-11-23T04:59:00Z' }, now), false)
+  assert.equal(canAct({ ...base, action: null }, now), false)
+  assert.equal(isVisible({ showAfter: '2026-11-23T05:10:00Z' }, now), false)
+  assert.equal(isVisible({ showAfter: '2026-11-23T05:10:00Z' }, now + 10 * 60000), true)
+  assert.equal(actionErrorText({ status: 409, message: '이미 완료했어요.' }), '이미 완료했어요.')
+  const calls = []
+  await client(async (path, options) => { calls.push(`${options.method} ${path}`); return {} }).act({ id: 'due:task:T1:2026-11-23' }, 'complete')
+  assert.deepEqual(calls, ['POST /api/notifications/due%3Atask%3AT1%3A2026-11-23/actions/complete'])
+  for (const file of ['../src/views/home/NotificationsView.vue', '../src/components/SidePanel.vue']) {
+    const view = read(file)
+    assert.match(view, /actOnNotification\(n, 'complete'\)/, file)
+    assert.match(view, /actOnNotification\(n, 'snooze'\)/, file)
+    assert.match(view, /처리됨/, file)
+  }
 })

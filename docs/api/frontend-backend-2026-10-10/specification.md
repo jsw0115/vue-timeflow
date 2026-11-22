@@ -2034,6 +2034,17 @@ KRW 정수. type=in은 양수, out은 음수. 0은 거부한다.
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 
+## POST /api/notifications/{id}/actions/{action}
+
+인증은 JWT이며 소스는 NotificationRefreshController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | id | String | 예 | 없음 |
+| path | action | String | 예 | 없음 |
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
 ## PUT /api/notifications/{id}/read
 
 인증은 JWT이며 소스는 RecordActionsController.java다. 성공 HTTP는 200다.

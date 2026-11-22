@@ -233,4 +233,14 @@ class TaskVersionTest {
         jdbc.update("UPDATE task SET due_time = '15:00:00' WHERE id = '01JTASK0000000000000000001'");
         assertEquals(java.sql.Time.valueOf("15:00:00"), jdbc.queryForObject("SELECT due_time FROM task WHERE id = '01JTASK0000000000000000001'", java.sql.Time.class));
     }
+
+    /** UF-126: 알림의 "완료"는 아직 끝나지 않은 할 일만 완료로 바꾸고, 이미 끝났으면 false, 지운 할 일은 404다. */
+    @Test void completeFromReminderChangesOnlyUnfinishedTasks() {
+        TaskResponse created = tasks.create(owner, input("알림 할 일", null));
+        org.junit.jupiter.api.Assertions.assertTrue(tasks.completeFromReminder(owner, created.id()));
+        assertEquals(kr.timebar.diary.task.TaskStatus.DONE, tasks.detail(owner, created.id()).status());
+        org.junit.jupiter.api.Assertions.assertFalse(tasks.completeFromReminder(owner, created.id()));
+        assertEquals(kr.timebar.diary.task.TaskStatus.DONE, tasks.detail(owner, created.id()).status(), "이미 끝난 할 일을 되돌리지 않는다");
+        assertThrows(kr.timebar.diary.common.ApiException.class, () -> tasks.completeFromReminder(UUID.randomUUID().toString(), created.id()));
+    }
 }
