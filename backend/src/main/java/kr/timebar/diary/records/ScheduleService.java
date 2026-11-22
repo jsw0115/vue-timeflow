@@ -66,7 +66,8 @@ public class ScheduleService {
     }
     /** 반복 규칙(없으면 요일)으로 정한 회차인지 본다. 쉬는 날 예외는 호출하는 쪽에서 따로 확인한다. */
     private boolean planned(Map<String,Object> routine, LocalDate day) {
-        if (Boolean.TRUE.equals(routine.get("paused")) || day.isBefore(FeatureInput.date(routine.get("startDate").toString()))) return false;
+        // 중지는 중지한 날부터, 지난 중지 기간은 그 기간만 뺀다(Q-20)
+        if (RoutineRules.paused(routine, day) || day.isBefore(FeatureInput.date(routine.get("startDate").toString()))) return false;
         if (routine.get("recurrence") != null && !"none".equals(FeatureInput.object(routine.get("recurrence")).get("frequency"))) return !RecurrenceRule.plannedDates(routine.get("startDate").toString(), routine.get("recurrence"), day, day).isEmpty();
         return ((List<?>)routine.get("days")).stream().anyMatch(value -> ((Number)value).intValue() == day.getDayOfWeek().getValue() % 7);
     }

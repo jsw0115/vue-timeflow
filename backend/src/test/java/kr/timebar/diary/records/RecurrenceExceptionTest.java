@@ -118,12 +118,13 @@ class RecurrenceExceptionTest {
 
     @Test
     void exceptionListAcceptsUpTo366UniqueSkipDates() {
-        LocalDate first = LocalDate.parse("2026-01-01");
+        // 지난 날짜 쉬는 날은 연 5회 한도(Q-19)가 있어, 개수 한도만 보려고 미래 연도를 쓴다
+        LocalDate first = LocalDate.parse("2030-01-01");
         List<Map<String, Object>> full = new ArrayList<>();
         for (int i = 0; i < 366; i++) full.add(skip(first.plusDays(i).toString()));
-        routine("2026-01-01", weekly(EVERY_DAY, full.toArray(Map[]::new)), EVERY_DAY);
+        routine("2030-01-01", weekly(EVERY_DAY, full.toArray(Map[]::new)), EVERY_DAY);
 
-        var tooMany = new ArrayList<>(full); tooMany.add(skip("2027-01-02"));
+        var tooMany = new ArrayList<>(full); tooMany.add(skip("2031-01-02"));
         assertInvalid(weekly(EVERY_DAY, tooMany.toArray(Map[]::new)));
         assertInvalid(weekly(EVERY_DAY, skip("2026-11-11"), skip("2026-11-11")));
         assertInvalid(weekly(EVERY_DAY, Map.of("date", "2026-11-11", "action", "override")));

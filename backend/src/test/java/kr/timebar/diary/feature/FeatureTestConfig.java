@@ -38,7 +38,8 @@ public class FeatureTestConfig {
     @Bean ObjectMapper mapper() { return new ObjectMapper().findAndRegisterModules(); }
     @Bean FeatureStore store(JdbcTemplate jdbc, ObjectMapper mapper) { return new FeatureStore(jdbc, mapper); }
     @Bean kr.timebar.diary.common.IdempotencyKeys idempotency(JdbcTemplate jdbc, ObjectMapper mapper) { return new kr.timebar.diary.common.IdempotencyKeys(jdbc, mapper); }
-    @Bean RecordService records(FeatureStore store, kr.timebar.diary.common.IdempotencyKeys idempotency) { return new RecordService(store, idempotency); }
+    @Bean kr.timebar.diary.records.RoutineRules routineRules(DayPolicy days) { return new kr.timebar.diary.records.RoutineRules(days); }
+    @Bean RecordService records(FeatureStore store, kr.timebar.diary.common.IdempotencyKeys idempotency, kr.timebar.diary.records.RoutineRules routines) { return new RecordService(store, idempotency, routines); }
     @Bean RecordLinks links(JdbcTemplate jdbc, FeatureStore store, kr.timebar.diary.common.IdempotencyKeys idempotency) { return new RecordLinks(jdbc, store, idempotency); }
     @Bean ActualRecordingService actualRecordings(FeatureStore store, JdbcTemplate jdbc, RecordLinks links) { return new ActualRecordingService(store, jdbc, links); }
     @Bean BackupService backups(FeatureStore store, JdbcTemplate jdbc, ObjectMapper mapper) { return new BackupService(store, jdbc, mapper); }

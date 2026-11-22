@@ -15,7 +15,10 @@ import java.util.*;
 public class RecordService {
     private final FeatureStore store;
     private final IdempotencyKeys idempotency;
-    public RecordService(FeatureStore store, IdempotencyKeys idempotency) { this.store = store; this.idempotency = idempotency; }
+    private final RoutineRules routines;
+    public RecordService(FeatureStore store, IdempotencyKeys idempotency) { this(store, idempotency, null); }
+    @org.springframework.beans.factory.annotation.Autowired
+    public RecordService(FeatureStore store, IdempotencyKeys idempotency, RoutineRules routines) { this.store = store; this.idempotency = idempotency; this.routines = routines; }
 
     public FeaturePage list(String user, FeatureType type, String from, String to, String q, String category, int page, int size) {
         return FeaturePage.of(store.all(user, type), from, to, q, category, page, size);
@@ -24,6 +27,7 @@ public class RecordService {
     public Map<String, Object> create(String user, FeatureType type, Map<String, Object> body) {
         Map<String, Object> data = FeatureInput.validate(type, body);
         if (type == FeatureType.MEMO && !data.containsKey("date")) data.put("date", LocalDate.now(java.time.ZoneId.of("Asia/Seoul")).toString());
+        if (type == FeatureType.ROUTINE_RECORD && routines != null) data = routines.prepare(user, null, data);
         return store.create(user, type, data);
     }
     /** 멱등 키가 있으면 같은 키로 다시 온 요청에 처음 만든 기록을 돌려준다(로컬 자료 이전, Q-13). */
@@ -31,7 +35,10 @@ public class RecordService {
         return idempotency.create(user, idempotencyKey, body, () -> create(user, type, body), row -> row.get("id").toString(), id -> get(user, type, id));
     }
     public Map<String, Object> update(String user, FeatureType type, String id, Map<String, Object> body) {
-        return store.replace(user, type, id, FeatureInput.version(body), FeatureInput.validate(type, body));
+        Map<String, Object> data = FeatureInput.validate(type, body);
+        // 루틴은 수정 전 저장값과 비교해 지난 날짜 쉬는 날·중지 기간을 서버가 정한다(Q-19·Q-20)
+        if (type == FeatureType.ROUTINE_RECORD && routines != null) data = routines.prepare(user, store.get(user, type, id), data);
+        return store.replace(user, type, id, FeatureInput.version(body), data);
     }
     /** 멱등 키가 있으면 응답을 잃어 다시 보낸 같은 수정에 처음 결과의 기록을 돌려준다(PR-12). 키는 수정할 기록 ID와 함께 해시한다. */
     public Map<String, Object> update(String user, FeatureType type, String id, Map<String, Object> body, String idempotencyKey) {

@@ -11,7 +11,7 @@ import ConflictCompare from '../../components/ConflictCompare.vue'
 import StorageNote from '../../components/StorageNote.vue'
 import { isAutomationOn, automationParam } from '../../store/automations'
 import RepeatSettings from '../../components/RepeatSettings.vue'
-import { makeRecurrence, skipDates, addSkipDates, removeSkipDate, recurrenceError, datesBetween, MAX_EXCEPTIONS } from '../../utils/recurrence.mjs'
+import { makeRecurrence, skipDates, addSkipDates, removeSkipDate, recurrenceError, datesBetween, MAX_EXCEPTIONS, RETRO_SKIPS_PER_YEAR, retroSkipCount } from '../../utils/recurrence.mjs'
 import { localDate } from '../../utils/postValidation.mjs'
 import TagMentionInput from '../../components/TagMentionInput.vue'
 import { routineError } from '../../utils/postValidation.mjs'
@@ -196,21 +196,30 @@ function openRest(r) {
   restTo.value = today.value
 }
 const restDates = computed(() => {
-  if (!restTarget.value || !restFrom.value || !restTo.value || restFrom.value < today.value || restTo.value < restFrom.value) return []
+  if (!restTarget.value || !restFrom.value || !restTo.value || restTo.value < restFrom.value) return []
   return routinePlannedDates(restTarget.value, restFrom.value, restTo.value)
 })
-const restNextRule = computed(() => (restTarget.value ? addSkipDates(routineRule(restTarget.value), restDates.value) : null))
+// 지난 날짜는 루틴마다 한 해에 RETRO_SKIPS_PER_YEAR번까지 쉬는 날로 추가할 수 있다(Q-19). 미리 정한 쉬는 날은 세지 않는다
+const restNextRule = computed(() => (restTarget.value ? addSkipDates(routineRule(restTarget.value), restDates.value, { today: today.value }) : null))
+const retroThisYear = computed(() => retroSkipCount(restTarget.value?.recurrence, today.value.slice(0, 4)))
+const retroOver = computed(() => {
+  if (!restNextRule.value) return ''
+  const years = [...new Set(restDates.value.filter((date) => date < today.value).map((date) => date.slice(0, 4)))]
+  const year = years.find((y) => retroSkipCount(restNextRule.value, y) > RETRO_SKIPS_PER_YEAR)
+  return year ? `지난 날짜는 한 해에 ${RETRO_SKIPS_PER_YEAR}번까지 쉬는 날로 추가할 수 있어요. ${year}년에 남은 횟수는 ${Math.max(0, RETRO_SKIPS_PER_YEAR - retroSkipCount(restTarget.value.recurrence, year))}번이에요.` : ''
+})
 const restError = computed(() => {
   const r = restTarget.value
   if (!r) return ''
   if (!restFrom.value || !restTo.value) return '시작일과 종료일을 선택해주세요.'
-  if (restFrom.value < today.value) return '오늘 이후 날짜만 쉬는 날로 정할 수 있어요.'
+  if (r.startDate && restFrom.value < r.startDate) return '루틴 시작일 이후 날짜만 쉬는 날로 정할 수 있어요.'
   if (restTo.value < restFrom.value) return '종료일은 시작일 이후로 선택해주세요.'
   if (!datesBetween(restFrom.value, restTo.value).length) return `기간은 최대 ${MAX_EXCEPTIONS}일까지 정할 수 있어요.`
   if (!restDates.value.length) return '이 기간에는 예정된 회차가 없어요.'
   const already = skipDates(r.recurrence)
   if (restDates.value.every((date) => already.has(date))) return '이미 쉬는 날로 정한 기간이에요.'
   if (r.done && restDates.value.includes(today.value)) return '오늘 완료한 루틴은 쉬는 날로 정할 수 없어요. 체크를 해제한 뒤 정해주세요.'
+  if (retroOver.value) return retroOver.value
   return recurrenceError(restNextRule.value, r.startDate ?? today.value)
 })
 const restUpcoming = computed(() => [...skipDates(restTarget.value?.recurrence)].filter((date) => date >= today.value).sort())
@@ -359,10 +368,11 @@ function removeRoutine(r) {
   <Modal v-if="restTarget" :title="'쉬는 날 · ' + restTarget.title" @close="restTargetId = null">
     <p class="form-note" style="margin: 0">쉬는 날은 달성률과 연속 기록 계산에서 빠져요. 하루 쉬어도 연속 기록이 이어지고, 그날은 오늘 목록에 나오지 않아요.</p>
     <div class="form-row rest-range">
-      <label style="flex: 1">시작일<input v-model="restFrom" type="date" :min="today" /></label>
-      <label style="flex: 1">종료일<input v-model="restTo" type="date" :min="restFrom || today" /></label>
+      <label style="flex: 1">시작일<input v-model="restFrom" type="date" :min="restTarget.startDate || undefined" aria-describedby="rest-retro-help" /></label>
+      <label style="flex: 1">종료일<input v-model="restTo" type="date" :min="restFrom || restTarget.startDate || undefined" /></label>
     </div>
     <p class="form-note" role="status">{{ restError || `예정된 회차 ${restDates.length}일을 쉬는 날로 정해요.` }}</p>
+    <p id="rest-retro-help" class="form-note">쉬는 날은 미리 정하는 게 기본이에요. 지난 날짜는 루틴마다 한 해에 {{ RETRO_SKIPS_PER_YEAR }}번까지 추가할 수 있어요. 올해 <span class="figure">{{ retroThisYear }}/{{ RETRO_SKIPS_PER_YEAR }}</span>번 썼어요.</p>
 
     <h4 class="rest-heading">예정된 쉬는 날</h4>
     <ul v-if="restUpcoming.length" class="rest-list">

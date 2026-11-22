@@ -106,7 +106,8 @@ public final class RecurrenceRule {
             Map<String,Object> exception = FeatureInput.object(item);
             if (overrides) FeatureInput.choice(exception, "action", "skip", "override");
             else FeatureInput.choice(exception, "action", "skip");
-            if ("skip".equals(exception.get("action"))) FeatureInput.keys(exception, Set.of("date", "action"));
+            // 루틴 쉬는 날의 retro(지난 날짜에 추가함)는 서버(RoutineRules)가 다시 정하는 값이라 받기만 한다(Q-19). 일정에서는 읽는 곳이 없다
+            if ("skip".equals(exception.get("action"))) { FeatureInput.keys(exception, Set.of("date", "action", "retro")); if (exception.get("retro") != null && !(exception.get("retro") instanceof Boolean)) FeatureInput.fail("retro는 boolean이어야 합니다."); }
             else override(exception);
             if (result.put(FeatureInput.date(FeatureInput.text(exception, "date")), exception) != null) FeatureInput.fail("같은 날짜에는 쉬는 날이나 회차 변경을 하나만 둘 수 있습니다.");
         }

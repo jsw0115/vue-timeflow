@@ -39,7 +39,7 @@ public final class FeatureInput {
             Object value = entry.getValue();
             if (value == null) continue;
             if (key.equals("value")) { bounded(value, 0); continue; }
-            if (key.equals("recurrence") || key.equals("goal") || key.equals("days") && type == FeatureType.ROUTINE_RECORD) { bounded(value, 0); continue; }
+            if (key.equals("recurrence") || key.equals("goal") || (key.equals("days") || key.equals("pausedRanges")) && type == FeatureType.ROUTINE_RECORD) { bounded(value, 0); continue; }
             if (BOOLEANS.contains(key)) { if (!(value instanceof Boolean)) fail(key + "는 boolean이어야 합니다."); }
             else if (NUMBERS.contains(key)) { number(body, key, -1000000000000d, 1000000000000d, false); }
             else if (ARRAYS.contains(key)) { if (!(value instanceof List<?> list) || list.size() > 500) fail(key + "는 최대 500개 배열입니다."); }

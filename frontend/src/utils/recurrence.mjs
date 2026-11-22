@@ -24,7 +24,8 @@ function exceptionsError(exceptions) {
   const seen = new Set()
   for (const item of exceptions) {
     if (!item || typeof item !== 'object' || !validDate(item.date)) return '쉬는 날 형식을 확인해주세요.'
-    if (item.action === 'skip') { if (Object.keys(item).some(key => key !== 'date' && key !== 'action')) return '쉬는 날 형식을 확인해주세요.' }
+    // retro(지난 날짜에 추가한 쉬는 날)는 서버 RoutineRules와 같이 참·거짓만 받는다(Q-19)
+    if (item.action === 'skip') { if (Object.keys(item).some(key => key !== 'date' && key !== 'action' && key !== 'retro') || (item.retro !== undefined && typeof item.retro !== 'boolean')) return '쉬는 날 형식을 확인해주세요.' }
     else if (item.action === 'override') { const error = overrideError(item); if (error) return error }
     else return '쉬는 날 형식을 확인해주세요.'
     if (seen.has(item.date)) return '한 날짜에는 쉬는 날이나 회차 변경을 하나만 정할 수 있어요.'
@@ -36,11 +37,23 @@ function exceptionsError(exceptions) {
 export function skipDates(rule) {
   return new Set(Array.isArray(rule?.exceptions) ? rule.exceptions.filter(item => item?.action === 'skip').map(item => item.date) : [])
 }
-/** 쉬는 날을 더한 새 규칙. 같은 날짜의 회차 변경은 쉬는 날로 바뀌고, 다른 예외는 남는다. 날짜순으로 정렬하고 원래 규칙은 바꾸지 않는다. */
-export function addSkipDates(rule, dates) {
-  const merged = [...new Set([...skipDates(rule), ...dates])]
-  const others = (rule?.exceptions ?? []).filter(item => item?.action !== 'skip' && !merged.includes(item.date))
-  return { ...(rule ?? { frequency: 'none' }), exceptions: [...others, ...merged.map(date => ({ date, action: 'skip' }))].sort(byDate) }
+/** 지난 날짜를 쉬는 날로 추가할 수 있는 횟수. 루틴마다, 그 날짜가 속한 달력 연도 기준이다(Q-19, 서버 RoutineRules와 같은 값). */
+export const RETRO_SKIPS_PER_YEAR = 5
+/** 그해 지난 날짜에 추가한 쉬는 날(retro) 수. */
+export function retroSkipCount(rule, year) {
+  return (rule?.exceptions ?? []).filter(item => item?.action === 'skip' && item.retro === true && String(item.date).slice(0, 4) === String(year)).length
+}
+/**
+ * 쉬는 날을 더한 새 규칙. 같은 날짜의 회차 변경은 쉬는 날로 바뀌고, 다른 예외는 남는다. 날짜순으로 정렬하고 원래 규칙은 바꾸지 않는다.
+ * 이미 있던 쉬는 날은 retro 표시까지 그대로 두고, today를 주면 새로 더한 지난 날짜에 retro를 붙인다(서버도 같은 기준으로 다시 정한다).
+ */
+export function addSkipDates(rule, dates, { today = '' } = {}) {
+  const kept = (rule?.exceptions ?? []).filter(item => item?.action === 'skip')
+  const have = new Set(kept.map(item => item.date))
+  const added = [...new Set(dates)].filter(date => !have.has(date)).map(date => (today && date < today ? { date, action: 'skip', retro: true } : { date, action: 'skip' }))
+  const skips = [...kept, ...added]
+  const others = (rule?.exceptions ?? []).filter(item => item?.action !== 'skip' && !skips.some(skip => skip.date === item.date))
+  return { ...(rule ?? { frequency: 'none' }), exceptions: [...others, ...skips].sort(byDate) }
 }
 /** 그 날짜의 예외(쉬는 날이든 회차 변경이든)를 지운 새 규칙. 회차가 원래대로 돌아온다. */
 export function removeException(rule, date) {

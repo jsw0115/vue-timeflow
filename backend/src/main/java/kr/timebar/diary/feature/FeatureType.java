@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 public enum FeatureType {
     DIARY("title body date mood tags", "title date"),
     SCHEDULE("title body category startDate endDate startTime endTime color attendeeIds recurrence", "title startDate endDate startTime endTime"),
-    ROUTINE_RECORD("title body category startDate time duration days goal notify reminderMinutes paused recurrence", "title startDate time duration days goal"),
+    ROUTINE_RECORD("title body category startDate time duration days goal notify reminderMinutes paused pausedFrom pausedRanges recurrence", "title startDate time duration days goal"),
     ROUTINE_COMPLETION("date completed routineId", "date completed routineId"),
     MEMO("title body date color actionable tags", "title"),
     DDAY("title body date category pinned notifyDays", "title date"),
