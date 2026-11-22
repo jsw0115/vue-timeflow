@@ -115,10 +115,39 @@ export function upcomingDates(applications, today, withinDays = 14) {
     for (const [field, label] of [['deadline', '지원 마감'], ['interviewDate', '면접']]) {
       const days = daysUntil(app[field], today)
       if (days === null || days < 0 || days > withinDays) continue
-      rows.push({ id: `${app.id}:${field}`, appId: app.id, label, date: app[field], days, title: app.title, company: app.company })
+      rows.push({ id: `${app.id}:${field}`, appId: app.id, field, label, date: app[field], days, title: app.title, company: app.company })
     }
   }
   return rows.sort((a, b) => a.days - b.days || a.title.localeCompare(b.title))
+}
+
+/** 짧은 날짜. 오늘에서 반년 안이면 MM-DD(홈 커리어 위젯과 같은 형식), 그보다 멀면 연도까지 쓴다. */
+export function shortDate(isoDate, today) {
+  const days = daysUntil(isoDate, today)
+  if (days === null) return isoDate ?? ''
+  return Math.abs(days) < 183 ? isoDate.slice(5) : isoDate
+}
+
+const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
+/** 요일 한 글자. 날짜 형식이 아니면 빈 문자열이다. */
+export function weekdayLabel(isoDate) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(isoDate ?? '')) return ''
+  return WEEKDAYS[new Date(isoDate + 'T00:00:00Z').getUTCDay()]
+}
+
+/**
+ * 대시보드 14일 시간축. 오늘부터 withinDays일까지 날짜 칸을 만들고 upcomingDates 행을 그날 칸에 넣는다.
+ * 가장 가까운 날의 표식만 next로 두어 한 가지만 강조한다(DESIGN.md 한 화면 한 가지 주목점). 화면은 색이 아닌 고리 모양으로 그린다.
+ */
+export function timebarDays(rows, today, withinDays = 14) {
+  const base = dayNumber(today)
+  const nearest = rows.length ? Math.min(...rows.map((row) => row.days)) : null
+  return Array.from({ length: withinDays + 1 }, (_, offset) => {
+    const date = new Date((base + offset) * DAY).toISOString().slice(0, 10)
+    const day = Number(date.slice(8))
+    const marks = rows.filter((row) => row.days === offset).map((row) => ({ id: row.id, field: row.field, label: row.label, next: row.days === nearest }))
+    return { offset, date, day, monthStart: day === 1, marks }
+  })
 }
 
 /** 상태별 지원 수. 0건 상태도 순서대로 돌려 표의 분모가 보이게 한다. */

@@ -6,7 +6,7 @@ import { ref } from 'vue'
 import { createFeatureStore } from '../src/features/records/featureStore.mjs'
 import {
   ACTIVITY_TYPES, APPLICATION_STATUSES, CAREER_GOALS, activityKind, applicationKind, daysUntil, dueLabel, goalOf,
-  groupByMonth, isWebUrl, listFromText, pipelineCounts, resumeProgress, upcomingDates,
+  groupByMonth, isWebUrl, listFromText, pipelineCounts, resumeProgress, shortDate, timebarDays, upcomingDates, weekdayLabel,
 } from '../src/features/career/careerModel.mjs'
 import { cleanGoal, createCareerGoalAccount, GOAL_PATH } from '../src/features/career/careerGoalAccount.mjs'
 
@@ -73,6 +73,32 @@ test('다가오는 마감·면접은 진행 중인 지원만 14일 안에서 날
   const counts = pipelineCounts(apps)
   assert.deepEqual(counts.map((row) => row.id), APPLICATION_STATUSES.map((status) => status.id))
   assert.equal(counts.find((row) => row.id === 'applied').count, 1)
+})
+
+test('대시보드 14일 시간축은 오늘부터 15칸이고 가장 가까운 날의 표식만 강조하며 달이 바뀌는 칸을 표시한다', () => {
+  const apps = [
+    { id: '1', title: 'A', company: 'a', status: 'applied', deadline: '2026-11-25', interviewDate: '2026-11-23' },
+    { id: '2', title: 'B', company: 'b', status: 'interview', interviewDate: '2026-11-23' },
+    { id: '3', title: 'C', company: 'c', status: 'interested', deadline: '2026-12-03' },
+  ]
+  const rows = upcomingDates(apps, '2026-11-22', 14)
+  assert.deepEqual(rows.map((row) => row.field), ['interviewDate', 'interviewDate', 'deadline', 'deadline'])
+  const days = timebarDays(rows, '2026-11-22', 14)
+  assert.equal(days.length, 15)
+  assert.deepEqual([days[0].date, days[14].date], ['2026-11-22', '2026-12-06'])
+  assert.deepEqual(days[1].marks.map((mark) => [mark.field, mark.next]), [['interviewDate', true], ['interviewDate', true]])
+  assert.deepEqual(days[3].marks.map((mark) => mark.next), [false])
+  assert.equal(days.find((day) => day.monthStart).date, '2026-12-01')
+  assert.ok(timebarDays([], '2026-11-22').every((day) => day.marks.length === 0))
+})
+
+test('짧은 날짜는 반년 안이면 MM-DD, 멀면 연도까지 쓰고 요일은 한 글자다', () => {
+  assert.equal(shortDate('2026-11-25', '2026-11-22'), '11-25')
+  assert.equal(shortDate('2027-01-03', '2026-12-28'), '01-03')
+  assert.equal(shortDate('2025-03-02', '2026-11-22'), '2025-03-02')
+  assert.equal(shortDate('', '2026-11-22'), '')
+  assert.equal(weekdayLabel('2026-11-25'), '수')
+  assert.equal(weekdayLabel('bad'), '')
 })
 
 test('이력서 입력 현황은 분모와 빠진 항목을 함께 준다', () => {
