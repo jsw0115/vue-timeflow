@@ -1,4 +1,5 @@
 <script setup>
+import AppIcon from '../../components/icons/AppIcon.vue'
 import { computed, ref, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { findDday, togglePin, updateDday, removeDday, ddayStore, ddayNotice } from '../../store/ddays'
@@ -77,7 +78,7 @@ async function remove() {
         <h2 style="margin: 10px 0 4px">{{ item.title }}</h2>
         <p>{{ item.date }}</p>
       </div>
-      <button class="icon" :title="item.pinned ? '고정 해제' : '고정하기'" aria-label="item.pinned ? '고정 해제' : '고정하기'" @click="pin">{{ item.pinned ? '★' : '☆' }}</button>
+      <button class="icon" :class="{ pinned: item.pinned }" :title="item.pinned ? '고정 해제' : '고정하기'" :aria-label="item.pinned ? '고정 해제' : '고정하기'" :aria-pressed="item.pinned ? 'true' : 'false'" @click="pin"><AppIcon name="star" :size="18" :class="{ filled: item.pinned }" /></button>
     </div>
     <b class="dday-num" style="display: block; margin: 12px 0">{{ item.dday }}</b>
     <p v-if="ddayNotice.message" class="input-field-help" data-state="error" role="status">{{ ddayNotice.message }}</p>
@@ -92,9 +93,9 @@ async function remove() {
       <ConflictCompare v-if="conflict" :rows="compareRows" :busy="saving.state.status === 'saving'" @keep-mine="keepMine" @use-latest="useLatest" />
       <SaveStatus :state="saving.state" :mode="ddayMode" @retry="save" />
       <button class="primary" style="width: 100%; margin-top: 16px" :disabled="!!conflict" :aria-busy="saving.state.status === 'saving' ? 'true' : undefined" @click="save">{{ saving.state.status === 'saving' ? '저장하는 중' : '저장하기' }}</button>
-      <button style="width: 100%; margin-top: 8px; color: var(--color-status-danger); font-weight: 700; padding: 10px" :aria-busy="removing.state.status === 'saving' ? 'true' : undefined" @click="remove">{{ removing.state.status === 'saving' ? '삭제하는 중' : '삭제하기' }}</button>
+      <button style="width: 100%; margin-top: 8px; color: var(--color-status-danger); font-weight: 600; padding: 10px" :aria-busy="removing.state.status === 'saving' ? 'true' : undefined" @click="remove">{{ removing.state.status === 'saving' ? '삭제하는 중' : '삭제하기' }}</button>
       <p v-if="removeMessage" class="input-field-help" data-state="error" role="status">{{ removeMessage }}</p>
     </div>
   </section>
-  <p v-else>D-Day 항목을 찾을 수 없어요. <a @click="router.push('/dday')" style="color: var(--color-accent); font-weight: 700; cursor: pointer">목록으로 돌아가기</a></p>
+  <p v-else>D-Day 항목을 찾을 수 없어요. <a @click="router.push('/dday')" style="color: var(--color-accent); font-weight: 600; cursor: pointer">목록으로 돌아가기</a></p>
 </template>

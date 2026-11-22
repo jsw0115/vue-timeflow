@@ -72,7 +72,7 @@ function social(provider) {
         </div>
         <p v-if="socialNotice" class="input-field-help login-social-note" role="status">{{ socialNotice }}</p>
         <p style="text-align: center; margin-top: 20px">
-          아직 계정이 없으신가요? <router-link to="/auth/signup" style="color: var(--color-accent); font-weight: 700">회원가입</router-link>
+          아직 계정이 없으신가요? <router-link to="/auth/signup" style="color: var(--color-accent); font-weight: 600">회원가입</router-link>
         </p>
       </div>
     </div>

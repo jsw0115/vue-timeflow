@@ -1,4 +1,5 @@
 <script setup>
+import AppIcon from '../../components/icons/AppIcon.vue'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { openPostComposer } from '../../store/appState'
@@ -84,7 +85,7 @@ async function remove(d) {
       <b class="figure">{{ d.dday }}</b>
       <span class="tag">{{ notifyLabel(d) }}</span>
       <span>
-        <button class="person-info" :title="d.pinned ? '고정 해제' : '고정하기'" aria-label="d.pinned ? '고정 해제' : '고정하기'" @click="togglePin(d)">{{ d.pinned ? '★' : '☆' }}</button>
+        <button class="person-info" :title="d.pinned ? '고정 해제' : '고정하기'" :aria-label="d.pinned ? '고정 해제' : '고정하기'" :aria-pressed="d.pinned ? 'true' : 'false'" @click="togglePin(d)"><AppIcon name="star" :size="18" :class="{ filled: d.pinned }" /></button>
       </span>
       <span style="display: flex; gap: 6px">
         <button class="review" style="margin: 0" @click="router.push('/dday/' + d.id)">상세</button>

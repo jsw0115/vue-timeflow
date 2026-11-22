@@ -75,20 +75,6 @@ const COLOR_PRESETS = [
   { name: '파랑', base: '#3f6b8f' },
 ]
 
-function lighten(hex, amount) {
-  const num = parseInt(hex.slice(1), 16)
-  const channel = (shift) => {
-    const value = (num >> shift) & 0xff
-    return Math.min(255, Math.round(value + (255 - value) * amount))
-  }
-  const r = channel(16)
-  const g = channel(8)
-  const b = channel(0)
-  return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`
-}
-function gradientFor(hex) {
-  return `linear-gradient(135deg, ${hex}, ${lighten(hex, 0.5)})`
-}
 
 // 주소록에서 참석자를 고른다 (차단한 사용자는 후보에서 제외)
 const attendeeKeyword = ref('')
@@ -303,7 +289,7 @@ watch(() => [route.query.id, route.query.occurrence, events.value.length], ([id,
     <section class="card list">
       <div class="list-head"><span>일정</span><span>날짜</span><span>카테고리</span><span>상태</span></div>
       <div class="row" :class="{ picked: activeId === e.id }" v-for="e in visibleEvents" :key="e.id" role="button" tabindex="0" @click="activeId = e.id; openDetail()" @keydown.enter.prevent="activeId = e.id; openDetail()" @keydown.space.prevent="activeId = e.id; openDetail()">
-        <label><i :style="{ background: gradientFor(e.color), width: '4px', height: '18px', borderRadius: '3px', display: 'inline-block', marginRight: '8px', verticalAlign: 'middle' }"></i>{{ e.title }}</label>
+        <label><i :style="{ background: e.color, width: '4px', height: '18px', borderRadius: '3px', display: 'inline-block', marginRight: '8px', verticalAlign: 'middle' }"></i>{{ e.title }}</label>
         <span>{{ e.startDate }} {{ e.startTime }}<small class="date-end">~ {{ e.endDate }} {{ e.endTime }}</small></span>
         <span class="tag">{{ e.category }}</span>
         <span class="badge" :class="{ ok: e.state === '예정', info: e.state === '공유받음' }">{{ e.state }}</span>
@@ -373,7 +359,7 @@ watch(() => [route.query.id, route.query.occurrence, events.value.length], ([id,
         :key="c.base"
         type="button"
         :title="c.name"
-        :style="{ width: '28px', height: '28px', borderRadius: '50%', background: gradientFor(c.base), border: detailDraft.color === c.base ? '2px solid var(--color-foreground)' : '2px solid transparent', cursor: 'pointer' }"
+        :style="{ width: '28px', height: '28px', borderRadius: '50%', background: c.base, border: detailDraft.color === c.base ? '2px solid var(--color-foreground)' : '2px solid transparent', cursor: 'pointer' }"
         @click="detailDraft.color = c.base"
       ></button>
     </div>
@@ -415,7 +401,7 @@ watch(() => [route.query.id, route.query.occurrence, events.value.length], ([id,
       <template v-else>
         <button type="button" class="modal-secondary" @click="closeDetail">취소</button>
         <button class="primary" :disabled="!!eventError(detailDraft) || !!conflict" :aria-busy="saving.state.status === 'saving' ? 'true' : undefined" @click="saveDetail">{{ saving.state.status === 'saving' ? '저장하는 중' : '저장하기' }}</button>
-        <button v-if="scope === 'all'" style="width: 100%; margin-top: 8px; color: var(--color-status-danger); font-weight: 700; padding: 10px" :aria-busy="removing.state.status === 'saving' ? 'true' : undefined" @click="removeActive">{{ removing.state.status === 'saving' ? '삭제하는 중' : isRepeating(active) ? '반복 전체 삭제하기' : '삭제하기' }}</button>
+        <button v-if="scope === 'all'" style="width: 100%; margin-top: 8px; color: var(--color-status-danger); font-weight: 600; padding: 10px" :aria-busy="removing.state.status === 'saving' ? 'true' : undefined" @click="removeActive">{{ removing.state.status === 'saving' ? '삭제하는 중' : isRepeating(active) ? '반복 전체 삭제하기' : '삭제하기' }}</button>
       </template>
     </template>
   </Modal>

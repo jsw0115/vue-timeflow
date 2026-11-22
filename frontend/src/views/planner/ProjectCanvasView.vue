@@ -1,4 +1,5 @@
 <script setup>
+import AppIcon from '../../components/icons/AppIcon.vue'
 import PageActions from '../../components/PageActions.vue'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -215,7 +216,7 @@ function priorityLabel(id) {
           <PersonTag v-if="c.assignee" :name="c.assignee" />
           <small v-else style="color: var(--color-muted)">담당자 미정</small>
           <small v-if="c.due" class="figure" :class="{ 'sla-over': isOverdue(c) }">{{ c.due.slice(5) }}</small>
-          <small v-if="checklistOf(c).total" class="figure">☑ {{ checklistOf(c).done }}/{{ checklistOf(c).total }}</small>
+          <small v-if="checklistOf(c).total" class="figure with-icon"><AppIcon name="check" :size="14" />{{ checklistOf(c).done }}/{{ checklistOf(c).total }}<span class="sr-only">체크리스트 완료</span></small>
         </div>
         <div class="kanban-card-move">
           <button class="person-info" title="왼쪽 컬럼으로" aria-label="왼쪽 컬럼으로" @click.stop="shift(c, -1)">←</button>

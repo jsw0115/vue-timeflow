@@ -121,7 +121,7 @@ const focusPath = FOCUS_TREND.map((v, i) => (i * 100) / (FOCUS_TREND.length - 1)
           <div class="stat-figures">
             <button v-for="f in figures" :key="f.key" type="button" class="stat-figure" :aria-label="f.label + ' ' + f.text + ', 원본 ' + f.count + '건 보기'" @click="openSource(f.key)">
               <span>{{ f.label }}</span>
-              <b class="figure">{{ f.text }}</b>
+              <b :class="f.empty ? 'stat-figure-empty' : 'figure'">{{ f.text }}</b>
               <small>기록 <span class="figure">{{ f.count }}</span>건 · 원본 보기</small>
             </button>
           </div>
@@ -255,6 +255,8 @@ const focusPath = FOCUS_TREND.map((v, i) => (i * 100) / (FOCUS_TREND.length - 1)
 .stat-figure > span { color: var(--color-muted); font-size: var(--type-body-size); }
 .stat-figure b { font-size: 1.375rem; font-weight: var(--type-figure-weight); line-height: 1.2; }
 .stat-figure small { color: var(--color-muted); font-size: var(--type-caption-size); }
+/* 원본이 없는 수치는 큰 숫자 자리에 문장을 크게 쓰지 않고, 같은 줄 높이를 지키는 보조 글자로 보인다 */
+.stat-figure b.stat-figure-empty { color: var(--color-muted); font-size: var(--type-body-size); font-weight: 500; line-height: 1.65rem; }
 .stat-meta { margin: var(--space-lg) 0 0; }
 @media (max-width: 1150px) { .stat-figures { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 420px) { .stat-figures { grid-template-columns: minmax(0, 1fr); } }

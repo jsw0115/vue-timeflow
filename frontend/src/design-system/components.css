@@ -8,6 +8,10 @@
    - loading: 너비를 유지하고 라벨을 진행형 문구로 바꾸며 aria-busy="true", progress 커서.
    기존 화면 클래스는 별칭으로 같은 규칙을 따른다. .icon → icon-button, .tabs·.filter·.compose-tabs → segmented-tab, .modal-secondary → button-secondary. */
 
+/* ---------- 한국어 줄바꿈 ---------- */
+/* 한국어 문장은 어절 단위로 줄을 바꾼다(DESIGN.md 3장). 끊을 어절 경계가 없는 긴 문자열만 글자 단위로 넘긴다. */
+body { word-break: keep-all; overflow-wrap: anywhere; }
+
 /* ---------- Button: primary ---------- */
 /* 화면에서 가장 중요한 행동 하나. 테마 accent를 채우고 10px 모서리, 42px 높이를 쓴다(검정 pill을 모든 테마에 강제하지 않는다). */
 .primary {
@@ -134,6 +138,10 @@ input:is([type='checkbox'], [type='radio']) { accent-color: var(--color-accent);
 .list .row { color: var(--color-foreground); }
 .list .row.picked { background: var(--color-accent-soft); border-radius: var(--radius-sm); box-shadow: inset 2px 0 0 var(--color-accent); }
 .list .row > :is(.tag, .badge, .state) { justify-self: start; }
+/* 데이터 표는 48px 행(24px 줄 + 위아래 12px)으로 촘촘하게 읽는다. 행 안 조작 요소는 자기 눌림 영역을 따로 가진다 */
+.list .row { min-height: var(--row-height); }
+/* 금액·수량처럼 비교하는 숫자 열은 오른쪽 정렬 + 고정폭 숫자 */
+.num-cell { justify-self: end; text-align: right; font-variant-numeric: tabular-nums; }
 /* 목록 행 안 동그란 완료 체크. 조작 경계는 control-border, 완료는 데이터 색(완료·실제 기록 의미) 채움 + 안쪽 card 고리. 제목 줄긋기로도 알린다. */
 :is(.routine, .task, .row) input:is([type='checkbox'], [type='radio']) { border-color: var(--color-control-border); }
 :is(.routine, .task, .row) input:is([type='checkbox'], [type='radio']):checked { background: var(--color-data); border-color: var(--color-data); box-shadow: inset 0 0 0 2px var(--color-card); }
@@ -146,6 +154,9 @@ input:is([type='checkbox'], [type='radio']) { accent-color: var(--color-accent);
   .list .row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm) var(--space-md); min-width: 0; padding: var(--space-lg) 0; }
   .list .row > :first-child { flex: 1 1 100%; min-width: 0; }
   .list .row.picked { padding-left: var(--space-lg); padding-right: var(--space-lg); }
+  /* 메타 줄에서도 숫자 열은 오른쪽 끝에 모은다(첫 숫자 열만 밀고 나머지는 그 뒤에 붙는다) */
+  .list .row > .num-cell { margin-left: auto; }
+  .list .row > .num-cell ~ .num-cell { margin-left: 0; }
 }
 
 /* ---------- Status badge ---------- */
@@ -162,6 +173,22 @@ nav button.active::before {
   content: ''; position: absolute; left: 0; top: var(--space-md); bottom: var(--space-md); width: 2px; border-radius: var(--radius-xs);
   background: var(--color-accent);
 }
+
+/* ---------- App shell: LNB 밀도 ---------- */
+/* LNB는 앱에서 가장 촘촘한 영역이다. 항목 36px·간격 2px, 묶음 이름은 위 24px·아래 8px로 자기 항목에 더 가깝게 붙인다.
+   묶음은 처음에 '메인'만 펼치고 현재 화면의 묶음을 자동으로 펼친다(App.vue defaultCollapsedGroups). */
+.sidebar nav button, .sidebar .nav-link { min-height: var(--nav-item-height); padding: var(--space-xs) var(--space-md); gap: var(--space-md); }
+.sidebar nav button:not(.nav-section) + button:not(.nav-section) { margin-top: 2px; }
+.sidebar nav .nav-section { min-height: 0; padding: var(--space-xxl) var(--space-md) var(--space-sm); letter-spacing: 0; }
+.sidebar nav .nav-section:first-child { padding-top: 0; }
+.sidebar nav .nav-section .chev { transition: transform var(--motion-fast) var(--ease-standard); }
+/* 안 읽은 수 배지: 굵기 600, 글자색은 표면 반전 */
+.icon-badge em { font-weight: 600; }
+
+/* ---------- Home dashboard grid ---------- */
+/* 크기가 섞인 위젯을 순서대로 놓으면 줄 끝에 빈칸이 생긴다. 보기 모드에서는 dense로 빈칸을 채우고,
+   편집 모드에서는 끌어 옮기는 순서가 보이는 순서와 같도록 원래 흐름을 쓴다. */
+.widget-grid:not(.editing) { grid-auto-flow: row dense; }
 
 /* ---------- Empty state ---------- */
 .empty-state {
@@ -185,6 +212,10 @@ nav button.active::before {
 /* components/icons/AppIcon.vue. 선 아이콘 하나의 패밀리(20px 기본, 보조 16px). 색은 글자색을 따른다. */
 .app-icon { display: block; flex: none; }
 .app-icon-text { line-height: 1; text-align: center; }
+/* 켜짐을 채운 모양으로 알리는 아이콘(고정 별 등). aria-pressed와 함께 쓴다 */
+.app-icon.filled { fill: currentColor; }
+/* 글자 옆 작은 아이콘: 같은 줄에 세우고 4px 띄운다 */
+.with-icon { display: inline-flex; align-items: center; gap: var(--space-xs); }
 .nav-icon { display: grid; place-items: center; }
 .workspace-chev, .nav-ext { display: grid; place-items: center; }
 

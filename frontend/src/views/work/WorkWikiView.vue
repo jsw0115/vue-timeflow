@@ -1,4 +1,5 @@
 <script setup>
+import AppIcon from '../../components/icons/AppIcon.vue'
 import PageActions from '../../components/PageActions.vue'
 import { computed, ref, watch } from 'vue'
 import StorageNote from '../../components/StorageNote.vue'
@@ -162,7 +163,7 @@ function pickTag(tag) {
         @click="activeId = d.id"
       >
         <span class="wiki-item-main">
-          <b>{{ d.pinned ? '★ ' : '' }}{{ d.title }}</b>
+          <b class="with-icon"><AppIcon v-if="d.pinned" name="star" :size="14" class="filled" /><span v-if="d.pinned" class="sr-only">고정됨</span>{{ d.title }}</b>
           <small>{{ d.space }} · {{ d.updatedAt }}</small>
         </span>
       </button>
@@ -185,8 +186,8 @@ function pickTag(tag) {
             <PersonTag :name="active.author" /> · {{ active.updatedAt }} 수정
           </p>
         </div>
-        <button class="person-info" :title="active.pinned ? '고정 해제' : '고정'" :aria-label="active.pinned ? '고정 해제' : '고정'" :disabled="saving.state.status === 'saving'" @click="onPin(active)">
-          {{ active.pinned ? '★' : '☆' }}
+        <button class="person-info" :title="active.pinned ? '고정 해제' : '고정'" :aria-label="active.pinned ? '고정 해제' : '고정'" :aria-pressed="active.pinned ? 'true' : 'false'" :disabled="saving.state.status === 'saving'" @click="onPin(active)">
+          <AppIcon name="star" :size="18" :class="{ filled: active.pinned }" />
         </button>
       </div>
 

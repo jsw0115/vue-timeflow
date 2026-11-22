@@ -87,7 +87,7 @@ function flash(t) {
       </section>
 
       <p style="text-align: center; margin-top: 16px">
-        이미 계정이 있으신가요? <router-link to="/auth/login" style="color: var(--color-accent); font-weight: 700">로그인</router-link>
+        이미 계정이 있으신가요? <router-link to="/auth/login" style="color: var(--color-accent); font-weight: 600">로그인</router-link>
       </p>
     </div>
   </div>

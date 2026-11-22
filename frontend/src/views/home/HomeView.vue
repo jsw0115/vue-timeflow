@@ -1,4 +1,5 @@
 <script setup>
+import AppIcon from '../../components/icons/AppIcon.vue'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { appearance } from '../../store/appearance'
@@ -123,7 +124,7 @@ function onDrop(id) {
       <button v-if="dashboardState.editing" class="icon" title="레이아웃 초기화" aria-label="레이아웃 초기화" @click="resetLayout">↺</button>
     </div>
 
-    <div class="widget-grid">
+    <div class="widget-grid" :class="{ editing: dashboardState.editing }">
       <article
         v-for="w in visibleWidgets"
         :key="w.id"
@@ -143,13 +144,13 @@ function onDrop(id) {
           <button class="review" :disabled="visibleWidgets[0]?.id === w.id" :aria-label="WIDGET_CATALOG[w.id]?.title + ' 앞으로 이동'" @click="shiftWidget(w.id, -1)">앞으로</button>
           <button class="review" :disabled="visibleWidgets.at(-1)?.id === w.id" :aria-label="WIDGET_CATALOG[w.id]?.title + ' 뒤로 이동'" @click="shiftWidget(w.id, 1)">뒤로</button>
           <button class="icon" style="width: 26px; height: 26px; font-size: 0.875rem" title="크기 변경" aria-label="크기 변경" @click="cycleSize(w.id)">⤢</button>
-          <button class="icon" style="width: 26px; height: 26px; font-size: 0.875rem" title="숨기기" aria-label="숨기기" @click="toggleVisible(w.id)">✕</button>
+          <button class="icon" title="숨기기" aria-label="숨기기" @click="toggleVisible(w.id)"><AppIcon name="close" :size="16" /></button>
         </div>
 
         <span v-if="['focusTime', 'dday', 'categoryDonut', 'weekdayBar', 'planVsActual'].includes(w.id)" class="sample-label">시연용 예시 데이터</span>
         <template v-if="w.id === 'events'">
           <div class="head"><div><h3>오늘의 흐름</h3><p>계획과 실제 기록을 확인하세요</p></div><button @click="router.push('/planner')">플래너 열기 →</button></div>
-          <div class="event" v-for="event in todayEvents" :key="event.title"><time>{{ event.time }}</time><i></i><span><b>{{ event.title }}</b><small>{{ event.tag }} · 종료 {{ event.endDate }} {{ event.endTime }}</small></span></div>
+          <div class="event" v-for="event in todayEvents" :key="event.title"><time>{{ event.time }}</time><i></i><span><b>{{ event.title }}</b><small>{{ event.tag }} · {{ event.endDate && event.endDate !== localDate() ? event.endDate.slice(5) + ' ' : '' }}{{ event.endTime }}까지</small></span></div>
           <p v-if="!todayEvents.length" class="empty-state">오늘 예정된 일정이 없어요. '플래너 열기'에서 하루를 계획해 보세요.</p>
         </template>
 

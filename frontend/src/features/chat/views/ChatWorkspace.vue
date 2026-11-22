@@ -2,6 +2,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Modal from '../../../components/Modal.vue'
+import AppIcon from '../../../components/icons/AppIcon.vue'
 import SearchPanel from '../../../components/SearchPanel.vue'
 import { logout, session } from '../../auth/session'
 import { chatApi } from '../api/chatApi'
@@ -229,7 +230,7 @@ onBeforeUnmount(() => { stopChat(); clearInterval(clock); clearTimeout(searchTim
           <div class="chat-typing" role="status">{{ typing ? typing + '님이 입력 중이에요…' : '' }}</div>
           <ChatComposer v-model="draft" :disabled="chat.loading" :members="activeRoom.members.filter(member => member.userId !== chatUserId)" :mentions="mentionIds" @mention="mention" @unmention="id => mentionDrafts[chat.selectedId] = mentionIds.filter(item => item !== id)" @send="send" @typing="chatApi.typing(chat.selectedId).catch(() => {})" />
         </section>
-        <section v-else class="chat-no-selection"><span class="chat-empty-symbol" aria-hidden="true">“</span><h2>오늘의 이야기를 나눠요</h2><p>대화를 선택하거나 새로 시작해보세요.<br />함께하는 계획은 조금 더 가벼워질 거예요.</p><button @click="showNew = true">새 대화 시작하기 ↗</button></section>
+        <section v-else class="chat-no-selection"><span class="chat-empty-symbol" aria-hidden="true"><AppIcon name="message" :size="32" /></span><h2>오늘의 이야기를 나눠요</h2><p>대화를 선택하거나 새로 시작해보세요.<br />함께하는 계획은 조금 더 가벼워질 거예요.</p><button @click="showNew = true">새 대화 시작하기 ↗</button></section>
       </section>
     <Modal v-if="showUnifiedSearch" title="통합 검색" @close="showUnifiedSearch = false"><SearchPanel @room="showUnifiedSearch = false" @close="showUnifiedSearch = false" /><template #footer><button class="modal-secondary" @click="showUnifiedSearch = false">닫기</button></template></Modal>
     <Modal v-if="showPresence" title="메신저 활성 상태" @close="showPresence = false"><p class="form-note">함께 대화하는 참여자의 메신저 상태를 표시해요.</p><ul class="chat-members"><li v-for="member in participants" :key="member.userId"><span>{{ member.nickname }}{{ member.userId === chatUserId ? ' (나)' : '' }}</span><small :class="{ 'chat-presence-active': isActive(member.userId) }">{{ presenceLabel(member.userId) }}</small></li></ul><template #footer><button class="modal-secondary" @click="showPresence = false">닫기</button></template></Modal>

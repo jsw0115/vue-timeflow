@@ -156,14 +156,14 @@ function importCsv(event) {
   <div class="planner">
     <section class="card list">
       <div class="list-head" style="grid-template-columns: 2fr 1fr 1fr 1.2fr .6fr">
-        <span>내역</span><span>분류</span><span>날짜</span><span>금액</span><span></span>
+        <span>내역</span><span>분류</span><span>날짜</span><span class="num-cell">금액</span><span></span>
       </div>
       <div class="row" style="grid-template-columns: 2fr 1fr 1fr 1.2fr .6fr" v-for="e in visible" :key="e.id">
         <label>{{ e.title }}</label>
         <span class="tag">{{ e.category }}</span>
         <span class="figure">{{ e.date.slice(5) }}</span>
-        <b class="figure" :class="e.type">{{ won(e.amount) }}</b>
-        <span><button class="review" style="margin: 0; padding: 4px 8px" @click="removeEntry(e)">삭제</button></span>
+        <b class="figure num-cell" :class="e.type">{{ won(e.amount) }}</b>
+        <span class="num-cell"><button class="review" :aria-label="`${e.title} 삭제`" @click="removeEntry(e)">삭제</button></span>
       </div>
       <p v-if="!visible.length" class="empty-state">이 달에는 머니로그 기록이 없어요. '+ 내역 추가'로 수입이나 지출을 남겨 보세요.</p>
     </section>

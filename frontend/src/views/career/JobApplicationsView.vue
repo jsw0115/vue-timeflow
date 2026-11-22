@@ -221,7 +221,7 @@ async function remove(item) {
 .apply-month-grid td:first-child { border-left: 0; }
 .apply-month-grid td.out { background: var(--color-surface); }
 .apply-month-grid td.out .apply-day { color: var(--color-muted); }
-.apply-month-grid td.today .apply-day { font-weight: 700; text-decoration: underline; text-underline-offset: 0.2em; }
+.apply-month-grid td.today .apply-day { font-weight: 600; text-decoration: underline; text-underline-offset: 0.2em; }
 .apply-day { display: block; margin-bottom: var(--space-xs); }
 .apply-event { display: block; width: 100%; margin: 0 0 var(--space-xs); padding: 0 var(--space-xs); border: 1px solid var(--color-control-border); border-left: 3px solid var(--color-accent); border-radius: var(--radius-xs); background: var(--color-card); color: var(--color-foreground); font-size: var(--type-caption-size); text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
 .apply-event.closed { border-left-style: dashed; border-left-color: var(--color-control-border); color: var(--color-muted); }

@@ -185,7 +185,7 @@ function linkPlannerItem(title) {
 
       <label style="display: block; font-size: 0.8125rem; font-weight: 600; margin-top: 15px">태그</label>
       <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px">
-        <span class="tag" v-for="t in tags" :key="t">#{{ t }} <a style="cursor: pointer; font-weight: 700" @click="removeTag(t)">×</a></span>
+        <span class="tag" v-for="t in tags" :key="t">#{{ t }} <a style="cursor: pointer; font-weight: 600" @click="removeTag(t)">×</a></span>
         <input v-model="tagInput" @keydown.enter.prevent="addTag" placeholder="태그 입력 후 Enter" style="border: 1px solid var(--color-hairline); border-radius: var(--radius-sm); padding: 4px 8px; width: 140px; background: var(--color-card)" />
       </div>
       <DayRecords :date="entryDate" />

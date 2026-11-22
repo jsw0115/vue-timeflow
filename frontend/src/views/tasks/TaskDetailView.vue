@@ -220,12 +220,12 @@ async function remove() {
     </section>
     <p v-else class="form-note">로그인하면 이 할 일을 일정에 배치하고 실제 기록과 연결할 수 있어요.</p>
 
-    <button style="width: 100%; margin-top: 20px; color: var(--color-status-danger); font-weight: 700; padding: 10px" :aria-busy="removing.state.status === 'saving' ? 'true' : undefined" @click="remove">{{ removing.state.status === 'saving' ? '삭제하는 중' : '삭제하기' }}</button>
+    <button style="width: 100%; margin-top: 20px; color: var(--color-status-danger); font-weight: 600; padding: 10px" :aria-busy="removing.state.status === 'saving' ? 'true' : undefined" @click="remove">{{ removing.state.status === 'saving' ? '삭제하는 중' : '삭제하기' }}</button>
     <p v-if="removeMessage" class="input-field-help" data-state="error" role="status">{{ removeMessage }}</p>
   </section>
   <p v-else-if="taskMode === 'server' && !taskStore.state.loaded && !taskStore.state.error" role="status">할 일을 불러오는 중이에요.</p>
   <div v-else-if="taskMode === 'server' && taskStore.state.error" class="empty-state" role="status"><p>할 일을 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요.</p><button type="button" class="button-secondary" @click="taskStore.reload()">다시 시도</button></div>
-  <p v-else>할 일을 찾을 수 없어요. <a @click="router.push('/tasks')" style="color: var(--color-accent); font-weight: 700; cursor: pointer">목록으로 돌아가기</a></p>
+  <p v-else>할 일을 찾을 수 없어요. <a @click="router.push('/tasks')" style="color: var(--color-accent); font-weight: 600; cursor: pointer">목록으로 돌아가기</a></p>
 </template>
 
 <style scoped>

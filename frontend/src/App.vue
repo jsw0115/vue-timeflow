@@ -91,10 +91,15 @@ const COLLAPSED_GROUPS_KEY = 'timeflow.nav.collapsedGroups'
 function loadCollapsedGroups() {
   try {
     const raw = localStorage.getItem(COLLAPSED_GROUPS_KEY)
-    return raw ? new Set(JSON.parse(raw)) : new Set()
+    return raw ? new Set(JSON.parse(raw)) : defaultCollapsedGroups()
   } catch {
-    return new Set()
+    return defaultCollapsedGroups()
   }
+}
+// 처음 쓰는 사람은 '메인' 묶음만 펼친다. 메뉴 50여 개를 한 번에 늘어놓지 않고(점진적 공개),
+// 지금 보고 있는 화면의 묶음은 아래 watch가 펼친다. 한 번 펼치고 접은 상태는 저장해 그대로 쓴다.
+function defaultCollapsedGroups() {
+  return new Set(navGroups.slice(1).map((group) => group.label))
 }
 const collapsedGroups = reactive(loadCollapsedGroups())
 function persistCollapsedGroups() {
@@ -189,7 +194,7 @@ watch(() => route.path, () => { mobileNav.value = false; workspaceOpen.value = f
           </router-link>
         </template>
         <template v-for="group in navGroups" :key="group.label">
-          <button type="button" class="nav-section" :class="{ collapsed: isGroupCollapsed(group.label) }" @click="toggleGroup(group.label)">
+          <button type="button" class="nav-section" :class="{ collapsed: isGroupCollapsed(group.label) }" :aria-expanded="!isGroupCollapsed(group.label)" @click="toggleGroup(group.label)">
             {{ group.label }}<i class="chev" aria-hidden="true"><AppIcon name="chevronDown" :size="14" /></i>
           </button>
           <template v-if="!isGroupCollapsed(group.label)">
@@ -241,7 +246,9 @@ watch(() => route.path, () => { mobileNav.value = false; workspaceOpen.value = f
             </button>
           </router-link>
           <!-- 화면당 주 버튼 하나(DESIGN.md 4장 Buttons). 홈에서만 주 버튼이고, 다른 화면에서는 그 화면의 주 행동을 가리지 않도록 보조 버튼이다 -->
-          <button :class="[route.name === '홈' ? 'primary' : 'button-secondary', { 'compose-collapsible': pageActionCount > 0 }]" @click="openComposer"><span aria-hidden="true">+</span>새 글 작성</button>
+          <!-- 화면이 자기 주 행동을 내놓으면 '새 글 작성'은 같은 줄의 다른 도구처럼 아이콘 버튼으로 물러난다(+ 버튼 두 개가 나란히 경쟁하지 않게) -->
+          <button v-if="pageActionCount > 0" class="icon compose-icon" title="새 글 작성" aria-label="새 글 작성" @click="openComposer"><AppIcon name="pen" /></button>
+          <button v-else :class="route.name === '홈' ? 'primary' : 'button-secondary'" @click="openComposer"><AppIcon name="plus" :size="16" />새 글 작성</button>
           <div id="page-actions" class="page-actions"></div>
         </div>
       </header>
@@ -259,5 +266,6 @@ watch(() => route.path, () => { mobileNav.value = false; workspaceOpen.value = f
     <LocalMigrationPrompt />
     <CommunityCreateModal v-if="communityComposer" @close="communityComposer = false" />
   </div>
-  <FloatingChat />
+  <!-- 로그인·약관·점검·공개 포트폴리오 같은 앱 셸 밖 화면에는 대화 버튼을 띄우지 않는다 -->
+  <FloatingChat v-if="!isBare" />
 </template>

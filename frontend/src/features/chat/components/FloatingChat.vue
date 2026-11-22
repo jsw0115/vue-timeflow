@@ -79,7 +79,7 @@ onBeforeUnmount(() => window.removeEventListener('resize', resize))
 .floating-chat-launcher:active { cursor: grabbing; }
 .floating-chat-launcher:hover { background: var(--color-surface); }
 .floating-chat-launcher svg { width: 25px; height: 25px; pointer-events: none; }
-.floating-chat-badge { position: absolute; top: -4px; right: -4px; padding: 3px 6px; border-radius: var(--radius-full); background: var(--color-foreground); color: var(--color-on-primary); font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; }
+.floating-chat-badge { position: absolute; top: -4px; right: -4px; padding: 3px 6px; border-radius: var(--radius-full); background: var(--color-foreground); color: var(--color-on-primary); font-size: 0.75rem; font-family: var(--font-mono); }
 .floating-chat { position: fixed; z-index: 89; right: max(12px, env(safe-area-inset-right)); bottom: max(80px, env(safe-area-inset-bottom)); width: min(440px, calc(100vw - 24px)); height: min(700px, calc(100dvh - 104px)); display: flex; flex-direction: column; padding: 0; background: var(--color-card); color: var(--color-foreground); border: 1px solid var(--color-hairline); border-radius: var(--radius-lg); box-shadow: var(--shadow-popover); overflow: hidden; }
 .floating-chat-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 16px; flex-shrink: 0; font-size: 0.75rem; border-bottom: 1px solid var(--color-hairline); }
 .floating-chat-bar b { margin-left: 8px; font-weight: 500; }
