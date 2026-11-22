@@ -15,6 +15,10 @@ test('서버 정책과 같은 기준으로 통과·실패를 가른다', () => {
 
 test('서버 PasswordPolicy의 길이·종류 기준이 바뀌면 이 검사도 함께 고친다', () => {
   const server = readFileSync(new URL('../../backend/src/main/java/kr/timebar/diary/auth/PasswordPolicy.java', import.meta.url), 'utf8')
-  assert.match(server, /length\(\) < 8 \|\| rawPassword\.length\(\) > 72/)
-  assert.match(server, /kinds < 2/)
+  // 기준 값은 관리자 정책 보기(Q-30)와 같이 쓰려고 상수로 옮겼다
+  assert.match(server, /MIN_LENGTH = 8;/)
+  assert.match(server, /MAX_LENGTH = 72;/)
+  assert.match(server, /MIN_KINDS = 2;/)
+  assert.match(server, /length\(\) < MIN_LENGTH \|\| rawPassword\.length\(\) > MAX_LENGTH/)
+  assert.match(server, /kinds < MIN_KINDS/)
 })

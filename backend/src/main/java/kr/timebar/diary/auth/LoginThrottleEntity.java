@@ -21,8 +21,8 @@ import java.time.LocalDateTime;
 @Table(name = "login_throttle")
 public class LoginThrottleEntity {
 
-    private static final int MAX_ATTEMPTS = 5;
-    private static final long LOCK_MINUTES = 15;
+    public static final int MAX_ATTEMPTS = 5;
+    public static final long LOCK_MINUTES = 15;
 
     @Id
     @Column(length = 26)

@@ -26,7 +26,7 @@ public class IdempotencyKeys {
     public static final String HEADER = "Idempotency-Key";
     /** 로컬 자료 이전 키(local:task:3)와 재전송 키(UUID v4)를 모두 받는다. */
     private static final Pattern KEY = Pattern.compile("[A-Za-z0-9:_.-]{1,100}");
-    private static final int RETENTION_DAYS = 7;
+    public static final int RETENTION_DAYS = 7;
 
     private final JdbcTemplate jdbc;
     private final ObjectMapper canonical;

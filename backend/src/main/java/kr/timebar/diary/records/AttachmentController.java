@@ -18,7 +18,7 @@ import java.util.*;
 @RequestMapping("/api/attachments")
 @Transactional
 public class AttachmentController {
-    private static final int MAX_BYTES = 10 * 1024 * 1024;
+    public static final int MAX_BYTES = 10 * 1024 * 1024;
     private static final String COLUMNS = "SELECT id,owner_id AS ownerId,group_id AS groupId,name,size_bytes AS sizeBytes,expires_at AS expiresAt,created_at AS createdAt FROM feature_file";
     private final JdbcTemplate jdbc;
     private final SocialService social;

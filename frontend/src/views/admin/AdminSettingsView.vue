@@ -1,133 +1,64 @@
 <script setup>
-import { computed, reactive, ref } from 'vue'
-import { audit, auditLogs } from '../../store/adminOps'
+// 관리자 설정 → 현재 적용 정책 보기(Q-30). 서버가 지금 실제로 쓰는 값만 읽기 전용으로 보인다.
+// 화면에서 바꿔도 서버가 적용하지 않는 값을 편집하게 두면 보안 정책이 바뀐 것처럼 보이므로 편집 입력을 두지 않는다.
+import { computed, onMounted, ref } from 'vue'
+import { apiRequest } from '../../features/auth/apiRequest.js'
+import { adminErrorText } from '../../features/admin/adminClient.mjs'
+import { loadPolicy, policySections } from '../../features/admin/policy.mjs'
 
-/**
- * 관리자 설정 — 사용자 설정 화면과 같은 좌측 메뉴 + 우측 폼 구조를 그대로 쓴다.
- * 값을 바꾸면 사용자 설정과 마찬가지로 저장 버튼을 눌러야 반영되고, 감사 로그에 남는다.
- */
-const SECTIONS = [
-  { id: 'service', label: '서비스 정책' },
-  { id: 'members', label: '운영자 권한' },
-  { id: 'security', label: '보안' },
-  { id: 'retention', label: '보관 정책' },
-]
+const policy = ref(null)
+const status = ref('loading')
+const error = ref('')
 const section = ref('service')
+const sections = computed(() => policySections(policy.value))
+const current = computed(() => sections.value.find((s) => s.id === section.value) ?? sections.value[0])
 
-const draft = reactive({
-  serviceName: '타임바 다이어리',
-  signupOpen: true,
-  requireEmailVerify: true,
-  defaultMode: 'B',
-  maxGroupsPerUser: 10,
-  passwordMinLength: 8,
-  sessionHours: 24,
-  twoFactorForAdmins: true,
-  ipAllowlist: '',
-  trashRetentionDays: 30,
-  auditRetentionDays: 365,
-  attachmentRetentionDays: 90,
-  inactiveAccountMonths: 12,
-})
-const saved = ref('')
-
-const admins = ref([
-  { id: 1, name: '운영자A', role: '최고 관리자', scopes: ['전체'] },
-  { id: 2, name: '운영자B', role: '운영자', scopes: ['CS', '콘텐츠'] },
-  { id: 3, name: '운영자C', role: '읽기 전용', scopes: ['통계'] },
-])
-const ROLES = ['최고 관리자', '운영자', '읽기 전용']
-
-function save() {
-  audit('시스템', '관리자 설정 저장', SECTIONS.find((s) => s.id === section.value).label)
-  saved.value = '저장했어요'
-  setTimeout(() => (saved.value = ''), 2000)
+async function load() {
+  status.value = 'loading'; error.value = ''
+  try { policy.value = await loadPolicy(apiRequest); status.value = 'ready' } catch (e) { error.value = adminErrorText(e); status.value = 'error' }
 }
-function changeRole(a, role) {
-  if (a.role === role) return
-  const before = a.role
-  a.role = role
-  audit('권한 변경', '운영자 권한 변경', a.name, before + ' → ' + role)
-}
-const recentAudits = computed(() => auditLogs.value.slice(0, 3))
+onMounted(load)
 </script>
 
 <template>
   <div class="settings">
-    <nav class="setting-menu card">
-      <button v-for="s in SECTIONS" :key="s.id" :class="{ active: section === s.id }" @click="section = s.id">
-        {{ s.label }}<span>›</span>
+    <nav class="setting-menu card" aria-label="정책 구획">
+      <button v-for="s in sections" :key="s.id" type="button" :class="{ active: section === s.id }" :aria-current="section === s.id ? 'true' : undefined" @click="section = s.id">
+        {{ s.label }}<span aria-hidden="true">›</span>
       </button>
     </nav>
 
-    <section class="card setting-content">
+    <section class="card setting-content" aria-labelledby="policy-title">
       <div class="setting-head">
         <div>
-          <h2>{{ SECTIONS.find((s) => s.id === section).label }}</h2>
-          <p>변경하면 감사 로그에 기록돼요</p>
+          <h2 id="policy-title">{{ current.label }}</h2>
+          <p>서버에 지금 적용된 정책이에요. 이 화면에서는 바꿀 수 없어요.</p>
         </div>
-        <span v-if="saved" class="badge ok">{{ saved }}</span>
       </div>
+      <!-- 좁은 화면에서는 왼쪽 구획 메뉴가 숨으므로 같은 구획을 여기서 고른다 -->
+      <label class="policy-pick">구획
+        <select v-model="section"><option v-for="s in sections" :key="s.id" :value="s.id">{{ s.label }}</option></select>
+      </label>
 
-      <!-- 서비스 정책 -->
-      <template v-if="section === 'service'">
-        <label>서비스 이름<input v-model="draft.serviceName" /></label>
-        <label>신규 가입 기본 모드
-          <select v-model="draft.defaultMode"><option value="J">계획 중심(J)</option><option value="P">자유 기록(P)</option><option value="B">균형(B)</option></select>
-        </label>
-        <label>사용자당 그룹 개수 제한<input type="number" min="1" max="100" v-model.number="draft.maxGroupsPerUser" /></label>
-        <label class="task" style="border: 0;display: inline-flex;">
-          <input type="checkbox" style="flex-shrink: 0;" v-model="draft.signupOpen" />
-          <span style="flex: 1"><b>신규 가입 허용</b><small>끄면 초대받은 사용자만 가입할 수 있어요</small></span>
-        </label>
-        <label class="task" style="border: 0;display: inline-flex;">
-          <input type="checkbox" style="flex-shrink: 0;" v-model="draft.requireEmailVerify" />
-          <span style="flex: 1"><b>이메일 인증 필수</b><small>인증 전에는 커뮤니티 활동을 제한해요</small></span>
-        </label>
-      </template>
-
-      <!-- 운영자 권한 -->
-      <template v-else-if="section === 'members'">
-        <div class="trow" v-for="a in admins" :key="a.id">
-          <span style="flex: 1">
-            <b style="display: block">{{ a.name }}</b>
-            <small style="color: var(--color-muted)">담당: {{ a.scopes.join(' · ') }}</small>
-          </span>
-          <select class="mini-select" :value="a.role" @change="changeRole(a, $event.target.value)">
-            <option v-for="r in ROLES" :key="r">{{ r }}</option>
-          </select>
+      <p v-if="status === 'loading'" class="input-field-help" role="status">정책을 불러오는 중이에요.</p>
+      <div v-else-if="status === 'error'" class="empty-state" role="alert"><p>{{ error }}</p><button type="button" class="button-secondary" @click="load">다시 시도</button></div>
+      <dl v-else class="policy-list">
+        <div v-for="row in current.rows" :key="row.label" class="policy-row">
+          <dt>{{ row.label }}</dt>
+          <dd><span v-if="row.unsupported" class="badge">지원하지 않음</span><span v-else class="figure">{{ row.value }}</span></dd>
         </div>
-        <p class="form-note">읽기 전용 운영자는 상태를 바꾸는 버튼이 비활성화돼요.</p>
-      </template>
+      </dl>
 
-      <!-- 보안 -->
-      <template v-else-if="section === 'security'">
-        <label>비밀번호 최소 길이<input type="number" min="8" max="64" v-model.number="draft.passwordMinLength" /></label>
-        <label>세션 유지 시간(시간)<input type="number" min="1" max="720" v-model.number="draft.sessionHours" /></label>
-        <label>관리자 IP 허용 목록<input v-model="draft.ipAllowlist" placeholder="쉼표로 구분 · 비우면 제한 없음" /></label>
-        <label class="task" style="border: 0;display: inline-flex;">
-          <input type="checkbox" style="flex-shrink: 0;" v-model="draft.twoFactorForAdmins" />
-          <span style="flex: 1"><b>관리자 2단계 인증 필수</b><small>운영자 계정은 OTP 없이 로그인할 수 없어요</small></span>
-        </label>
-      </template>
-
-      <!-- 보관 정책 -->
-      <template v-else>
-        <label>휴지통 보관 기간(일)<input type="number" min="1" max="365" v-model.number="draft.trashRetentionDays" /></label>
-        <label>감사 로그 보관 기간(일)<input type="number" min="30" max="3650" v-model.number="draft.auditRetentionDays" /></label>
-        <label>공유 첨부파일 보관 기간(일)<input type="number" min="1" max="365" v-model.number="draft.attachmentRetentionDays" /></label>
-        <label>휴면 계정 전환(개월)<input type="number" min="3" max="60" v-model.number="draft.inactiveAccountMonths" /></label>
-        <p class="form-note">보관 기간이 지난 데이터는 자동으로 정리돼요. 감사 로그는 최소 30일 이상으로만 설정할 수 있어요.</p>
-      </template>
-
-      <button class="primary" @click="save">저장하기</button>
-
-      <div class="section-label" style="margin-top: 22px">최근 관리자 활동</div>
-      <div class="event" v-for="l in recentAudits" :key="l.id">
-        <i></i>
-        <span style="flex: 1"><b>{{ l.action }}</b><small>{{ l.admin }} · {{ l.target }}</small></span>
-        <small class="figure">{{ l.at }}</small>
-      </div>
+      <p class="form-note">로그인 유지 시간처럼 바꿀 수 있는 값은 배포 설정(환경 변수)에서 바꾸고 다시 배포해요. 계정 역할은 <router-link to="/admin">사용자 관리</router-link>에서, 관리자 조치 기록은 <router-link to="/admin/audit">감사 로그</router-link>에서 봐요.</p>
     </section>
   </div>
 </template>
+
+<style scoped>
+.policy-pick { display: none; }
+.policy-list { display: grid; gap: 0; margin: var(--space-lg) 0; }
+.policy-row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-xs) var(--space-lg); padding: var(--space-md) 0; border-bottom: 1px solid var(--color-hairline); }
+.policy-row dt { color: var(--color-foreground); font-weight: 600; }
+.policy-row dd { margin: 0; color: var(--color-foreground); }
+@media (max-width: 760px) { .policy-pick { display: grid; gap: var(--space-xs); } }
+</style>

@@ -1,6 +1,6 @@
 # API 목록
 
-기준 2026-10-10. 총 308개 매핑이며 wildcard 경로는 허용된 값을 선택한다. 채팅은 CHAT_ENABLED=true 조건부 등록이다. 구현·검증 범위는 [검증 기록](verification.md)을 확인한다.
+기준 2026-10-10. 총 309개 매핑이며 wildcard 경로는 허용된 값을 선택한다. 채팅은 CHAT_ENABLED=true 조건부 등록이다. 구현·검증 범위는 [검증 기록](verification.md)을 확인한다.
 
 | 메서드 | 경로 | 인증 | 처리 | 소스 |
 |---|---|---|---|---|
@@ -18,6 +18,7 @@
 | POST | `/api/admin/notices` | JWT + ADMIN | 실제 처리 소스 있음 | AdminController |
 | DELETE | `/api/admin/notices/{id}` | JWT + ADMIN | 실제 처리 소스 있음 | AdminController |
 | PUT | `/api/admin/notices/{id}` | JWT + ADMIN | 실제 처리 소스 있음 | AdminController |
+| GET | `/api/admin/policy` | JWT + ADMIN | 실제 처리 소스 있음 | AdminPolicyController |
 | GET | `/api/admin/settings` | JWT + ADMIN | 실제 처리 소스 있음 | AdminController |
 | PUT | `/api/admin/settings` | JWT + ADMIN | 실제 처리 소스 있음 | AdminController |
 | GET | `/api/admin/stats` | JWT + ADMIN | 실제 처리 소스 있음 | AdminController |

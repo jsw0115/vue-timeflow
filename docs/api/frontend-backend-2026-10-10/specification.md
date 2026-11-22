@@ -176,6 +176,12 @@
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 
+## GET /api/admin/policy
+
+인증은 JWT + ADMIN이며 소스는 AdminPolicyController.java다. 성공 HTTP는 200다.
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
 ## GET /api/admin/settings
 
 인증은 JWT + ADMIN이며 소스는 AdminController.java다. 성공 HTTP는 200다.
