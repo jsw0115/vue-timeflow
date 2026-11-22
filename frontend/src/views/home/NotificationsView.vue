@@ -1,8 +1,9 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import ListFilterBar from '../../components/ListFilterBar.vue'
-import { notifications, unreadNotifications, markRead, markAllRead, removeNotification } from '../../store/people'
+import { notifications, unreadNotifications, markRead, markAllRead, removeNotification, loadNotifications, notificationState } from '../../store/people'
+import { session } from '../../features/auth/session.js'
 import PageActions from '../../components/PageActions.vue'
 
 /** 알림 — 헤더 우측 패널과 같은 people 스토어를 공유한다. */
@@ -37,6 +38,9 @@ const visible = computed(() => {
   })
 })
 
+// 알림함을 열 때마다 서버가 다가오는 마감 알림을 계산하게 하고 목록을 새로 읽는다(Q-32)
+onMounted(() => { if (session.userId) void loadNotifications() })
+
 function open(n) {
   markRead(n)
   router.push(n.link)
@@ -59,6 +63,9 @@ function open(n) {
     :total-count="notifications.length"
   />
 
+  <p v-if="notificationState.status === 'loading' && !notifications.length" class="input-field-help" role="status">알림을 불러오는 중이에요.</p>
+  <p v-if="notificationState.status === 'error' || notificationState.message" class="input-field-help" data-state="error" role="alert">{{ notificationState.message || '알림을 불러오지 못했어요.' }} <button type="button" class="button-text" @click="loadNotifications">다시 시도</button></p>
+  <p v-if="!session.userId" class="input-field-help">지금 보이는 알림은 예시예요. 로그인하면 계정 알림과 할 일·지원 마감 알림을 받아요.</p>
   <section class="card">
     <div class="notif-row" v-for="n in visible" :key="n.id" :class="{ unread: !n.read }">
       <button class="notif-main" @click="open(n)">

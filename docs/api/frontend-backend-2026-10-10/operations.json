@@ -5749,6 +5749,22 @@
     "externalBoundary": false
   },
   {
+    "method": "POST",
+    "route": "/api/notifications/due-refresh",
+    "parameters": [],
+    "status": 200,
+    "responseType": "?",
+    "controller": "NotificationRefreshController",
+    "kind": "서비스 연결",
+    "implementationStatus": "서비스 연결 · 검증 범위 별도",
+    "public": false,
+    "responseSchema": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "externalBoundary": false
+  },
+  {
     "method": "PUT",
     "route": "/api/notifications/read-all",
     "parameters": [],

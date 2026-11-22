@@ -36,6 +36,12 @@ public class SettingsService {
         if (section.equals("career") && data.get("value") instanceof Map<?,?> value && value.get("goal") != null && !CAREER_GOALS.contains(value.get("goal"))) FeatureInput.fail("커리어 목표 값을 확인해주세요.");
         // 랭킹 참여(PR-19 UF-136). false면 다른 회원의 챌린지 랭킹 응답에서 빠진다(ChallengeService.ranking)
         if (section.equals("share-visibility") && data.get("value") instanceof Map<?,?> value && value.containsKey("rankingVisible") && !(value.get("rankingVisible") instanceof Boolean)) FeatureInput.fail("랭킹 참여 값은 true 또는 false입니다.");
+        // 마감 알림 시점(Q-32). 서버 DueReminders가 같은 허용값으로 읽는다
+        if (section.equals("notifications") && data.get("value") instanceof Map<?,?> value) {
+            if (value.containsKey("dueReminders") && !(value.get("dueReminders") instanceof Boolean)) FeatureInput.fail("마감 알림 켜기 값은 true 또는 false입니다.");
+            if (value.containsKey("dueLeadMinutes") && !(value.get("dueLeadMinutes") instanceof Number n && n.doubleValue() == n.intValue() && kr.timebar.diary.records.DueReminders.LEAD_MINUTES.contains(n.intValue()))) FeatureInput.fail("할 일 마감 알림 시점은 0·10·30·60·180·1440분 전 중 하나입니다.");
+            if (value.containsKey("applicationLeadDays") && !(value.get("applicationLeadDays") instanceof Number n && n.doubleValue() == n.intValue() && kr.timebar.diary.records.DueReminders.LEAD_DAYS.contains(n.intValue()))) FeatureInput.fail("지원 일정 알림 시점은 0·1·3·7일 전 중 하나입니다.");
+        }
         if (store.optional(user, FeatureType.SETTING, section).isEmpty()) return store.create(user, FeatureType.SETTING, section, data);
         return store.replace(user, FeatureType.SETTING, section, FeatureInput.version(body), data);
     }

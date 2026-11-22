@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { modeState, modeMeta, modeContent } from '../../store/modeProfiles'
 import { session } from '../../features/auth/session.js'
+import DueReminderSettings from '../../components/DueReminderSettings.vue'
 
 const channels = ref([
   { id: 'push', title: '푸시 알림', desc: '앱과 브라우저 알림', on: true },
@@ -84,6 +85,8 @@ function save() {
 <template>
   <section class="card setting-content">
     <h2>알림</h2>
+    <!-- 마감 알림(Q-32)은 계정 설정에 바로 저장한다. 아래 채널·카테고리·방해 금지는 아직 이 화면의 예시다 -->
+    <DueReminderSettings v-if="session.userId" />
     <div class="section-label">채널</div>
     <div class="trow" v-for="c in channels" :key="c.id">
       <span style="flex: 1">
