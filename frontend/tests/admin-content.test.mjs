@@ -34,9 +34,13 @@ test('콘텐츠 화면은 서버를 쓰고, 공개로 바꿔도 사용자에게 
   assert.match(view, /사용자에게 보이지 않아요/)
 })
 
-test('앱 화면 어디에서도 /api/content를 읽지 않는다(바뀌면 콘텐츠 화면 안내도 고친다)', () => {
+test('/api/content는 공용 콘텐츠 모듈 하나만 읽고, 그 모듈은 홈·템플릿 관리만 쓴다(바뀌면 콘텐츠 화면 안내도 고친다, Q-29)', () => {
   const walk = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((entry) => (entry.isDirectory() ? walk(path.join(dir, entry.name)) : [path.join(dir, entry.name)]))
   const src = fileURLToPath(new URL('../src/', import.meta.url))
-  const readers = walk(src).filter((file) => /\.(vue|js|mjs)$/.test(file) && /['"`]\/api\/content['"`?]/.test(readFileSync(file, 'utf8')))
-  assert.deepEqual(readers, [])
+  const files = walk(src).filter((file) => /\.(vue|js|mjs)$/.test(file))
+  const rel = (file) => path.relative(src, file).split(path.sep).join('/')
+  const readers = files.filter((file) => /['"`]\/api\/content['"`?]/.test(readFileSync(file, 'utf8'))).map(rel)
+  assert.deepEqual(readers, ['features/content/publicContent.mjs'])
+  const users = files.filter((file) => /features\/content\/publicContent\.mjs/.test(readFileSync(file, 'utf8'))).map(rel).sort()
+  assert.deepEqual(users, ['views/home/HomeView.vue', 'views/planner/PlannerTemplatesView.vue'])
 })

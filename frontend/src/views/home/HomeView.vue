@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { appearance } from '../../store/appearance'
 import { tasks, routines, events, openPostComposer, toggle, toggleRoutine, isRoutineToday, routineStore } from '../../store/appState'
@@ -9,6 +9,8 @@ import { modeState, modeContent } from '../../store/modeProfiles'
 import { dashboardState, WIDGET_CATALOG, cycleSize, toggleVisible, moveWidget, resetLayout } from '../../store/dashboard'
 import QuickCapture from '../../components/QuickCapture.vue'
 import { session } from '../../features/auth/session.js'
+import { apiRequest } from '../../features/auth/apiRequest.js'
+import { loadPublicContent, quoteOfDay } from '../../features/content/publicContent.mjs'
 import { activityStore, applicationStore } from '../../store/careerLedger'
 import { activityTypeLabel, dueLabel, recentActivities, upcomingDates } from '../../features/career/careerModel.mjs'
 
@@ -50,6 +52,14 @@ const todayRoutines = computed(() => routines.value.filter((r) => isRoutineToday
 const doneRate = computed(() => tasks.value.length ? Math.round(tasks.value.filter(x => x.done).length / tasks.value.length * 100) : 0)
 const routineDone = computed(() => todayRoutines.value.filter(r => r.done).length)
 const routinePercent = computed(() => todayRoutines.value.length ? Math.round(routineDone.value / todayRoutines.value.length * 100) : 0)
+// 오늘의 문장(Q-29): 관리자가 공개한 명언 중 날짜마다 하나. 로그인 상태에서만 서버에서 읽고, 없거나 못 읽으면 보이지 않는다
+const publicContent = ref([])
+watch(() => session.userId, async (id) => {
+  publicContent.value = []
+  if (!id) return
+  try { const rows = await loadPublicContent(apiRequest); if (session.userId === id) publicContent.value = rows ?? [] } catch { publicContent.value = [] }
+}, { immediate: true })
+const quote = computed(() => quoteOfDay(publicContent.value, localDate()))
 const todayEvents = computed(() => eventOccurrences(events.value, localDate(), localDate()).sort((a, b) => a.startTime.localeCompare(b.startTime)))
 const pendingTasks = computed(() => tasks.value.filter(t => !t.done).length)
 function shiftWidget(id, direction) {
@@ -94,6 +104,10 @@ function onDrop(id) {
           <div><dt>남은 할 일</dt><dd class="figure">{{ pendingTasks }}</dd></div>
           <div><dt>오늘 루틴</dt><dd class="figure">{{ routineDone }}<small>/{{ todayRoutines.length }}</small></dd></div>
         </dl>
+        <figure v-if="quote" class="today-quote" aria-label="오늘의 문장">
+          <blockquote>{{ quote.text }}</blockquote>
+          <figcaption v-if="quote.by">{{ quote.by }}</figcaption>
+        </figure>
         <div class="today-links"><button type="button" class="button-text" @click="openPostComposer('일정')">일정 추가</button><button type="button" class="button-text" @click="router.push('/routines')">루틴 확인</button><button type="button" class="button-text" @click="openPostComposer('다이어리')">하루 회고</button></div>
       </div>
     </div>
@@ -245,4 +259,8 @@ function onDrop(id) {
   .today-band { padding: var(--space-xl); }
 }
 .career-recent { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-xs); margin: var(--space-sm) 0 0; color: var(--color-body); font-size: var(--type-body-sm-size); overflow-wrap: anywhere; }
+/* 오늘의 문장(Q-29). 주 행동(빠른 기록)보다 눈에 띄지 않게 작은 글씨와 흐린 색으로 둔다 */
+.today-quote { margin: var(--space-md) 0 0; color: var(--color-muted); font-size: var(--type-body-sm-size); }
+.today-quote blockquote { margin: 0; overflow-wrap: anywhere; }
+.today-quote figcaption { margin-top: var(--space-xs); font-size: var(--type-caption-size); }
 </style>

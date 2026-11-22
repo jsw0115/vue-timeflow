@@ -1,6 +1,6 @@
 <script setup>
 // 콘텐츠 관리. 명언·플래너 템플릿·스티커팩을 서버에 저장한다. 감사 로그는 서버가 남긴다(PR-10 UF-117 7-3).
-// 사용자 앱에는 아직 이 콘텐츠를 읽어 보이는 화면이 없어, 공개로 바꿔도 사용자에게 보이지 않는다는 사실을 화면에 알린다.
+// 공개 콘텐츠가 사용자 앱 어디에 보이는지 화면에 알린다(Q-29): 명언은 홈의 오늘의 문장, 플래너 템플릿은 템플릿 관리의 공용 템플릿. 스티커팩은 아직 보이는 곳이 없다.
 import { computed, onMounted, ref } from 'vue'
 import Modal from '../../components/Modal.vue'
 import { apiRequest } from '../../features/auth/apiRequest.js'
@@ -63,7 +63,7 @@ async function remove(row) {
     <div><h2>콘텐츠 관리</h2><p>명언·플래너 템플릿·스티커팩을 서버에 저장하고 공개 여부를 정해요</p></div>
     <button type="button" class="primary" @click="open()">+ 콘텐츠 추가</button>
   </div>
-  <p class="callout content-note" role="note">아직 사용자 앱에는 이 콘텐츠를 읽어 보여 주는 화면이 없어요. "공개"로 바꿔도 지금은 사용자에게 보이지 않아요. 어느 화면에 보일지는 정해지면 연결해요.</p>
+  <p class="callout content-note" role="note">"공개"로 바꾸면 로그인한 사용자에게 보여요. 명언은 홈의 "오늘의 문장"에 날짜마다 하나씩, 플래너 템플릿은 템플릿 관리의 "공용 템플릿"에 보여요. 플래너 템플릿 내용은 한 줄에 하나씩 "07:00 아침 스트레칭"처럼 적어 주세요. 스티커팩은 그림 자료가 준비되면 연결해서, 지금은 사용자에게 보이지 않아요.</p>
 
   <p v-if="status === 'loading'" class="input-field-help" role="status">콘텐츠를 불러오는 중이에요.</p>
   <div v-else-if="status === 'error'" class="empty-state" role="status"><p>{{ loadError }}</p><button type="button" class="button-secondary" @click="load">다시 시도</button></div>
@@ -99,7 +99,7 @@ async function remove(row) {
     <label>이름<input v-model="editing.draft.title" maxlength="200" required /></label>
     <label>내용<textarea v-model="editing.draft.body" rows="4" maxlength="20000" required></textarea></label>
     <label>위치 메모(선택)<input v-model="editing.draft.where" maxlength="200" placeholder="예: 홈 대시보드에 쓰려고 함" /></label>
-    <label class="content-live"><input v-model="editing.draft.live" type="checkbox" />공개로 설정(지금은 사용자 화면에 보이지 않아요)</label>
+    <label class="content-live"><input v-model="editing.draft.live" type="checkbox" />공개로 설정(로그인한 사용자에게 보여요. 스티커팩은 아직 보이지 않아요)</label>
     <p v-if="error" class="input-field-help" data-state="error" role="alert">{{ error }}</p>
     <p v-if="saving.state === 'failed'" class="input-field-help" data-state="error" role="alert">{{ saving.message }}</p>
     <template #footer>
