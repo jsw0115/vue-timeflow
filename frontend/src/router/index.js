@@ -55,6 +55,7 @@ import JobApplicationsView from '../views/career/JobApplicationsView.vue'
 
 // 소셜
 import FriendsView from '../views/share/FriendsView.vue'
+import PublicPortfolioView from '../views/share/PublicPortfolioView.vue'
 import ShareGroupsView from '../views/share/ShareGroupsView.vue'
 import SharedFilesView from '../views/share/SharedFilesView.vue'
 import GroupDetailView from '../views/share/GroupDetailView.vue'
@@ -245,6 +246,8 @@ const bareRoutes = [
   { path: '/system/maintenance', name: '점검/업데이트 안내', component: MaintenanceView },
   { path: '/system/permission', name: '권한 요청', component: PermissionRequestView },
   { path: '/legal', name: '약관/정책 뷰어', component: LegalViewerView },
+  // 링크로 여는 공개 포트폴리오(Q-22). 로그인 없이 보인다
+  { path: '/p/:token', name: '공개 포트폴리오', component: PublicPortfolioView },
 ]
 
 /** 하위 호환: 기존에 flat `navItems`를 참조하던 코드를 위해 평탄화한 배열도 함께 내보낸다 */

@@ -12,6 +12,7 @@ import {
 import { aiSettings, isFeatureOn } from '../../store/aiSettings'
 import { useCapabilityStatus } from '../../features/integrations/useCapabilityStatus.mjs'
 import HelpPopover from '../../components/HelpPopover.vue'
+import PortfolioLinkPanel from '../../components/PortfolioLinkPanel.vue'
 import { exportPdf, exportWord, sectionsToHtml } from '../../store/docExport'
 
 /**
@@ -363,7 +364,9 @@ function onVisibilityChange(v) {
 
   <!-- 포트폴리오 -->
   <template v-else-if="tab === 'portfolio'">
-    <section class="card" style="margin-bottom: 16px">
+    <!-- 로그인 상태: 계정 포트폴리오의 공개 링크(Q-22). 아래 공개 범위 토글은 로그아웃 상태의 예시에만 쓴다 -->
+    <PortfolioLinkPanel v-if="onServer" :items="portfolio" />
+    <section v-else class="card" style="margin-bottom: 16px">
       <div class="head">
         <div><h3 style="margin: 0">공개 범위</h3><p style="margin: 4px 0 0">{{ VISIBILITY[workPrivacy.portfolioVisibility].desc }}</p></div>
         <span class="badge" :class="workPrivacy.portfolioVisibility === 'private' ? 'ok' : 'warn'">
@@ -375,19 +378,18 @@ function onVisibilityChange(v) {
           {{ v.label }}
         </button>
       </div>
-      <p v-if="onServer" class="input-field-help">계정의 포트폴리오를 링크로 공개하는 기능은 아직 준비 중이에요. 지금은 아무 항목도 공개되지 않아요.</p>
-      <p v-else class="form-note">링크 공개를 켜도, 아래에서 직접 고른 항목만 열립니다. 지금 공개중인 항목 {{ sharedCount }}개.</p>
+      <p class="form-note">링크 공개를 켜도, 아래에서 직접 고른 항목만 열립니다. 지금 공개중인 항목 {{ sharedCount }}개.</p>
     </section>
     <button v-if="onServer" type="button" class="button-secondary" style="margin-bottom: 12px" @click="openPortfolio">항목 추가</button>
     <div v-if="onServer && portfolioStore.state.loaded && !portfolio.length" class="empty-state" role="status"><p>아직 포트폴리오 항목이 없어요. 항목을 추가해 보세요.</p></div>
 
     <section class="card list">
-      <div class="list-head" style="grid-template-columns: 2fr 1fr 1fr 1fr"><span>항목</span><span>종류</span><span>수정일</span><span>링크 공개</span></div>
+      <div class="list-head" style="grid-template-columns: 2fr 1fr 1fr 1fr"><span>항목</span><span>종류</span><span>수정일</span><span>{{ onServer ? '관리' : '링크 공개' }}</span></div>
       <div class="row" style="grid-template-columns: 2fr 1fr 1fr 1fr" v-for="p in portfolio" :key="p.id">
         <label>{{ p.title }}</label>
         <span class="tag">{{ p.kind }}</span>
         <span class="figure">{{ p.updated }}</span>
-        <span v-if="onServer" style="display: flex; align-items: center; gap: 6px"><small>준비 중</small><button class="review" style="margin: 0" @click="removePortfolio(p)">삭제</button></span>
+        <span v-if="onServer" style="display: flex; align-items: center; gap: 6px"><button class="review" style="margin: 0" @click="removePortfolio(p)">삭제</button></span>
         <span v-else>
           <button
             type="button"

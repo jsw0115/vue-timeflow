@@ -2,7 +2,7 @@
 
 작성일 2026-10-31. 수정일 2026-10-31. Vue 라우터의 명시적 경로와 플래너 매핑을 정적으로 추출한 생성 문서입니다.
 
-경로 90개입니다. 동일 컴포넌트의 여러 경로·선택 파라미터를 별개 목록 행으로 표시합니다. 라우트 개수는 기능 완성도나 실제 접근 권한·서버 연결 검증 수가 아닙니다. 설정의 section별 탭과 모달은 별도 경로로 세지 않습니다.
+경로 91개입니다. 동일 컴포넌트의 여러 경로·선택 파라미터를 별개 목록 행으로 표시합니다. 라우트 개수는 기능 완성도나 실제 접근 권한·서버 연결 검증 수가 아닙니다. 설정의 section별 탭과 모달은 별도 경로로 세지 않습니다.
 
 상세 입력·레이아웃·상태·흐름은 [화면 명세](screen-design.md)에 관리합니다. 화면 카탈로그 데이터의 기획 항목과 실제 라우트는 다를 수 있습니다.
 
@@ -68,6 +68,7 @@
 | `/money` | 머니로그 | [MoneyLogView](../../frontend/src/views/money/MoneyLogView.vue) | 로컬 store·API·소유권·갱신 실패를 실제 호출로 확인 |
 | `/my-posts` | 내 글 | [MyPostsView](../../frontend/src/views/tags/MyPostsView.vue) | 로컬 store·API·소유권·갱신 실패를 실제 호출로 확인 |
 | `/notifications` | 알림 | [NotificationsView](../../frontend/src/views/home/NotificationsView.vue) | 로컬 store·API·소유권·갱신 실패를 실제 호출로 확인 |
+| `/p/:token` | 공개 포트폴리오 | [PublicPortfolioView](../../frontend/src/views/share/PublicPortfolioView.vue) | 로컬 store·API·소유권·갱신 실패를 실제 호출로 확인 |
 | `/planner` | 플래너 | [PlannerDailyView](../../frontend/src/views/planner/PlannerDailyView.vue) | 로컬 store·API·소유권·갱신 실패를 실제 호출로 확인 |
 | `/planner/canvas` | 프로젝트 캔버스 | [ProjectCanvasView](../../frontend/src/views/planner/ProjectCanvasView.vue) | 로컬 store·API·소유권·갱신 실패를 실제 호출로 확인 |
 | `/planner/daily` | 플래너 일간 | [PlannerDailyView](../../frontend/src/views/planner/PlannerDailyView.vue) | 로컬 store·API·소유권·갱신 실패를 실제 호출로 확인 |

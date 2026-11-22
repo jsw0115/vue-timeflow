@@ -49,9 +49,12 @@ class FeatureHttpTest {
     @Autowired JdbcTemplate jdbc;
     MockMvc mvc;
     String owner;
+    String other;
     @BeforeEach void setup() {
         var user = new UserEntity("http@example.test", "테스터", "hash", UserRole.USER, UserStatus.ACTIVE);
         owner = user.getId(); when(users.findById(owner)).thenReturn(Optional.of(user));
+        var second = new UserEntity("http-other@example.test", "다른 사람", "hash", UserRole.USER, UserStatus.ACTIVE);
+        other = second.getId(); when(users.findById(other)).thenReturn(Optional.of(second));
         authenticate(owner, "USER");
         var actions = new RecordActionsController(records, store, mock(TaskService.class), mock(kr.timebar.diary.planner.PlannerService.class), work);
         mvc = MockMvcBuilders.standaloneSetup(new RecordsController(records), new ContactsController(records), new WorkController(records, work), actions,
@@ -167,6 +170,33 @@ class FeatureHttpTest {
         mvc.perform(get("/api/public/portfolios/" + token)).andExpect(status().isOk()).andExpect(jsonPath("$.data.items.length()").value(1)).andExpect(jsonPath("$.data.items[0].kind").value("사례"));
         authenticate(owner, "USER"); mvc.perform(delete("/api/work/portfolio-links/" + id)).andExpect(status().isNoContent());
         mvc.perform(get("/api/public/portfolios/" + token)).andExpect(status().isNotFound());
+    }
+    /** Q-22: 링크 공개는 만료가 있고 목록에 주소가 없으며, 전체 공개는 만료 없이 목록에 주소가 남는다. 남의 링크는 목록에 없고 닫을 수 없다. */
+    @Test void portfolioLinksHaveTwoScopesAndAreListedOnlyToTheirOwner() throws Exception {
+        var item = work.create(owner, FeatureType.PORTFOLIO, Map.of("title", "공개 항목", "kind", "사례"));
+        String link = mvc.perform(post("/api/work/portfolio-links").contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsString(Map.of("itemIds", List.of(item.get("id")), "scope", "link", "expiresInDays", 1)))).andExpect(status().isCreated())
+                .andExpect(jsonPath("$.data.scope").value("link")).andExpect(jsonPath("$.data.expiresAt").isString()).andReturn().getResponse().getContentAsString();
+        String linkToken = mapper.readTree(link).path("data").path("token").asText();
+        String open = mvc.perform(post("/api/work/portfolio-links").contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsString(Map.of("itemIds", List.of(item.get("id")), "scope", "public")))).andExpect(status().isCreated())
+                .andExpect(jsonPath("$.data.scope").value("public")).andExpect(jsonPath("$.data.expiresAt").doesNotExist()).andReturn().getResponse().getContentAsString();
+        String publicToken = mapper.readTree(open).path("data").path("token").asText(), publicId = mapper.readTree(open).path("data").path("id").asText();
+        var listed = mapper.readTree(mvc.perform(get("/api/work/portfolio-links")).andExpect(status().isOk()).andReturn().getResponse().getContentAsString()).path("data");
+        int mine = 0;
+        for (var row : listed) {
+            if (row.path("scope").asText().equals("link")) assertTrue(row.path("token").isMissingNode(), "링크 공개 주소는 다시 보이지 않는다");
+            if (row.path("id").asText().equals(publicId)) assertEquals(publicToken, row.path("token").asText());
+            mine++;
+        }
+        assertTrue(mine >= 2);
+        SecurityContextHolder.clearContext();
+        mvc.perform(get("/api/public/portfolios/" + linkToken)).andExpect(status().isOk()).andExpect(jsonPath("$.data.scope").value("link"));
+        mvc.perform(get("/api/public/portfolios/" + publicToken)).andExpect(status().isOk()).andExpect(jsonPath("$.data.scope").value("public")).andExpect(jsonPath("$.data.expiresAt").doesNotExist());
+        authenticate(other, "USER");
+        mvc.perform(get("/api/work/portfolio-links")).andExpect(status().isOk()).andExpect(jsonPath("$.data.length()").value(0));
+        mvc.perform(delete("/api/work/portfolio-links/" + publicId)).andExpect(status().isNotFound());
+        authenticate(owner, "USER");
+        mvc.perform(post("/api/work/portfolio-links").contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsString(Map.of("itemIds", List.of(item.get("id")), "scope", "everyone")))).andExpect(status().isBadRequest());
+        mvc.perform(post("/api/work/portfolio-links").contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsString(Map.of("itemIds", List.of(item.get("id")), "expiresInDays", 3)))).andExpect(status().isBadRequest());
     }
     /** 로컬 자료 이전(UF-86)이 같은 멱등 키로 다시 보내도 업무 기록·위키·WBS가 하나만 생긴다(PR-10 4단계). */
     @Test void workCreatesReplayTheSameRecordForTheSameIdempotencyKey() throws Exception {
