@@ -1146,4 +1146,5 @@ export const EN = {
   "한국어": "Korean",
   "영어": "English",
   "영어본은 지금 문서를 영어로 고쳐 저장한 뒤 언어를 '영어'로 골라 버전으로 남겨요. 한국어 원문은 그 전에 한국어 버전으로 남겨 두면 덮어써도 버전에 그대로 있어요.": "To make an English version, edit and save the document in English, then save a version with the language set to 'English'. Save a Korean version first, and the Korean original stays in that version even after you overwrite the document.",
+  "실행률": "Execution rate",
 }

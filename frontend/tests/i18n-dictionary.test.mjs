@@ -118,3 +118,11 @@ test('목록에서 이름을 꺼내 tr에 넘기는 값(상태·문서·고용 �
   const [section] = snapshotSections({ document: 'resume', content: { resume: { name: '김하나', years: 4 } } }, { t: en })
   assert.deepEqual(section, { heading: 'Basic information', rows: [['Name', '김하나'], ['Years of experience', '4 years']] })
 })
+
+test('용어 목록 문서(docs/dev-docs/12, Q-38 (4))의 영어가 사전과 같다', () => {
+  const doc = readFileSync(new URL('../../docs/dev-docs/12-다국어-용어-목록.md', import.meta.url), 'utf8')
+  const rows = [...doc.split('## 용어')[1].split('## 변경 이력')[0].matchAll(/^\| ([^|]+) \| ([^|]+) \| [^|]+ \|$/gm)].map((m) => [m[1].trim(), m[2].trim()]).filter(([ko, en]) => !(ko === '한국어' && en === '영어') && ko !== '---')
+  assert.equal(rows.length, 29)
+  assert.deepEqual(rows.filter(([ko, en]) => EN[ko] !== en), [])
+})
+
