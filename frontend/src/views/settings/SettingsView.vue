@@ -4,6 +4,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { SETTINGS_GROUPS, SETTINGS_SECTIONS } from '../../router/settingsSections'
 import AppIcon from '../../components/icons/AppIcon.vue'
 import { SETTINGS_ICONS } from '../../components/icons/iconPaths.mjs'
+import { localeState } from '../../store/locale'
+import { settingDesc, settingLabel, settingsGroupLabel, shellText } from '../../features/i18n/locale.mjs'
 
 /**
  * 환경설정 셸 — 관리자 콘솔과 같은 구조.
@@ -31,12 +33,15 @@ function select(section) {
 }
 
 const query = ref('')
+const locale = computed(() => localeState.locale)
+const t = (key) => shellText(key, locale.value)
 const filteredGroups = computed(() => {
   const k = query.value.trim()
   if (!k) return SETTINGS_GROUPS
   return SETTINGS_GROUPS.map((g) => ({
     ...g,
-    items: g.items.filter((i) => i.label.includes(k) || (i.desc ?? '').includes(k)),
+    // 보이는 언어의 이름·설명과 한국어 원문 둘 다로 찾는다(PR-32)
+    items: g.items.filter((i) => [i.label, i.desc ?? '', settingLabel(i, locale.value), settingDesc(i, locale.value)].some((text) => text.toLowerCase().includes(k.toLowerCase()))),
   })).filter((g) => g.items.length)
 })
 const noResult = computed(() => query.value.trim() && !filteredGroups.value.length)
@@ -44,15 +49,15 @@ const noResult = computed(() => query.value.trim() && !filteredGroups.value.leng
 
 <template>
   <div class="settings">
-    <nav class="setting-menu card">
+    <nav class="setting-menu card" :lang="locale">
       <label class="list-search setting-menu-search">
         <span aria-hidden="true">⌕</span>
-        <input v-model="query" type="search" placeholder="설정 검색" />
-        <button v-if="query" class="person-info" type="button" title="지우기" aria-label="지우기" @click="query = ''">×</button>
+        <input v-model="query" type="search" :placeholder="t('searchSettings')" :aria-label="t('searchSettings')" />
+        <button v-if="query" class="person-info" type="button" :title="t('clear')" :aria-label="t('clear')" @click="query = ''">×</button>
       </label>
 
       <template v-for="g in filteredGroups" :key="g.label">
-        <div class="setting-menu-group">{{ g.label }}</div>
+        <div class="setting-menu-group">{{ settingsGroupLabel(g.label, locale) }}</div>
         <button
           v-for="item in g.items"
           :key="item.id"
@@ -61,12 +66,12 @@ const noResult = computed(() => query.value.trim() && !filteredGroups.value.leng
           @click="select(item)"
         >
           <i class="setting-menu-icon"><AppIcon :name="SETTINGS_ICONS[item.id]" :fallback="item.icon" :size="18" /></i>
-          <span class="setting-menu-label">{{ item.label }}</span>
+          <span class="setting-menu-label">{{ settingLabel(item, locale) }}</span>
           <span class="setting-menu-caret" aria-hidden="true"><AppIcon name="chevronRight" :size="16" /></span>
         </button>
       </template>
 
-      <p v-if="noResult" class="empty-state" role="status">검색 결과가 없어요. 설정 이름의 일부만 입력해 보세요.</p>
+      <p v-if="noResult" class="empty-state" role="status">{{ t('noSettingResult') }}</p>
     </nav>
 
     <div class="setting-pane">
@@ -74,3 +79,8 @@ const noResult = computed(() => query.value.trim() && !filteredGroups.value.leng
     </div>
   </div>
 </template>
+
+<style scoped>
+/* 목록 버튼 규칙(.setting-menu button: 폭 100%·여백)이 검색칸의 지우기 버튼에도 걸려 입력칸이 0px로 줄었다. 지우기 버튼만 작은 크기로 되돌린다 */
+.setting-menu-search button { flex: none; width: 24px; height: 24px; padding: 0; border-bottom: 0; justify-content: center; align-items: center; }
+</style>

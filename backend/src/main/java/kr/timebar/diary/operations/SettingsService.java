@@ -13,6 +13,8 @@ import java.util.*;
 @Service
 @Transactional
 public class SettingsService {
+    /** 표시 언어(PR-32). 기본은 한국어(DESIGN.md Voice and microcopy). */
+    public static final List<String> LOCALES = List.of("ko", "en");
     public static final Set<String> SECTIONS = Set.of("general", "categories", "notifications", "share-visibility", "theme-sticker", "appearance", "mode-profiles", "form-style", "dashboard", "stats-portlets", "automation", "ai", "work-privacy", "security", "widgets", "integrations", "career");
     /** 커리어 목표(docs/design 03 §5). 첫 화면 위젯 순서만 바꾸고 권한·공개 범위는 바꾸지 않는다. */
     public static final Set<String> CAREER_GOALS = Set.of("job-seeker", "job-changer", "employee", "project-member");
@@ -34,6 +36,8 @@ public class SettingsService {
         if (section.equals("security") && data.get("value") instanceof Map<?,?> value && Boolean.TRUE.equals(value.get("twoFactor"))) throw new ApiException(ErrorCode.SERVICE_UNAVAILABLE, "2단계 인증 제공자를 설정해야 합니다.");
         if (section.equals("work-privacy") && data.get("value") instanceof Map<?,?> value && value.containsKey("portfolioVisibility") && !Set.of("private", "link").contains(value.get("portfolioVisibility"))) FeatureInput.fail("포트폴리오 공개 설정은 private/link입니다. 링크는 별도 발급이 필요합니다.");
         if (section.equals("career") && data.get("value") instanceof Map<?,?> value && value.get("goal") != null && !CAREER_GOALS.contains(value.get("goal"))) FeatureInput.fail("커리어 목표 값을 확인해주세요.");
+        // 표시 언어(PR-32 1단계). 화면 문구만 바꾸고 저장된 기록은 바꾸지 않는다
+        if (section.equals("general") && data.get("value") instanceof Map<?,?> value && value.get("locale") != null && !LOCALES.contains(value.get("locale"))) FeatureInput.fail("표시 언어는 ko 또는 en입니다.");
         // 랭킹 참여(PR-19 UF-136). false면 다른 회원의 챌린지 랭킹 응답에서 빠진다(ChallengeService.ranking)
         if (section.equals("share-visibility") && data.get("value") instanceof Map<?,?> value && value.containsKey("rankingVisible") && !(value.get("rankingVisible") instanceof Boolean)) FeatureInput.fail("랭킹 참여 값은 true 또는 false입니다.");
         // 마감 알림 시점(Q-32). 서버 DueReminders가 같은 허용값으로 읽는다

@@ -31,7 +31,7 @@ export const SETTINGS_GROUPS = [
   {
     label: '화면 · 작성',
     items: [
-      { id: 'env', label: '환경 설정', icon: '⚙', desc: '기본 모드·화면 밀도·기본값', component: SettingsEnvView },
+      { id: 'env', label: '환경 설정', icon: '⚙', desc: '기본 모드·화면 밀도·표시 언어·기본값', component: SettingsEnvView },
       { id: 'forms', label: '글양식 · 화면 구성', icon: '✎', desc: '모드별 작성 항목과 포틀릿', component: SettingsFormStyleView },
       { id: 'theme', label: '테마 · 디자인', icon: '◑', desc: '표면 테마와 포인트 컬러', component: SettingsThemeView },
       { id: 'widgets', label: '위젯 설정', icon: '▦', desc: '홈 위젯 표시와 크기', component: SettingsWidgetsView },

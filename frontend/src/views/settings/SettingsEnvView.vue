@@ -10,6 +10,8 @@ import { DEFAULT_CATEGORY, goalFor } from '../../features/start/startPresets.mjs
 import StartPresetPicker from '../../components/StartPresetPicker.vue'
 import { applyStart, startPreset, undoStart } from '../../store/startPreset'
 import { savedAt } from '../../features/career/documentVersions.mjs'
+import { chooseLocale, localeState } from '../../store/locale'
+import { LOCALES, formatDate, formatWon } from '../../features/i18n/locale.mjs'
 import { session } from '../../features/auth/session.js'
 
 const router = useRouter()
@@ -24,6 +26,8 @@ const startCategory = ref(startPreset.category || DEFAULT_CATEGORY)
 const startGoal = ref(goalFor(startCategory.value, careerGoal.goal || DEFAULT_GOAL))
 const startApplyLayout = ref(false)
 watch(() => careerGoal.goal, (value) => { if (value && startPreset.status !== 'saving') startGoal.value = goalFor(startCategory.value, value) })
+// 표시 언어(PR-32 1단계). 날짜·금액 형식 미리 보기는 고정 예시 값이다
+const LOCALE_SAMPLE_DATE = new Date(2026, 10, 25)
 const applyStartPreset = () => applyStart({ category: startCategory.value, goal: startGoal.value, mode: modeState.activeMode, applyLayout: startApplyLayout.value })
 
 function save() {
@@ -78,6 +82,19 @@ function save() {
       <button type="button" class="button-secondary" @click="router.push('/settings/forms')">글양식 설정하기</button>
     </div>
 
+    <!-- 표시 언어(PR-32 1단계). 저장이 끝난 뒤에만 바꾸고, 기록 내용은 바꾸지 않는다 -->
+    <div class="section-label" style="margin-top: 22px">표시 언어</div>
+    <p class="form-note" style="margin-top: 0">지금은 사이드바·화면 머리글·상단 버튼·환경설정 목록만 영어로 바뀌어요. 각 화면 본문과 내가 쓴 기록은 그대로예요.</p>
+    <fieldset class="locale-picker">
+      <legend class="sr-only">표시 언어</legend>
+      <label v-for="l in LOCALES" :key="l.id" class="locale-option" :class="{ selected: localeState.locale === l.id }" :lang="l.id">
+        <input type="radio" name="display-locale" :value="l.id" :checked="localeState.locale === l.id" :disabled="localeState.status === 'saving'" @change="chooseLocale(l.id)" />
+        <span><b>{{ l.label }}</b><small>{{ formatDate(LOCALE_SAMPLE_DATE, l.id) }} · {{ formatWon(12000, l.id) }}</small></span>
+        <em v-if="localeState.locale === l.id">{{ l.id === 'en' ? 'Selected' : '선택됨' }}</em>
+      </label>
+    </fieldset>
+    <p class="input-field-help" role="status" :data-state="localeState.status === 'failed' ? 'error' : localeState.status === 'saved' ? 'success' : undefined">{{ localeState.status === 'saving' ? '저장하는 중이에요.' : localeState.message }}</p>
+
     <div class="section-label" style="margin-top: 22px">화면 밀도</div>
     <p class="form-note" style="margin-top: 0">간격과 글자 크기를 바꾸면 앱 전체에 바로 적용돼요.</p>
     <div class="density-picker">
@@ -123,6 +140,14 @@ function save() {
 </template>
 
 <style scoped>
+.locale-picker { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-md); margin: 0; padding: 0; border: 0; min-width: 0; }
+.locale-option { position: relative; display: block; margin: 0; padding: var(--space-lg); border: 1px solid var(--color-hairline); border-radius: var(--radius-md); background: var(--color-card); cursor: pointer; font-weight: 400; }
+.locale-option.selected { border-color: var(--color-accent); background: var(--color-accent-soft); box-shadow: inset 0 0 0 1px var(--color-accent); }
+.locale-option:focus-within { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.locale-option input { position: absolute; opacity: 0; pointer-events: none; }
+.locale-option span { display: grid; gap: var(--space-xs); padding-right: var(--space-xxl); }
+.locale-option small { color: var(--color-body); font-size: var(--type-body-sm-size); }
+.locale-option em { position: absolute; top: var(--space-lg); right: var(--space-lg); color: var(--color-accent); font-size: var(--type-caption-size); font-style: normal; font-weight: 600; }
 .start-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm) var(--space-md); margin-top: var(--space-lg); }
 .weekday-mode-toggle { display: inline-flex; margin-top: var(--space-lg); border: 0; }
 .weekday-mode-toggle span { flex: 1; }
