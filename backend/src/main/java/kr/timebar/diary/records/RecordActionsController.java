@@ -103,6 +103,15 @@ public class RecordActionsController {
     public ApiResponse<?> wbs() { return ApiResponse.ok(work.wbs(CurrentUser.id())); }
     @GetMapping("/work/wiki/{id}/history")
     public ApiResponse<?> wikiHistory(@PathVariable String id) { return ApiResponse.ok(work.history(CurrentUser.id(), id)); }
+    /** 자기소개서(PR-25). 이력서와 같이 계정에 하나이고 version으로 저장한다. */
+    @GetMapping("/work/cover-letter")
+    public ApiResponse<?> coverLetter() { return ApiResponse.ok(store.optional(CurrentUser.id(), FeatureType.COVER_LETTER, "default").orElse(Map.of("version", 0))); }
+    @PutMapping("/work/cover-letter")
+    public ApiResponse<?> saveCoverLetter(@RequestBody Map<String,Object> body) {
+        var data = FeatureInput.validate(FeatureType.COVER_LETTER, body);
+        if (store.optional(CurrentUser.id(), FeatureType.COVER_LETTER, "default").isEmpty()) return ApiResponse.ok(store.create(CurrentUser.id(), FeatureType.COVER_LETTER, "default", data));
+        return ApiResponse.ok(store.replace(CurrentUser.id(), FeatureType.COVER_LETTER, "default", FeatureInput.version(body), data));
+    }
     @GetMapping("/work/resume")
     public ApiResponse<?> resume() { return ApiResponse.ok(store.optional(CurrentUser.id(), FeatureType.RESUME, "default").orElse(Map.of("version", 0))); }
     @PutMapping("/work/resume")

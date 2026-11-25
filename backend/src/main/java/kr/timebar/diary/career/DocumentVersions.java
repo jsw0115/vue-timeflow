@@ -16,9 +16,9 @@ import java.util.*;
 @Service
 @Transactional
 public class DocumentVersions {
-    /** 버전으로 고정할 수 있는 문서. 자기소개서는 아직 저장 화면이 없어 넣지 않는다. */
-    public static final List<String> DOCUMENTS = List.of("resume", "career", "portfolio");
-    private static final Map<String, String> NAMES = Map.of("resume", "이력서", "career", "경력기술서", "portfolio", "포트폴리오");
+    /** 버전으로 고정할 수 있는 문서. 자기소개서는 PR-25 후속(Q-41)에서 더했다. */
+    public static final List<String> DOCUMENTS = List.of("resume", "career", "portfolio", "cover-letter");
+    private static final Map<String, String> NAMES = Map.of("resume", "이력서", "career", "경력기술서", "portfolio", "포트폴리오", "cover-letter", "자기소개서");
     /** 문서마다 남길 수 있는 버전 수. 원문에 없는 제안값이다. */
     public static final int MAX_VERSIONS = 100;
     public static final int MAX_LABEL = 100, MAX_NOTE = 500;
@@ -39,7 +39,7 @@ public class DocumentVersions {
         if (body == null) FeatureInput.fail("요청 본문이 필요합니다.");
         FeatureInput.keys(body, Set.of("document", "label", "note"));
         String document = FeatureInput.requiredText(body, "document");
-        if (!DOCUMENTS.contains(document)) FeatureInput.fail("문서는 resume·career·portfolio 중 하나입니다.");
+        if (!DOCUMENTS.contains(document)) FeatureInput.fail("문서는 resume·career·portfolio·cover-letter 중 하나입니다.");
         String label = FeatureInput.text(body, "label").trim(), note = FeatureInput.text(body, "note").trim();
         if (body.get("label") != null && !(body.get("label") instanceof String)) FeatureInput.fail("label은 문자열이어야 합니다.");
         if (body.get("note") != null && !(body.get("note") instanceof String)) FeatureInput.fail("note는 문자열이어야 합니다.");
@@ -60,7 +60,7 @@ public class DocumentVersions {
     /** 버전 목록(내용 없이). document를 주면 그 문서만, 번호가 큰 것부터다. */
     @Transactional(readOnly = true)
     public List<Map<String, Object>> list(String owner, String document) {
-        if (document != null && !document.isBlank() && !DOCUMENTS.contains(document)) FeatureInput.fail("문서는 resume·career·portfolio 중 하나입니다.");
+        if (document != null && !document.isBlank() && !DOCUMENTS.contains(document)) FeatureInput.fail("문서는 resume·career·portfolio·cover-letter 중 하나입니다.");
         var counts = attachedCounts(owner);
         return store.all(owner, FeatureType.DOC_VERSION).stream()
                 .filter(row -> document == null || document.isBlank() || document.equals(row.get("document")))
@@ -144,6 +144,12 @@ public class DocumentVersions {
             var resume = store.optional(owner, FeatureType.RESUME, "default").orElseThrow(() -> new ApiException(ErrorCode.CONFLICT, "저장한 이력서가 없어요. 이력서를 먼저 저장해 주세요."));
             content.put("resume", FeatureStore.payload(resume));
             content.put("sourceVersion", resume.get("version"));
+            return content;
+        }
+        if (document.equals("cover-letter")) {
+            var letter = store.optional(owner, FeatureType.COVER_LETTER, "default").orElseThrow(() -> new ApiException(ErrorCode.CONFLICT, "저장한 자기소개서가 없어요. 자기소개서를 먼저 저장해 주세요."));
+            content.put("coverLetter", FeatureStore.payload(letter));
+            content.put("sourceVersion", letter.get("version"));
             return content;
         }
         var type = document.equals("career") ? FeatureType.CAREER : FeatureType.PORTFOLIO;

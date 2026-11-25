@@ -3,7 +3,8 @@ import { computed, ref, watch } from 'vue'
 import Modal from '../../components/Modal.vue'
 import SaveStatus from '../../components/SaveStatus.vue'
 import ConflictCompare from '../../components/ConflictCompare.vue'
-import { careerStore, portfolioStore, resumeStore } from '../../store/career'
+import { careerStore, coverLetterStore, portfolioStore, resumeStore } from '../../store/career'
+import { COVER_LETTER_SECTIONS } from '../../features/records/resumeStore.mjs'
 import { achievementsFromText } from '../../features/records/featureKinds.mjs'
 import { EMPLOYMENT_STATUSES, EMPLOYMENT_TYPES, GAP_NOTICE_DAYS, careerDetailError, careerPeriodNotes, employmentTypeLabel, periodLabel } from '../../features/career/careerPeriods.mjs'
 import { localDate } from '../../utils/postValidation.mjs'
@@ -28,6 +29,7 @@ const tab = ref('career')
 const TABS = [
   { id: 'career', label: '경력기술서' },
   { id: 'resume', label: '이력서' },
+  { id: 'cover', label: '자기소개서' },
   { id: 'portfolio', label: '포트폴리오' },
   { id: 'privacy', label: '보안 설정' },
 ]
@@ -73,11 +75,15 @@ const onServer = computed(() => careerMode.value === 'server')
 const projects = computed(() => (onServer.value ? careerStore.list.value : demoProjects.value))
 const portfolio = computed(() => (onServer.value ? portfolioStore.list.value : demoPortfolio.value))
 const resumeDraft = ref({ ...resumeStore.state.value })
+// 자기소개서(PR-25 Q-41): 로그인 상태에서만 쓰고 계정에 하나다. 회사별 제출본은 아래 버전으로 남긴다
+const coverDraft = ref({ ...coverLetterStore.state.value })
 const resume = computed(() => (onServer.value ? resumeDraft.value : demoResume.value))
 watch(careerMode, async (mode) => {
   if (mode !== 'server') return
   await resumeStore.load()
   resumeDraft.value = { ...resumeStore.state.value }
+  await coverLetterStore.load()
+  coverDraft.value = { ...coverLetterStore.state.value }
 }, { immediate: true })
 const listMessage = ref('')
 
@@ -167,6 +173,32 @@ function useLatestResume() {
   resumeDraft.value = { ...resumeConflict.value.latest }
   resumeConflict.value = null
   resumeSaving.reset()
+}
+
+/* 자기소개서 저장(로그인 상태). 이력서와 같은 version·충돌 처리다 */
+const coverSaving = createSaveState({ fields: { title: ['title', '제목'] } })
+const coverConflict = ref(null)
+async function saveCover() {
+  coverConflict.value = null
+  const result = await coverSaving.run(() => coverLetterStore.save(coverDraft.value))
+  if (result.ok) { coverDraft.value = { ...result.value }; return }
+  if (result.error.kind === 'conflict' && result.error.latest) coverConflict.value = { latest: result.error.latest, version: result.error.latestVersion }
+}
+const coverCompareRows = computed(() => {
+  if (!coverConflict.value) return []
+  const latest = coverConflict.value.latest, mine = coverDraft.value
+  return [{ key: 'title', label: '제목' }, ...COVER_LETTER_SECTIONS].map((sec) => ({ label: sec.label, mine: String(mine[sec.key] ?? ''), latest: String(latest[sec.key] ?? '') }))
+})
+function keepMyCover() {
+  coverLetterStore.adopt(coverConflict.value.latest, coverConflict.value.version)
+  coverConflict.value = null
+  saveCover()
+}
+function useLatestCover() {
+  coverLetterStore.adopt(coverConflict.value.latest, coverConflict.value.version)
+  coverDraft.value = { ...coverConflict.value.latest }
+  coverConflict.value = null
+  coverSaving.reset()
 }
 
 /* 포트폴리오 항목 추가·수정·삭제(로그인 상태). 구성 칸·결과물 링크·근거 연결은 PR-26 */
@@ -274,6 +306,13 @@ function buildDoc(kind) {
       sections.push({ type: 'p', text: '사용 기술: ' + p.stack })
     })
     return { title: resume.value.name + ' 경력기술서', sections }
+  }
+  if (kind === 'cover') {
+    const c = coverDraft.value
+    return {
+      title: resume.value.name + ' 자기소개서',
+      sections: [{ type: 'title', text: c.title || '자기소개서' }, ...COVER_LETTER_SECTIONS.filter((sec) => String(c[sec.key] ?? '').trim()).flatMap((sec) => [{ type: 'h2', text: sec.label }, { type: 'p', text: c[sec.key] }])],
+    }
   }
   if (kind === 'resume') {
     return {
@@ -435,6 +474,23 @@ function onVisibilityChange(v) {
     <DocumentVersionPanel v-if="onServer" document="resume" />
   </template>
 
+  <!-- 자기소개서(PR-25 Q-41) -->
+  <template v-else-if="tab === 'cover'">
+    <div v-if="!onServer" class="empty-state" role="status"><p>자기소개서는 로그인하면 쓰고 계정에 저장할 수 있어요. 로그인한 뒤 이 탭을 다시 열어 주세요.</p></div>
+    <section v-else class="card cover-letter">
+      <h3>자기소개서</h3>
+      <p class="form-note">회사별로 고친 글은 아래 '버전'에 이름을 붙여 남기고, 지원 기록에 제출본으로 이어 두세요. 자기소개서도 커뮤니티·랭킹·공유 화면에 나타나지 않아요.</p>
+      <label>제목<input v-model="coverDraft.title" maxlength="200" placeholder="예: 기본 자기소개서" /></label>
+      <label v-for="sec in COVER_LETTER_SECTIONS" :key="sec.key">{{ sec.label }}<textarea v-model="coverDraft[sec.key]" rows="5" maxlength="20000"></textarea></label>
+      <ConflictCompare v-if="coverConflict" :rows="coverCompareRows" :busy="coverSaving.state.status === 'saving'" @keep-mine="keepMyCover" @use-latest="useLatestCover" />
+      <SaveStatus :state="coverSaving.state" mode="server" @retry="saveCover" />
+      <p v-if="!coverDraft.title.trim()" class="form-note">제목을 넣어야 저장할 수 있어요.</p>
+      <button type="button" class="button-secondary" style="margin-top: 12px" :disabled="!coverDraft.title.trim() || !!coverConflict || !coverLetterStore.state.loaded" :aria-busy="coverSaving.state.status === 'saving' ? 'true' : undefined" @click="saveCover">{{ coverSaving.state.status === 'saving' ? '저장하는 중' : '자기소개서 저장' }}</button>
+      <p v-if="coverLetterStore.state.error" class="input-field-help" data-state="error" role="status">자기소개서를 불러오지 못했어요. 새로고침한 뒤 다시 시도해 주세요.</p>
+    </section>
+    <DocumentVersionPanel v-if="onServer" document="cover-letter" />
+  </template>
+
   <!-- 포트폴리오 -->
   <template v-else-if="tab === 'portfolio'">
     <!-- 로그인 상태: 계정 포트폴리오의 공개 링크(Q-22). 아래 공개 범위 토글은 로그아웃 상태의 예시에만 쓴다 -->
@@ -592,6 +648,7 @@ function onVisibilityChange(v) {
 .career-period-notes { margin: 0 0 var(--space-md); padding: var(--space-md) var(--space-lg); border: 1px solid var(--color-hairline); border-radius: var(--radius-md); background: var(--color-card); }
 .career-period-notes ul { margin: var(--space-xs) 0; padding-left: var(--space-lg); }
 .career-duties { margin: var(--space-sm) 0 0; white-space: pre-line; overflow-wrap: anywhere; }
+.cover-letter textarea { width: 100%; }
 .portfolio-title { display: grid; gap: 2px; min-width: 0; overflow-wrap: anywhere; }
 .portfolio-evidence { color: var(--color-muted); font-size: var(--type-caption-size); }
 .portfolio-public-note { margin: var(--space-md) 0 0; }

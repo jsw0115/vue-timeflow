@@ -1,10 +1,12 @@
 // 문서 버전(PR-25): 요청 경로, 문서 이름, 고정본 내용을 화면 행으로 바꾸는 규칙. 서버 DocumentVersions와 같은 문서 종류만 다룬다.
 import { EMPLOYMENT_STATUSES, employmentTypeLabel, periodLabel } from './careerPeriods.mjs'
+import { COVER_LETTER_SECTIONS } from '../records/resumeStore.mjs'
 
 export const DOCUMENTS = [
   { id: 'resume', label: '이력서' },
   { id: 'career', label: '경력기술서' },
   { id: 'portfolio', label: '포트폴리오' },
+  { id: 'cover-letter', label: '자기소개서' },
 ]
 export const MAX_VERSIONS = 100
 export const documentLabel = (id) => DOCUMENTS.find((item) => item.id === id)?.label ?? '문서'
@@ -55,6 +57,10 @@ export function snapshotSections(version, { maskCompany = false } = {}) {
     const r = content.resume ?? {}
     return [{ heading: '기본 정보', rows: filled([row('이름', r.name), row('경력', r.years != null && r.years !== '' ? `${r.years}년` : ''), row('한 줄 소개', r.headline), row('보유 기술', r.skills), row('학력', r.education)]) }]
   }
+  if (version?.document === 'cover-letter') {
+    const c = content.coverLetter ?? {}
+    return [{ heading: c.title || '자기소개서', rows: filled(COVER_LETTER_SECTIONS.map((s) => row(s.label, c[s.key]))) }]
+  }
   const items = Array.isArray(content.items) ? content.items : []
   if (version?.document === 'career') {
     return items.map((item) => ({
@@ -81,7 +87,7 @@ export function versionErrorText(error) {
 /** 비교용 항목 목록. 이력서는 하나, 경력기술서·포트폴리오는 원본 기록 ID로 묶는다(ID가 없으면 순서로). */
 function entries(version, options) {
   const sections = snapshotSections(version, options)
-  if (version?.document === 'resume') return sections.map((s) => ({ key: 'resume', ...s }))
+  if (version?.document === 'resume' || version?.document === 'cover-letter') return sections.map((s) => ({ key: version.document, ...s }))
   const items = Array.isArray(version?.content?.items) ? version.content.items : []
   return sections.map((s, index) => ({ key: items[index]?.id ? 'id:' + items[index].id : 'at:' + index, ...s }))
 }

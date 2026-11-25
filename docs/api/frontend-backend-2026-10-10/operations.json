@@ -1852,7 +1852,8 @@
           "enum": [
             "resume",
             "career",
-            "portfolio"
+            "portfolio",
+            "cover-letter"
           ]
         },
         "label": {
@@ -1868,7 +1869,7 @@
         "document"
       ],
       "additionalProperties": false,
-      "description": "지금 저장된 이력서(resume)·경력기술서 항목(career)·포트폴리오 항목(portfolio)을 서버가 복사해 고정 버전을 만든다(PR-25). 내용은 요청으로 받지 않는다. 번호는 문서마다 1부터 늘고 ID는 \"문서-번호\"다. 저장된 내용이 없거나 문서마다 100개를 넘으면 409. 버전은 고치는 경로가 없다."
+      "description": "지금 저장된 이력서(resume)·경력기술서 항목(career)·포트폴리오 항목(portfolio)·자기소개서(cover-letter)를 서버가 복사해 고정 버전을 만든다(PR-25). 내용은 요청으로 받지 않는다. 번호는 문서마다 1부터 늘고 ID는 \"문서-번호\"다. 저장된 내용이 없거나 문서마다 100개를 넘으면 409. 버전은 고치는 경로가 없다."
     },
     "responseSchema": {
       "$ref": "#/components/schemas/DocumentVersionDetail"
@@ -11049,6 +11050,125 @@
     },
     "responseSchema": {
       "$ref": "#/components/schemas/CAREERResponse"
+    },
+    "externalBoundary": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/work/cover-letter",
+    "parameters": [],
+    "status": 200,
+    "responseType": "?",
+    "controller": "RecordActionsController",
+    "kind": "서비스 연결",
+    "implementationStatus": "서비스 연결 · 검증 범위 별도",
+    "public": false,
+    "responseSchema": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "maxLength": 200,
+          "minLength": 1
+        },
+        "motivation": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 20000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "competency": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 20000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "problemSolving": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 20000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "collaboration": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 20000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "growth": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 20000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "id": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "additionalProperties": true
+    },
+    "externalBoundary": false
+  },
+  {
+    "method": "PUT",
+    "route": "/api/work/cover-letter",
+    "parameters": [
+      {
+        "name": "body",
+        "type": "Map<String,Object>",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "?",
+    "controller": "RecordActionsController",
+    "kind": "서비스 연결",
+    "implementationStatus": "서비스 연결 · 검증 범위 별도",
+    "public": false,
+    "requestSchema": {
+      "$ref": "#/components/schemas/COVER_LETTERUpsert"
+    },
+    "responseSchema": {
+      "$ref": "#/components/schemas/COVER_LETTERResponse"
     },
     "externalBoundary": false
   },

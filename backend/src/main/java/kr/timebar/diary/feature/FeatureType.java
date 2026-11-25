@@ -25,6 +25,8 @@ public enum FeatureType {
     WIKI("title body space parentId pinned", "title space"),
     CAREER("title period role company stack achievements employmentType department startDate endDate employmentStatus duties", "title role"),
     RESUME("name headline years skills education", "name"),
+    // 자기소개서(PR-25, 09 Q-41): 개편안 문서 유형 표의 지원 동기·직무 역량·문제 해결·협업·성장 경험. 계정에 하나이고 회사별 제출본은 문서 버전으로 남긴다
+    COVER_LETTER("title motivation competency problemSolving collaboration growth", "title"),
     // 포트폴리오 항목(PR-26): 개편안 4.3·문서 유형 표의 소개(body)·문제·역할·기술·과정·성과·개인 기여·결과물 링크와 근거(커리어 활동·경력) 연결
     PORTFOLIO("title body kind role stack problem process outcome contribution links activityIds experienceId", "title kind"),
     PORTFOLIO_LINK("itemIds", "itemIds"),

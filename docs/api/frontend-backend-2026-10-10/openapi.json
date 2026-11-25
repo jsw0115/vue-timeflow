@@ -6482,7 +6482,8 @@
                     "enum": [
                       "resume",
                       "career",
-                      "portfolio"
+                      "portfolio",
+                      "cover-letter"
                     ]
                   },
                   "label": {
@@ -6498,7 +6499,7 @@
                   "document"
                 ],
                 "additionalProperties": false,
-                "description": "지금 저장된 이력서(resume)·경력기술서 항목(career)·포트폴리오 항목(portfolio)을 서버가 복사해 고정 버전을 만든다(PR-25). 내용은 요청으로 받지 않는다. 번호는 문서마다 1부터 늘고 ID는 \"문서-번호\"다. 저장된 내용이 없거나 문서마다 100개를 넘으면 409. 버전은 고치는 경로가 없다."
+                "description": "지금 저장된 이력서(resume)·경력기술서 항목(career)·포트폴리오 항목(portfolio)·자기소개서(cover-letter)를 서버가 복사해 고정 버전을 만든다(PR-25). 내용은 요청으로 받지 않는다. 번호는 문서마다 1부터 늘고 ID는 \"문서-번호\"다. 저장된 내용이 없거나 문서마다 100개를 넘으면 409. 버전은 고치는 경로가 없다."
               }
             }
           }
@@ -36433,6 +36434,295 @@
         "x-test-evidence": "verification.md"
       }
     },
+    "/api/work/cover-letter": {
+      "get": {
+        "operationId": "RecordActionsController_get__api_work_cover_letter",
+        "tags": [
+          "RecordActionsController"
+        ],
+        "summary": "GET /api/work/cover-letter",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "성공. 세부 정책은 README와 기능 규약을 따른다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "title": {
+                          "type": "string",
+                          "maxLength": 200,
+                          "minLength": 1
+                        },
+                        "motivation": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "maxLength": 20000
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "competency": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "maxLength": 20000
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "problemSolving": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "maxLength": 20000
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "collaboration": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "maxLength": 20000
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "growth": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "maxLength": 20000
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "id": {
+                          "type": "string",
+                          "maxLength": 100
+                        },
+                        "version": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "additionalProperties": true
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 검증 오류.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 필요 또는 폐기된 토큰.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "역할·회원 권한 부족.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "없음·타인 리소스·만료.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "버전·현재 상태 충돌.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-implementation-status": "서비스 연결 · 검증 범위 별도",
+        "x-source": "RecordActionsController.java",
+        "x-admin-required": false,
+        "x-test-evidence": "verification.md"
+      },
+      "put": {
+        "operationId": "RecordActionsController_put__api_work_cover_letter",
+        "tags": [
+          "RecordActionsController"
+        ],
+        "summary": "PUT /api/work/cover-letter",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/COVER_LETTERUpsert"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "성공. 세부 정책은 README와 기능 규약을 따른다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/COVER_LETTERResponse"
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 검증 오류.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 필요 또는 폐기된 토큰.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "역할·회원 권한 부족.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "없음·타인 리소스·만료.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "버전·현재 상태 충돌.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-implementation-status": "서비스 연결 · 검증 범위 별도",
+        "x-source": "RecordActionsController.java",
+        "x-admin-required": false,
+        "x-test-evidence": "verification.md"
+      }
+    },
     "/api/work/portfolio": {
       "get": {
         "operationId": "WorkController_get__api_work_portfolio",
@@ -48425,6 +48715,304 @@
         },
         "additionalProperties": true
       },
+      "COVER_LETTERCreate": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1
+          },
+          "motivation": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "competency": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "problemSolving": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "collaboration": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "growth": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "additionalProperties": false
+      },
+      "COVER_LETTERUpdate": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1
+          },
+          "motivation": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "competency": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "problemSolving": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "collaboration": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "growth": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "title",
+          "version"
+        ],
+        "additionalProperties": false
+      },
+      "COVER_LETTERUpsert": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1
+          },
+          "motivation": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "competency": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "problemSolving": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "collaboration": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "growth": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "additionalProperties": false
+      },
+      "COVER_LETTERResponse": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1
+          },
+          "motivation": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "competency": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "problemSolving": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "collaboration": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "growth": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": true
+      },
       "PORTFOLIOCreate": {
         "type": "object",
         "properties": {
@@ -54172,7 +54760,8 @@
             "enum": [
               "resume",
               "career",
-              "portfolio"
+              "portfolio",
+              "cover-letter"
             ]
           },
           "number": {
@@ -54220,7 +54809,8 @@
             "enum": [
               "resume",
               "career",
-              "portfolio"
+              "portfolio",
+              "cover-letter"
             ]
           },
           "number": {
@@ -54251,6 +54841,11 @@
             "type": "object",
             "properties": {
               "resume": {
+                "type": "object",
+                "properties": {},
+                "additionalProperties": true
+              },
+              "coverLetter": {
                 "type": "object",
                 "properties": {},
                 "additionalProperties": true
@@ -54289,7 +54884,7 @@
           "content"
         ],
         "additionalProperties": false,
-        "description": "content.resume(이력서) 또는 content.items(경력기술서·포트폴리오 항목, 원본 id와 그때의 version 포함). 원본을 고쳐도 바뀌지 않는다."
+        "description": "content.resume(이력서), content.coverLetter(자기소개서) 또는 content.items(경력기술서·포트폴리오 항목, 원본 id와 그때의 version 포함). 원본을 고쳐도 바뀌지 않는다."
       },
       "AttachedDocument": {
         "type": "object",
@@ -54303,7 +54898,8 @@
             "enum": [
               "resume",
               "career",
-              "portfolio"
+              "portfolio",
+              "cover-letter"
             ]
           },
           "number": {

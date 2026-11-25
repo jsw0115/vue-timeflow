@@ -711,11 +711,11 @@ status는 관심(interested)·준비 중(preparing)·지원 완료(applied)·서
 
 | 본문 필드 | 타입 | 필수 | 제약 |
 |---|---|---|---|
-| document | string | 예 | resume/career/portfolio |
+| document | string | 예 | resume/career/portfolio/cover-letter |
 | label | string | 아니오 | 길이 ≤ 100 |
 | note | string | 아니오 | 길이 ≤ 500 |
 
-지금 저장된 이력서(resume)·경력기술서 항목(career)·포트폴리오 항목(portfolio)을 서버가 복사해 고정 버전을 만든다(PR-25). 내용은 요청으로 받지 않는다. 번호는 문서마다 1부터 늘고 ID는 "문서-번호"다. 저장된 내용이 없거나 문서마다 100개를 넘으면 409. 버전은 고치는 경로가 없다.
+지금 저장된 이력서(resume)·경력기술서 항목(career)·포트폴리오 항목(portfolio)·자기소개서(cover-letter)를 서버가 복사해 고정 버전을 만든다(PR-25). 내용은 요청으로 받지 않는다. 번호는 문서마다 1부터 늘고 ID는 "문서-번호"다. 저장된 내용이 없거나 문서마다 100개를 넘으면 409. 버전은 고치는 경로가 없다.
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 
@@ -3820,6 +3820,28 @@ file을 multipart/form-data로 전달한다. boundary는 HTTP 클라이언트가
 | version | integer | 예 | 최소 1 |
 
 고용 형태 employmentType은 정규직(full-time)·계약직(contract)·인턴(intern)·아르바이트(part-time)·프리랜서(freelance)·기타(other). 재직 상태 employmentStatus는 재직 중(current)·종료(ended). endDate는 startDate 이후. current이면 endDate를 비우고, ended이면 endDate가 필요하다. 상세 필드는 모두 선택이며 예전 자유 기간(period)도 받는다. 담당 업무 duties는 20000자까지다(REQ-F25). 기간 겹침·공백은 서버가 막지 않는다.
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## GET /api/work/cover-letter
+
+인증은 JWT이며 소스는 RecordActionsController.java다. 성공 HTTP는 200다.
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## PUT /api/work/cover-letter
+
+인증은 JWT이며 소스는 RecordActionsController.java다. 성공 HTTP는 200다.
+
+| 본문 필드 | 타입 | 필수 | 제약 |
+|---|---|---|---|
+| title | string | 예 | 길이 ≤ 200 |
+| motivation | string 또는 null | 아니오 | 기능 규약 참조 |
+| competency | string 또는 null | 아니오 | 기능 규약 참조 |
+| problemSolving | string 또는 null | 아니오 | 기능 규약 참조 |
+| collaboration | string 또는 null | 아니오 | 기능 규약 참조 |
+| growth | string 또는 null | 아니오 | 기능 규약 참조 |
+| version | integer | 아니오 | 최소 1 |
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 

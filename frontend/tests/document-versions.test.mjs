@@ -8,8 +8,8 @@ const read = (path) => readFileSync(new URL('../' + path, import.meta.url), 'utf
 
 test('문서 종류와 한도는 서버와 같다', () => {
   const server = read('../backend/src/main/java/kr/timebar/diary/career/DocumentVersions.java')
-  assert.match(server, /DOCUMENTS = List\.of\("resume", "career", "portfolio"\)/)
-  assert.deepEqual(DOCUMENTS.map((doc) => doc.id), ['resume', 'career', 'portfolio'])
+  assert.match(server, /DOCUMENTS = List\.of\("resume", "career", "portfolio", "cover-letter"\)/)
+  assert.deepEqual(DOCUMENTS.map((doc) => doc.id), ['resume', 'career', 'portfolio', 'cover-letter'])
   assert.match(server, new RegExp(`MAX_VERSIONS = ${MAX_VERSIONS};`))
 })
 
@@ -79,4 +79,23 @@ test('버전 비교: 원본 ID로 항목을 맞춰 바뀐 칸·추가·삭제를
   assert.match(panel, /:disabled="!compareBase \|\| !compareTarget \|\| compareBase === compareTarget"/)
   const view = read('src/components/DocumentVersionCompare.vue')
   for (const word of ['>바뀜<', '>추가<', '>삭제<', '>이전<', '>이후<']) assert.ok(view.includes(word), word)
+})
+
+test('자기소개서(PR-25 Q-41): 칸은 서버와 같고, 버전 보기·비교가 되며, 경력 화면 탭과 버전 묶음이 있다', async () => {
+  const { COVER_LETTER_SECTIONS, createCoverLetterStore } = await import('../src/features/records/resumeStore.mjs')
+  const { compareVersions } = await import('../src/features/career/documentVersions.mjs')
+  const server = read('../backend/src/main/java/kr/timebar/diary/feature/FeatureType.java')
+  assert.match(server, new RegExp(`COVER_LETTER\\("title ${COVER_LETTER_SECTIONS.map((s) => s.key).join(' ')}", "title"\\)`))
+  assert.deepEqual(COVER_LETTER_SECTIONS.map((s) => s.label), ['지원 동기', '직무 역량', '문제 해결', '협업', '성장 경험'])
+  const v1 = { document: 'cover-letter', content: { coverLetter: { title: '기본', motivation: '처음 동기' } } }
+  const v2 = { document: 'cover-letter', content: { coverLetter: { title: '기본', motivation: '고친 동기', growth: '성장' } } }
+  assert.deepEqual(snapshotSections(v2), [{ heading: '기본', rows: [['지원 동기', '고친 동기'], ['성장 경험', '성장']] }])
+  assert.deepEqual(compareVersions(v1, v2).changed[0].fields.map((f) => f.label), ['지원 동기', '성장 경험'])
+  const calls = []
+  const store = createCoverLetterStore({ owner: () => 'ME', request: async (path, options = {}) => { calls.push([path, options.method ?? 'GET', options.body ? JSON.parse(options.body) : null]); return { title: '기본', version: 1 } } })
+  await store.save({ title: ' 기본 ', motivation: '동기' })
+  assert.deepEqual(calls[0], ['/api/work/cover-letter', 'PUT', { title: '기본', motivation: '동기', competency: '', problemSolving: '', collaboration: '', growth: '' }])
+  const view = read('src/views/work/CareerDocsView.vue')
+  assert.match(view, /\{ id: 'cover', label: '자기소개서' \}/)
+  assert.match(view, /<DocumentVersionPanel v-if="onServer" document="cover-letter" \/>/)
 })

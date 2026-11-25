@@ -64,10 +64,23 @@ class DocumentVersionsTest {
         assertEquals("결제 리뉴얼", items.get(0).get("title"));
     }
 
+    /** 자기소개서(PR-25 Q-41)도 버전으로 고정하고 지원에 잇는다. 저장한 자기소개서가 없으면 409, 긴 글 칸은 200자를 넘어도 된다. */
+    @Test void freezesCoverLetters() {
+        assertEquals(ErrorCode.CONFLICT, error(() -> versions.create(me, new HashMap<>(Map.of("document", "cover-letter")))));
+        var data = kr.timebar.diary.feature.FeatureInput.validate(FeatureType.COVER_LETTER, new HashMap<>(Map.of("title", "기본 자기소개서", "motivation", "가".repeat(1500), "growth", "성장")));
+        store.create(me, FeatureType.COVER_LETTER, "default", data);
+        var version = versions.create(me, new HashMap<>(Map.of("document", "cover-letter", "label", "가나다 제출용")));
+        assertEquals("cover-letter-1", version.get("id"));
+        @SuppressWarnings("unchecked") var letter = (Map<String, Object>) ((Map<String, Object>) version.get("content")).get("coverLetter");
+        assertEquals("성장", letter.get("growth"));
+        versions.attach(me, application, new HashMap<>(Map.of("versionId", "cover-letter-1")));
+        assertEquals(List.of("cover-letter-1"), versions.attached(me, application).stream().map(row -> row.get("id")).toList());
+    }
+
     /** 모르는 문서·필드, 너무 긴 이름표는 400이다. 다른 계정의 버전은 같은 404다. */
     @Test void rejectsInvalidInputAndForeignVersions() {
         resume(me, "소개");
-        assertEquals(ErrorCode.VALIDATION_FAILED, error(() -> versions.create(me, new HashMap<>(Map.of("document", "cover-letter")))));
+        assertEquals(ErrorCode.VALIDATION_FAILED, error(() -> versions.create(me, new HashMap<>(Map.of("document", "self-intro")))));
         assertEquals(ErrorCode.VALIDATION_FAILED, error(() -> versions.create(me, new HashMap<>(Map.of("document", "resume", "content", "x")))));
         assertEquals(ErrorCode.VALIDATION_FAILED, error(() -> versions.create(me, new HashMap<>(Map.of("document", "resume", "label", "가".repeat(101))))));
         String id = versions.create(me, new HashMap<>(Map.of("document", "resume"))).get("id").toString();
