@@ -3,8 +3,9 @@ import { computed, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { navGroups } from './router'
 import { isGroupCollapsed, setGroupCollapsed } from './store/navCollapse'
-import { localeState } from './store/locale'
+import { localeState, setBodyLocale } from './store/locale'
 import { formatDate, groupLabel, modeText, navName, navTitle, shellText } from './features/i18n/locale.mjs'
+import { documentLang } from './features/i18n/translatedRoutes.mjs'
 import { composer, openPostComposer } from './store/appState'
 import PostComposer from './components/PostComposer.vue'
 import LocalMigrationPrompt from './components/LocalMigrationPrompt.vue'
@@ -52,6 +53,12 @@ provide('pageActionSlot', {
 // 표시 언어(PR-32 1단계): 사이드바·머리글 문구만 바꾸고 화면 본문은 한국어 그대로다. 바뀐 부분에만 lang을 붙인다
 const locale = computed(() => localeState.locale)
 const t = (key, vars) => shellText(key, locale.value, vars)
+// 본문까지 옮긴 화면에서만 문서 언어와 본문 문구(tr)를 바꾼다(대화 상자 포함). 나머지 화면은 본문이 한국어라 ko다
+watch(() => [locale.value, route.path], () => {
+  const lang = documentLang(locale.value, route.path)
+  setBodyLocale(lang)
+  if (typeof document !== 'undefined') document.documentElement.lang = lang
+}, { immediate: true })
 const todayLabel = computed(() => formatDate(new Date(), locale.value))
 const currentNav = computed(() => navGroups.flatMap((group) => group.items).find((item) => item.path === route.path))
 const modeName = (mode) => modeText(mode, locale.value, modeMeta(mode)).name

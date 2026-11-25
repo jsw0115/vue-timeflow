@@ -39,6 +39,6 @@ test('후보: 서버 기록(문자열 ID)만, 이미 이은 것 제외, 끝난 �
 test('화면: 저장한 활동에만 근거 구역, 지워진 원본 표시', () => {
   assert.match(read('../src/views/career/CareerActivitiesView.vue'), /<ActivitySourcePanel v-if="editor\.base\?\.id && typeof editor\.base\.id === 'string'"/)
   const panel = read('../src/components/ActivitySourcePanel.vue')
-  assert.match(panel, /s\.broken \? '지워진 원본' : s\.title/)
+  assert.match(panel, /s\.broken \? tr\('지워진 원본'\) : s\.title/)
   assert.doesNotMatch(panel, /v-html/)
 })

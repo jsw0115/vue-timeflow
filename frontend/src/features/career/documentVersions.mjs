@@ -1,5 +1,5 @@
 // 문서 버전(PR-25): 요청 경로, 문서 이름, 고정본 내용을 화면 행으로 바꾸는 규칙. 서버 DocumentVersions와 같은 문서 종류만 다룬다.
-import { EMPLOYMENT_STATUSES, employmentTypeLabel, periodLabel } from './careerPeriods.mjs'
+import { EMPLOYMENT_STATUSES, employmentTypeLabel, korean, periodLabel } from './careerPeriods.mjs'
 import { COVER_LETTER_SECTIONS } from '../records/resumeStore.mjs'
 
 export const DOCUMENTS = [
@@ -38,10 +38,16 @@ export function savedAt(iso) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
-/** 선택 목록·연결 목록에 쓰는 한 줄 이름. 이름표를 붙였으면 번호도 함께 보인다. */
-export function versionName(version) {
+/** 선택 목록·연결 목록에 쓰는 한 줄 이름. 이름표를 붙였으면 번호도 함께 보인다. t는 문서 이름 번역이다. */
+export function versionName(version, t = korean) {
+  const plain = `${t(documentLabel(version.document))} v${version.number}`
+  const own = versionTitle(version, t)
+  return own !== plain ? `${plain} · ${own}` : plain
+}
+/** 버전 제목. 서버가 붙인 기본 제목("이력서 v3")이면 고른 언어의 문서 이름으로 바꾸고, 직접 붙인 이름표는 그대로 둔다. */
+export function versionTitle(version, t = korean) {
   const plain = `${documentLabel(version.document)} v${version.number}`
-  return version.title && version.title !== plain ? `${plain} · ${version.title}` : plain
+  return !version.title || version.title === plain ? `${t(documentLabel(version.document))} v${version.number}` : version.title
 }
 
 const row = (label, value) => [label, value == null ? '' : String(value)]
@@ -49,31 +55,32 @@ const filled = (rows) => rows.filter(([, value]) => value.trim() !== '')
 
 /**
  * 고정본 내용을 읽기 전용 화면 묶음으로 바꾼다. maskCompany면 회사명을 가린다(경력 화면의 회사명 비공개 설정과 같다).
+ * t는 항목 이름·정해진 값(고용 형태 등)의 번역이다. 사용자가 적은 값은 번역하지 않는다.
  * 반환: [{ heading, rows: [[이름, 값]] }]
  */
-export function snapshotSections(version, { maskCompany = false } = {}) {
+export function snapshotSections(version, { maskCompany = false, t = korean } = {}) {
   const content = version?.content ?? {}
   if (version?.document === 'resume') {
     const r = content.resume ?? {}
-    return [{ heading: '기본 정보', rows: filled([row('이름', r.name), row('경력', r.years != null && r.years !== '' ? `${r.years}년` : ''), row('한 줄 소개', r.headline), row('보유 기술', r.skills), row('학력', r.education)]) }]
+    return [{ heading: t('기본 정보'), rows: filled([row(t('이름'), r.name), row(t('경력'), r.years != null && r.years !== '' ? t('{n}년', { n: r.years }) : ''), row(t('한 줄 소개'), r.headline), row(t('보유 기술'), r.skills), row(t('학력'), r.education)]) }]
   }
   if (version?.document === 'cover-letter') {
     const c = content.coverLetter ?? {}
-    return [{ heading: c.title || '자기소개서', rows: filled(COVER_LETTER_SECTIONS.map((s) => row(s.label, c[s.key]))) }]
+    return [{ heading: c.title || t('자기소개서'), rows: filled(COVER_LETTER_SECTIONS.map((s) => row(t(s.label), c[s.key]))) }]
   }
   const items = Array.isArray(content.items) ? content.items : []
   if (version?.document === 'career') {
     return items.map((item) => ({
       heading: item.title ?? '',
       rows: filled([
-        row('기간', periodLabel(item)), row('역할', item.role), row('담당 업무', item.duties),
-        row('회사', maskCompany && item.company ? '회사명 비공개' : item.company), row('부서', item.department),
-        row('고용 형태', employmentTypeLabel(item.employmentType)), row('재직 상태', EMPLOYMENT_STATUSES.find((s) => s.value === item.employmentStatus)?.label),
-        row('기술', item.stack), row('성과', (item.achievements ?? []).join('\n')),
+        row(t('기간'), periodLabel(item, t)), row(t('역할'), item.role), row(t('담당 업무'), item.duties),
+        row(t('회사'), maskCompany && item.company ? t('회사명 비공개') : item.company), row(t('부서'), item.department),
+        row(t('고용 형태'), item.employmentType ? t(employmentTypeLabel(item.employmentType)) : ''), row(t('재직 상태'), item.employmentStatus ? t(EMPLOYMENT_STATUSES.find((s) => s.value === item.employmentStatus)?.label ?? '') : ''),
+        row(t('기술'), item.stack), row(t('성과'), (item.achievements ?? []).join('\n')),
       ]),
     }))
   }
-  return items.map((item) => ({ heading: item.title ?? '', rows: filled([row('종류', item.kind), row('내용', item.body)]) }))
+  return items.map((item) => ({ heading: item.title ?? '', rows: filled([row(t('종류'), item.kind), row(t('내용'), item.body)]) }))
 }
 
 export function versionErrorText(error) {
@@ -108,7 +115,7 @@ export function compareVersions(base, target, options = {}) {
     const oldRows = new Map(old.rows), newRows = new Map(entry.rows)
     const labels = [...new Set([...old.rows.map(([l]) => l), ...entry.rows.map(([l]) => l)])]
     const fields = labels.filter((l) => (oldRows.get(l) ?? '') !== (newRows.get(l) ?? '')).map((l) => ({ label: l, before: oldRows.get(l) ?? '', after: newRows.get(l) ?? '' }))
-    if (old.heading !== entry.heading) fields.unshift({ label: '제목', before: old.heading, after: entry.heading })
+    if (old.heading !== entry.heading) fields.unshift({ label: (options.t ?? korean)('제목'), before: old.heading, after: entry.heading })
     if (fields.length) result.changed.push({ heading: entry.heading, fields })
     else result.unchanged += 1
   }

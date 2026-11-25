@@ -1,4 +1,5 @@
 <script setup>
+import { tr } from '../store/locale'
 import { onMounted, onBeforeUnmount, ref, useId } from 'vue'
 import EditPresence from './EditPresence.vue'
 defineProps({ wide: { type: Boolean, default: false }, title: { type: String, default: '' }, editResource: { type: String, default: '' } })
@@ -26,12 +27,12 @@ function backdrop(event) {
       <div class="modal-card" :class="{ wide }">
         <div class="modal-head">
           <h3 :id="titleId">{{ title }}</h3>
-          <button type="button" class="icon" aria-label="닫기" @click="emit('close')">×</button>
+          <button type="button" class="icon" :aria-label="tr('닫기')" @click="emit('close')">×</button>
         </div>
         <div v-if="$slots.toolbar" class="modal-toolbar"><slot name="toolbar" /></div>
         <EditPresence v-if="editResource" :resource="editResource" />
         <div class="modal-body"><slot /></div>
-        <div class="modal-footer"><slot name="footer"><button type="button" class="modal-secondary" @click="emit('close')">닫기</button></slot></div>
+        <div class="modal-footer"><slot name="footer"><button type="button" class="modal-secondary" @click="emit('close')">{{ tr('닫기') }}</button></slot></div>
       </div>
     </dialog>
   </Teleport>

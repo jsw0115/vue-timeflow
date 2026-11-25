@@ -1,4 +1,8 @@
 // 경력 상세 필드(PR-24, REQ-F25)의 허용값·기간 표시·요청 본문과, 저장을 막지 않는 기간 겹침·공백 안내를 정한다.
+import { translate } from '../i18n/translate.mjs'
+
+/** 화면 문구 번역 함수의 기본값. 한국어 원문 그대로다. */
+export const korean = (ko, vars) => translate(ko, 'ko', vars)
 
 /** 서버 FeatureInput.EMPLOYMENT_TYPES와 같은 순서다. */
 export const EMPLOYMENT_TYPES = [
@@ -22,13 +26,13 @@ const ISO = /^\d{4}-\d{2}-\d{2}$/
 export const employmentTypeLabel = (value) => EMPLOYMENT_TYPES.find((item) => item.value === value)?.label ?? ''
 const month = (iso) => iso.slice(0, 7).replace('-', '.')
 
-/** 시작일이 있으면 날짜로, 없으면 예전에 적은 기간 문구를 보인다. */
-export function periodLabel(item) {
+/** 시작일이 있으면 날짜로, 없으면 예전에 적은 기간 문구를 보인다. t는 화면 표시용 번역이고, 저장 본문(careerBody)은 늘 한국어다. */
+export function periodLabel(item, t = korean) {
   const start = String(item?.startDate ?? '')
   if (!ISO.test(start)) return String(item?.period ?? '')
   const end = String(item.endDate ?? '')
   if (ISO.test(end)) return month(start) + ' ~ ' + month(end)
-  return item.employmentStatus === 'current' ? month(start) + ' ~ 재직 중' : month(start) + ' ~'
+  return item.employmentStatus === 'current' ? month(start) + ' ~ ' + t('재직 중') : month(start) + ' ~'
 }
 
 /**
