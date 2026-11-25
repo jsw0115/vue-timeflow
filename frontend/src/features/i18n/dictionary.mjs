@@ -594,7 +594,7 @@ export const EN = {
   "시작일과 같은 날짜에 반복해요. 해당 날짜가 없는 달은 건너뛰어요.": "Repeats on the same date as the start date. Months without that date are skipped.",
   "검색": "Search",
   "검색어 지우기": "Clear search",
-  "{n}건 / 전체 {total}건": "{n} of {total}",
+  "{n}건 / 전체 {total}건": "{n} of {total} items",
   "필터 초기화 ({n})": "Reset filters ({n})",
   "{names}님이 다른 창에서 수정 중이에요.": "{names} is editing in another window.",
   "{name}님이 수정 중이에요.": "{name} is editing.",
@@ -992,6 +992,10 @@ export const EN = {
   "분류 전체": "All categories",
   "지남": "Past",
   "{n}일마다": "Every {n} days",
+  ", 항목 1개": ", 1 item",
+  "1일마다": "Every day",
+  "1개월마다": "Every month",
+  "1년마다": "Every year",
   "{n}주마다": "Every {n} weeks",
   "{n}개월마다": "Every {n} months",
   "{n}년마다": "Every {n} years",
@@ -1664,5 +1668,7 @@ export const EN = {
 
 /** 숫자 뒤 단위("12일", "9건"). 이름표와 같은 글자라도 뜻이 달라 사전과 따로 둔다. 없으면 영어에서는 단위를 붙이지 않는다. */
 export const UNITS_EN = { 일: ' days', 건: ' items', 시간: ' h', 점: ' pts' }
+/** 수가 1일 때의 단위("1 day"). 없으면 UNITS_EN을 쓴다. */
+export const UNITS_EN_ONE = { 일: ' day', 건: ' item', 점: ' pt' }
 /** 문장 안 단위 이름("이번 주", "3주 전"). 영어 문장에 넣을 단수 이름이다. */
 export const UNIT_WORDS_EN = { 일: 'day', 주: 'week', 월: 'month', 년: 'year' }

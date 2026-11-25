@@ -1,5 +1,5 @@
 <script setup>
-import { tr } from '../store/locale'
+import { tr, unit } from '../store/locale'
 import { computed } from 'vue'
 
 /**
@@ -68,7 +68,7 @@ function reset() {
 
     <div class="list-filter-meta">
       <span v-if="resultCount !== null">
-        {{ totalCount !== null && resultCount !== totalCount ? tr('{n}건 / 전체 {total}건', { n: resultCount, total: totalCount }) : tr('{n}건', { n: resultCount }) }}
+        {{ totalCount !== null && resultCount !== totalCount ? tr('{n}건 / 전체 {total}건', { n: resultCount, total: totalCount }) : resultCount + unit('건', resultCount) }}
       </span>
       <button v-if="activeCount" class="review" style="margin: 0; padding: 4px 10px" @click="reset">{{ tr('필터 초기화 ({n})', { n: activeCount }) }}</button>
     </div>

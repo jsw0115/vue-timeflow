@@ -1,5 +1,5 @@
 <script setup>
-import { tr, unit } from '../../store/locale'
+import { bodyLocale, tr, unit } from '../../store/locale'
 import { computed, ref } from 'vue'
 
 /**
@@ -63,9 +63,9 @@ const buckets = computed(() => {
 const written = computed(() => Math.min(dayCount.value, Math.round(dayCount.value * 0.72)))
 const highlights = computed(() => Math.max(1, Math.round(dayCount.value / 10)))
 const topMood = computed(() => (buckets.value.reduce((a, b) => a + b.mood, 0) / buckets.value.length > 62 ? '좋음' : '보통'))
-// 집계 단위 이름(일·주·월)과 칸 이름은 본문 언어로 보인다
+// 집계 단위 이름(일·주·월)과 칸 이름은 본문 언어로 보인다. 한국어 칸 이름은 예전 그대로("1일", "3월")다
 const UNIT = { 일: '일 단위', 주: '주 단위', 월: '월 단위' }
-const bucketName = (b, i) => tr(b.label.endsWith('일') ? '{n}일째' : b.label.endsWith('주') ? '{n}주째' : '{n}개월째', { n: i + 1 })
+const bucketName = (b, i) => bodyLocale.value === 'ko' ? b.label : tr(b.label.endsWith('일') ? '{n}일째' : b.label.endsWith('주') ? '{n}주째' : '{n}개월째', { n: i + 1 })
 </script>
 
 <template>
@@ -97,10 +97,10 @@ const bucketName = (b, i) => tr(b.label.endsWith('일') ? '{n}일째' : b.label.
     </section>
 
     <div class="metrics" style="margin-bottom: 16px">
-      <article><span>{{ tr('작성일') }}</span><b class="figure">{{ written }}<small>{{ unit('일') }}</small></b><small>{{ tr('전체 {n}일 중', { n: dayCount }) }}</small></article>
+      <article><span>{{ tr('작성일') }}</span><b class="figure">{{ written }}<small>{{ unit('일', written) }}</small></b><small>{{ tr('전체 {n}일 중', { n: dayCount }) }}</small></article>
       <article><span>{{ tr('작성률') }}</span><b class="figure">{{ Math.round((written / dayCount) * 100) }}<small>%</small></b></article>
       <article><span>{{ tr('가장 많은 감정') }}</span><b class="figure" style="font-size: 1.1875rem">{{ tr(topMood) }}</b></article>
-      <article><span>{{ tr('하이라이트') }}</span><b class="figure">{{ highlights }}<small>{{ unit('건') }}</small></b></article>
+      <article><span>{{ tr('하이라이트') }}</span><b class="figure">{{ highlights }}<small>{{ unit('건', highlights) }}</small></b></article>
     </div>
 
     <section class="card">

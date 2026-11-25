@@ -208,12 +208,12 @@ function onDrop(id) {
         </template>
 
         <template v-else-if="w.id === 'streak'">
-          <span>{{ tr('연속 기록') }}</span><b class="figure">{{ bestStreak }}<small>{{ unit('일') }}</small></b>
+          <span>{{ tr('연속 기록') }}</span><b class="figure">{{ bestStreak }}<small>{{ unit('일', bestStreak) }}</small></b>
           <p>{{ tr('가장 긴 루틴 · 최고 {n}일', { n: bestEver }) }}</p>
         </template>
 
         <template v-else-if="w.id === 'godlifeScore'">
-          <span>{{ tr('갓생 점수') }}</span><b class="figure">{{ godlifeScore }}<small>{{ unit('점') }}</small></b>
+          <span>{{ tr('갓생 점수') }}</span><b class="figure">{{ godlifeScore }}<small>{{ unit('점', godlifeScore) }}</small></b>
           <p>{{ tr('루틴 50% + 할 일 50%') }}</p>
         </template>
 

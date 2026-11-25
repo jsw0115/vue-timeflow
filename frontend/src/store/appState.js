@@ -73,7 +73,8 @@ export function routineRate(routine) {
 export function dayLabel(routine, t = korean, dayName = (x) => ROUTINE_DAYS[x]) {
   const rule = routine.recurrence
   const every = { daily: '{n}일마다', weekly: '{n}주마다', monthly: '{n}개월마다', yearly: '{n}년마다' }[rule?.frequency]
-  if (rule && (rule.frequency !== 'weekly' || rule.interval !== 1)) return every ? t(every, { n: rule.interval }) : t('{n}마다', { n: rule.interval })
+  // 간격 1은 따로 둔다(영어 "Every 1 days" 방지). 한국어 표시는 "1일마다" 그대로다
+  if (rule && (rule.frequency !== 'weekly' || rule.interval !== 1)) return every ? t(rule.interval === 1 ? every.replace('{n}', '1') : every, { n: rule.interval }) : t('{n}마다', { n: rule.interval })
   const d = routine.days ?? []
   if (!d.length || d.length === 7) return t('매일')
   if (d.length === 5 && [1, 2, 3, 4, 5].every((x) => d.includes(x))) return t('평일')

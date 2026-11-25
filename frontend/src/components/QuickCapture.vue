@@ -87,7 +87,7 @@ const PATHS = { '일정': '/events', '할 일': '/tasks', '메모': '/memos' }
       <p v-if="dropsTime" class="input-field-help">{{ tr('오전·오후를 고르지 않으면 마감 날짜만 저장돼요.') }}</p>
       <p v-if="!result.parsed" class="input-field-help">{{ tr('날짜나 시간을 찾지 못해 원문 그대로 메모로 둘게요.') }}</p>
       <p v-else-if="kind === '메모'" class="input-field-help">{{ tr('메모로 바꾸면 적은 원문 그대로 저장해요.') }}</p>
-      <p v-if="problem" class="input-field-help" data-state="error" role="alert">{{ problem }}</p>
+      <p v-if="problem" class="input-field-help" data-state="error" role="alert">{{ tr(problem) }}</p>
       <button type="button" class="button-text quick-detail" @click="openDetail">{{ tr('자세히 쓰기') }}</button>
     </div>
     <SaveStatus :state="saving.state" :mode="storage === 'local' ? 'local' : 'server'" @retry="save" />

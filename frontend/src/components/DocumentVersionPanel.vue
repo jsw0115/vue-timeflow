@@ -34,7 +34,8 @@ async function save() {
   busy.value = true; message.value = ''; announce.value = ''
   try {
     const created = await client.create(props.document, { label: label.value, note: note.value, language: language.value })
-    label.value = ''; note.value = ''
+    // 언어도 기본값(한국어)으로 되돌려, 다음 버전이 모르는 사이 영어로 남지 않게 한다
+    label.value = ''; note.value = ''; language.value = 'ko'
     announce.value = tr('‘{name}’ 버전을 저장했어요.', { name: versionName(created) })
     await load()
   } catch (error) { message.value = versionErrorText(error) } finally { busy.value = false }

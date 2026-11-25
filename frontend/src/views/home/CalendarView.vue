@@ -7,6 +7,7 @@ import { localDate } from '../../utils/postValidation.mjs'
 import { eventOccurrences, occurrenceLink } from '../../utils/recurrence.mjs'
 import { events, tasks } from '../../store/appState'
 import { ddays, isPast } from '../../store/ddays'
+import { ddayCellDate } from '../../utils/dday.mjs'
 import { posts, ME } from '../../store/tagging'
 
 /**
@@ -65,11 +66,11 @@ const itemsByDate = computed(() => {
       }
     }
   }
-  if (on.value.dday) ddays.value.forEach((d) => add(d.isoDate, { kind: 'dday', title: d.title, meta: d.dday, link: '/dday/' + d.id }))
+  if (on.value.dday) ddays.value.forEach((d) => add(ddayCellDate(d, TODAY), { kind: 'dday', title: d.title, meta: d.dday, link: '/dday/' + d.id }))
   if (on.value.task) {
     tasks.value.forEach(t => add(t.date, { kind: 'task', title: t.title, meta: t.done ? tr('완료') : tr(t.category), link: '/tasks/' + t.id, done: t.done }))
   }
-  if (on.value.post) posts.value.filter((p) => p.author === ME).forEach((p) => add(p.at, { kind: 'post', title: p.title, meta: p.kind, link: p.link }))
+  if (on.value.post) posts.value.filter((p) => p.author === ME).forEach((p) => add(p.at, { kind: 'post', title: p.title, meta: tr(p.kind), link: p.link }))
   return map
 })
 
@@ -136,7 +137,7 @@ function labelOf(kind) {
           class="cal-cell"
           :class="{ out: c.out, today: c.today, selected: selected === c.key }"
           :aria-pressed="selected === c.key"
-          :aria-label="dayName(c) + (c.items.length ? tr(', 항목 {n}개', { n: c.items.length }) : '')"
+          :aria-label="dayName(c) + (c.items.length === 1 ? tr(', 항목 1개') : c.items.length ? tr(', 항목 {n}개', { n: c.items.length }) : '')"
           @click="selected = c.key"
         >
           <b class="cal-date">{{ c.date }}</b>

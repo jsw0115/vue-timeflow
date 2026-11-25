@@ -142,7 +142,7 @@ function download(kind) {
   <div class="metrics" style="--metric-cols: 3; margin-bottom: 16px">
     <article><span>{{ tr('총 누적 시간') }}</span><b class="figure">{{ totalHours }}<small>h</small></b></article>
     <article><span>{{ tr('업무 유형') }}</span><b class="figure">{{ types.length }}<small v-if="bodyLocale === 'ko'">종</small></b></article>
-    <article><span>{{ tr('인수인계 문서') }}</span><b class="figure">{{ docs.length }}<small>{{ unit('건') }}</small></b></article>
+    <article><span>{{ tr('인수인계 문서') }}</span><b class="figure">{{ docs.length }}<small>{{ unit('건', docs.length) }}</small></b></article>
   </div>
 
   <section class="card list" style="margin-bottom: 16px">

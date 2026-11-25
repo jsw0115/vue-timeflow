@@ -5,7 +5,7 @@ import { apiRequest } from '../features/auth/apiRequest.js'
 import { DEFAULT_LOCALE, cleanLocale } from '../features/i18n/locale.mjs'
 import { LOCALE_STORAGE_KEY, createLocaleAccount, localeErrorText } from '../features/i18n/localeAccount.mjs'
 import { translate } from '../features/i18n/translate.mjs'
-import { UNITS_EN, UNIT_WORDS_EN } from '../features/i18n/dictionary.mjs'
+import { UNITS_EN, UNITS_EN_ONE, UNIT_WORDS_EN } from '../features/i18n/dictionary.mjs'
 
 const account = createLocaleAccount({ request: apiRequest })
 function readLocal() { try { return cleanLocale(localStorage.getItem(LOCALE_STORAGE_KEY)) } catch { return null } }
@@ -53,7 +53,7 @@ export const setBodyLocale = (locale) => { bodyLocale.value = locale }
 /** 화면 문구 고르기. 한국어 원문을 넘기면 지금 본문 언어로 돌려준다(템플릿에서 반응형으로 다시 그려진다). */
 export const tr = (ko, vars) => translate(ko, bodyLocale.value, vars)
 
-/** 숫자 뒤 단위. 한국어는 그대로, 다른 언어는 단위 표(UNITS_EN)를 쓰고 없으면 붙이지 않는다. */
-export const unit = (ko) => (bodyLocale.value === 'ko' ? ko : UNITS_EN[ko] ?? '')
+/** 숫자 뒤 단위. 한국어는 그대로, 다른 언어는 단위 표(UNITS_EN)를 쓰고 없으면 붙이지 않는다. n이 1이면 단수 단위(UNITS_EN_ONE)를 쓴다. */
+export const unit = (ko, n) => (bodyLocale.value === 'ko' ? ko : (n === 1 ? UNITS_EN_ONE[ko] : undefined) ?? UNITS_EN[ko] ?? '')
 /** 문장 안에 넣는 단위 이름. 한국어는 그대로, 다른 언어는 단위 이름 표를 쓴다. */
 export const unitWord = (ko) => (bodyLocale.value === 'ko' ? ko : UNIT_WORDS_EN[ko] ?? ko)
