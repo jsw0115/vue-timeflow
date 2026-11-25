@@ -1,11 +1,15 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { modeState, modeMeta, setWeekdaySchedule } from '../../store/modeProfiles'
 import { appearance, DENSITIES, FONT_SIZES } from '../../store/appearance'
 import DayBoundarySettings from '../../components/DayBoundarySettings.vue'
-import { careerGoal, chooseCareerGoal } from '../../store/careerGoal'
-import { CAREER_GOALS, DEFAULT_GOAL } from '../../features/career/careerModel.mjs'
+import { careerGoal } from '../../store/careerGoal'
+import { DEFAULT_GOAL } from '../../features/career/careerModel.mjs'
+import { DEFAULT_CATEGORY, goalFor } from '../../features/start/startPresets.mjs'
+import StartPresetPicker from '../../components/StartPresetPicker.vue'
+import { applyStart, startPreset, undoStart } from '../../store/startPreset'
+import { savedAt } from '../../features/career/documentVersions.mjs'
 import { session } from '../../features/auth/session.js'
 
 const router = useRouter()
@@ -14,6 +18,13 @@ const startScreen = ref('홈 대시보드')
 const dateFormat = ref('2026.08.24 (월) · 24시간제')
 const weekStart = ref('월요일')
 const saved = ref(false)
+
+// 시작 구성(PR-23 Q-34): 분류 → 커리어 목표. 설정 화면에서는 메뉴·위젯 맞추기를 기본으로 끄고 둔다(직접 고친 구성을 지키기 위해)
+const startCategory = ref(startPreset.category || DEFAULT_CATEGORY)
+const startGoal = ref(goalFor(startCategory.value, careerGoal.goal || DEFAULT_GOAL))
+const startApplyLayout = ref(false)
+watch(() => careerGoal.goal, (value) => { if (value && startPreset.status !== 'saving') startGoal.value = goalFor(startCategory.value, value) })
+const applyStartPreset = () => applyStart({ category: startCategory.value, goal: startGoal.value, mode: modeState.activeMode, applyLayout: startApplyLayout.value })
 
 function save() {
   saved.value = true
@@ -31,15 +42,14 @@ function save() {
       <span v-if="saved" class="badge ok">저장했어요</span>
     </div>
 
-    <!-- 커리어 목표(docs/design 03 §5). 고르면 바로 저장하고, 저장이 끝난 뒤에만 완료 문구를 보인다 -->
-    <div class="section-label">커리어 목표</div>
-    <p class="form-note" style="margin-top: 0">커리어 대시보드에서 먼저 볼 내용을 정해요. 공개 범위나 권한은 바뀌지 않아요.</p>
-    <div class="mode-picker career-goal-picker" role="group" aria-label="커리어 목표">
-      <button v-for="g in CAREER_GOALS" :key="g.id" type="button" :class="{ selected: (careerGoal.goal || DEFAULT_GOAL) === g.id }" :aria-pressed="(careerGoal.goal || DEFAULT_GOAL) === g.id" :disabled="careerGoal.status === 'saving'" @click="chooseCareerGoal(g.id)">
-        <span>{{ g.label }}<small>{{ g.desc }}</small></span>
-      </button>
+    <!-- 커리어 목표·시작 구성(docs/design 03 §5, PR-23 Q-34). 저장을 누른 뒤에만 바꾸고, 저장이 끝난 뒤에만 완료 문구를 보인다 -->
+    <div class="section-label">커리어 목표 · 시작 구성</div>
+    <StartPresetPicker v-model:category="startCategory" v-model:goal="startGoal" v-model:apply-layout="startApplyLayout" :mode="modeState.activeMode" />
+    <div class="start-actions">
+      <button type="button" class="button-secondary" :disabled="startPreset.status === 'saving' || careerGoal.status === 'saving'" :aria-busy="startPreset.status === 'saving' ? 'true' : undefined" @click="applyStartPreset">{{ startPreset.status === 'saving' ? '저장하는 중' : startApplyLayout ? '목표 저장하고 구성 적용' : '목표 저장' }}</button>
+      <button v-if="startPreset.undo" type="button" class="button-text" :disabled="startPreset.status === 'saving'" @click="undoStart">이전 구성으로 되돌리기<span class="figure"> ({{ savedAt(startPreset.undo.at) }} 적용 전)</span></button>
     </div>
-    <p class="input-field-help" role="status" :data-state="careerGoal.status === 'failed' ? 'error' : careerGoal.status === 'saved' ? 'success' : undefined">{{ careerGoal.status === 'saving' ? '저장하는 중이에요.' : careerGoal.message || (careerGoal.goal ? '' : '아직 고르지 않아 기본 목표(취업 준비) 순서로 보여요.') + (session.userId ? '' : ' 로그아웃 상태에서는 이 브라우저에 저장해요.') }}</p>
+    <p class="input-field-help" role="status" :data-state="startPreset.status === 'failed' ? 'error' : startPreset.status === 'saved' ? 'success' : undefined">{{ startPreset.status === 'saving' ? '저장하는 중이에요.' : startPreset.message || (careerGoal.goal ? '' : '아직 목표를 고르지 않아 기본 목표(취업 준비) 순서로 보여요.') + (session.userId ? '' : ' 로그아웃 상태에서는 이 브라우저에 저장해요.') }}</p>
 
     <div class="section-label" style="margin-top: var(--space-lg)">기본 모드</div>
     <div class="mode-picker">
@@ -113,10 +123,7 @@ function save() {
 </template>
 
 <style scoped>
-/* 커리어 목표는 4개라 2열로 둔다. 좁은 화면은 공통 mode-picker 규칙처럼 1열로 쌓는다 */
-.career-goal-picker { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.career-goal-picker span { display: grid; gap: var(--space-xs); }
-@media (max-width: 760px) { .career-goal-picker { grid-template-columns: minmax(0, 1fr); } }
+.start-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm) var(--space-md); margin-top: var(--space-lg); }
 .weekday-mode-toggle { display: inline-flex; margin-top: var(--space-lg); border: 0; }
 .weekday-mode-toggle span { flex: 1; }
 .weekday-mode-note { margin-top: 0; }

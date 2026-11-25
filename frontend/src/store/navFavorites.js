@@ -7,6 +7,8 @@ import { cleanFavorites, moveFavorite, pinnableItems, toggleFavorite } from '../
 const KEY = 'timeflow.nav.favorites'
 let pinnable = []
 export const pinnableMenus = () => pinnable
+/** 사이드바 묶음 이름(순서대로). App.vue가 넘긴 메뉴 목록에서 얻는다. */
+export const navGroupLabels = () => pinnable.map((item) => item.group).filter((label, index, list) => list.indexOf(label) === index)
 
 export const navFavorites = reactive({ paths: [], ready: false })
 

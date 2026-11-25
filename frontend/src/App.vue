@@ -1,7 +1,8 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, provide, reactive, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { navGroups } from './router'
+import { isGroupCollapsed, setGroupCollapsed } from './store/navCollapse'
 import { composer, openPostComposer } from './store/appState'
 import PostComposer from './components/PostComposer.vue'
 import LocalMigrationPrompt from './components/LocalMigrationPrompt.vue'
@@ -87,46 +88,21 @@ function isNavActive(item) {
 initNavFavorites(navGroups)
 const favorites = computed(() => favoriteMenus())
 
-const COLLAPSED_GROUPS_KEY = 'timeflow.nav.collapsedGroups'
-function loadCollapsedGroups() {
-  try {
-    const raw = localStorage.getItem(COLLAPSED_GROUPS_KEY)
-    return raw ? new Set(JSON.parse(raw)) : new Set()
-  } catch {
-    return new Set()
-  }
-}
-const collapsedGroups = reactive(loadCollapsedGroups())
-function persistCollapsedGroups() {
-  try {
-    localStorage.setItem(COLLAPSED_GROUPS_KEY, JSON.stringify([...collapsedGroups]))
-  } catch {
-    // localStorage를 쓸 수 없는 환경(시크릿 모드 등)에서는 세션 내 상태만 유지
-  }
-}
-function isGroupCollapsed(label) {
-  return collapsedGroups.has(label)
-}
+// 묶음 접힘은 store/navCollapse.js가 이 브라우저에 저장한다(시작 구성과 함께 쓴다)
 function toggleGroup(label) {
   if (label === '플래너') {
-    collapsedGroups.delete(label)
-    persistCollapsedGroups()
+    setGroupCollapsed(label, false)
     void router.push('/planner')
     return
   }
-  if (collapsedGroups.has(label)) collapsedGroups.delete(label)
-  else collapsedGroups.add(label)
-  persistCollapsedGroups()
+  setGroupCollapsed(label, !isGroupCollapsed(label))
 }
 // 지금 보고 있는 화면이 속한 그룹은 접혀 있어도 자동으로 펼쳐서, 현재 위치를 놓치지 않게 한다
 watch(
   () => route.path,
   () => {
     const activeGroup = navGroups.find((g) => g.items.some((item) => isNavActive(item)))
-    if (activeGroup && collapsedGroups.has(activeGroup.label)) {
-      collapsedGroups.delete(activeGroup.label)
-      persistCollapsedGroups()
-    }
+    if (activeGroup && isGroupCollapsed(activeGroup.label)) setGroupCollapsed(activeGroup.label, false)
   },
   { immediate: true },
 )
@@ -189,7 +165,7 @@ watch(() => route.path, () => { mobileNav.value = false; workspaceOpen.value = f
           </router-link>
         </template>
         <template v-for="group in navGroups" :key="group.label">
-          <button type="button" class="nav-section" :class="{ collapsed: isGroupCollapsed(group.label) }" @click="toggleGroup(group.label)">
+          <button type="button" class="nav-section" :class="{ collapsed: isGroupCollapsed(group.label) }" :aria-expanded="group.label === '플래너' ? undefined : !isGroupCollapsed(group.label)" @click="toggleGroup(group.label)">
             {{ group.label }}<i class="chev" aria-hidden="true"><AppIcon name="chevronDown" :size="14" /></i>
           </button>
           <template v-if="!isGroupCollapsed(group.label)">
