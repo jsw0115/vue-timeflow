@@ -3896,6 +3896,57 @@ file을 multipart/form-data로 전달한다. boundary는 HTTP 클라이언트가
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 
+## GET /api/work/projects/{projectId}/actuals
+
+인증은 JWT이며 소스는 ProjectReportController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | projectId | String | 예 | 없음 |
+| query | from | String | 예 | 없음 |
+| query | to | String | 예 | 없음 |
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## POST /api/work/projects/{projectId}/actuals
+
+인증은 JWT이며 소스는 ProjectReportController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | projectId | String | 예 | 없음 |
+
+| 본문 필드 | 타입 | 필수 | 제약 |
+|---|---|---|---|
+| actualId | string | 예 | 길이 ≤ 100 |
+
+끝낸 실제 기록을 프로젝트(최상위 WBS 작업)에 잇는다(PR-19 UF-138, Q-35). 실제 기록 하나는 프로젝트 하나에만 속해, 다른 프로젝트에 이어져 있었으면 옮긴다. 하위 작업·진행 중 기록은 400, 없거나 다른 계정의 프로젝트·기록은 404.
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## DELETE /api/work/projects/{projectId}/actuals/{actualId}
+
+인증은 JWT이며 소스는 ProjectReportController.java다. 성공 HTTP는 204다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | projectId | String | 예 | 없음 |
+| path | actualId | String | 예 | 없음 |
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## GET /api/work/projects/{projectId}/report-draft
+
+인증은 JWT이며 소스는 ProjectReportController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | projectId | String | 예 | 없음 |
+| query | from | String | 예 | 없음 |
+| query | to | String | 예 | 없음 |
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
 ## GET /api/work/records
 
 인증은 JWT이며 소스는 WorkController.java다. 성공 HTTP는 200다.

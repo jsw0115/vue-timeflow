@@ -2,7 +2,7 @@
 
 기준 2026-10-10. 생성 명령: frontend에서 npm run docs:api. 현재 컨트롤러의 단일 문자열 매핑 형식에 한정된 생성기입니다.
 
-총 324개. 기존 지정 계약 검증 10, 서비스 연결 301, 외부 제공자 경계 13, 미구현 stub 0, 공용 메모리 시연 0.
+총 328개. 기존 지정 계약 검증 10, 서비스 연결 305, 외부 제공자 경계 13, 미구현 stub 0, 공용 메모리 시연 0.
 
 | 상태 | 의미 |
 |---|---|
@@ -98,6 +98,10 @@ ChatController의 19개 경로는 CHAT_ENABLED=true일 때 등록됩니다. [채
 | GET | /api/stat/focus | 서비스 연결 · 검증 범위 별도 | JWT | InsightController |
 | POST | /api/notifications/due-refresh | 서비스 연결 · 검증 범위 별도 | JWT | NotificationRefreshController |
 | POST | /api/notifications/{id}/actions/{action} | 서비스 연결 · 검증 범위 별도 | JWT | NotificationRefreshController |
+| GET | /api/work/projects/{projectId}/actuals | 서비스 연결 · 검증 범위 별도 | JWT | ProjectReportController |
+| POST | /api/work/projects/{projectId}/actuals | 서비스 연결 · 검증 범위 별도 | JWT | ProjectReportController |
+| DELETE | /api/work/projects/{projectId}/actuals/{actualId} | 서비스 연결 · 검증 범위 별도 | JWT | ProjectReportController |
+| GET | /api/work/projects/{projectId}/report-draft | 서비스 연결 · 검증 범위 별도 | JWT | ProjectReportController |
 | GET | /api/reports/time-blocks | 서비스 연결 · 검증 범위 별도 | JWT | ReportController |
 | POST | /api/reports/draft | 서비스 연결 · 검증 범위 별도 | JWT | ReportController |
 | GET | /api/reports/{reportKey} | 서비스 연결 · 검증 범위 별도 | JWT | ReportController |

@@ -36826,6 +36826,497 @@
         "x-test-evidence": "verification.md"
       }
     },
+    "/api/work/projects/{projectId}/actuals": {
+      "get": {
+        "operationId": "ProjectReportController_get__api_work_projects__projectId__actuals",
+        "tags": [
+          "ProjectReportController"
+        ],
+        "summary": "GET /api/work/projects/{projectId}/actuals",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "성공. 세부 정책은 README와 기능 규약을 따른다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ProjectActual"
+                      },
+                      "maxItems": 500
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 검증 오류.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 필요 또는 폐기된 토큰.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "역할·회원 권한 부족.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "없음·타인 리소스·만료.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "버전·현재 상태 충돌.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-implementation-status": "서비스 연결 · 검증 범위 별도",
+        "x-source": "ProjectReportController.java",
+        "x-admin-required": false,
+        "x-test-evidence": "verification.md"
+      },
+      "post": {
+        "operationId": "ProjectReportController_post__api_work_projects__projectId__actuals",
+        "tags": [
+          "ProjectReportController"
+        ],
+        "summary": "POST /api/work/projects/{projectId}/actuals",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "actualId": {
+                    "type": "string",
+                    "maxLength": 100
+                  }
+                },
+                "required": [
+                  "actualId"
+                ],
+                "additionalProperties": false,
+                "description": "끝낸 실제 기록을 프로젝트(최상위 WBS 작업)에 잇는다(PR-19 UF-138, Q-35). 실제 기록 하나는 프로젝트 하나에만 속해, 다른 프로젝트에 이어져 있었으면 옮긴다. 하위 작업·진행 중 기록은 400, 없거나 다른 계정의 프로젝트·기록은 404."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "성공. 세부 정책은 README와 기능 규약을 따른다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "actualId": {
+                          "type": "string",
+                          "maxLength": 100
+                        },
+                        "projectId": {
+                          "type": "string",
+                          "maxLength": 100
+                        }
+                      },
+                      "required": [
+                        "actualId",
+                        "projectId"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 검증 오류.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 필요 또는 폐기된 토큰.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "역할·회원 권한 부족.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "없음·타인 리소스·만료.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "버전·현재 상태 충돌.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-implementation-status": "서비스 연결 · 검증 범위 별도",
+        "x-source": "ProjectReportController.java",
+        "x-admin-required": false,
+        "x-test-evidence": "verification.md"
+      }
+    },
+    "/api/work/projects/{projectId}/actuals/{actualId}": {
+      "delete": {
+        "operationId": "ProjectReportController_delete__api_work_projects__projectId__actuals__actualId_",
+        "tags": [
+          "ProjectReportController"
+        ],
+        "summary": "DELETE /api/work/projects/{projectId}/actuals/{actualId}",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actualId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "본문 없음."
+          },
+          "400": {
+            "description": "입력 검증 오류.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 필요 또는 폐기된 토큰.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "역할·회원 권한 부족.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "없음·타인 리소스·만료.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "버전·현재 상태 충돌.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-implementation-status": "서비스 연결 · 검증 범위 별도",
+        "x-source": "ProjectReportController.java",
+        "x-admin-required": false,
+        "x-test-evidence": "verification.md"
+      }
+    },
+    "/api/work/projects/{projectId}/report-draft": {
+      "get": {
+        "operationId": "ProjectReportController_get__api_work_projects__projectId__report_draft",
+        "tags": [
+          "ProjectReportController"
+        ],
+        "summary": "GET /api/work/projects/{projectId}/report-draft",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "성공. 세부 정책은 README와 기능 규약을 따른다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/ProjectReportDraft"
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 검증 오류.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 필요 또는 폐기된 토큰.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "역할·회원 권한 부족.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "없음·타인 리소스·만료.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "버전·현재 상태 충돌.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-implementation-status": "서비스 연결 · 검증 범위 별도",
+        "x-source": "ProjectReportController.java",
+        "x-admin-required": false,
+        "x-test-evidence": "verification.md"
+      }
+    },
     "/api/work/records": {
       "get": {
         "operationId": "WorkController_get__api_work_records",
@@ -52718,6 +53209,151 @@
           "tasks"
         ],
         "additionalProperties": false
+      },
+      "ProjectActual": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "minutes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "linked": {
+            "type": "boolean"
+          },
+          "linkedProjectId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "linkedProjectTitle": {
+            "type": "string",
+            "maxLength": 200
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "startedAt",
+          "endedAt",
+          "minutes"
+        ],
+        "additionalProperties": false
+      },
+      "ProjectReportDraft": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "projectTitle": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "from": {
+            "type": "string",
+            "format": "date"
+          },
+          "to": {
+            "type": "string",
+            "format": "date"
+          },
+          "actualMinutes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sessions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProjectActual"
+            },
+            "maxItems": 500
+          },
+          "done": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                "title": {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                "progress": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              },
+              "required": [
+                "id",
+                "title",
+                "progress"
+              ],
+              "additionalProperties": false
+            },
+            "maxItems": 500
+          },
+          "remaining": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                "title": {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                "progress": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              },
+              "required": [
+                "id",
+                "title",
+                "progress"
+              ],
+              "additionalProperties": false
+            },
+            "maxItems": 500
+          }
+        },
+        "required": [
+          "projectId",
+          "from",
+          "to",
+          "actualMinutes",
+          "sessions",
+          "done",
+          "remaining"
+        ],
+        "additionalProperties": false,
+        "description": "이 프로젝트에 이은 기간 안 끝낸 실제 기록의 분(기간 밖·일시정지 제외, 사용자 하루 기준)과 합계, 프로젝트 아래 진척 100% 작업(done)과 미만 작업(remaining). 아무것도 저장하지 않는다. 기간은 366일까지."
       },
       "PublicPortfolioItem": {
         "type": "object",

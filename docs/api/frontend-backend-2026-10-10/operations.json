@@ -11055,6 +11055,161 @@
   },
   {
     "method": "GET",
+    "route": "/api/work/projects/{projectId}/actuals",
+    "parameters": [
+      {
+        "name": "projectId",
+        "type": "String",
+        "location": "path",
+        "required": true
+      },
+      {
+        "name": "from",
+        "type": "String",
+        "location": "query",
+        "required": true
+      },
+      {
+        "name": "to",
+        "type": "String",
+        "location": "query",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "?",
+    "controller": "ProjectReportController",
+    "kind": "서비스 연결",
+    "implementationStatus": "서비스 연결 · 검증 범위 별도",
+    "public": false,
+    "responseSchema": {
+      "type": "array",
+      "items": {
+        "$ref": "#/components/schemas/ProjectActual"
+      },
+      "maxItems": 500
+    },
+    "externalBoundary": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/work/projects/{projectId}/actuals",
+    "parameters": [
+      {
+        "name": "projectId",
+        "type": "String",
+        "location": "path",
+        "required": true
+      },
+      {
+        "name": "body",
+        "type": "Map<String, Object>",
+        "location": "body",
+        "required": false
+      }
+    ],
+    "status": 200,
+    "responseType": "?",
+    "controller": "ProjectReportController",
+    "kind": "서비스 연결",
+    "implementationStatus": "서비스 연결 · 검증 범위 별도",
+    "public": false,
+    "requestSchema": {
+      "type": "object",
+      "properties": {
+        "actualId": {
+          "type": "string",
+          "maxLength": 100
+        }
+      },
+      "required": [
+        "actualId"
+      ],
+      "additionalProperties": false,
+      "description": "끝낸 실제 기록을 프로젝트(최상위 WBS 작업)에 잇는다(PR-19 UF-138, Q-35). 실제 기록 하나는 프로젝트 하나에만 속해, 다른 프로젝트에 이어져 있었으면 옮긴다. 하위 작업·진행 중 기록은 400, 없거나 다른 계정의 프로젝트·기록은 404."
+    },
+    "responseSchema": {
+      "type": "object",
+      "properties": {
+        "actualId": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "projectId": {
+          "type": "string",
+          "maxLength": 100
+        }
+      },
+      "required": [
+        "actualId",
+        "projectId"
+      ],
+      "additionalProperties": false
+    },
+    "externalBoundary": false
+  },
+  {
+    "method": "DELETE",
+    "route": "/api/work/projects/{projectId}/actuals/{actualId}",
+    "parameters": [
+      {
+        "name": "projectId",
+        "type": "String",
+        "location": "path",
+        "required": true
+      },
+      {
+        "name": "actualId",
+        "type": "String",
+        "location": "path",
+        "required": true
+      }
+    ],
+    "status": 204,
+    "responseType": "void",
+    "controller": "ProjectReportController",
+    "kind": "서비스 연결",
+    "implementationStatus": "서비스 연결 · 검증 범위 별도",
+    "public": false,
+    "responseSchema": {},
+    "externalBoundary": false
+  },
+  {
+    "method": "GET",
+    "route": "/api/work/projects/{projectId}/report-draft",
+    "parameters": [
+      {
+        "name": "projectId",
+        "type": "String",
+        "location": "path",
+        "required": true
+      },
+      {
+        "name": "from",
+        "type": "String",
+        "location": "query",
+        "required": true
+      },
+      {
+        "name": "to",
+        "type": "String",
+        "location": "query",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "?",
+    "controller": "ProjectReportController",
+    "kind": "서비스 연결",
+    "implementationStatus": "서비스 연결 · 검증 범위 별도",
+    "public": false,
+    "responseSchema": {
+      "$ref": "#/components/schemas/ProjectReportDraft"
+    },
+    "externalBoundary": false
+  },
+  {
+    "method": "GET",
     "route": "/api/work/records",
     "parameters": [
       {

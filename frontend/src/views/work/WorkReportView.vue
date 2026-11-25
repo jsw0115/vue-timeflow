@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue'
+import ProjectReportPanel from '../../components/ProjectReportPanel.vue'
 
 /**
  * 업무 리포트 — 일간/주간/월간/연간 탭이 실제로 데이터를 바꾼다.
@@ -114,6 +115,9 @@ async function copyDraft() {
 </script>
 
 <template>
+  <!-- 계정 기록으로 만드는 초안(PR-19 UF-138). 아래 통계는 화면에 넣어 둔 예시 값이다 -->
+  <ProjectReportPanel />
+  <p class="input-field-help">아래 업무 유형별 통계와 업무보고는 화면 예시예요. 계정 기록으로 만든 보고서는 위 '프로젝트 업무 보고서 초안'을 써 주세요.</p>
   <div class="toolbar">
     <b>{{ active.caption }}</b><span></span>
     <button v-for="p in PERIODS" :key="p.key" :class="{ selected: view === p.key }" @click="view = p.key">{{ p.key }}</button>
