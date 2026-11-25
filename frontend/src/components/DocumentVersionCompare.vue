@@ -40,11 +40,11 @@ const empty = computed(() => diff.value && !diff.value.added.length && !diff.val
         </dl>
       </section>
       <section v-if="diff.added.length" class="compare-item">
-        <h3><span class="tag">{{ tr('추가') }}</span> {{ tr('새로 들어간 항목') }}</h3>
+        <h3><span class="tag">{{ tr('추가됨') }}</span> {{ tr('새로 들어간 항목') }}</h3>
         <ul><li v-for="(a, i) in diff.added" :key="'a' + i">{{ a.heading }}</li></ul>
       </section>
       <section v-if="diff.removed.length" class="compare-item">
-        <h3><span class="tag">{{ tr('삭제') }}</span> {{ tr('빠진 항목') }}</h3>
+        <h3><span class="tag">{{ tr('삭제됨') }}</span> {{ tr('빠진 항목') }}</h3>
         <ul><li v-for="(r, i) in diff.removed" :key="'r' + i">{{ r.heading }}</li></ul>
       </section>
     </template>

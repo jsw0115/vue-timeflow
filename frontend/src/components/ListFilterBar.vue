@@ -1,4 +1,5 @@
 <script setup>
+import { tr } from '../store/locale'
 import { computed } from 'vue'
 
 /**
@@ -13,7 +14,7 @@ const props = defineProps({
   query: { type: String, default: '' },
   filters: { type: Object, default: () => ({}) },
   groups: { type: Array, default: () => [] },
-  placeholder: { type: String, default: '검색' },
+  placeholder: { type: String, default: '' },
   resultCount: { type: Number, default: null },
   totalCount: { type: Number, default: null },
 })
@@ -45,11 +46,11 @@ function reset() {
         <span aria-hidden="true">⌕</span>
         <input
           :value="query"
-          :placeholder="placeholder"
+          :placeholder="placeholder || tr('검색')"
           type="search"
           @input="emit('update:query', $event.target.value)"
         />
-        <button v-if="query" class="person-info" type="button" title="검색어 지우기" aria-label="검색어 지우기" @click="emit('update:query', '')">×</button>
+        <button v-if="query" class="person-info" type="button" :title="tr('검색어 지우기')" :aria-label="tr('검색어 지우기')" @click="emit('update:query', '')">×</button>
       </label>
 
       <div class="filter" v-for="g in groups" :key="g.id">
@@ -59,7 +60,7 @@ function reset() {
           type="button"
           :class="{ selected: valueOf(g) === o.value }"
           @click="setFilter(g.id, o.value)"
-        >{{ o.label }}</button>
+        >{{ tr(o.label) }}</button>
       </div>
 
       <slot name="actions" />
@@ -67,10 +68,9 @@ function reset() {
 
     <div class="list-filter-meta">
       <span v-if="resultCount !== null">
-        {{ resultCount }}건
-        <template v-if="totalCount !== null && resultCount !== totalCount"> / 전체 {{ totalCount }}건</template>
+        {{ totalCount !== null && resultCount !== totalCount ? tr('{n}건 / 전체 {total}건', { n: resultCount, total: totalCount }) : tr('{n}건', { n: resultCount }) }}
       </span>
-      <button v-if="activeCount" class="review" style="margin: 0; padding: 4px 10px" @click="reset">필터 초기화 ({{ activeCount }})</button>
+      <button v-if="activeCount" class="review" style="margin: 0; padding: 4px 10px" @click="reset">{{ tr('필터 초기화 ({n})', { n: activeCount }) }}</button>
     </div>
   </div>
 </template>

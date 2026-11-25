@@ -1,4 +1,5 @@
 <script setup>
+import { tr } from '../../store/locale'
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { tasks, taskStore, openPostComposer } from '../../store/appState'
@@ -52,9 +53,9 @@ watch(() => activeTask.value?.id, () => { if (activeTask.value && taskMode.value
 // 다른 기기에서 바꾼 내용을 보이도록 목록에 들어올 때 다시 불러온다
 onMounted(() => { if (taskMode.value === 'server' && taskStore.state.loaded) taskStore.reload() })
 function assigneeLabel(item) {
-  if (!item.assigneeId) return '담당자 없음'
-  if (item.assigneeId === 'self') return '나'
-  return taskMode.value === 'server' ? '다른 계정' : contactById(Number(item.assigneeId))?.name ?? '담당자 없음'
+  if (!item.assigneeId) return tr('담당자 없음')
+  if (item.assigneeId === 'self') return tr('나')
+  return taskMode.value === 'server' ? tr('다른 계정') : contactById(Number(item.assigneeId))?.name ?? tr('담당자 없음')
 }
 
 function openModal() { openPostComposer('할 일') }
@@ -62,7 +63,7 @@ watch(() => route.query.new, (v) => { if (v) openModal() }, { immediate: true })
 </script>
 
 <template>
-  <PageActions><button class="primary" @click="openModal">+ 새 할 일</button></PageActions>
+  <PageActions><button class="primary" @click="openModal">{{ tr('+ 새 할 일') }}</button></PageActions>
 
   <StorageNote :mode="taskMode" />
   <p v-if="taskStore.notice.message" class="input-field-help" data-state="error" role="status">{{ taskStore.notice.message }}</p>
@@ -70,31 +71,31 @@ watch(() => route.query.new, (v) => { if (v) openModal() }, { immediate: true })
     v-model:query="query"
     v-model:filters="filters"
     :groups="FILTER_GROUPS"
-    placeholder="할 일 제목·분류 검색"
+    :placeholder="tr('할 일 제목·분류 검색')"
     :result-count="visible.length"
     :total-count="tasks.length"
   />
   <div class="manage">
     <section class="card list">
-      <div class="list-head"><span>할 일</span><span>카테고리</span><span>상태</span></div>
+      <div class="list-head"><span>{{ tr('할 일') }}</span><span>{{ tr('카테고리') }}</span><span>{{ tr('상태') }}</span></div>
       <div class="row" style="grid-template-columns: 2.2fr 1fr 0.8fr; cursor: pointer" v-for="t in visible" :key="t.id" :class="{ picked: t.id === activeId }" @click="router.push(`/tasks/${t.id}`)">
         <label @click.stop><input type="checkbox" :checked="t.done" :aria-busy="taskStore.isPending(t) ? 'true' : undefined" @click.prevent="taskStore.toggle(t)" /><b :class="{ done: t.done }">{{ t.title }}</b><span v-if="t.offline" class="tag" :class="{ warn: t.offline === 'review' }" style="margin-left: var(--space-sm)">{{ OFFLINE_LABEL[t.offline] }}</span></label>
-        <span class="tag">{{ t.category }}</span>
-        <span class="badge" :class="{ ok: t.done }">{{ t.done ? '완료' : '진행중' }}</span>
+        <span class="tag">{{ tr(t.category) }}</span>
+        <span class="badge" :class="{ ok: t.done }">{{ t.done ? tr('완료') : tr('진행중') }}</span>
       </div>
-      <p v-if="taskMode === 'server' && taskStore.state.loading && !taskStore.state.loaded" class="input-field-help" role="status">할 일을 불러오는 중이에요.</p>
-      <div v-else-if="taskMode === 'server' && taskStore.state.error && !taskStore.state.loaded" class="empty-state" role="status"><p>할 일을 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요.</p><button type="button" class="button-secondary" @click="taskStore.reload()">다시 시도</button></div>
-      <p v-else-if="!visible.length" class="empty-state" role="status">조건에 맞는 할 일이 없어요. 검색어나 필터를 바꾸거나 '+ 새 할 일'로 추가해 보세요.</p>
+      <p v-if="taskMode === 'server' && taskStore.state.loading && !taskStore.state.loaded" class="input-field-help" role="status">{{ tr('할 일을 불러오는 중이에요.') }}</p>
+      <div v-else-if="taskMode === 'server' && taskStore.state.error && !taskStore.state.loaded" class="empty-state" role="status"><p>{{ tr('할 일을 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요.') }}</p><button type="button" class="button-secondary" @click="taskStore.reload()">{{ tr('다시 시도') }}</button></div>
+      <p v-else-if="!visible.length" class="empty-state" role="status">{{ tr('조건에 맞는 할 일이 없어요. 검색어나 필터를 바꾸거나 \'+ 새 할 일\'로 추가해 보세요.') }}</p>
     </section>
     <aside class="card detail" v-if="activeTask">
       <h3>{{ activeTask.title }}</h3>
-      <p>{{ activeTask.date ? activeTask.date + (activeTask.dueTime ? ' ' + activeTask.dueTime : '') : '마감일 없음' }} · {{ activeTask.category }}</p>
-      <label>체크리스트 {{ activeChecklist.items.filter(item => item.done).length }}/{{ activeChecklist.items.length }}</label>
+      <p>{{ activeTask.date ? activeTask.date + (activeTask.dueTime ? ' ' + activeTask.dueTime : '') : tr('마감일 없음') }} · {{ tr(activeTask.category) }}</p>
+      <label>{{ tr('체크리스트 {done}/{all}', { done: activeChecklist.items.filter(item => item.done).length, all: activeChecklist.items.length }) }}</label>
       <ul class="task-checklist-preview"><li v-for="item in activeChecklist.items" :key="item.id"><label><input type="checkbox" :checked="item.done" :aria-busy="taskStore.isItemBusy(item) ? 'true' : undefined" @click.prevent="taskStore.setItemDone(activeTask, item, !item.done)" /><span :class="{ done: item.done }">{{ item.title }}</span></label><small>{{ assigneeLabel(item) }}</small></li></ul>
-      <p v-if="activeChecklist.status === 'loading'" class="input-field-help" role="status">체크리스트를 불러오는 중이에요.</p>
-      <div v-else-if="activeChecklist.status === 'error'" role="status"><p class="input-field-help" data-state="error">체크리스트를 불러오지 못했어요.</p><button type="button" class="button-secondary" @click="taskStore.loadChecklist(activeTask)">다시 불러오기</button></div>
-      <p v-else-if="!activeChecklist.items.length" class="form-note">상세 보기에서 체크리스트와 담당자를 추가하세요.</p>
-      <button class="button-secondary" @click="router.push(`/tasks/${activeTask.id}`)">상세 보기</button>
+      <p v-if="activeChecklist.status === 'loading'" class="input-field-help" role="status">{{ tr('체크리스트를 불러오는 중이에요.') }}</p>
+      <div v-else-if="activeChecklist.status === 'error'" role="status"><p class="input-field-help" data-state="error">{{ tr('체크리스트를 불러오지 못했어요.') }}</p><button type="button" class="button-secondary" @click="taskStore.loadChecklist(activeTask)">{{ tr('다시 불러오기') }}</button></div>
+      <p v-else-if="!activeChecklist.items.length" class="form-note">{{ tr('상세 보기에서 체크리스트와 담당자를 추가하세요.') }}</p>
+      <button class="button-secondary" @click="router.push(`/tasks/${activeTask.id}`)">{{ tr('상세 보기') }}</button>
     </aside>
   </div>
 

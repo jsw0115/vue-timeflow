@@ -32,8 +32,11 @@ test('영어가 없으면 한국어 원문, 자리표시를 채운다. 본문까
   assert.equal(translate('없는 문구 {n}', 'en', { n: 2 }), '없는 문구 2')
   assert.equal(translate('전체 {n}', 'en', { n: 3 }), 'All 3')
   assert.equal(translate('전체 {n}', 'ko', { n: 3 }), '전체 3')
+  assert.equal(translate(undefined, 'en'), '')
+  assert.equal(translate(7, 'en'), '7')
+  assert.equal(translate('내 분류 {x}', 'en'), '내 분류 {x}')
   for (const path of TRANSLATED_PATHS) assert.equal(documentLang('en', path), 'en')
-  assert.equal(documentLang('en', '/tasks'), 'ko')
+  assert.equal(documentLang('en', '/events'), 'ko')
   assert.equal(documentLang('ko', '/career'), 'ko')
 })
 
@@ -68,6 +71,22 @@ test('목록에서 이름을 꺼내 tr에 넘기는 값(상태·문서·고용 �
   assert.equal(hoursText(90, en), '1 h 30 min')
   assert.equal(hoursText(90), '1시간 30분')
   assert.equal(moveText({ kind: 'task', before: { dueTime: '10:00' }, after: { dueTime: '10:30' } }, en), 'Due 10:00 → 10:30')
+  // 기록(6단계): 글 종류·기분·알림 시점·업무 유형·위키 공간·작성 창 분류, 입력 검사 문구
+  // postComposer.js는 브라우저 저장소를 불러와 Node에서 직접 읽지 못하므로 소스에서 목록을 꺼낸다
+  const postKinds = readFileSync(new URL('../src/store/postComposer.js', import.meta.url), 'utf8').match(/postKinds = \[([^\]]+)\]/)[1].match(/'([^']+)'/g).map((k) => k.slice(1, -1))
+  const { MOODS } = await import('../src/utils/mood.mjs')
+  const { WORK_TYPES } = await import('../src/features/records/featureKinds.mjs')
+  const composer = readFileSync(new URL('../src/components/PostComposer.vue', import.meta.url), 'utf8')
+  const categories = [...composer.matchAll(/\['([^\]]+)'\]/g)].flatMap((m) => m[1].split("', '"))
+  const records = [...MOODS.map((m) => m.label), ...WORK_TYPES, ...categories, ...postKinds]
+  assert.ok(postKinds.length >= 10)
+  assert.deepEqual(records.filter((ko) => !(ko in EN)), [])
+  for (const file of ['utils/postValidation.mjs', 'utils/recurrence.mjs', 'store/ddays.js', 'store/wiki.js']) {
+    const source = readFileSync(new URL('../src/' + file, import.meta.url), 'utf8')
+    const shown = [...source.matchAll(/(?:return|label:) '([^']*[가-힣][^']*)'/g)].map((m) => m[1])
+    assert.deepEqual(shown.filter((ko) => !(ko in EN)), [], file)
+  }
+  assert.equal(documentLang('en', '/tasks/12'), 'en')
   const current = { startDate: '2026-01-05', employmentStatus: 'current' }
   assert.equal(periodLabel(current, en), '2026.01 ~ Current')
   assert.equal(periodLabel(current), '2026.01 ~ 재직 중')

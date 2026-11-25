@@ -68,7 +68,7 @@ const pageName = computed(() => {
   if (route.path.startsWith('/settings')) return t('settings')
   if (currentNav.value) return navName(currentNav.value, locale.value)
   // 메뉴에 없는 화면(플래너 일·주·월·연 등)은 라우트 이름표를 본문 언어로 보인다
-  return route.name ?? (route.meta?.label ? tr(route.meta.label) : '')
+  return route.name ? tr(route.name) : route.meta?.label ? tr(route.meta.label) : ''
 })
 const pageDesc = computed(() => {
   if (route.path.startsWith('/settings')) return ''
