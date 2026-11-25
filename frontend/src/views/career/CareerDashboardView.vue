@@ -12,6 +12,8 @@ import {
   pipelineCounts, recentActivities, resumeProgress, upcomingDates,
 } from '../../features/career/careerModel.mjs'
 import { localDate } from '../../utils/postValidation.mjs'
+import { localeState } from '../../store/locale'
+import { activityTypeText, careerText, dueText, goalText, resumeFieldText, statusText, upcomingText } from '../../features/i18n/careerMessages.mjs'
 
 const router = useRouter()
 const signedIn = computed(() => Boolean(session.userId))
@@ -43,82 +45,85 @@ function loadState(store) {
   if (store.state.error && !store.state.loaded) return 'error'
   return 'ready'
 }
-const SECTION_TITLES = { deadlines: '다가오는 마감·면접', pipeline: '지원 진행 현황', activities: '최근 활동', experiences: '경력·경험', documents: '문서 준비' }
+// 표시 언어(PR-32 Q-38): 커리어 대시보드 본문을 옮긴다. 영어가 없는 문구는 한국어 그대로다
+const locale = computed(() => localeState.locale)
+const t = (key, vars) => careerText(key, locale.value, vars)
+const goalShown = computed(() => goalText(goal.value, locale.value))
 const sections = computed(() => goal.value.sections)
 </script>
 
 <template>
-  <PageActions><button type="button" class="primary" @click="router.push('/career/activities?new=1')">활동 기록하기</button></PageActions>
+  <PageActions><button type="button" class="primary" :lang="locale" @click="router.push('/career/activities?new=1')">{{ t('recordActivity') }}</button></PageActions>
 
-  <section class="career-context" aria-labelledby="career-goal-title">
+  <section class="career-context" aria-labelledby="career-goal-title" :lang="locale">
     <div>
-      <p id="career-goal-title" class="eyebrow">커리어 목표</p>
-      <p class="career-goal"><b>{{ goal.label }}</b><span v-if="!goalPicked" class="tag">기본값</span></p>
-      <p class="input-field-help">{{ goal.desc }} 목표는 화면 순서만 바꾸고 공개 범위나 권한은 바꾸지 않아요.</p>
+      <p id="career-goal-title" class="eyebrow">{{ t('goalEyebrow') }}</p>
+      <p class="career-goal"><b>{{ goalShown.label }}</b><span v-if="!goalPicked" class="tag">{{ t('defaultTag') }}</span></p>
+      <p class="input-field-help">{{ goalShown.desc }} {{ t('goalNote') }}</p>
     </div>
-    <button type="button" class="button-secondary" :aria-expanded="choosing" aria-controls="career-goal-picker" @click="choosing = !choosing">{{ choosing ? '닫기' : '목표 바꾸기' }}</button>
+    <button type="button" class="button-secondary" :aria-expanded="choosing" aria-controls="career-goal-picker" @click="choosing = !choosing">{{ choosing ? t('close') : t('changeGoal') }}</button>
   </section>
-  <section v-if="choosing" id="career-goal-picker" class="card career-goal-picker">
+  <section v-if="choosing" id="career-goal-picker" class="card career-goal-picker" :lang="locale">
     <fieldset>
-      <legend>지금 가장 가까운 목표를 골라 주세요</legend>
+      <legend>{{ t('pickGoal') }}</legend>
       <label v-for="option in CAREER_GOALS" :key="option.id" class="goal-option" :class="{ selected: draftGoal === option.id }">
         <input v-model="draftGoal" type="radio" name="career-goal" :value="option.id" />
-        <span><b>{{ option.label }}</b><small>{{ option.desc }}</small></span>
-        <span v-if="draftGoal === option.id" class="goal-check">선택됨</span>
+        <span><b>{{ goalText(option, locale).label }}</b><small>{{ goalText(option, locale).desc }}</small></span>
+        <span v-if="draftGoal === option.id" class="goal-check">{{ t('selected') }}</span>
       </label>
     </fieldset>
     <div class="goal-actions">
-      <p class="input-field-help" role="status" :data-state="careerGoal.status === 'failed' ? 'error' : undefined">{{ careerGoal.status === 'saving' ? '저장하는 중이에요.' : careerGoal.message || (signedIn ? '계정에 저장해요.' : '로그아웃 상태라 이 브라우저에 저장해요.') }}</p>
-      <button type="button" class="primary" :disabled="careerGoal.status === 'saving'" :aria-busy="careerGoal.status === 'saving' ? 'true' : undefined" @click="saveGoal">{{ careerGoal.status === 'saving' ? '저장하는 중' : '이 목표로 보기' }}</button>
+      <p class="input-field-help" role="status" :data-state="careerGoal.status === 'failed' ? 'error' : undefined">{{ careerGoal.status === 'saving' ? t('saving') : careerGoal.message || (signedIn ? t('savesToAccount') : t('savesToBrowser')) }}</p>
+      <button type="button" class="primary" :disabled="careerGoal.status === 'saving'" :aria-busy="careerGoal.status === 'saving' ? 'true' : undefined" @click="saveGoal">{{ careerGoal.status === 'saving' ? t('savingShort') : t('useGoal') }}</button>
     </div>
   </section>
 
-  <div v-if="!signedIn" class="empty-state career-signed-out" role="status">
-    <p>로그인하면 활동·경력·지원 기록을 계정에 모아 볼 수 있어요. 로그아웃 상태에서는 커리어 기록을 저장하지 않아요.</p>
-    <router-link class="button-secondary" to="/auth/login">로그인</router-link>
+  <div v-if="!signedIn" class="empty-state career-signed-out" role="status" :lang="locale">
+    <p>{{ t('signedOut') }}</p>
+    <router-link class="button-secondary" to="/auth/login">{{ t('signIn') }}</router-link>
   </div>
 
-  <div v-else class="career-sections">
+  <div v-else class="career-sections" :lang="locale">
     <section v-for="(id, index) in sections" :key="id" class="card career-section" :class="{ lead: index === 0 }" :aria-labelledby="'career-' + id">
-      <div class="head"><h2 :id="'career-' + id">{{ SECTION_TITLES[id] }}</h2>
-        <router-link v-if="id === 'deadlines' || id === 'pipeline'" class="button-text" to="/career/applications">지원 관리</router-link>
-        <router-link v-else-if="id === 'activities'" class="button-text" to="/career/activities">전체 보기</router-link>
-        <router-link v-else class="button-text" to="/work/career">경력·포트폴리오</router-link>
+      <div class="head"><h2 :id="'career-' + id">{{ t('section.' + id) }}</h2>
+        <router-link v-if="id === 'deadlines' || id === 'pipeline'" class="button-text" to="/career/applications">{{ t('applications') }}</router-link>
+        <router-link v-else-if="id === 'activities'" class="button-text" to="/career/activities">{{ t('seeAll') }}</router-link>
+        <router-link v-else class="button-text" to="/work/career">{{ t('careerDocs') }}</router-link>
       </div>
 
       <template v-if="id === 'deadlines'">
-        <p class="input-field-help">오늘부터 14일 안 · 진행 중인 지원 {{ openCount }}건 기준</p>
-        <p v-if="loadState(applicationStore) === 'loading'" class="input-field-help" role="status">지원 기록을 불러오는 중이에요.</p>
-        <div v-else-if="loadState(applicationStore) === 'error'" class="empty-state" role="status"><p>지원 기록을 불러오지 못했어요.</p><button type="button" class="button-secondary" @click="applicationStore.reload()">다시 시도</button></div>
-        <p v-else-if="!upcoming.length" class="empty-state">14일 안에 다가오는 마감이나 면접이 없어요. 지원 관리에서 마감·면접 날짜를 넣으면 여기에 보여요.</p>
+        <p class="input-field-help">{{ t('deadlinesBasis', { open: openCount }) }}</p>
+        <p v-if="loadState(applicationStore) === 'loading'" class="input-field-help" role="status">{{ t('loadingApplications') }}</p>
+        <div v-else-if="loadState(applicationStore) === 'error'" class="empty-state" role="status"><p>{{ t('applicationsFailed') }}</p><button type="button" class="button-secondary" @click="applicationStore.reload()">{{ t('retry') }}</button></div>
+        <p v-else-if="!upcoming.length" class="empty-state">{{ t('noUpcoming') }}</p>
         <ul v-else class="career-rows">
-          <li v-for="row in upcoming" :key="row.id"><span class="figure">{{ row.date }}</span><span><b>{{ row.company }}</b> · {{ row.title }}</span><span class="tag">{{ row.label }} · {{ dueLabel(row.days) }}</span></li>
+          <li v-for="row in upcoming" :key="row.id"><span class="figure">{{ row.date }}</span><span><b>{{ row.company }}</b> · {{ row.title }}</span><span class="tag">{{ upcomingText(row.label, locale) }} · {{ dueText(row.days, locale, dueLabel(row.days)) }}</span></li>
         </ul>
       </template>
 
       <template v-else-if="id === 'pipeline'">
-        <p class="input-field-help">전체 지원 {{ applications.length }}건 · 진행 중 {{ openCount }}건</p>
-        <p v-if="loadState(applicationStore) === 'loading'" class="input-field-help" role="status">지원 기록을 불러오는 중이에요.</p>
-        <p v-else-if="!applications.length" class="empty-state">아직 저장한 지원이 없어요. 관심 있는 공고부터 추가해 보세요.</p>
+        <p class="input-field-help">{{ t('pipelineBasis', { all: applications.length, open: openCount }) }}</p>
+        <p v-if="loadState(applicationStore) === 'loading'" class="input-field-help" role="status">{{ t('loadingApplications') }}</p>
+        <p v-else-if="!applications.length" class="empty-state">{{ t('noApplications') }}</p>
         <dl v-else class="career-counts">
-          <div v-for="row in pipeline" :key="row.id"><dt>{{ row.label }}</dt><dd class="figure">{{ row.count }}건</dd></div>
+          <div v-for="row in pipeline" :key="row.id"><dt>{{ statusText(row.id, locale, row.label) }}</dt><dd class="figure">{{ t('count', { n: row.count }) }}</dd></div>
         </dl>
       </template>
 
       <template v-else-if="id === 'activities'">
-        <p class="input-field-help">전체 활동 {{ activities.length }}건 중 최근 {{ recent.length }}건</p>
-        <p v-if="loadState(activityStore) === 'loading'" class="input-field-help" role="status">활동을 불러오는 중이에요.</p>
-        <div v-else-if="loadState(activityStore) === 'error'" class="empty-state" role="status"><p>활동을 불러오지 못했어요.</p><button type="button" class="button-secondary" @click="activityStore.reload()">다시 시도</button></div>
-        <p v-else-if="!recent.length" class="empty-state">아직 남긴 활동이 없어요. 최근 업무나 학습 성과를 남기면 이력서·포트폴리오에 활용할 수 있어요.</p>
+        <p class="input-field-help">{{ t('activitiesBasis', { all: activities.length, recent: recent.length }) }}</p>
+        <p v-if="loadState(activityStore) === 'loading'" class="input-field-help" role="status">{{ t('loadingActivities') }}</p>
+        <div v-else-if="loadState(activityStore) === 'error'" class="empty-state" role="status"><p>{{ t('activitiesFailed') }}</p><button type="button" class="button-secondary" @click="activityStore.reload()">{{ t('retry') }}</button></div>
+        <p v-else-if="!recent.length" class="empty-state">{{ t('noActivities') }}</p>
         <ul v-else class="career-rows">
-          <li v-for="item in recent" :key="item.id"><span class="figure">{{ item.date }}</span><span>{{ item.title }}</span><span class="tag">{{ activityTypeLabel(item.activityType) }}</span></li>
+          <li v-for="item in recent" :key="item.id"><span class="figure">{{ item.date }}</span><span>{{ item.title }}</span><span class="tag">{{ activityTypeText(item.activityType, locale, activityTypeLabel(item.activityType)) }}</span></li>
         </ul>
       </template>
 
       <template v-else-if="id === 'experiences'">
-        <p class="input-field-help">경력 프로젝트 {{ experiences.length }}건</p>
-        <p v-if="loadState(careerStore) === 'loading'" class="input-field-help" role="status">경력을 불러오는 중이에요.</p>
-        <p v-else-if="!experiences.length" class="empty-state">아직 경력 프로젝트가 없어요. 회사·인턴·프로젝트 경험을 추가하면 활동을 경력에 연결할 수 있어요.</p>
+        <p class="input-field-help">{{ t('experiencesBasis', { n: experiences.length }) }}</p>
+        <p v-if="loadState(careerStore) === 'loading'" class="input-field-help" role="status">{{ t('loadingExperiences') }}</p>
+        <p v-else-if="!experiences.length" class="empty-state">{{ t('noExperiences') }}</p>
         <ul v-else class="career-rows">
           <li v-for="item in experiences.slice(0, 3)" :key="item.id"><span>{{ item.title }}</span><span class="input-field-help">{{ [item.period, item.role].filter(Boolean).join(' · ') }}</span></li>
         </ul>
@@ -126,11 +131,12 @@ const sections = computed(() => goal.value.sections)
 
       <template v-else-if="id === 'documents'">
         <dl class="career-counts">
-          <div><dt>이력서 기본 정보</dt><dd class="figure">{{ resumeState.total }}개 중 {{ resumeState.filled }}개 입력</dd></div>
-          <div><dt>포트폴리오 항목</dt><dd class="figure">{{ portfolioCount }}건</dd></div>
+          <div><dt>{{ t('resumeBasics') }}</dt><dd class="figure">{{ t('resumeFilled', { total: resumeState.total, filled: resumeState.filled }) }}</dd></div>
+          <div><dt>{{ t('portfolioItems') }}</dt><dd class="figure">{{ t('count', { n: portfolioCount }) }}</dd></div>
         </dl>
-        <p v-if="resumeState.missing.length" class="input-field-help">{{ resumeState.missing.join(', ') }}을(를) 채우면 이력서를 내보낼 때 바로 쓸 수 있어요.</p>
-        <p class="input-field-help">지원 공고별 문서 버전 저장은 아직 준비 중이에요.</p>
+        <p v-if="resumeState.missing.length" class="input-field-help">{{ t('resumeMissing', { fields: resumeState.missing.map((label) => resumeFieldText(label, locale)).join(', ') }) }}</p>
+        <!-- 지원별 문서 버전은 PR-25에서 만들었다. 예전 '준비 중' 문구를 고쳤다 -->
+        <p class="input-field-help">{{ t('versionsHint') }}</p>
       </template>
     </section>
   </div>

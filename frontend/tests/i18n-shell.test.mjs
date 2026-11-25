@@ -86,3 +86,20 @@ test('좁은 화면(760px 이하)에서도 설정 구역을 고를 수 있다', 
   assert.match(view, /\.setting-mobile-pick \{ display: none; \}/)
   assert.equal(shellText('settingsSection', 'en'), 'Settings section')
 })
+
+test('Q-38 2단계: 커리어 대시보드 본문 문구는 영어가 모두 있고 한글이 섞이지 않으며, 예전 "준비 중" 문구는 없다', async () => {
+  const m = await import('../src/features/i18n/careerMessages.mjs')
+  const { CAREER_GOALS, ACTIVITY_TYPES, APPLICATION_STATUSES, RESUME_FIELDS } = await import('../src/features/career/careerModel.mjs')
+  const english = [...Object.values(m.CAREER_TEXT).map((e) => e.en), ...Object.values(m.GOALS_EN).flatMap((g) => [g.label, g.desc]), ...Object.values(m.ACTIVITY_TYPES_EN), ...Object.values(m.STATUSES_EN), ...Object.values(m.UPCOMING_EN), ...Object.values(m.RESUME_FIELDS_EN)]
+  assert.deepEqual(english.filter((text) => !text || /[가-힣]/.test(text)), [])
+  assert.deepEqual(CAREER_GOALS.map((g) => g.id).filter((id) => !m.GOALS_EN[id]), [])
+  assert.deepEqual(ACTIVITY_TYPES.map((a) => a.id).filter((id) => !m.ACTIVITY_TYPES_EN[id]), [])
+  assert.deepEqual(APPLICATION_STATUSES.map((s) => s.id).filter((id) => !m.STATUSES_EN[id]), [])
+  assert.deepEqual(RESUME_FIELDS.map((f) => f.label).filter((label) => !m.RESUME_FIELDS_EN[label]), [])
+  assert.equal(m.careerText('pipelineBasis', 'en', { all: 1, open: 1 }), 'Applications: 1 · Open: 1')
+  assert.equal(m.careerText('pipelineBasis', 'ko', { all: 3, open: 2 }), '전체 지원 3건 · 진행 중 2건')
+  assert.deepEqual([m.dueText(0, 'en', '오늘'), m.dueText(1, 'en', ''), m.dueText(-3, 'en', ''), m.dueText(2, 'ko', '2일 남음')], ['Today', '1 day left', '3 days ago', '2일 남음'])
+  const view = read('src/views/career/CareerDashboardView.vue')
+  assert.doesNotMatch(view, /아직 준비 중이에요|을\(를\)/)
+  assert.match(view, /<div v-else class="career-sections" :lang="locale">/)
+})
