@@ -14,7 +14,7 @@ for (const file of files(root)) {
   const source = readFileSync(file, 'utf8')
   // features/career·planner의 표시 함수는 번역 함수를 t로 받는다(기본값은 한국어 그대로). App.vue 등의 t('키')는 다른 사전이라 이 폴더만 본다
   const pattern = /\/features\/(career|planner)\//.test(file) ? /\b(?:tr|t)\('((?:\\'|[^'])*)'/g : /\btr\('((?:\\'|[^'])*)'/g
-  for (const m of source.matchAll(pattern)) used.set(m[1].replaceAll("\\'", "'"), file.slice(root.length))
+  for (const m of source.matchAll(pattern)) used.set(m[1].replaceAll("\\'", "'").replaceAll('\\n', '\n'), file.slice(root.length))
 }
 const names = (text) => [...text.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort()
 
@@ -99,6 +99,14 @@ test('목록에서 이름을 꺼내 tr에 넘기는 값(상태·문서·고용 �
   const eight = ['views/routines/RoutineListView.vue', 'views/home/DdayView.vue', 'views/events/DdayManageView.vue', 'views/money/MoneyLogView.vue']
     .flatMap((file) => [...readFileSync(new URL('../src/' + file, import.meta.url), 'utf8').matchAll(/(?:label|name|verdict|detail|risk): '([^']+)'/g)].map((m) => m[1]))
   assert.deepEqual(eight.filter((ko) => !(ko in EN)), [])
+  // 9단계: 기간 요약 프리셋, 일정 템플릿 반복, 캔버스 라벨·우선순위
+  const nine = ['views/diary/DiarySummaryView.vue', 'views/events/EventTemplatesView.vue', 'views/planner/ProjectCanvasView.vue']
+    .flatMap((file) => [...readFileSync(new URL('../src/' + file, import.meta.url), 'utf8').matchAll(/(?:label|repeat): '([^']+)'/g)].map((m) => m[1]))
+  const canvas = readFileSync(new URL('../src/store/canvas.js', import.meta.url), 'utf8')
+  const canvasValues = [...canvas.match(/LABELS = \[([^\]]+)\]/)[1].matchAll(/'([^']+)'/g), ...canvas.matchAll(/label: '([^']+)'/g)].map((m) => m[1])
+  assert.ok(canvasValues.length >= 8)
+  assert.deepEqual([...nine, ...canvasValues].filter((ko) => !(ko in EN)), [])
+  assert.equal(documentLang('en', '/dday/3'), 'en')
   const current = { startDate: '2026-01-05', employmentStatus: 'current' }
   assert.equal(periodLabel(current, en), '2026.01 ~ Current')
   assert.equal(periodLabel(current), '2026.01 ~ 재직 중')

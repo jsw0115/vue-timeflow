@@ -1,4 +1,5 @@
 <script setup>
+import { tr } from '../../store/locale'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import Modal from '../../components/Modal.vue'
@@ -58,7 +59,7 @@ function save() {
   editing.value = null
 }
 function remove(t) {
-  if (!window.confirm('\u2018' + t.title + '\u2019 템플릿을 삭제할까요?')) return
+  if (!window.confirm(tr('‘{title}’ 템플릿을 삭제할까요?', { title: t.title }))) return
   templates.value = templates.value.filter((x) => x.id !== t.id)
 }
 /** 템플릿으로 새 일정 만들기 — 일정 화면의 생성 모달을 연다 */
@@ -67,68 +68,68 @@ function apply(t) {
   router.push({ path: '/events', query: { new: String(Date.now()), template: t.title } })
 }
 function alarmLabel(min) {
-  if (!min) return '알림 없음'
-  if (min >= 1440) return Math.round(min / 1440) + '일 전'
-  if (min >= 60) return Math.round(min / 60) + '시간 전'
-  return min + '분 전'
+  if (!min) return tr('알림 없음')
+  if (min >= 1440) return Math.round(min / 1440) === 1 ? tr('1일 전') : tr('{n}일 전', { n: Math.round(min / 1440) })
+  if (min >= 60) return tr('{n}시간 전', { n: Math.round(min / 60) })
+  return tr('{n}분 전', { n: min })
 }
 </script>
 
 <template>
   <div class="page-tools">
-    <span class="form-note" style="margin: 0">자주 만드는 일정을 저장해두세요</span>
+    <span class="form-note" style="margin: 0">{{ tr('자주 만드는 일정을 저장해두세요') }}</span>
     <span></span>
-    <PageActions><button class="primary" @click="openAdd">+ 템플릿 저장</button></PageActions>
+    <PageActions><button class="primary" @click="openAdd">{{ tr('+ 템플릿 저장') }}</button></PageActions>
   </div>
 
   <ListFilterBar
     v-model:query="query"
     v-model:filters="filters"
     :groups="FILTER_GROUPS"
-    placeholder="템플릿 이름·분류 검색"
+    :placeholder="tr('템플릿 이름·분류 검색')"
     :result-count="visible.length"
     :total-count="templates.length"
   />
 
   <section class="card list">
     <div class="list-head" style="grid-template-columns: 1.8fr .8fr .8fr 1.2fr 1fr .8fr 1.4fr">
-      <span>템플릿</span><span>분류</span><span>소요</span><span>반복</span><span>알림</span><span>사용</span><span>관리</span>
+      <span>{{ tr('템플릿') }}</span><span>{{ tr('분류') }}</span><span>{{ tr('소요') }}</span><span>{{ tr('반복') }}</span><span>{{ tr('알림') }}</span><span>{{ tr('사용') }}</span><span>{{ tr('관리') }}</span>
     </div>
     <div class="row" style="grid-template-columns: 1.8fr .8fr .8fr 1.2fr 1fr .8fr 1.4fr" v-for="t in visible" :key="t.id">
       <label><i :class="['tpl-dot', t.color]"></i>{{ t.title }}</label>
-      <span class="tag">{{ t.category }}</span>
-      <span class="figure">{{ t.duration }}분</span>
-      <span>{{ t.repeat }}</span>
+      <span class="tag">{{ tr(t.category) }}</span>
+      <span class="figure">{{ tr('{n}분', { n: t.duration }) }}</span>
+      <span>{{ tr(t.repeat) }}</span>
       <span>{{ alarmLabel(t.alarm) }}</span>
-      <span class="figure">{{ t.uses }}회</span>
+      <span class="figure">{{ tr('{n}회', { n: t.uses }) }}</span>
       <span style="display: flex; gap: 6px">
-        <button class="review" style="margin: 0" @click="apply(t)">적용</button>
-        <button class="review" style="margin: 0" @click="openEdit(t)">수정</button>
-        <button class="review" style="margin: 0" @click="remove(t)">삭제</button>
+        <button class="review" style="margin: 0" @click="apply(t)">{{ tr('적용') }}</button>
+        <button class="review" style="margin: 0" @click="openEdit(t)">{{ tr('수정') }}</button>
+        <button class="review" style="margin: 0" @click="remove(t)">{{ tr('삭제') }}</button>
       </span>
     </div>
-    <p v-if="!visible.length" class="empty-state" role="status">조건에 맞는 템플릿이 없어요. 검색어를 바꾸거나 '+ 템플릿 저장'으로 만들어 보세요.</p>
+    <p v-if="!visible.length" class="empty-state" role="status">{{ tr('조건에 맞는 템플릿이 없어요. 검색어를 바꾸거나 \'+ 템플릿 저장\'으로 만들어 보세요.') }}</p>
   </section>
 
-  <Modal v-if="editing" :title="editing === 'new' ? '템플릿 저장' : '템플릿 수정'" wide @close="editing = null">
-    <label>템플릿 이름<input v-model="draft.title" placeholder="예: 주간 팀 회의" autofocus /></label>
+  <Modal v-if="editing" :title="editing === 'new' ? tr('템플릿 저장') : tr('템플릿 수정')" wide @close="editing = null">
+    <label>{{ tr('템플릿 이름') }}<input v-model="draft.title" :placeholder="tr('예: 주간 팀 회의')" autofocus /></label>
     <div class="form-row">
-      <label style="flex: 1">분류<select v-model="draft.category"><option>업무</option><option>공부</option><option>건강</option><option>휴식</option><option>개인</option></select></label>
-      <label style="flex: 1">소요 시간(분)<input type="number" min="5" step="5" v-model.number="draft.duration" /></label>
+      <label style="flex: 1">{{ tr('분류') }}<select v-model="draft.category"><option value="업무">{{ tr('업무') }}</option><option value="공부">{{ tr('공부') }}</option><option value="건강">{{ tr('건강') }}</option><option value="휴식">{{ tr('휴식') }}</option><option value="개인">{{ tr('개인') }}</option></select></label>
+      <label style="flex: 1">{{ tr('소요 시간(분)') }}<input type="number" min="5" step="5" v-model.number="draft.duration" /></label>
     </div>
     <div class="form-row">
-      <label style="flex: 1">반복<select v-model="draft.repeat"><option>반복 없음</option><option>매주 월 09:00</option><option>매일</option><option>매월 1일</option></select></label>
-      <label style="flex: 1">알림<select v-model.number="draft.alarm"><option :value="0">알림 없음</option><option :value="10">10분 전</option><option :value="60">1시간 전</option><option :value="1440">1일 전</option></select></label>
+      <label style="flex: 1">{{ tr('반복') }}<select v-model="draft.repeat"><option value="반복 없음">{{ tr('반복 없음') }}</option><option value="매주 월 09:00">{{ tr('매주 월 09:00') }}</option><option value="매일">{{ tr('매일') }}</option><option value="매월 1일">{{ tr('매월 1일') }}</option></select></label>
+      <label style="flex: 1">{{ tr('알림') }}<select v-model.number="draft.alarm"><option :value="0">{{ tr('알림 없음') }}</option><option :value="10">{{ tr('10분 전') }}</option><option :value="60">{{ tr('1시간 전') }}</option><option :value="1440">{{ tr('1일 전') }}</option></select></label>
     </div>
-    <label>색상</label>
+    <label>{{ tr('색상') }}</label>
     <div class="swatch-row">
       <button v-for="c in COLORS" :key="c" type="button" class="cat-swatch tpl-dot" :class="[c, { picked: draft.color === c }]" @click="draft.color = c"></button>
     </div>
-    <p v-if="!canSave" class="form-note">이름을 입력하고 소요 시간을 1분 이상으로 설정해주세요.</p>
+    <p v-if="!canSave" class="form-note">{{ tr('이름을 입력하고 소요 시간을 1분 이상으로 설정해주세요.') }}</p>
 
     <template #footer>
-      <button type="button" class="modal-secondary" @click="editing = null">취소</button>
-      <button class="primary" :disabled="!canSave" @click="save">{{ editing === 'new' ? '저장하기' : '변경 저장' }}</button>
+      <button type="button" class="modal-secondary" @click="editing = null">{{ tr('취소') }}</button>
+      <button class="primary" :disabled="!canSave" @click="save">{{ editing === 'new' ? tr('저장하기') : tr('변경 저장') }}</button>
     </template>
   </Modal>
 </template>

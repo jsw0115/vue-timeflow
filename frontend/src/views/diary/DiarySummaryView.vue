@@ -1,4 +1,5 @@
 <script setup>
+import { tr } from '../../store/locale'
 import { computed, ref } from 'vue'
 
 /**
@@ -62,56 +63,59 @@ const buckets = computed(() => {
 const written = computed(() => Math.min(dayCount.value, Math.round(dayCount.value * 0.72)))
 const highlights = computed(() => Math.max(1, Math.round(dayCount.value / 10)))
 const topMood = computed(() => (buckets.value.reduce((a, b) => a + b.mood, 0) / buckets.value.length > 62 ? '좋음' : '보통'))
+// 집계 단위 이름(일·주·월)과 칸 이름은 본문 언어로 보인다
+const UNIT = { 일: '일 단위', 주: '주 단위', 월: '월 단위' }
+const bucketName = (b, i) => tr(b.label.endsWith('일') ? '{n}일째' : b.label.endsWith('주') ? '{n}주째' : '{n}개월째', { n: i + 1 })
 </script>
 
 <template>
+  <p class="sample-label">{{ tr('이 화면의 기간 요약과 수치는 시연용 예시 데이터예요. 실제 다이어리 기록이나 AI로 계산하지 않아요.') }}</p>
   <div class="page-tools">
     <span></span>
     <div class="filter">
-      <button v-for="p in PRESETS" :key="p.id" :class="{ selected: preset === p.id }" @click="applyPreset(p)">{{ p.label }}</button>
+      <button v-for="p in PRESETS" :key="p.id" :class="{ selected: preset === p.id }" @click="applyPreset(p)">{{ tr(p.label) }}</button>
     </div>
   </div>
 
   <section class="card" style="margin-bottom: 16px">
     <div class="range-row">
-      <label style="margin: 0">시작<input type="date" v-model="from" @change="onManualDate" /></label>
+      <label style="margin: 0">{{ tr('시작일') }}<input type="date" v-model="from" @change="onManualDate" /></label>
       <span class="range-sep">→</span>
-      <label style="margin: 0">종료<input type="date" v-model="to" @change="onManualDate" /></label>
+      <label style="margin: 0">{{ tr('종료일') }}<input type="date" v-model="to" @change="onManualDate" /></label>
       <span class="badge" :class="invalid ? 'danger' : 'ok'">
-        {{ invalid ? '종료일이 시작일보다 빨라요' : dayCount + '일 · ' + bucketUnit + ' 단위 집계' }}
+        {{ invalid ? tr('종료일이 시작일보다 빨라요') : tr('{n}일 · {unit} 집계', { n: dayCount, unit: tr(UNIT[bucketUnit]) }) }}
       </span>
     </div>
   </section>
 
   <template v-if="!invalid">
     <section class="card hero" style="min-height: auto; padding: 24px 28px; flex-direction: column; align-items: flex-start; margin-bottom: 16px">
-      <span class="pill">AI 요약</span>
+      <span class="pill">{{ tr('요약 예시') }}</span>
       <p style="margin-top: 12px">
-        {{ from }} ~ {{ to }} 사이 {{ written }}일을 기록했어요. 새 프로젝트로 바빴지만 운동 루틴 덕분에 컨디션은 좋았던 기간이에요.
-        ‘회의’와 ‘운동’이 가장 자주 등장한 키워드입니다.
+        {{ tr('{from} ~ {to} 사이 {n}일을 기록했어요. 새 프로젝트로 바빴지만 운동 루틴 덕분에 컨디션은 좋았던 기간이에요. ‘회의’와 ‘운동’이 가장 자주 등장한 키워드입니다.', { from, to, n: written }) }}
       </p>
     </section>
 
     <div class="metrics" style="margin-bottom: 16px">
-      <article><span>작성일</span><b class="figure">{{ written }}<small>일</small></b><small>전체 {{ dayCount }}일 중</small></article>
-      <article><span>작성률</span><b class="figure">{{ Math.round((written / dayCount) * 100) }}<small>%</small></b></article>
-      <article><span>가장 많은 감정</span><b class="figure" style="font-size: 1.1875rem">{{ topMood }}</b></article>
-      <article><span>하이라이트</span><b class="figure">{{ highlights }}<small>건</small></b></article>
+      <article><span>{{ tr('작성일') }}</span><b class="figure">{{ written }}<small>{{ tr('일') }}</small></b><small>{{ tr('전체 {n}일 중', { n: dayCount }) }}</small></article>
+      <article><span>{{ tr('작성률') }}</span><b class="figure">{{ Math.round((written / dayCount) * 100) }}<small>%</small></b></article>
+      <article><span>{{ tr('가장 많은 감정') }}</span><b class="figure" style="font-size: 1.1875rem">{{ tr(topMood) }}</b></article>
+      <article><span>{{ tr('하이라이트') }}</span><b class="figure">{{ highlights }}<small>{{ tr('건') }}</small></b></article>
     </div>
 
     <section class="card">
-      <h3>감정 변화 추이 · {{ bucketUnit }} 단위</h3>
+      <h3>{{ tr('감정 변화 추이 · {unit}', { unit: tr(UNIT[bucketUnit]) }) }}</h3>
       <div class="chart">
-        <div v-for="b in buckets" :key="b.label">
-          <b :style="{ height: b.mood + '%' }" :title="b.label + ' · ' + b.mood"></b>
-          <small>{{ b.label }}</small>
+        <div v-for="(b, i) in buckets" :key="b.label">
+          <b :style="{ height: b.mood + '%' }" :title="bucketName(b, i) + ' · ' + b.mood"></b>
+          <small>{{ bucketName(b, i) }}</small>
         </div>
       </div>
-      <p class="form-note" style="margin-top: 12px">기간이 길어지면 일 → 주 → 월 단위로 자동 묶어서 보여줘요.</p>
+      <p class="form-note" style="margin-top: 12px">{{ tr('기간이 길어지면 일 → 주 → 월 단위로 자동 묶어서 보여줘요.') }}</p>
     </section>
   </template>
 
   <section v-else class="card">
-    <p>기간을 다시 선택해주세요. 종료일은 시작일과 같거나 이후여야 해요.</p>
+    <p>{{ tr('기간을 다시 선택해주세요. 종료일은 시작일과 같거나 이후여야 해요.') }}</p>
   </section>
 </template>
