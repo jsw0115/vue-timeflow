@@ -7193,7 +7193,7 @@
         "items": {
           "type": "array",
           "items": {
-            "$ref": "#/components/schemas/PORTFOLIOCreate"
+            "$ref": "#/components/schemas/PublicPortfolioItem"
           },
           "maxItems": 500
         },

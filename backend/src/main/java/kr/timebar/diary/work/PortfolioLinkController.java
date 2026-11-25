@@ -17,6 +17,8 @@ public class PortfolioLinkController {
     public static final Set<String> SCOPES = Set.of("public", "link");
     public static final Set<Integer> LINK_DAYS = Set.of(1, 7, 30);
     public static final int MAX_ACTIVE_LINKS = 20;
+    /** 공개 화면에 보이는 필드(PR-26). 근거 연결 ID(activityIds·experienceId)와 새로 생길 내부 필드는 내보내지 않는다. */
+    public static final List<String> PUBLIC_FIELDS = List.of("title", "kind", "body", "role", "stack", "problem", "process", "outcome", "contribution", "links");
     private final FeatureStore store;
     private final kr.timebar.diary.auth.UserRepository users;
     public PortfolioLinkController(FeatureStore store, kr.timebar.diary.auth.UserRepository users) { this.store = store; this.users = users; }
@@ -76,11 +78,17 @@ public class PortfolioLinkController {
         if (users.findById(row.get("userId").toString()).filter(kr.timebar.diary.auth.UserEntity::isActive).isEmpty()) throw new ApiException(ErrorCode.NOT_FOUND);
         if (expired(row)) throw new ApiException(ErrorCode.NOT_FOUND);
         List<Map<String,Object>> items = new ArrayList<>();
-        for (Object id : (List<?>)row.get("itemIds")) store.optional(row.get("userId").toString(), FeatureType.PORTFOLIO, id.toString()).ifPresent(item -> items.add(FeatureStore.payload(item)));
+        for (Object id : (List<?>)row.get("itemIds")) store.optional(row.get("userId").toString(), FeatureType.PORTFOLIO, id.toString()).ifPresent(item -> items.add(publicView(item)));
         var result = new LinkedHashMap<String,Object>();
         result.put("items", items); result.put("scope", scope(row));
         if (row.get("expiresAt") != null) result.put("expiresAt", row.get("expiresAt"));
         return ApiResponse.ok(result);
+    }
+
+    private static Map<String,Object> publicView(Map<String,Object> item) {
+        var result = new LinkedHashMap<String,Object>();
+        for (String key : PUBLIC_FIELDS) if (item.get(key) != null) result.put(key, item.get(key));
+        return result;
     }
 
     private List<Map<String,Object>> active(String user) {

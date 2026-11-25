@@ -42,8 +42,10 @@ export const careerKind = {
 
 /** 포트폴리오 항목. 화면의 수정일은 서버 수정 시각의 날짜다. */
 export const portfolioKind = {
-  kind: 'portfolio', path: '/api/work/portfolio', fields: ['title', 'body', 'kind'], demoFields: ['title'],
-  toLocal: (row) => ({ ...row, updated: String(row.updatedAt ?? '').slice(0, 10).replaceAll('-', '.') }),
+  kind: 'portfolio', path: '/api/work/portfolio',
+  // 구성 칸·결과물 링크·근거 연결(PR-26)
+  fields: ['title', 'body', 'kind', 'role', 'stack', 'problem', 'process', 'outcome', 'contribution', 'links', 'activityIds', 'experienceId'], demoFields: ['title'],
+  toLocal: (row) => ({ ...row, links: row.links ?? [], activityIds: row.activityIds ?? [], updated: String(row.updatedAt ?? '').slice(0, 10).replaceAll('-', '.') }),
 }
 
 /** 업무 기록 종류. 서버(FeatureInput.validateWork)가 받는 다섯 가지다(PR-10 4단계). */

@@ -23966,7 +23966,7 @@
                         "items": {
                           "type": "array",
                           "items": {
-                            "$ref": "#/components/schemas/PORTFOLIOCreate"
+                            "$ref": "#/components/schemas/PublicPortfolioItem"
                           },
                           "maxItems": 500
                         },
@@ -47276,13 +47276,121 @@
             "type": "string",
             "maxLength": 200,
             "minLength": 1
+          },
+          "role": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "stack": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "problem": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "process": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "contribution": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "links": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "maxLength": 2000
+                },
+                "maxItems": 10
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "activityIds": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                "maxItems": 20
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "experienceId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
           "title",
           "kind"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "포트폴리오 항목(PR-26). body는 프로젝트 소개, problem·process·outcome·contribution은 문제·과정·성과·개인 기여(각 20000자), role·stack은 역할·기술(200자). links는 결과물 http/https 주소 최대 10개. activityIds(최대 20)와 experienceId는 본인 커리어 활동·경력만 남고, 지워졌거나 다른 계정의 ID는 오류 없이 저장에서 빠진다. 공개 링크에는 activityIds·experienceId가 나가지 않는다."
       },
       "PORTFOLIOUpdate": {
         "type": "object",
@@ -47308,6 +47416,113 @@
             "maxLength": 200,
             "minLength": 1
           },
+          "role": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "stack": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "problem": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "process": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "contribution": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "links": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "maxLength": 2000
+                },
+                "maxItems": 10
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "activityIds": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                "maxItems": 20
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "experienceId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "version": {
             "type": "integer",
             "minimum": 1
@@ -47318,7 +47533,8 @@
           "kind",
           "version"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "포트폴리오 항목(PR-26). body는 프로젝트 소개, problem·process·outcome·contribution은 문제·과정·성과·개인 기여(각 20000자), role·stack은 역할·기술(200자). links는 결과물 http/https 주소 최대 10개. activityIds(최대 20)와 experienceId는 본인 커리어 활동·경력만 남고, 지워졌거나 다른 계정의 ID는 오류 없이 저장에서 빠진다. 공개 링크에는 activityIds·experienceId가 나가지 않는다."
       },
       "PORTFOLIOUpsert": {
         "type": "object",
@@ -47344,6 +47560,113 @@
             "maxLength": 200,
             "minLength": 1
           },
+          "role": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "stack": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "problem": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "process": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "contribution": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "links": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "maxLength": 2000
+                },
+                "maxItems": 10
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "activityIds": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                "maxItems": 20
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "experienceId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "version": {
             "type": "integer",
             "minimum": 1
@@ -47353,7 +47676,8 @@
           "title",
           "kind"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "포트폴리오 항목(PR-26). body는 프로젝트 소개, problem·process·outcome·contribution은 문제·과정·성과·개인 기여(각 20000자), role·stack은 역할·기술(200자). links는 결과물 http/https 주소 최대 10개. activityIds(최대 20)와 experienceId는 본인 커리어 활동·경력만 남고, 지워졌거나 다른 계정의 ID는 오류 없이 저장에서 빠진다. 공개 링크에는 activityIds·experienceId가 나가지 않는다."
       },
       "PORTFOLIOResponse": {
         "type": "object",
@@ -47378,6 +47702,113 @@
             "type": "string",
             "maxLength": 200,
             "minLength": 1
+          },
+          "role": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "stack": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "problem": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "process": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "contribution": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "links": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "maxLength": 2000
+                },
+                "maxItems": 10
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "activityIds": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                "maxItems": 20
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "experienceId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "id": {
             "type": "string",
@@ -52287,6 +52718,61 @@
           "tasks"
         ],
         "additionalProperties": false
+      },
+      "PublicPortfolioItem": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "kind": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "body": {
+            "type": "string",
+            "maxLength": 20000
+          },
+          "role": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "stack": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "problem": {
+            "type": "string",
+            "maxLength": 20000
+          },
+          "process": {
+            "type": "string",
+            "maxLength": 20000
+          },
+          "outcome": {
+            "type": "string",
+            "maxLength": 20000
+          },
+          "contribution": {
+            "type": "string",
+            "maxLength": 20000
+          },
+          "links": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 2000
+            },
+            "maxItems": 10
+          }
+        },
+        "required": [
+          "title",
+          "kind"
+        ],
+        "additionalProperties": false,
+        "description": "공개 화면에 나가는 필드만 있다(PR-26). 근거 연결 ID와 기록 ID는 없다."
       },
       "DocumentVersion": {
         "type": "object",

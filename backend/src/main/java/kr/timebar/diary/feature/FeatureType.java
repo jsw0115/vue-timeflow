@@ -25,7 +25,8 @@ public enum FeatureType {
     WIKI("title body space parentId pinned", "title space"),
     CAREER("title period role company stack achievements employmentType department startDate endDate employmentStatus", "title role"),
     RESUME("name headline years skills education", "name"),
-    PORTFOLIO("title body kind", "title kind"),
+    // 포트폴리오 항목(PR-26): 개편안 4.3·문서 유형 표의 소개(body)·문제·역할·기술·과정·성과·개인 기여·결과물 링크와 근거(커리어 활동·경력) 연결
+    PORTFOLIO("title body kind role stack problem process outcome contribution links activityIds experienceId", "title kind"),
     PORTFOLIO_LINK("itemIds", "itemIds"),
     // 커리어 활동 원장(docs/design 04 FD-85 후보). 기존 경력(CAREER)을 experienceId로 참조하고 원천 기록을 복제하지 않는다
     CAREER_ACTIVITY("title body activityType date endDate experienceId role skillTags achievements links visibility tags", "title activityType date"),

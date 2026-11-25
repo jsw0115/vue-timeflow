@@ -16,6 +16,8 @@ import { useCapabilityStatus } from '../../features/integrations/useCapabilitySt
 import HelpPopover from '../../components/HelpPopover.vue'
 import PortfolioLinkPanel from '../../components/PortfolioLinkPanel.vue'
 import DocumentVersionPanel from '../../components/DocumentVersionPanel.vue'
+import { activityStore } from '../../store/careerLedger'
+import { MAX_ACTIVITIES, MAX_LINKS, PORTFOLIO_SECTIONS, evidenceOf, filledSections, linksFromText, portfolioDraft, portfolioValues } from '../../features/career/portfolioItems.mjs'
 import { exportPdf, exportWord, sectionsToHtml } from '../../store/docExport'
 
 /**
@@ -166,18 +168,54 @@ function useLatestResume() {
   resumeSaving.reset()
 }
 
-/* 포트폴리오 항목 추가·삭제(로그인 상태) */
+/* 포트폴리오 항목 추가·수정·삭제(로그인 상태). 구성 칸·결과물 링크·근거 연결은 PR-26 */
 const PORTFOLIO_KINDS = ['케이스 스터디', '문서', '회고', '기타']
 const portfolioEditor = ref(null)
-const portfolioSaving = createSaveState({ fields: { title: ['title', '제목'], kind: ['kind', '종류'] } })
-function openPortfolio() {
+const portfolioSaving = createSaveState({ fields: { title: ['title', '제목'], kind: ['kind', '종류'], links: ['links', '결과물 링크'] } })
+const portfolioConflict = ref(null)
+const activities = computed(() => activityStore.list.value)
+const evidenceLoaded = computed(() => !!activityStore.state.loaded && !!careerStore.state.loaded)
+const evidence = (p) => evidenceOf(p, { activities: activities.value, experiences: careerStore.list.value, loaded: evidenceLoaded.value })
+const portfolioLinks = computed(() => (portfolioEditor.value ? linksFromText(portfolioEditor.value.draft.linksText) : { links: [], invalid: [] }))
+const portfolioBroken = computed(() => (portfolioEditor.value ? evidence(portfolioEditor.value.draft).activities.filter((a) => a.broken) : []))
+const portfolioCanSave = computed(() => {
+  const draft = portfolioEditor.value?.draft
+  return !!draft?.title.trim() && !portfolioLinks.value.invalid.length && portfolioLinks.value.links.length <= MAX_LINKS && draft.activityIds.length <= MAX_ACTIVITIES
+})
+function openPortfolio(p = null) {
   portfolioSaving.reset()
-  portfolioEditor.value = { title: '', kind: PORTFOLIO_KINDS[0], body: '' }
+  portfolioConflict.value = null
+  portfolioEditor.value = { base: p ? { ...p } : null, draft: portfolioDraft(p, PORTFOLIO_KINDS[0]) }
+}
+function toggleEvidence(id) {
+  const ids = portfolioEditor.value.draft.activityIds
+  portfolioEditor.value.draft.activityIds = ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]
 }
 async function savePortfolio() {
-  if (!portfolioEditor.value.title.trim()) return
-  const result = await portfolioSaving.run(() => portfolioStore.create({ ...portfolioEditor.value, title: portfolioEditor.value.title.trim() }))
-  if (result.ok) portfolioEditor.value = null
+  if (!portfolioCanSave.value) return
+  const { base, draft } = portfolioEditor.value
+  const values = portfolioValues(draft)
+  portfolioConflict.value = null
+  const result = await portfolioSaving.run(() => (base ? portfolioStore.update(base, values) : portfolioStore.create(values)))
+  if (result.ok) { portfolioEditor.value = null; return }
+  if (result.error.kind === 'conflict') portfolioConflict.value = { latest: { ...(result.error.latest ?? base) } }
+}
+const portfolioCompareRows = computed(() => {
+  if (!portfolioConflict.value) return []
+  const latest = portfolioConflict.value.latest, mine = portfolioValues(portfolioEditor.value.draft)
+  return [
+    { label: '항목 · 종류', mine: mine.title + ' · ' + mine.kind, latest: (latest.title ?? '') + ' · ' + (latest.kind ?? '') },
+    ...PORTFOLIO_SECTIONS.map((sec) => ({ label: sec.label, mine: mine[sec.key], latest: String(latest[sec.key] ?? '') })),
+    { label: '결과물 링크', mine: mine.links.join('\n'), latest: (latest.links ?? []).join('\n') },
+  ]
+})
+function keepMyPortfolio() {
+  portfolioEditor.value.base = { ...portfolioConflict.value.latest }
+  portfolioConflict.value = null
+  savePortfolio()
+}
+function useLatestPortfolio() {
+  openPortfolio(portfolioConflict.value.latest)
 }
 async function removePortfolio(p) {
   if (!window.confirm('‘' + p.title + '’ 항목을 삭제할까요?')) return
@@ -261,6 +299,12 @@ function buildDoc(kind) {
       { type: 'title', text: resume.value.name + ' 포트폴리오' },
       { type: 'meta', text: '항목 ' + items.length + '건 · 공개 범위 ' + VISIBILITY[workPrivacy.portfolioVisibility].label },
       { type: 'table', head: ['항목', '종류', '수정일'], rows: items.map((p) => [p.title, p.kind, p.updated]) },
+      // 항목별 구성 칸과 결과물 링크(PR-26). 근거 연결(활동·경력)은 내보내지 않는다
+      ...items.flatMap((p) => [
+        { type: 'h2', text: p.title },
+        ...filledSections(p).flatMap((sec) => [{ type: 'meta', text: sec.label }, { type: 'p', text: sec.value }]),
+        ...((p.links ?? []).length ? [{ type: 'meta', text: '결과물 링크' }, { type: 'list', items: p.links }] : []),
+      ]),
     ],
   }
 }
@@ -406,16 +450,16 @@ function onVisibilityChange(v) {
       </div>
       <p class="form-note">링크 공개를 켜도, 아래에서 직접 고른 항목만 열립니다. 지금 공개중인 항목 {{ sharedCount }}개.</p>
     </section>
-    <button v-if="onServer" type="button" class="button-secondary" style="margin-bottom: 12px" @click="openPortfolio">항목 추가</button>
+    <button v-if="onServer" type="button" class="button-secondary" style="margin-bottom: 12px" @click="openPortfolio()">항목 추가</button>
     <div v-if="onServer && portfolioStore.state.loaded && !portfolio.length" class="empty-state" role="status"><p>아직 포트폴리오 항목이 없어요. 항목을 추가해 보세요.</p></div>
 
     <section class="card list">
       <div class="list-head" style="grid-template-columns: 2fr 1fr 1fr 1fr"><span>항목</span><span>종류</span><span>수정일</span><span>{{ onServer ? '관리' : '링크 공개' }}</span></div>
       <div class="row" style="grid-template-columns: 2fr 1fr 1fr 1fr" v-for="p in portfolio" :key="p.id">
-        <label>{{ p.title }}</label>
+        <span class="portfolio-title">{{ p.title }}<small v-if="onServer && (p.activityIds?.length || p.experienceId)" class="portfolio-evidence">근거 <span class="figure">{{ evidence(p).activities.length + (p.experienceId ? 1 : 0) }}</span>건<template v-if="evidence(p).activities.some((a) => a.broken) || evidence(p).experience?.broken"> · 지워진 근거 있음</template></small></span>
         <span class="tag">{{ p.kind }}</span>
         <span class="figure">{{ p.updated }}</span>
-        <span v-if="onServer" style="display: flex; align-items: center; gap: 6px"><button class="review" style="margin: 0" @click="removePortfolio(p)">삭제</button></span>
+        <span v-if="onServer" style="display: flex; align-items: center; gap: 6px"><button class="review" style="margin: 0" :aria-label="p.title + ' 수정'" @click="openPortfolio(p)">수정</button><button class="review" style="margin: 0" :aria-label="p.title + ' 삭제'" @click="removePortfolio(p)">삭제</button></span>
         <span v-else>
           <button
             type="button"
@@ -507,14 +551,34 @@ function onVisibilityChange(v) {
       <button class="primary" :disabled="!projectCanSave || !!projectConflict" :aria-busy="projectSaving.state.status === 'saving' ? 'true' : undefined" @click="saveProject">{{ projectSaving.state.status === 'saving' ? '저장하는 중' : '저장하기' }}</button>
     </template>
   </Modal>
-  <Modal v-if="portfolioEditor" title="포트폴리오 항목 추가" @close="portfolioEditor = null">
-    <label>항목<input v-model="portfolioEditor.title" maxlength="200" /></label>
-    <label>종류<select v-model="portfolioEditor.kind"><option v-for="kind in PORTFOLIO_KINDS" :key="kind">{{ kind }}</option></select></label>
-    <label>내용<textarea v-model="portfolioEditor.body" rows="4"></textarea></label>
+  <Modal v-if="portfolioEditor" :title="portfolioEditor.base ? '포트폴리오 항목 수정' : '포트폴리오 항목 추가'" wide @close="portfolioEditor = null">
+    <div class="career-detail-grid">
+      <label>항목<input v-model="portfolioEditor.draft.title" maxlength="200" /></label>
+      <label>종류<select v-model="portfolioEditor.draft.kind"><option v-for="kind in PORTFOLIO_KINDS" :key="kind">{{ kind }}</option></select></label>
+    </div>
+    <p class="input-field-help portfolio-public-note">공개 링크를 열면 아래 칸과 결과물 링크가 그대로 보여요. 회사 기밀·개인정보·비공개 저장소 내용은 적지 마세요. 근거 연결은 공개 화면에 나가지 않아요.</p>
+    <template v-for="sec in PORTFOLIO_SECTIONS" :key="sec.key">
+      <label v-if="sec.long">{{ sec.label }}<textarea v-model="portfolioEditor.draft[sec.key]" rows="3" maxlength="20000"></textarea></label>
+      <label v-else>{{ sec.label }}<input v-model="portfolioEditor.draft[sec.key]" maxlength="200" /></label>
+    </template>
+    <label>결과물 링크(한 줄에 하나, 최대 {{ MAX_LINKS }}개)<textarea v-model="portfolioEditor.draft.linksText" rows="2" placeholder="https://" :aria-invalid="portfolioLinks.invalid.length ? 'true' : undefined" aria-describedby="portfolio-links-help"></textarea></label>
+    <p id="portfolio-links-help" class="input-field-help" :data-state="portfolioLinks.invalid.length || portfolioLinks.links.length > MAX_LINKS ? 'error' : undefined">{{ portfolioLinks.invalid.length ? 'http 또는 https 주소만 넣을 수 있어요: ' + portfolioLinks.invalid.join(', ') : portfolioLinks.links.length > MAX_LINKS ? '결과물 링크는 ' + MAX_LINKS + '개까지예요.' : '시연 주소나 결과물 문서 주소를 넣어요.' }}</p>
+    <fieldset class="portfolio-evidence-pick">
+      <legend>근거 <span class="figure">{{ portfolioEditor.draft.activityIds.length }}/{{ MAX_ACTIVITIES }}</span></legend>
+      <p class="input-field-help">이 항목의 근거가 되는 경력과 커리어 활동을 골라요. 나만 보고, 지워진 근거는 저장할 때 빠져요.</p>
+      <label>연결할 경력<select v-model="portfolioEditor.draft.experienceId"><option value="">연결 안 함</option><option v-for="c in careerStore.list.value" :key="c.id" :value="c.id">{{ c.title }}</option></select></label>
+      <p v-if="!activities.length" class="input-field-help">커리어 활동이 아직 없어요. 활동 타임라인에서 먼저 남겨 주세요.</p>
+      <div v-else class="portfolio-activity-list">
+        <label v-for="a in activities" :key="a.id" class="menu-check"><input type="checkbox" :checked="portfolioEditor.draft.activityIds.includes(a.id)" :disabled="!portfolioEditor.draft.activityIds.includes(a.id) && portfolioEditor.draft.activityIds.length >= MAX_ACTIVITIES" @change="toggleEvidence(a.id)" />{{ a.date }} {{ a.title }}</label>
+      </div>
+      <p v-if="portfolioBroken.length" class="input-field-help">지워진 활동 <span class="figure">{{ portfolioBroken.length }}</span>건은 저장할 때 빠져요.</p>
+    </fieldset>
+    <p v-if="portfolioSaving.state.fieldMessage" class="input-field-help" data-state="error" role="alert">{{ portfolioSaving.state.fieldMessage }}</p>
+    <ConflictCompare v-if="portfolioConflict" :rows="portfolioCompareRows" :busy="portfolioSaving.state.status === 'saving'" @keep-mine="keepMyPortfolio" @use-latest="useLatestPortfolio" />
     <SaveStatus :state="portfolioSaving.state" mode="server" @retry="savePortfolio" />
     <template #footer>
       <button type="button" class="modal-secondary" @click="portfolioEditor = null">취소</button>
-      <button class="primary" :disabled="!portfolioEditor.title.trim()" :aria-busy="portfolioSaving.state.status === 'saving' ? 'true' : undefined" @click="savePortfolio">{{ portfolioSaving.state.status === 'saving' ? '저장하는 중' : '항목 추가' }}</button>
+      <button class="primary" :disabled="!portfolioCanSave || !!portfolioConflict" :aria-busy="portfolioSaving.state.status === 'saving' ? 'true' : undefined" @click="savePortfolio">{{ portfolioSaving.state.status === 'saving' ? '저장하는 중' : portfolioEditor.base ? '저장하기' : '항목 추가' }}</button>
     </template>
   </Modal>
 </template>
@@ -523,6 +587,15 @@ function onVisibilityChange(v) {
 .career-note { display: block; margin: 0 0 var(--space-md); }
 .career-period-notes { margin: 0 0 var(--space-md); padding: var(--space-md) var(--space-lg); border: 1px solid var(--color-hairline); border-radius: var(--radius-md); background: var(--color-card); }
 .career-period-notes ul { margin: var(--space-xs) 0; padding-left: var(--space-lg); }
+.portfolio-title { display: grid; gap: 2px; min-width: 0; overflow-wrap: anywhere; }
+.portfolio-evidence { color: var(--color-muted); font-size: var(--type-caption-size); }
+.portfolio-public-note { margin: var(--space-md) 0 0; }
+.portfolio-evidence-pick { display: grid; gap: var(--space-xs); margin: var(--space-lg) 0 0; padding: var(--space-md); border: 1px solid var(--color-hairline); border-radius: var(--radius-md); min-width: 0; }
+.portfolio-evidence-pick legend { padding: 0 var(--space-xs); font-weight: 600; }
+.portfolio-evidence-pick p { margin: 0; }
+.portfolio-activity-list { display: grid; max-height: 200px; overflow-y: auto; }
+.portfolio-activity-list .menu-check { display: flex; align-items: center; gap: var(--space-sm); margin: 0; min-height: var(--input-height); font-weight: 400; overflow-wrap: anywhere; }
+.portfolio-activity-list .menu-check input { width: auto; margin: 0; }
 /* 경력 편집 창의 상세 입력. 좁은 화면에서는 한 열로 내린다. 전역 규칙의 첫 label 여백 0을 칸마다 같게 맞춘다 */
 .career-detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); column-gap: var(--space-md); }
 .career-period-grid { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }

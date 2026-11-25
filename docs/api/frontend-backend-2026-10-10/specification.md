@@ -3803,6 +3803,17 @@ file을 multipart/form-data로 전달한다. boundary는 HTTP 클라이언트가
 | title | string | 예 | 길이 ≤ 200 |
 | body | string 또는 null | 아니오 | 기능 규약 참조 |
 | kind | string | 예 | 길이 ≤ 200 |
+| role | string 또는 null | 아니오 | 기능 규약 참조 |
+| stack | string 또는 null | 아니오 | 기능 규약 참조 |
+| problem | string 또는 null | 아니오 | 기능 규약 참조 |
+| process | string 또는 null | 아니오 | 기능 규약 참조 |
+| outcome | string 또는 null | 아니오 | 기능 규약 참조 |
+| contribution | string 또는 null | 아니오 | 기능 규약 참조 |
+| links | array 또는 null | 아니오 | 기능 규약 참조 |
+| activityIds | array 또는 null | 아니오 | 기능 규약 참조 |
+| experienceId | string 또는 null | 아니오 | 기능 규약 참조 |
+
+포트폴리오 항목(PR-26). body는 프로젝트 소개, problem·process·outcome·contribution은 문제·과정·성과·개인 기여(각 20000자), role·stack은 역할·기술(200자). links는 결과물 http/https 주소 최대 10개. activityIds(최대 20)와 experienceId는 본인 커리어 활동·경력만 남고, 지워졌거나 다른 계정의 ID는 오류 없이 저장에서 빠진다. 공개 링크에는 activityIds·experienceId가 나가지 않는다.
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 
@@ -3870,7 +3881,18 @@ file을 multipart/form-data로 전달한다. boundary는 HTTP 클라이언트가
 | title | string | 예 | 길이 ≤ 200 |
 | body | string 또는 null | 아니오 | 기능 규약 참조 |
 | kind | string | 예 | 길이 ≤ 200 |
+| role | string 또는 null | 아니오 | 기능 규약 참조 |
+| stack | string 또는 null | 아니오 | 기능 규약 참조 |
+| problem | string 또는 null | 아니오 | 기능 규약 참조 |
+| process | string 또는 null | 아니오 | 기능 규약 참조 |
+| outcome | string 또는 null | 아니오 | 기능 규약 참조 |
+| contribution | string 또는 null | 아니오 | 기능 규약 참조 |
+| links | array 또는 null | 아니오 | 기능 규약 참조 |
+| activityIds | array 또는 null | 아니오 | 기능 규약 참조 |
+| experienceId | string 또는 null | 아니오 | 기능 규약 참조 |
 | version | integer | 예 | 최소 1 |
+
+포트폴리오 항목(PR-26). body는 프로젝트 소개, problem·process·outcome·contribution은 문제·과정·성과·개인 기여(각 20000자), role·stack은 역할·기술(200자). links는 결과물 http/https 주소 최대 10개. activityIds(최대 20)와 experienceId는 본인 커리어 활동·경력만 남고, 지워졌거나 다른 계정의 ID는 오류 없이 저장에서 빠진다. 공개 링크에는 activityIds·experienceId가 나가지 않는다.
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 

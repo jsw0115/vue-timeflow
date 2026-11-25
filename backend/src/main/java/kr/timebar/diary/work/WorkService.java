@@ -19,6 +19,7 @@ public class WorkService {
     public Map<String, Object> create(String user, FeatureType type, Map<String, Object> body) {
         var data = FeatureInput.validate(type, body);
         parent(user, type, null, data);
+        evidence(user, type, data);
         return store.create(user, type, data);
     }
 
@@ -34,6 +35,7 @@ public class WorkService {
         if (((Number) old.get("version")).longValue() != version) throw new ApiException(ErrorCode.CONFLICT);
         var data = FeatureInput.validate(type, body);
         parent(user, type, id, data);
+        evidence(user, type, data);
         if (type == FeatureType.WIKI) {
             store.create(user, FeatureType.WIKI, id + "@" + version, FeatureStore.payload(old));
         }
@@ -96,6 +98,22 @@ public class WorkService {
         }
         var data = new LinkedHashMap<>(row); data.put("rollupMd", md); data.put("rollupProgress", Math.round(progress)); result.add(data);
         return new double[] {md, progress};
+    }
+
+    /**
+     * 포트폴리오 근거(PR-26): 이 계정의 커리어 활동·경력만 남긴다. 지워졌거나 다른 계정의 ID는 저장할 때 빼서
+     * 지워진 근거가 있어도 수정이 막히지 않고, 다른 계정 기록이 있는지도 드러나지 않는다. 중복 ID는 하나만 남긴다.
+     */
+    private void evidence(String user, FeatureType type, Map<String, Object> data) {
+        if (type != FeatureType.PORTFOLIO) return;
+        if (data.get("activityIds") instanceof List<?> ids) {
+            var kept = new ArrayList<String>();
+            for (Object id : ids) if (!kept.contains(id.toString()) && store.optional(user, FeatureType.CAREER_ACTIVITY, id.toString()).isPresent()) kept.add(id.toString());
+            data.put("activityIds", kept);
+        }
+        String experience = FeatureInput.text(data, "experienceId").trim();
+        if (experience.isEmpty() || store.optional(user, FeatureType.CAREER, experience).isEmpty()) data.remove("experienceId");
+        else data.put("experienceId", experience);
     }
 
     private void parent(String user, FeatureType type, String id, Map<String, Object> data) {

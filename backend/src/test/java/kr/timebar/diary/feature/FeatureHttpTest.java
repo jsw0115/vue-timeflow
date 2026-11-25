@@ -171,6 +171,22 @@ class FeatureHttpTest {
         authenticate(owner, "USER"); mvc.perform(delete("/api/work/portfolio-links/" + id)).andExpect(status().isNoContent());
         mvc.perform(get("/api/public/portfolios/" + token)).andExpect(status().isNotFound());
     }
+    /** PR-26: 공개 화면에는 정한 공개 필드만 나가고, 근거 연결 ID(activityIds·experienceId)는 나가지 않는다. */
+    @Test void publicPortfolioShowsOnlyPublicFields() throws Exception {
+        var activity = store.create(owner, FeatureType.CAREER_ACTIVITY, Map.of("title", "사내 결제 개선", "activityType", "work", "date", "2026-10-01", "visibility", "private"));
+        var career = work.create(owner, FeatureType.CAREER, Map.of("title", "민감한 경력", "role", "개발"));
+        var item = work.create(owner, FeatureType.PORTFOLIO, Map.of("title", "결제 개선", "kind", "케이스 스터디", "problem", "결제 실패율", "outcome", "실패율 30% 감소",
+                "links", List.of("https://example.com/demo"), "activityIds", List.of(activity.get("id")), "experienceId", career.get("id")));
+        String token = mapper.readTree(mvc.perform(post("/api/work/portfolio-links").contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsString(Map.of("itemIds", List.of(item.get("id"))))))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString()).path("data").path("token").asText();
+        SecurityContextHolder.clearContext();
+        mvc.perform(get("/api/public/portfolios/" + token)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.items[0].problem").value("결제 실패율"))
+                .andExpect(jsonPath("$.data.items[0].links[0]").value("https://example.com/demo"))
+                .andExpect(jsonPath("$.data.items[0].activityIds").doesNotExist())
+                .andExpect(jsonPath("$.data.items[0].experienceId").doesNotExist())
+                .andExpect(jsonPath("$.data.items[0].id").doesNotExist());
+    }
     /** Q-22: 링크 공개는 만료가 있고 목록에 주소가 없으며, 전체 공개는 만료 없이 목록에 주소가 남는다. 남의 링크는 목록에 없고 닫을 수 없다. */
     @Test void portfolioLinksHaveTwoScopesAndAreListedOnlyToTheirOwner() throws Exception {
         var item = work.create(owner, FeatureType.PORTFOLIO, Map.of("title", "공개 항목", "kind", "사례"));
