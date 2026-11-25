@@ -530,6 +530,45 @@ activityType은 회사 업무(work)·인턴(intern)·아르바이트(part-time)�
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 
+## GET /api/career/activities/{id}/sources
+
+인증은 JWT이며 소스는 ActivitySourceController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | id | String | 예 | 없음 |
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## POST /api/career/activities/{id}/sources
+
+인증은 JWT이며 소스는 ActivitySourceController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | id | String | 예 | 없음 |
+
+| 본문 필드 | 타입 | 필수 | 제약 |
+|---|---|---|---|
+| kind | string | 예 | schedule/actual/wbs |
+| id | string | 예 | 길이 ≤ 100 |
+
+커리어 활동에 근거 원본(일정·실제 기록·WBS 작업)을 잇는다(PR-24). 같은 계정의 기록만, 활동마다 50개까지(넘으면 409). 없는 원본·다른 계정 원본은 같은 404. 응답은 근거 목록이고, 지워진 원본은 title 없이 broken=true로 보인다.
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## DELETE /api/career/activities/{id}/sources/{kind}/{sourceId}
+
+인증은 JWT이며 소스는 ActivitySourceController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | id | String | 예 | 없음 |
+| path | kind | String | 예 | 없음 |
+| path | sourceId | String | 예 | 없음 |
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
 ## GET /api/career/applications
 
 인증은 JWT이며 소스는 CareerController.java다. 성공 HTTP는 200다.

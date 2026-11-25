@@ -19,6 +19,8 @@ import java.util.*;
 @Transactional
 public class RecordLinks {
     public static final String TASK = "task", SCHEDULE = "schedule", ACTUAL = "actual";
+    /** 커리어 활동과 그 근거 원본(PR-24, IM-15 4단계). 활동 → 일정·실제 기록·WBS 작업 방향으로 저장한다. */
+    public static final String ACTIVITY = "activity", WBS = "wbs";
     private static final Set<String> KINDS = Set.of(TASK, SCHEDULE, ACTUAL);
     private final JdbcTemplate jdbc;
     private final FeatureStore store;
@@ -56,9 +58,16 @@ public class RecordLinks {
         return result;
     }
 
-    /** 기록을 지울 때 그 기록이 들어간 연결만 지운다. 연결된 다른 기록은 남는다(UF-93). */
+    /**
+     * 기록을 지울 때 그 기록이 들어간 연결만 지운다. 연결된 다른 기록은 남는다(UF-93).
+     * 커리어 활동의 근거 연결은 남겨, 활동 화면이 "지워진 원본"(깨진 출처)으로 보이게 한다(docs/design 04 FD-85~87). 활동 자신을 지울 때는 모두 지운다.
+     */
     public void forget(String owner, String kind, String id) {
-        jdbc.update("DELETE FROM record_link WHERE owner_id=? AND (source_kind=? AND source_id=? OR target_kind=? AND target_id=?)", owner, kind, id, kind, id);
+        if (ACTIVITY.equals(kind)) {
+            jdbc.update("DELETE FROM record_link WHERE owner_id=? AND (source_kind=? AND source_id=? OR target_kind=? AND target_id=?)", owner, kind, id, kind, id);
+            return;
+        }
+        jdbc.update("DELETE FROM record_link WHERE owner_id=? AND (source_kind=? AND source_id=? AND target_kind<>? OR target_kind=? AND target_id=? AND source_kind<>?)", owner, kind, id, ACTIVITY, kind, id, ACTIVITY);
     }
 
     /** 일정을 지우고 그 일정의 연결도 같은 트랜잭션에서 지운다. 일정에서 시작한 실제 기록은 남는다. */
@@ -85,12 +94,15 @@ public class RecordLinks {
 
     public static void requireKind(String kind) { if (!KINDS.contains(kind)) FeatureInput.fail("kind는 task, schedule, actual 중 하나입니다."); }
 
-    private Optional<String> title(String owner, String kind, String id) {
+    /** 연결된 기록의 제목. 없거나 다른 계정의 기록이면 비어 있다. */
+    public Optional<String> title(String owner, String kind, String id) {
         if (id == null || id.isBlank() || id.length() > 100) return Optional.empty();
         return switch (kind) {
             case TASK -> jdbc.queryForList("SELECT title FROM task WHERE id=? AND user_id=? AND d_at IS NULL", String.class, id, owner).stream().findFirst();
             case SCHEDULE -> store.optional(owner, FeatureType.SCHEDULE, id).map(row -> Objects.toString(row.get("title"), ""));
             case ACTUAL -> store.optional(owner, FeatureType.ACTUAL_SESSION, id).map(row -> Objects.toString(row.get("title"), ""));
+            case ACTIVITY -> store.optional(owner, FeatureType.CAREER_ACTIVITY, id).map(row -> Objects.toString(row.get("title"), ""));
+            case WBS -> store.optional(owner, FeatureType.WBS, id).map(row -> Objects.toString(row.get("title"), ""));
             default -> Optional.empty();
         };
     }

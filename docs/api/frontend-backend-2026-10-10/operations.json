@@ -1396,6 +1396,116 @@
   },
   {
     "method": "GET",
+    "route": "/api/career/activities/{id}/sources",
+    "parameters": [
+      {
+        "name": "id",
+        "type": "String",
+        "location": "path",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "?",
+    "controller": "ActivitySourceController",
+    "kind": "서비스 연결",
+    "implementationStatus": "서비스 연결 · 검증 범위 별도",
+    "public": false,
+    "responseSchema": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "externalBoundary": false
+  },
+  {
+    "method": "POST",
+    "route": "/api/career/activities/{id}/sources",
+    "parameters": [
+      {
+        "name": "id",
+        "type": "String",
+        "location": "path",
+        "required": true
+      },
+      {
+        "name": "body",
+        "type": "Map<String,Object>",
+        "location": "body",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "?",
+    "controller": "ActivitySourceController",
+    "kind": "서비스 연결",
+    "implementationStatus": "서비스 연결 · 검증 범위 별도",
+    "public": false,
+    "requestSchema": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "schedule",
+            "actual",
+            "wbs"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "maxLength": 100
+        }
+      },
+      "required": [
+        "kind",
+        "id"
+      ],
+      "additionalProperties": false,
+      "description": "커리어 활동에 근거 원본(일정·실제 기록·WBS 작업)을 잇는다(PR-24). 같은 계정의 기록만, 활동마다 50개까지(넘으면 409). 없는 원본·다른 계정 원본은 같은 404. 응답은 근거 목록이고, 지워진 원본은 title 없이 broken=true로 보인다."
+    },
+    "responseSchema": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "externalBoundary": false
+  },
+  {
+    "method": "DELETE",
+    "route": "/api/career/activities/{id}/sources/{kind}/{sourceId}",
+    "parameters": [
+      {
+        "name": "id",
+        "type": "String",
+        "location": "path",
+        "required": true
+      },
+      {
+        "name": "kind",
+        "type": "String",
+        "location": "path",
+        "required": true
+      },
+      {
+        "name": "sourceId",
+        "type": "String",
+        "location": "path",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "?",
+    "controller": "ActivitySourceController",
+    "kind": "서비스 연결",
+    "implementationStatus": "서비스 연결 · 검증 범위 별도",
+    "public": false,
+    "responseSchema": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "externalBoundary": false
+  },
+  {
+    "method": "GET",
     "route": "/api/career/applications",
     "parameters": [
       {

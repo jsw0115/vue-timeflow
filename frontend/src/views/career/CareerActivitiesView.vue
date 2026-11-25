@@ -6,6 +6,7 @@ import Modal from '../../components/Modal.vue'
 import SaveStatus from '../../components/SaveStatus.vue'
 import ConflictCompare from '../../components/ConflictCompare.vue'
 import PageActions from '../../components/PageActions.vue'
+import ActivitySourcePanel from '../../components/ActivitySourcePanel.vue'
 import { session } from '../../features/auth/session.js'
 import { activityStore } from '../../store/careerLedger'
 import { careerStore } from '../../store/career'
@@ -160,6 +161,9 @@ onMounted(() => {
     <label>근거 링크 (한 줄에 하나, 최대 10개)<textarea v-model="editor.draft.linksText" rows="3" placeholder="https://" :aria-invalid="badLinks.length || tooManyLinks ? 'true' : undefined" aria-describedby="activity-link-help"></textarea></label>
     <p id="activity-link-help" class="input-field-help" :data-state="badLinks.length || tooManyLinks ? 'error' : undefined">{{ badLinks.length ? 'http 또는 https로 시작하는 주소만 넣을 수 있어요: ' + badLinks.join(', ') : tooManyLinks ? '근거 링크는 10개까지 넣을 수 있어요.' : 'PR·문서·결과물 주소를 남겨요. 서버가 이 주소를 열어 보지는 않아요.' }}</p>
     <label>메모(선택)<textarea v-model="editor.draft.body" rows="3"></textarea></label>
+    <!-- 근거 원본(PR-24)은 저장한 활동에만 잇는다. 연결은 바로 저장되고 활동 저장과는 따로다 -->
+    <ActivitySourcePanel v-if="editor.base?.id && typeof editor.base.id === 'string'" :activity-id="editor.base.id" :activity-date="editor.draft.date" />
+    <p v-else class="form-note">활동을 저장한 뒤 다시 열면 일정·실제 기록·WBS 작업을 근거로 이을 수 있어요.</p>
     <p class="form-note">나만 보기로 저장돼요. 공유·공개 기능은 아직 없어요.</p>
     <p v-if="saving.state.fieldMessage" class="input-field-help" data-state="error" role="alert">{{ saving.state.fieldMessage }}</p>
     <ConflictCompare v-if="conflict" :rows="compareRows" :busy="saving.state.status === 'saving'" @keep-mine="keepMine" @use-latest="useLatest" />

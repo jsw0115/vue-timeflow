@@ -19,7 +19,10 @@ public class CareerService {
     private final FeatureStore store;
     private final IdempotencyKeys idempotency;
 
-    public CareerService(FeatureStore store, IdempotencyKeys idempotency) { this.store = store; this.idempotency = idempotency; }
+    private final kr.timebar.diary.records.RecordLinks links;
+    public CareerService(FeatureStore store, IdempotencyKeys idempotency) { this(store, idempotency, null); }
+    @org.springframework.beans.factory.annotation.Autowired
+    public CareerService(FeatureStore store, IdempotencyKeys idempotency, kr.timebar.diary.records.RecordLinks links) { this.store = store; this.idempotency = idempotency; this.links = links; }
 
     /** 멱등 키가 있으면 같은 키로 다시 온 요청에 처음 만든 기록을 돌려준다. */
     public Map<String, Object> create(String user, FeatureType type, Map<String, Object> body, String idempotencyKey) {
@@ -44,6 +47,8 @@ public class CareerService {
     public void delete(String user, FeatureType type, String id, long version) {
         store.get(user, supported(type), id);
         store.delete(user, type, id, version);
+        // 활동을 지우면 그 활동의 근거 연결도 지운다(원본은 남는다, PR-24)
+        if (type == FeatureType.CAREER_ACTIVITY && links != null) links.forget(user, kr.timebar.diary.records.RecordLinks.ACTIVITY, id);
     }
 
     /**
