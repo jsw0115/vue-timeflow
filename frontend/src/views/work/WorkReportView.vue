@@ -1,4 +1,5 @@
 <script setup>
+import { tr } from '../../store/locale'
 import { computed, ref } from 'vue'
 import ProjectReportPanel from '../../components/ProjectReportPanel.vue'
 
@@ -117,41 +118,41 @@ async function copyDraft() {
 <template>
   <!-- 계정 기록으로 만드는 초안(PR-19 UF-138). 아래 통계는 화면에 넣어 둔 예시 값이다 -->
   <ProjectReportPanel />
-  <p class="input-field-help">아래 업무 유형별 통계와 업무보고는 화면 예시예요. 계정 기록으로 만든 보고서는 위 '프로젝트 업무 보고서 초안'을 써 주세요.</p>
+  <p class="input-field-help">{{ tr('아래 업무 유형별 통계와 업무보고는 화면 예시예요. 계정 기록으로 만든 보고서는 위 \'프로젝트 업무 보고서 초안\'을 써 주세요.') }}</p>
   <div class="toolbar">
-    <b>{{ active.caption }}</b><span></span>
-    <button v-for="p in PERIODS" :key="p.key" :class="{ selected: view === p.key }" @click="view = p.key">{{ p.key }}</button>
+    <b>{{ tr(active.caption) }}</b><span></span>
+    <button v-for="p in PERIODS" :key="p.key" :class="{ selected: view === p.key }" @click="view = p.key">{{ tr(p.key) }}</button>
   </div>
 
   <div class="metrics">
-    <article><span>총 업무 시간</span><b class="figure" style="font-size: 1.1875rem">{{ hm(active.totalMin) }}</b></article>
-    <article><span>계획 대비 실행</span><b class="figure" style="font-size: 1.1875rem">{{ active.planRate }}%</b></article>
-    <article><span>완료 업무</span><b class="figure" style="font-size: 1.1875rem">{{ active.doneCount }}건</b></article>
-    <article><span>회의 시간 비중</span><b class="figure" style="font-size: 1.1875rem">{{ meetingShare }}%</b></article>
+    <article><span>{{ tr('총 업무 시간') }}</span><b class="figure" style="font-size: 1.1875rem">{{ hm(active.totalMin) }}</b></article>
+    <article><span>{{ tr('계획 대비 실행') }}</span><b class="figure" style="font-size: 1.1875rem">{{ active.planRate }}%</b></article>
+    <article><span>{{ tr('완료 업무') }}</span><b class="figure" style="font-size: 1.1875rem">{{ tr('{n}건', { n: active.doneCount }) }}</b></article>
+    <article><span>{{ tr('회의 시간 비중') }}</span><b class="figure" style="font-size: 1.1875rem">{{ meetingShare }}%</b></article>
   </div>
 
   <section class="card" style="margin-top: 16px">
     <div class="head">
-      <div><h3 style="margin: 0">업무 유형별 계획 대비 실제</h3><p style="margin: 4px 0 0">{{ active.key }} 기준</p></div>
-      <button class="review" style="margin: 0" @click="showReport = !showReport">{{ showReport ? 'AI 업무보고 닫기' : 'AI 업무보고 생성' }}</button>
+      <div><h3 style="margin: 0">{{ tr('업무 유형별 계획 대비 실제') }}</h3><p style="margin: 4px 0 0">{{ tr('{period} 기준', { period: tr(active.key) }) }}</p></div>
+      <button class="review" style="margin: 0" @click="showReport = !showReport">{{ showReport ? tr('업무보고 초안 닫기') : tr('업무보고 초안 만들기') }}</button>
     </div>
     <div class="chart">
       <div v-for="b in active.bars" :key="b.label">
-        <i :style="{ height: pct(b.plan) + '%' }" :title="'계획 ' + hm(b.plan)"></i>
-        <b :style="{ height: pct(b.actual) + '%' }" :title="'실제 ' + hm(b.actual)"></b>
-        <small>{{ b.label }}</small>
+        <i :style="{ height: pct(b.plan) + '%' }" :title="tr('계획 {time}', { time: hm(b.plan) })"></i>
+        <b :style="{ height: pct(b.actual) + '%' }" :title="tr('실제 {time}', { time: hm(b.actual) })"></b>
+        <small>{{ tr(b.label) }}</small>
       </div>
     </div>
     <div class="chart-legend">
-      <span><i class="swatch plan"></i>계획</span>
-      <span><i class="swatch actual"></i>실제 기록</span>
+      <span><i class="swatch plan"></i>{{ tr('계획') }}</span>
+      <span><i class="swatch actual"></i>{{ tr('실제 기록') }}</span>
     </div>
   </section>
 
   <section v-if="showReport" class="card" style="margin-top: 16px">
     <div class="head">
-      <div><h3 style="margin: 0">AI 업무보고 초안 · {{ active.key }}</h3><p style="margin: 4px 0 0">집계값을 그대로 문장으로 정리했어요. 수정해서 그대로 제출할 수 있어요.</p></div>
-      <button class="review" style="margin: 0" @click="copyDraft">{{ copied ? '복사됨' : '복사' }}</button>
+      <div><h3 style="margin: 0">{{ tr('업무보고 초안 · {period}', { period: tr(active.key) }) }}</h3><p style="margin: 4px 0 0">{{ tr('집계값을 그대로 문장으로 정리했어요. 수정해서 그대로 제출할 수 있어요.') }}</p></div>
+      <button class="review" style="margin: 0" @click="copyDraft">{{ copied ? tr('복사됨') : tr('복사') }}</button>
     </div>
     <textarea class="report-draft" :value="draft" readonly rows="14"></textarea>
   </section>

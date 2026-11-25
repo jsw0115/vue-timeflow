@@ -36,7 +36,7 @@ test('영어가 없으면 한국어 원문, 자리표시를 채운다. 본문까
   assert.equal(translate(7, 'en'), '7')
   assert.equal(translate('내 분류 {x}', 'en'), '내 분류 {x}')
   for (const path of TRANSLATED_PATHS) assert.equal(documentLang('en', path), 'en')
-  assert.equal(documentLang('en', '/work/wbs'), 'ko')
+  assert.equal(documentLang('en', '/stats'), 'ko')
   assert.equal(documentLang('ko', '/career'), 'ko')
 })
 

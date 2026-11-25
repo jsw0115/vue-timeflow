@@ -2,6 +2,7 @@
 // 약어 옆의 짧은 설명. 키보드(Enter·Space)와 터치로 열고, Esc·바깥 누름·포커스 이동·스크롤로 닫는다(PR-19 UF-135).
 // 포커스는 버튼에 그대로 있어 닫아도 제자리다. 열린 설명은 aria-live 영역으로 화면 낭독기에 읽힌다.
 // 표(.list)처럼 overflow로 잘리는 곳에서도 보이도록 화면 기준으로 띄우고, 열 때 화면 안으로 위치를 맞춘다.
+import { tr } from '../store/locale'
 import { computed, nextTick, onBeforeUnmount, ref, useId } from 'vue'
 import { termOf } from '../features/help/terms.mjs'
 
@@ -53,13 +54,13 @@ onBeforeUnmount(() => listen(false))
 <template>
   <span v-if="info" ref="root" class="term-hint" @focusout="onFocusOut" @keydown.esc.stop="close">
     <button ref="button" type="button" class="term-hint-button" :aria-expanded="open ? 'true' : 'false'" :aria-controls="panelId" @click="toggle">
-      {{ term }}<span class="sr-only"> 뜻 보기</span>
+      {{ tr(term) }}<span class="sr-only"> {{ tr('뜻 보기') }}</span>
     </button>
     <span :id="panelId" ref="panel" class="term-hint-panel" :hidden="!open" :style="pos" aria-live="polite">
-      <template v-if="open"><b>{{ term }}<template v-if="info.full"> ({{ info.full }})</template></b> {{ info.desc }}</template>
+      <template v-if="open"><b>{{ tr(term) }}<template v-if="info.full"> ({{ info.full }})</template></b> {{ tr(info.desc) }}</template>
     </span>
   </span>
-  <template v-else>{{ term }}</template>
+  <template v-else>{{ tr(term) }}</template>
 </template>
 
 <style scoped>

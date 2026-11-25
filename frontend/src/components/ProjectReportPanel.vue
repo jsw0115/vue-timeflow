@@ -1,6 +1,7 @@
 <script setup>
 // 프로젝트 업무 보고서 초안(PR-19 UF-138, Q-35). 프로젝트(최상위 WBS 작업)와 기간을 고르면, 이 프로젝트에 넣은 실제 기록 시간·완료 작업·남은 작업으로 초안을 만든다.
 // 초안은 따로 저장하고 원본 기록은 바꾸지 않는다. 자동으로 보내지 않는다.
+import { tr } from '../store/locale'
 import { computed, ref, watch } from 'vue'
 import { apiRequest } from '../features/auth/apiRequest.js'
 import { session } from '../features/auth/session.js'
@@ -53,20 +54,20 @@ async function toggle(item) {
     else await client.link(projectId.value, item.id)
     const [list, draft] = await Promise.all([client.candidates(projectId.value, range.value.from, range.value.to), client.draft(projectId.value, range.value.from, range.value.to)])
     candidates.value = list ?? []; summary.value = draft; generated.value = draftText(draft)
-    announce.value = item.linked ? `‘${item.title}’ 기록을 이 프로젝트에서 뺐어요.` : `‘${item.title}’ 기록을 이 프로젝트에 넣었어요.`
+    announce.value = item.linked ? tr('‘{title}’ 기록을 이 프로젝트에서 뺐어요.', { title: item.title }) : tr('‘{title}’ 기록을 이 프로젝트에 넣었어요.', { title: item.title })
   } catch (error) { message.value = reportErrorText(error) } finally { busy.value = false }
 }
 function regenerate() {
-  if (edited.value && !window.confirm('고친 초안 글을 지금 기록으로 다시 만들까요? 고친 내용은 사라져요.')) return
+  if (edited.value && !window.confirm(tr('고친 초안 글을 지금 기록으로 다시 만들까요? 고친 내용은 사라져요.'))) return
   text.value = generated.value
-  announce.value = '지금 기록으로 초안을 다시 만들었어요.'
+  announce.value = tr('지금 기록으로 초안을 다시 만들었어요.')
 }
 async function saveDraft() {
   if (!key.value || !summary.value) return
   busy.value = true; message.value = ''
   try {
     saved.value = await client.save(key.value, { title: `${summary.value.projectTitle} 업무 보고 ${range.value.from}~${range.value.to}`, body: text.value, date: range.value.to }, saved.value?.version)
-    announce.value = '초안을 저장했어요. 원본 기록은 바뀌지 않아요.'
+    announce.value = tr('초안을 저장했어요. 원본 기록은 바뀌지 않아요.')
   } catch (error) { message.value = reportErrorText(error) } finally { busy.value = false }
 }
 const copied = ref(false)
@@ -77,44 +78,44 @@ async function copy() {
 
 <template>
   <section class="card project-report" aria-labelledby="project-report-title">
-    <h3 id="project-report-title">프로젝트 업무 보고서 초안</h3>
-    <p class="input-field-help">프로젝트와 기간을 고르면, 이 프로젝트에 넣은 실제 기록 시간과 WBS 진척으로 초안을 만들어요. 자동으로 보내지 않고, 초안을 고쳐도 원본 기록은 바뀌지 않아요.</p>
-    <p v-if="!session.userId" class="empty-state" role="status">로그인하면 계정의 WBS와 실제 기록으로 초안을 만들 수 있어요. 지금은 아래 예시만 볼 수 있어요.</p>
+    <h3 id="project-report-title">{{ tr('프로젝트 업무 보고서 초안') }}</h3>
+    <p class="input-field-help">{{ tr('프로젝트와 기간을 고르면, 이 프로젝트에 넣은 실제 기록 시간과 WBS 진척으로 초안을 만들어요. 자동으로 보내지 않고, 초안을 고쳐도 원본 기록은 바뀌지 않아요.') }}</p>
+    <p v-if="!session.userId" class="empty-state" role="status">{{ tr('로그인하면 계정의 WBS와 실제 기록으로 초안을 만들 수 있어요. 지금은 아래 예시만 볼 수 있어요.') }}</p>
     <template v-else>
       <div class="report-pick">
-        <label>프로젝트<select v-model="projectId"><option value="">{{ projects.length ? '골라 주세요' : '최상위 WBS 작업이 없어요' }}</option><option v-for="p in projects" :key="p.id" :value="p.id">{{ p.title }}</option></select></label>
-        <label>기간<select v-model="period"><option v-for="p in PERIODS" :key="p.id" :value="p.id">{{ p.label }}</option></select></label>
-        <label>시작<input v-model="range.from" type="date" :disabled="period !== 'custom'" /></label>
-        <label>끝<input v-model="range.to" type="date" :min="range.from" :disabled="period !== 'custom'" /></label>
+        <label>{{ tr('프로젝트') }}<select v-model="projectId"><option value="">{{ projects.length ? tr('골라 주세요') : tr('최상위 WBS 작업이 없어요') }}</option><option v-for="p in projects" :key="p.id" :value="p.id">{{ p.title }}</option></select></label>
+        <label>{{ tr('기간') }}<select v-model="period"><option v-for="p in PERIODS" :key="p.id" :value="p.id">{{ tr(p.label) }}</option></select></label>
+        <label>{{ tr('시작') }}<input v-model="range.from" type="date" :disabled="period !== 'custom'" /></label>
+        <label>{{ tr('끝') }}<input v-model="range.to" type="date" :min="range.from" :disabled="period !== 'custom'" /></label>
       </div>
-      <p v-if="!projects.length" class="input-field-help">WBS에서 최상위 작업을 만들면 프로젝트로 고를 수 있어요.</p>
-      <p v-if="!rangeOk" class="input-field-help" data-state="error" role="alert">끝 날짜는 시작 날짜와 같거나 뒤여야 해요.</p>
-      <p v-if="status === 'loading'" class="input-field-help" role="status">초안 재료를 불러오는 중이에요.</p>
+      <p v-if="!projects.length" class="input-field-help">{{ tr('WBS에서 최상위 작업을 만들면 프로젝트로 고를 수 있어요.') }}</p>
+      <p v-if="!rangeOk" class="input-field-help" data-state="error" role="alert">{{ tr('끝 날짜는 시작 날짜와 같거나 뒤여야 해요.') }}</p>
+      <p v-if="status === 'loading'" class="input-field-help" role="status">{{ tr('초안 재료를 불러오는 중이에요.') }}</p>
       <template v-if="summary && status !== 'error'">
         <div class="report-metrics">
-          <article><span>실제 시간</span><b class="figure">{{ hm(summary.actualMinutes) }}</b></article>
-          <article><span>완료한 작업</span><b class="figure">{{ summary.done.length }}건</b></article>
-          <article><span>남은 작업</span><b class="figure">{{ summary.remaining.length }}건</b></article>
+          <article><span>{{ tr('실제 시간') }}</span><b class="figure">{{ hm(summary.actualMinutes) }}</b></article>
+          <article><span>{{ tr('완료한 작업') }}</span><b class="figure">{{ tr('{n}건', { n: summary.done.length }) }}</b></article>
+          <article><span>{{ tr('남은 작업') }}</span><b class="figure">{{ tr('{n}건', { n: summary.remaining.length }) }}</b></article>
         </div>
         <fieldset class="report-actuals">
-          <legend>이 기간의 실제 기록</legend>
-          <p class="input-field-help">체크한 기록만 이 프로젝트의 실제 시간에 들어가요. 기록 하나는 프로젝트 하나에만 넣을 수 있어요.</p>
-          <p v-if="!candidates.length" class="input-field-help">이 기간에 끝낸 실제 기록이 없어요. 플래너에서 실제 기록을 남기면 여기에 보여요.</p>
+          <legend>{{ tr('이 기간의 실제 기록') }}</legend>
+          <p class="input-field-help">{{ tr('체크한 기록만 이 프로젝트의 실제 시간에 들어가요. 기록 하나는 프로젝트 하나에만 넣을 수 있어요.') }}</p>
+          <p v-if="!candidates.length" class="input-field-help">{{ tr('이 기간에 끝낸 실제 기록이 없어요. 플래너에서 실제 기록을 남기면 여기에 보여요.') }}</p>
           <label v-for="c in candidates" :key="c.id" class="report-actual">
             <input type="checkbox" :checked="c.linked" :disabled="busy" @change="toggle(c)" />
-            <span>{{ c.title || '제목 없는 기록' }} <small class="figure">{{ hm(c.minutes) }}</small><small v-if="c.linkedProjectTitle"> · 지금 ‘{{ c.linkedProjectTitle }}’에 들어 있어요. 체크하면 이 프로젝트로 옮겨요.</small></span>
+            <span>{{ c.title || tr('제목 없는 기록') }} <small class="figure">{{ hm(c.minutes) }}</small><small v-if="c.linkedProjectTitle"> · {{ tr('지금 ‘{title}’에 들어 있어요. 체크하면 이 프로젝트로 옮겨요.', { title: c.linkedProjectTitle }) }}</small></span>
           </label>
         </fieldset>
-        <label class="report-text">초안<textarea v-model="text" rows="12"></textarea></label>
-        <p class="input-field-help">{{ saved ? '저장한 초안을 보여 드려요.' : '아직 저장하지 않은 초안이에요.' }}<template v-if="edited"> 고친 내용이 있어요.</template></p>
+        <label class="report-text">{{ tr('초안') }}<textarea v-model="text" rows="12"></textarea></label>
+        <p class="input-field-help">{{ saved ? tr('저장한 초안을 보여 드려요.') : tr('아직 저장하지 않은 초안이에요.') }}<template v-if="edited"> {{ tr('고친 내용이 있어요.') }}</template></p>
         <div class="report-actions">
-          <button type="button" class="button-secondary" :disabled="busy || !key" :aria-busy="busy ? 'true' : undefined" @click="saveDraft">초안 저장</button>
-          <button type="button" class="button-text" :disabled="busy" @click="regenerate">지금 기록으로 다시 만들기</button>
-          <button type="button" class="button-text" @click="copy">{{ copied ? '복사했어요' : '복사' }}</button>
+          <button type="button" class="button-secondary" :disabled="busy || !key" :aria-busy="busy ? 'true' : undefined" @click="saveDraft">{{ tr('초안 저장') }}</button>
+          <button type="button" class="button-text" :disabled="busy" @click="regenerate">{{ tr('지금 기록으로 다시 만들기') }}</button>
+          <button type="button" class="button-text" @click="copy">{{ copied ? tr('복사했어요') : tr('복사') }}</button>
         </div>
       </template>
       <p class="sr-only" role="status">{{ announce }}</p>
-      <p v-if="message" class="input-field-help" data-state="error" role="alert">{{ message }}</p>
+      <p v-if="message" class="input-field-help" data-state="error" role="alert">{{ tr(message) }}</p>
     </template>
   </section>
 </template>

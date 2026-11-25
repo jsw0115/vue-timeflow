@@ -58,7 +58,7 @@ test('초안 문장은 서버 재료의 합계·완료·남은 일·기록을 �
 test('화면: 자동 발송 없음·원본 그대로 안내, 다시 만들기 전 확인, 예시 통계 표시', () => {
   const panel = read('src/components/ProjectReportPanel.vue')
   assert.match(panel, /자동으로 보내지 않고, 초안을 고쳐도 원본 기록은 바뀌지 않아요/)
-  assert.match(panel, /window\.confirm\('고친 초안 글을 지금 기록으로 다시 만들까요\?/)
+  assert.match(panel, /window\.confirm\(tr\('고친 초안 글을 지금 기록으로 다시 만들까요\?/)
   assert.doesNotMatch(panel, /mail|send|fetch\(/i)
   const view = read('src/views/work/WorkReportView.vue')
   assert.match(view, /<ProjectReportPanel \/>/)
