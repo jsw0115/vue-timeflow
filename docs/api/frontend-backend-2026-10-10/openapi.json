@@ -31761,6 +31761,215 @@
         "x-test-evidence": "verification.md"
       }
     },
+    "/api/stat/execution": {
+      "get": {
+        "operationId": "ExecutionRateController_get__api_stat_execution",
+        "tags": [
+          "ExecutionRateController"
+        ],
+        "summary": "GET /api/stat/execution",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "성공. 세부 정책은 README와 기능 규약을 따른다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "from": {
+                          "type": "string",
+                          "format": "date"
+                        },
+                        "to": {
+                          "type": "string",
+                          "format": "date"
+                        },
+                        "days": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "date": {
+                                "type": "string",
+                                "format": "date"
+                              },
+                              "plannedMinutes": {
+                                "type": "integer",
+                                "minimum": 0
+                              },
+                              "executedMinutes": {
+                                "type": "integer",
+                                "minimum": 0
+                              },
+                              "actualMinutes": {
+                                "type": "integer",
+                                "minimum": 0
+                              },
+                              "rate": {
+                                "type": [
+                                  "integer",
+                                  "null"
+                                ],
+                                "minimum": 0,
+                                "maximum": 100
+                              }
+                            },
+                            "required": [
+                              "date",
+                              "plannedMinutes",
+                              "executedMinutes",
+                              "actualMinutes",
+                              "rate"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "maxItems": 500
+                        },
+                        "totals": {
+                          "type": "object",
+                          "properties": {
+                            "plannedMinutes": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "executedMinutes": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "actualMinutes": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "rate": {
+                              "type": [
+                                "integer",
+                                "null"
+                              ],
+                              "minimum": 0,
+                              "maximum": 100
+                            }
+                          },
+                          "required": [
+                            "plannedMinutes",
+                            "executedMinutes",
+                            "actualMinutes",
+                            "rate"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "from",
+                        "to",
+                        "days",
+                        "totals"
+                      ],
+                      "additionalProperties": false,
+                      "description": "계획 실행률(PR-19 UF-136, Q-40). plannedMinutes는 그날 일정·계획 블록(취소 제외)을 합친 시간, executedMinutes는 그중 실제 기록(일시정지 제외)이 겹친 시간, actualMinutes는 계획 밖을 포함한 실제 기록 총량, rate는 executed÷planned 반올림 %. 계획이 없는 날은 rate가 null이다. 날짜는 사용자 시간대·하루 시작 시각 기준, 기간은 366일까지."
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 검증 오류.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 필요 또는 폐기된 토큰.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "역할·회원 권한 부족.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "없음·타인 리소스·만료.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "버전·현재 상태 충돌.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-implementation-status": "서비스 연결 · 검증 범위 별도",
+        "x-source": "ExecutionRateController.java",
+        "x-admin-required": false,
+        "x-test-evidence": "verification.md"
+      }
+    },
     "/api/stat/focus": {
       "get": {
         "operationId": "InsightController_get__api_stat_focus",

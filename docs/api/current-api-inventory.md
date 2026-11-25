@@ -2,7 +2,7 @@
 
 기준 2026-10-10. 생성 명령: frontend에서 npm run docs:api. 현재 컨트롤러의 단일 문자열 매핑 형식에 한정된 생성기입니다.
 
-총 333개. 기존 지정 계약 검증 10, 서비스 연결 310, 외부 제공자 경계 13, 미구현 stub 0, 공용 메모리 시연 0.
+총 334개. 기존 지정 계약 검증 10, 서비스 연결 311, 외부 제공자 경계 13, 미구현 stub 0, 공용 메모리 시연 0.
 
 | 상태 | 의미 |
 |---|---|
@@ -91,6 +91,7 @@ ChatController의 19개 경로는 CHAT_ENABLED=true일 때 등록됩니다. [채
 | GET | /api/diary/{date} | 서비스 연결 · 검증 범위 별도 | JWT | EventDiaryMemoController |
 | POST | /api/diary/{date} | 서비스 연결 · 검증 범위 별도 | JWT | EventDiaryMemoController |
 | DELETE | /api/diary/{date} | 서비스 연결 · 검증 범위 별도 | JWT | EventDiaryMemoController |
+| GET | /api/stat/execution | 서비스 연결 · 검증 범위 별도 | JWT | ExecutionRateController |
 | GET | /api/home/summary | 서비스 연결 · 검증 범위 별도 | JWT | InsightController |
 | GET | /api/stat/dashboard | 서비스 연결 · 검증 범위 별도 | JWT | InsightController |
 | GET | /api/stat/category | 서비스 연결 · 검증 범위 별도 | JWT | InsightController |

@@ -9780,6 +9780,125 @@
   },
   {
     "method": "GET",
+    "route": "/api/stat/execution",
+    "parameters": [
+      {
+        "name": "from",
+        "type": "String",
+        "location": "query",
+        "required": true
+      },
+      {
+        "name": "to",
+        "type": "String",
+        "location": "query",
+        "required": true
+      }
+    ],
+    "status": 200,
+    "responseType": "?",
+    "controller": "ExecutionRateController",
+    "kind": "서비스 연결",
+    "implementationStatus": "서비스 연결 · 검증 범위 별도",
+    "public": false,
+    "responseSchema": {
+      "type": "object",
+      "properties": {
+        "from": {
+          "type": "string",
+          "format": "date"
+        },
+        "to": {
+          "type": "string",
+          "format": "date"
+        },
+        "days": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "date": {
+                "type": "string",
+                "format": "date"
+              },
+              "plannedMinutes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "executedMinutes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "actualMinutes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "rate": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 0,
+                "maximum": 100
+              }
+            },
+            "required": [
+              "date",
+              "plannedMinutes",
+              "executedMinutes",
+              "actualMinutes",
+              "rate"
+            ],
+            "additionalProperties": false
+          },
+          "maxItems": 500
+        },
+        "totals": {
+          "type": "object",
+          "properties": {
+            "plannedMinutes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "executedMinutes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "actualMinutes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "rate": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 100
+            }
+          },
+          "required": [
+            "plannedMinutes",
+            "executedMinutes",
+            "actualMinutes",
+            "rate"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "from",
+        "to",
+        "days",
+        "totals"
+      ],
+      "additionalProperties": false,
+      "description": "계획 실행률(PR-19 UF-136, Q-40). plannedMinutes는 그날 일정·계획 블록(취소 제외)을 합친 시간, executedMinutes는 그중 실제 기록(일시정지 제외)이 겹친 시간, actualMinutes는 계획 밖을 포함한 실제 기록 총량, rate는 executed÷planned 반올림 %. 계획이 없는 날은 rate가 null이다. 날짜는 사용자 시간대·하루 시작 시각 기준, 기간은 366일까지."
+    },
+    "externalBoundary": false
+  },
+  {
+    "method": "GET",
     "route": "/api/stat/focus",
     "parameters": [
       {
