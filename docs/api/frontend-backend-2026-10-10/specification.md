@@ -3640,6 +3640,13 @@ file을 multipart/form-data로 전달한다. boundary는 HTTP 클라이언트가
 | company | string 또는 null | 아니오 | 기능 규약 참조 |
 | stack | string 또는 null | 아니오 | 기능 규약 참조 |
 | achievements | array 또는 null | 아니오 | 기능 규약 참조 |
+| employmentType | string 또는 null | 아니오 | 기능 규약 참조 |
+| department | string 또는 null | 아니오 | 기능 규약 참조 |
+| startDate | string 또는 null | 아니오 | 기능 규약 참조 |
+| endDate | string 또는 null | 아니오 | 기능 규약 참조 |
+| employmentStatus | string 또는 null | 아니오 | 기능 규약 참조 |
+
+고용 형태 employmentType은 정규직(full-time)·계약직(contract)·인턴(intern)·아르바이트(part-time)·프리랜서(freelance)·기타(other). 재직 상태 employmentStatus는 재직 중(current)·종료(ended). endDate는 startDate 이후. current이면 endDate를 비우고, ended이면 endDate가 필요하다. 상세 필드는 모두 선택이며 예전 자유 기간(period)도 받는다. 기간 겹침·공백은 서버가 막지 않는다.
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 
@@ -3680,7 +3687,14 @@ file을 multipart/form-data로 전달한다. boundary는 HTTP 클라이언트가
 | company | string 또는 null | 아니오 | 기능 규약 참조 |
 | stack | string 또는 null | 아니오 | 기능 규약 참조 |
 | achievements | array 또는 null | 아니오 | 기능 규약 참조 |
+| employmentType | string 또는 null | 아니오 | 기능 규약 참조 |
+| department | string 또는 null | 아니오 | 기능 규약 참조 |
+| startDate | string 또는 null | 아니오 | 기능 규약 참조 |
+| endDate | string 또는 null | 아니오 | 기능 규약 참조 |
+| employmentStatus | string 또는 null | 아니오 | 기능 규약 참조 |
 | version | integer | 예 | 최소 1 |
+
+고용 형태 employmentType은 정규직(full-time)·계약직(contract)·인턴(intern)·아르바이트(part-time)·프리랜서(freelance)·기타(other). 재직 상태 employmentStatus는 재직 중(current)·종료(ended). endDate는 startDate 이후. current이면 endDate를 비우고, ended이면 endDate가 필요하다. 상세 필드는 모두 선택이며 예전 자유 기간(period)도 받는다. 기간 겹침·공백은 서버가 막지 않는다.
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 

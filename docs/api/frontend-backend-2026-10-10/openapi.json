@@ -45693,13 +45693,79 @@
                 "type": "null"
               }
             ]
+          },
+          "employmentType": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "full-time",
+                  "contract",
+                  "intern",
+                  "part-time",
+                  "freelance",
+                  "other"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "department": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "startDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "endDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "employmentStatus": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "current",
+                  "ended"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
           "title",
           "role"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "고용 형태 employmentType은 정규직(full-time)·계약직(contract)·인턴(intern)·아르바이트(part-time)·프리랜서(freelance)·기타(other). 재직 상태 employmentStatus는 재직 중(current)·종료(ended). endDate는 startDate 이후. current이면 endDate를 비우고, ended이면 endDate가 필요하다. 상세 필드는 모두 선택이며 예전 자유 기간(period)도 받는다. 기간 겹침·공백은 서버가 막지 않는다."
       },
       "CAREERUpdate": {
         "type": "object",
@@ -45762,6 +45828,71 @@
               }
             ]
           },
+          "employmentType": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "full-time",
+                  "contract",
+                  "intern",
+                  "part-time",
+                  "freelance",
+                  "other"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "department": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "startDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "endDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "employmentStatus": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "current",
+                  "ended"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "version": {
             "type": "integer",
             "minimum": 1
@@ -45772,7 +45903,8 @@
           "role",
           "version"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "고용 형태 employmentType은 정규직(full-time)·계약직(contract)·인턴(intern)·아르바이트(part-time)·프리랜서(freelance)·기타(other). 재직 상태 employmentStatus는 재직 중(current)·종료(ended). endDate는 startDate 이후. current이면 endDate를 비우고, ended이면 endDate가 필요하다. 상세 필드는 모두 선택이며 예전 자유 기간(period)도 받는다. 기간 겹침·공백은 서버가 막지 않는다."
       },
       "CAREERUpsert": {
         "type": "object",
@@ -45835,6 +45967,71 @@
               }
             ]
           },
+          "employmentType": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "full-time",
+                  "contract",
+                  "intern",
+                  "part-time",
+                  "freelance",
+                  "other"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "department": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "startDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "endDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "employmentStatus": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "current",
+                  "ended"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "version": {
             "type": "integer",
             "minimum": 1
@@ -45844,7 +46041,8 @@
           "title",
           "role"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "고용 형태 employmentType은 정규직(full-time)·계약직(contract)·인턴(intern)·아르바이트(part-time)·프리랜서(freelance)·기타(other). 재직 상태 employmentStatus는 재직 중(current)·종료(ended). endDate는 startDate 이후. current이면 endDate를 비우고, ended이면 endDate가 필요하다. 상세 필드는 모두 선택이며 예전 자유 기간(period)도 받는다. 기간 겹침·공백은 서버가 막지 않는다."
       },
       "CAREERResponse": {
         "type": "object",
@@ -45901,6 +46099,71 @@
                   "maxLength": 200
                 },
                 "maxItems": 500
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "employmentType": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "full-time",
+                  "contract",
+                  "intern",
+                  "part-time",
+                  "freelance",
+                  "other"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "department": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "startDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "endDate": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "employmentStatus": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "current",
+                  "ended"
+                ]
               },
               {
                 "type": "null"

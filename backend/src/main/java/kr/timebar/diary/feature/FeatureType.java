@@ -23,7 +23,7 @@ public enum FeatureType {
     WORK_RECORD("title body type owner projectId status startDate endDate startTime endTime half leaveDays location partner transport expense fromCompany toCompany role handover", "title type owner startDate endDate startTime endTime"),
     WBS("title body parentId md progress owner open startDate endDate", "title md progress"),
     WIKI("title body space parentId pinned", "title space"),
-    CAREER("title period role company stack achievements", "title role"),
+    CAREER("title period role company stack achievements employmentType department startDate endDate employmentStatus", "title role"),
     RESUME("name headline years skills education", "name"),
     PORTFOLIO("title body kind", "title kind"),
     PORTFOLIO_LINK("itemIds", "itemIds"),

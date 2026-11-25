@@ -106,6 +106,7 @@ for (const match of featureSource.matchAll(/(\w+)\("([^"]*)",\s*"([^"]*)"\)/g)) 
   if (name === 'COMMUNITY') { properties.joinPolicy = choice('open', 'approval'); properties.visibility = choice('public', 'private') }
   if (name === 'CHALLENGE') { properties.verify = choice('self', 'record'); properties.windowStart = clock; properties.windowEnd = clock }
   if (name === 'CAREER_ACTIVITY') { properties.activityType = choice('work', 'intern', 'part-time', 'freelance', 'project', 'study', 'community'); properties.visibility = choice('private') }
+  if (name === 'CAREER') { properties.employmentType = choice('full-time', 'contract', 'intern', 'part-time', 'freelance', 'other'); properties.employmentStatus = choice('current', 'ended') }
   if (name === 'JOB_APPLICATION') { properties.status = choice('interested', 'preparing', 'applied', 'screening-passed', 'interview', 'accepted', 'rejected', 'on-hold', 'withdrawn'); properties.postingUrl = string(2000) }
   for (const field of required.split(' ')) if (properties[field]?.type === 'string') properties[field] = { ...properties[field], minLength: 1 }
   for (const [field, definition] of Object.entries(properties)) if (!required.split(' ').includes(field)) properties[field] = { anyOf: [definition, { type: 'null' }] }
@@ -119,6 +120,7 @@ schemas.WORK_RECORDCreate.description = '종료 일시는 시작 이후. 반차�
 schemas.CHALLENGECreate.description = 'verify는 self(직접 인증, 기본) 또는 record(실시간 실제 기록으로 확인). record이면 minMinutes(1~600) 필수. windowStart·windowEnd(HH:mm)는 record에서만 함께 정하며 끝이 시작보다 늦어야 한다(자정을 넘지 않음). openRecords=true(기록 공개 챌린지)는 record여야 한다. 만든 뒤에는 규칙을 바꾸지 않는다.'
 schemas.CAREER_ACTIVITYCreate.description = 'activityType은 회사 업무(work)·인턴(intern)·아르바이트(part-time)·프리랜서(freelance)·개인 프로젝트(project)·학습(study)·커뮤니티 활동(community). endDate는 date 이후. experienceId는 본인 경력(/api/work/career/projects)의 ID만 받고, 없거나 다른 계정 경력이면 400. links는 http/https 절대 주소 최대 10개이며 서버가 호출하지 않는다. visibility는 private만 받고 빼면 private로 저장한다.'
 schemas.JOB_APPLICATIONCreate.description = 'status는 관심(interested)·준비 중(preparing)·지원 완료(applied)·서류 통과(screening-passed)·면접 예정(interview)·최종 합격(accepted)·불합격(rejected)·보류(on-hold)·철회(withdrawn). 상태 전이 제한은 없다. postingUrl은 http/https 절대 주소(최대 2000자)이며 서버가 공고를 가져오지 않는다.'
+schemas.CAREERCreate.description = '고용 형태 employmentType은 정규직(full-time)·계약직(contract)·인턴(intern)·아르바이트(part-time)·프리랜서(freelance)·기타(other). 재직 상태 employmentStatus는 재직 중(current)·종료(ended). endDate는 startDate 이후. current이면 endDate를 비우고, ended이면 endDate가 필요하다. 상세 필드는 모두 선택이며 예전 자유 기간(period)도 받는다. 기간 겹침·공백은 서버가 막지 않는다.'
 schemas.SCHEDULECreate.description = '종료 일시는 시작 이후, 최대 366일. 참석자 ID는 메타데이터이며 공유 권한을 만들지 않는다.'
 schemas.SETTINGCreate.description = 'JSON 최대 깊이 8, 객체 100필드, 배열 500항목, 저장 크기 128 KiB. apiKey/password/secret/cardNumber/accessToken/refreshToken은 중첩 위치에서도 거부한다. 자동화·AI 설정 저장은 실행을 의미하지 않는다.'
 

@@ -100,6 +100,7 @@ public final class FeatureInput {
             case COMMUNITY -> { choice(body, "joinPolicy", "open", "approval"); choice(body, "visibility", "public", "private"); number(body, "capacity", 2, 500, true); }
             case CHALLENGE -> validateChallenge(body);
             case CAREER_ACTIVITY -> validateActivity(body);
+            case CAREER -> validateCareer(body);
             case JOB_APPLICATION -> {
                 choice(body, "status", APPLICATION_STATUSES.toArray(String[]::new));
                 if (!text(body, "postingUrl").isEmpty()) webUrl(text(body, "postingUrl"));
@@ -130,6 +131,21 @@ public final class FeatureInput {
      * 커리어 활동은 기본 비공개다. 공유 기능이 아직 없어 private만 받는다(docs/design 09 §3).
      * 근거 링크는 http/https 주소만 저장하고 서버가 그 주소를 호출하지 않는다(docs/design 07 §1-4).
      */
+    /** 경력 고용 형태(REQ-F25, design 04 FD-86). 화면 이름은 정규직·계약직·인턴·아르바이트·프리랜서·기타다. */
+    public static final List<String> EMPLOYMENT_TYPES = List.of("full-time", "contract", "intern", "part-time", "freelance", "other");
+
+    /**
+     * 경력 상세(PR-24): 고용 형태·재직 상태는 허용값만, 종료일은 시작일 이후, 재직 중이면 종료일이 없고 종료면 종료일이 있다.
+     * 예전 기록의 자유 기간(period)은 그대로 받는다.
+     */
+    private static void validateCareer(Map<String, Object> body) {
+        if (body.get("employmentType") != null) choice(body, "employmentType", EMPLOYMENT_TYPES.toArray(String[]::new));
+        if (body.get("employmentStatus") != null) choice(body, "employmentStatus", "current", "ended");
+        if (!text(body, "startDate").isEmpty() && !text(body, "endDate").isEmpty()) range(text(body, "startDate"), text(body, "endDate"));
+        if ("current".equals(body.get("employmentStatus")) && !text(body, "endDate").isEmpty()) fail("재직 중인 경력은 종료일을 비워 주세요.");
+        if ("ended".equals(body.get("employmentStatus")) && text(body, "endDate").isEmpty()) fail("종료한 경력은 종료일이 필요해요.");
+    }
+
     private static void validateActivity(Map<String, Object> body) {
         choice(body, "activityType", ACTIVITY_TYPES.toArray(String[]::new));
         if (!text(body, "endDate").isEmpty()) range(text(body, "date"), text(body, "endDate"));

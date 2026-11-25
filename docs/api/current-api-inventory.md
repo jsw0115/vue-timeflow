@@ -2,7 +2,7 @@
 
 기준 2026-10-10. 생성 명령: frontend에서 npm run docs:api. 현재 컨트롤러의 단일 문자열 매핑 형식에 한정된 생성기입니다.
 
-총 298개. 기존 지정 계약 검증 10, 서비스 연결 275, 외부 제공자 경계 13, 미구현 stub 0, 공용 메모리 시연 0.
+총 317개. 기존 지정 계약 검증 10, 서비스 연결 294, 외부 제공자 경계 13, 미구현 stub 0, 공용 메모리 시연 0.
 
 | 상태 | 의미 |
 |---|---|
@@ -24,6 +24,19 @@ ChatController의 19개 경로는 CHAT_ENABLED=true일 때 등록됩니다. [채
 | POST | /api/auth/logout | 서비스 연결 · 검증 범위 별도 | JWT | AuthController |
 | POST | /api/auth/refresh | 서비스 연결 · 검증 범위 별도 | 공개 | AuthController |
 | GET | /api/auth/me | 서비스 연결 · 검증 범위 별도 | JWT | AuthController |
+| GET | /api/career/activities/{id}/sources | 서비스 연결 · 검증 범위 별도 | JWT | ActivitySourceController |
+| POST | /api/career/activities/{id}/sources | 서비스 연결 · 검증 범위 별도 | JWT | ActivitySourceController |
+| DELETE | /api/career/activities/{id}/sources/{kind}/{sourceId} | 서비스 연결 · 검증 범위 별도 | JWT | ActivitySourceController |
+| GET | /api/career/activities | 서비스 연결 · 검증 범위 별도 | JWT | CareerController |
+| GET | /api/career/activities/{id} | 서비스 연결 · 검증 범위 별도 | JWT | CareerController |
+| POST | /api/career/activities | 서비스 연결 · 검증 범위 별도 | JWT | CareerController |
+| PUT | /api/career/activities/{id} | 서비스 연결 · 검증 범위 별도 | JWT | CareerController |
+| DELETE | /api/career/activities/{id} | 서비스 연결 · 검증 범위 별도 | JWT | CareerController |
+| GET | /api/career/applications | 서비스 연결 · 검증 범위 별도 | JWT | CareerController |
+| GET | /api/career/applications/{id} | 서비스 연결 · 검증 범위 별도 | JWT | CareerController |
+| POST | /api/career/applications | 서비스 연결 · 검증 범위 별도 | JWT | CareerController |
+| PUT | /api/career/applications/{id} | 서비스 연결 · 검증 범위 별도 | JWT | CareerController |
+| DELETE | /api/career/applications/{id} | 서비스 연결 · 검증 범위 별도 | JWT | CareerController |
 | GET | /api/chat/people | 서비스 연결 · 검증 범위 별도 | JWT | ChatController |
 | PUT | /api/chat/communities/{communityId}/room | 서비스 연결 · 검증 범위 별도 | JWT | ChatController |
 | GET | /api/chat/rooms | 서비스 연결 · 검증 범위 별도 | JWT | ChatController |
@@ -64,6 +77,9 @@ ChatController의 19개 경로는 CHAT_ENABLED=true일 때 등록됩니다. [채
 | POST | /api/admin/notices | 서비스 연결 · 검증 범위 별도 | JWT + ADMIN | AdminController |
 | PUT | /api/admin/notices/{id} | 서비스 연결 · 검증 범위 별도 | JWT + ADMIN | AdminController |
 | DELETE | /api/admin/notices/{id} | 서비스 연결 · 검증 범위 별도 | JWT + ADMIN | AdminController |
+| GET | /api/admin/policy | 서비스 연결 · 검증 범위 별도 | JWT + ADMIN | AdminPolicyController |
+| POST | /api/contacts/{id}/account | 서비스 연결 · 검증 범위 별도 | JWT | ContactAccountController |
+| DELETE | /api/contacts/{id}/account | 서비스 연결 · 검증 범위 별도 | JWT | ContactAccountController |
 | GET | /api/diary/calendar | 서비스 연결 · 검증 범위 별도 | JWT | EventDiaryMemoController |
 | GET | /api/diary/{date} | 서비스 연결 · 검증 범위 별도 | JWT | EventDiaryMemoController |
 | POST | /api/diary/{date} | 서비스 연결 · 검증 범위 별도 | JWT | EventDiaryMemoController |
@@ -73,6 +89,8 @@ ChatController의 19개 경로는 CHAT_ENABLED=true일 때 등록됩니다. [채
 | GET | /api/stat/category | 서비스 연결 · 검증 범위 별도 | JWT | InsightController |
 | GET | /api/stat/plan-actual | 서비스 연결 · 검증 범위 별도 | JWT | InsightController |
 | GET | /api/stat/focus | 서비스 연결 · 검증 범위 별도 | JWT | InsightController |
+| POST | /api/notifications/due-refresh | 서비스 연결 · 검증 범위 별도 | JWT | NotificationRefreshController |
+| POST | /api/notifications/{id}/actions/{action} | 서비스 연결 · 검증 범위 별도 | JWT | NotificationRefreshController |
 | GET | /api/reports/time-blocks | 서비스 연결 · 검증 범위 별도 | JWT | ReportController |
 | POST | /api/reports/draft | 서비스 연결 · 검증 범위 별도 | JWT | ReportController |
 | GET | /api/reports/{reportKey} | 서비스 연결 · 검증 범위 별도 | JWT | ReportController |
@@ -290,6 +308,7 @@ ChatController의 19개 경로는 CHAT_ENABLED=true일 때 등록됩니다. [채
 | PUT | /api/tasks/{taskId}/checklist-items/{itemId}/completion | 구현 완료 · 단위/HTTP 계약 검증 | JWT | TaskChecklistController |
 | DELETE | /api/tasks/{taskId}/checklist-items/{itemId} | 구현 완료 · 단위/HTTP 계약 검증 | JWT | TaskChecklistController |
 | POST | /api/work/portfolio-links | 서비스 연결 · 검증 범위 별도 | JWT | PortfolioLinkController |
+| GET | /api/work/portfolio-links | 서비스 연결 · 검증 범위 별도 | JWT | PortfolioLinkController |
 | DELETE | /api/work/portfolio-links/{id} | 서비스 연결 · 검증 범위 별도 | JWT | PortfolioLinkController |
 | GET | /api/public/portfolios/{token} | 서비스 연결 · 검증 범위 별도 | 공개 | PortfolioLinkController |
 | GET | /api/work/records | 서비스 연결 · 검증 범위 별도 | JWT | WorkController |

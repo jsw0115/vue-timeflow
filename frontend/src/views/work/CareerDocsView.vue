@@ -5,6 +5,8 @@ import SaveStatus from '../../components/SaveStatus.vue'
 import ConflictCompare from '../../components/ConflictCompare.vue'
 import { careerStore, portfolioStore, resumeStore } from '../../store/career'
 import { achievementsFromText } from '../../features/records/featureKinds.mjs'
+import { EMPLOYMENT_STATUSES, EMPLOYMENT_TYPES, GAP_NOTICE_DAYS, careerDetailError, careerPeriodNotes, employmentTypeLabel, periodLabel } from '../../features/career/careerPeriods.mjs'
+import { localDate } from '../../utils/postValidation.mjs'
 import { createSaveState, saveFailureMessage } from '../../features/records/saveState.mjs'
 import {
   workPrivacy, VISIBILITY, isPortfolioShared, togglePortfolioShared, logAccess,
@@ -80,19 +82,26 @@ const listMessage = ref('')
 const projectEditor = ref(null)
 const projectSaving = createSaveState({ fields: { title: ['title', '제목'], role: ['role', '역할'] } })
 const projectConflict = ref(null)
-const projectCanSave = computed(() => !!projectEditor.value?.draft.title.trim() && !!projectEditor.value?.draft.role.trim())
+const projectDetailError = computed(() => (projectEditor.value ? careerDetailError(projectEditor.value.draft) : ''))
+const projectCanSave = computed(() => !!projectEditor.value?.draft.title.trim() && !!projectEditor.value?.draft.role.trim() && !projectDetailError.value)
 function openProject(p = null) {
   projectSaving.reset()
   projectConflict.value = null
   projectEditor.value = {
     base: p ? { ...p } : null,
-    draft: { title: p?.title ?? '', period: p?.period ?? '', role: p?.role ?? '', company: p?.company ?? '', stack: p?.stack ?? '', achievementsText: (p?.achievements ?? []).join('\n') },
+    draft: {
+      title: p?.title ?? '', period: p?.period ?? '', role: p?.role ?? '', company: p?.company ?? '', stack: p?.stack ?? '', achievementsText: (p?.achievements ?? []).join('\n'),
+      employmentType: p?.employmentType ?? '', department: p?.department ?? '', startDate: p?.startDate ?? '', endDate: p?.endDate ?? '', employmentStatus: p?.employmentStatus ?? '',
+    },
   }
 }
 async function saveProject() {
   const { base, draft } = projectEditor.value
   if (!projectCanSave.value) return
-  const values = { title: draft.title.trim(), period: draft.period, role: draft.role.trim(), company: draft.company, stack: draft.stack, achievements: achievementsFromText(draft.achievementsText) }
+  const values = {
+    title: draft.title.trim(), period: draft.period, role: draft.role.trim(), company: draft.company, stack: draft.stack, achievements: achievementsFromText(draft.achievementsText),
+    employmentType: draft.employmentType, department: draft.department, startDate: draft.startDate, endDate: draft.employmentStatus === 'current' ? '' : draft.endDate, employmentStatus: draft.employmentStatus,
+  }
   projectConflict.value = null
   const result = await projectSaving.run(() => (base ? careerStore.update(base, values) : careerStore.create(values)))
   if (result.ok) { projectEditor.value = null; return }
@@ -103,11 +112,17 @@ const projectCompareRows = computed(() => {
   const latest = projectConflict.value.latest, mine = projectEditor.value.draft
   return [
     { label: '프로젝트', mine: mine.title.trim(), latest: latest.title },
-    { label: '기간 · 역할', mine: mine.period + ' · ' + mine.role, latest: (latest.period ?? '') + ' · ' + latest.role },
-    { label: '회사', mine: mine.company, latest: latest.company ?? '' },
+    { label: '기간 · 역할', mine: periodLabel(mine) + ' · ' + mine.role, latest: periodLabel(latest) + ' · ' + latest.role },
+    { label: '회사 · 부서', mine: [mine.company, mine.department].filter(Boolean).join(' · '), latest: [latest.company, latest.department].filter(Boolean).join(' · ') },
+    { label: '고용 형태 · 상태', mine: detailLabel(mine), latest: detailLabel(latest) },
     { label: '성과', mine: achievementsFromText(mine.achievementsText).join('\n'), latest: (latest.achievements ?? []).join('\n') },
   ]
 })
+function detailLabel(p) {
+  return [employmentTypeLabel(p.employmentType), EMPLOYMENT_STATUSES.find((item) => item.value === p.employmentStatus)?.label].filter(Boolean).join(' · ')
+}
+/* 기간 겹침·공백 안내(REQ-F25). 저장은 막지 않는다 */
+const periodNotes = computed(() => (onServer.value ? careerPeriodNotes(projects.value, localDate()) : { overlaps: [], gaps: [], compared: 0 }))
 function keepMyProject() {
   projectEditor.value.base = { ...projectConflict.value.latest }
   projectConflict.value = null
@@ -183,7 +198,7 @@ const generating = ref(null)
 const generated = ref('')
 function generateStatement(p) {
   generating.value = p
-  const head = p.period + ' · ' + p.role + ' (' + (workPrivacy.maskCompanyNames ? '회사명 비공개' : p.company) + ')'
+  const head = periodLabel(p) + ' · ' + p.role + ' (' + (workPrivacy.maskCompanyNames ? '회사명 비공개' : p.company) + ')'
   const body = p.achievements.map((a) => '- ' + a).join('\n')
   generated.value = [
     head,
@@ -213,7 +228,7 @@ function buildDoc(kind) {
     ]
     projects.value.forEach((p) => {
       sections.push({ type: 'h2', text: p.title })
-      sections.push({ type: 'meta', text: p.period + ' · ' + p.role + ' · ' + companyLabel(p) })
+      sections.push({ type: 'meta', text: [periodLabel(p), p.role, companyLabel(p), p.department, employmentTypeLabel(p.employmentType)].filter(Boolean).join(' · ') })
       sections.push({ type: 'list', items: p.achievements })
       sections.push({ type: 'p', text: '사용 기술: ' + p.stack })
     })
@@ -233,7 +248,7 @@ function buildDoc(kind) {
         {
           type: 'table',
           head: ['기간', '역할', '소속', '프로젝트'],
-          rows: projects.value.map((p) => [p.period, p.role, companyLabel(p), p.title]),
+          rows: projects.value.map((p) => [periodLabel(p), p.role, companyLabel(p), p.title]),
         },
       ],
     }
@@ -314,11 +329,19 @@ function onVisibilityChange(v) {
     <div v-else-if="onServer && careerStore.state.error && !careerStore.state.loaded" class="empty-state" role="status"><p>경력을 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요.</p><button type="button" class="button-secondary" @click="careerStore.reload()">다시 시도</button></div>
     <div v-else-if="onServer && !projects.length" class="empty-state" role="status"><p>아직 남긴 경력 프로젝트가 없어요. 프로젝트를 추가해 보세요.</p></div>
     <button v-if="onServer" type="button" class="button-secondary" style="margin-bottom: 12px" @click="openProject()">프로젝트 추가</button>
+    <div v-if="periodNotes.overlaps.length || periodNotes.gaps.length" class="career-period-notes" role="note">
+      <p class="section-label">기간 확인</p>
+      <ul>
+        <li v-for="[a, b] in periodNotes.overlaps" :key="'o' + a.id + '-' + b.id">‘{{ a.title }}’, ‘{{ b.title }}’ 기간이 겹쳐요. 겸직이나 동시 프로젝트라면 그대로 두셔도 돼요.</li>
+        <li v-for="gap in periodNotes.gaps" :key="'g' + gap.after.id + '-' + gap.before.id">‘{{ gap.after.title }}’ 뒤 ‘{{ gap.before.title }}’ 시작까지 <span class="figure">{{ gap.days }}</span>일이 비어요.</li>
+      </ul>
+      <p class="input-field-help">시작일이 있는 경력만 비교해요. 공백은 {{ GAP_NOTICE_DAYS }}일보다 길 때만 알려요.</p>
+    </div>
     <section class="card" v-for="p in projects" :key="p.id" style="margin-bottom: 12px">
       <div class="head">
         <div>
           <h3 style="margin: 0">{{ p.title }}</h3>
-          <p style="margin: 4px 0 0">{{ p.period }} · {{ p.role }} · {{ workPrivacy.maskCompanyNames ? mask(p.company ?? '') : p.company }}</p>
+          <p style="margin: 4px 0 0">{{ [periodLabel(p), p.role, workPrivacy.maskCompanyNames ? mask(p.company ?? '') : p.company, p.department, employmentTypeLabel(p.employmentType)].filter(Boolean).join(' · ') }}</p>
         </div>
         <span style="display: flex; flex-wrap: wrap; gap: 6px">
           <button class="review" style="margin: 0" @click="generateStatement(p)">문장 만들기</button>
@@ -455,10 +478,23 @@ function onVisibilityChange(v) {
   </Modal>
   <Modal v-if="projectEditor" :title="projectEditor.base ? '경력 프로젝트 수정' : '경력 프로젝트 추가'" @close="projectEditor = null">
     <label>프로젝트<input v-model="projectEditor.draft.title" maxlength="200" /></label>
-    <div class="form-row"><label style="flex: 1">기간<input v-model="projectEditor.draft.period" maxlength="200" placeholder="예: 2026.03 ~ 2026.09" /></label><label style="flex: 1">역할<input v-model="projectEditor.draft.role" maxlength="200" /></label></div>
-    <div class="form-row"><label style="flex: 1">회사<input v-model="projectEditor.draft.company" maxlength="200" /></label><label style="flex: 1">기술<input v-model="projectEditor.draft.stack" maxlength="200" /></label></div>
+    <div class="career-detail-grid">
+      <label>회사<input v-model="projectEditor.draft.company" maxlength="200" /></label>
+      <label>부서<input v-model="projectEditor.draft.department" maxlength="200" /></label>
+      <label>역할<input v-model="projectEditor.draft.role" maxlength="200" /></label>
+      <label>고용 형태<select v-model="projectEditor.draft.employmentType"><option value="">선택 안 함</option><option v-for="item in EMPLOYMENT_TYPES" :key="item.value" :value="item.value">{{ item.label }}</option></select></label>
+    </div>
+    <div class="career-detail-grid career-period-grid">
+      <label>재직 상태<select v-model="projectEditor.draft.employmentStatus"><option value="">선택 안 함</option><option v-for="item in EMPLOYMENT_STATUSES" :key="item.value" :value="item.value">{{ item.label }}</option></select></label>
+      <label>시작일<input v-model="projectEditor.draft.startDate" type="date" /></label>
+      <label>종료일<input v-model="projectEditor.draft.endDate" type="date" :min="projectEditor.draft.startDate || undefined" :disabled="projectEditor.draft.employmentStatus === 'current'" :aria-describedby="projectEditor.draft.employmentStatus === 'current' ? 'career-end-help' : undefined" /></label>
+    </div>
+    <p v-if="projectEditor.draft.employmentStatus === 'current'" id="career-end-help" class="input-field-help">재직 중이면 종료일 없이 저장해요.</p>
+    <p v-if="!projectEditor.draft.startDate && projectEditor.draft.period" class="input-field-help">예전에 적은 기간: {{ projectEditor.draft.period }}. 시작일을 넣으면 날짜 기준으로 바뀌어요.</p>
+    <p v-if="projectDetailError" class="input-field-help" data-state="error" role="alert">{{ projectDetailError }}</p>
+    <label>기술<input v-model="projectEditor.draft.stack" maxlength="200" /></label>
     <label>성과 (한 줄에 하나)<textarea v-model="projectEditor.draft.achievementsText" rows="5"></textarea></label>
-    <p v-if="!projectCanSave" class="form-note">프로젝트와 역할을 입력해주세요.</p>
+    <p v-if="!projectEditor.draft.title.trim() || !projectEditor.draft.role.trim()" class="form-note">프로젝트와 역할을 입력해주세요.</p>
     <p v-if="projectSaving.state.fieldMessage" class="input-field-help" data-state="error" role="alert">{{ projectSaving.state.fieldMessage }}</p>
     <ConflictCompare v-if="projectConflict" :rows="projectCompareRows" :busy="projectSaving.state.status === 'saving'" @keep-mine="keepMyProject" @use-latest="useLatestProject" />
     <SaveStatus :state="projectSaving.state" mode="server" @retry="saveProject" />
@@ -481,4 +517,10 @@ function onVisibilityChange(v) {
 
 <style>
 .career-note { display: block; margin: 0 0 var(--space-md); }
+.career-period-notes { margin: 0 0 var(--space-md); padding: var(--space-md) var(--space-lg); border: 1px solid var(--color-hairline); border-radius: var(--radius-md); background: var(--color-card); }
+.career-period-notes ul { margin: var(--space-xs) 0; padding-left: var(--space-lg); }
+/* 경력 편집 창의 상세 입력. 좁은 화면에서는 한 열로 내린다. 전역 규칙의 첫 label 여백 0을 칸마다 같게 맞춘다 */
+.career-detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); column-gap: var(--space-md); }
+.career-period-grid { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
+.modal-card .career-detail-grid > label, .modal-card .career-detail-grid > label:first-child { margin-top: var(--space-lg); }
 </style>
