@@ -4,10 +4,16 @@ import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { apiRequest } from '../../features/auth/apiRequest.js'
 import { filledSections, safeLinks } from '../../features/career/portfolioItems.mjs'
+import { unlockErrorText, unlockPublic } from '../../features/career/portfolioLinks.mjs'
 
 const route = useRoute()
 const items = ref([])
 const status = ref('loading')
+// 비밀번호가 걸린 링크(Q-39)는 항목 없이 protected만 온다. 비밀번호를 넣어 연다
+const locked = ref(false)
+const password = ref('')
+const unlocking = ref(false)
+const unlockMessage = ref('')
 let robots = null
 
 function setNoIndex(on) {
@@ -22,9 +28,18 @@ async function load() {
   try {
     const data = await apiRequest(`/api/public/portfolios/${token}`)
     items.value = data?.items ?? []
+    locked.value = data?.protected === true && !items.value.length
     setNoIndex(data?.scope !== 'public')
     status.value = 'ready'
   } catch (error) { status.value = error?.status === 404 ? 'missing' : 'error' }
+}
+async function unlock() {
+  if (!password.value) return
+  unlocking.value = true; unlockMessage.value = ''
+  try {
+    const data = await unlockPublic(apiRequest, String(route.params.token ?? ''), password.value)
+    items.value = data?.items ?? []; locked.value = false; password.value = ''
+  } catch (error) { unlockMessage.value = unlockErrorText(error) } finally { unlocking.value = false }
 }
 onMounted(load)
 onBeforeUnmount(() => setNoIndex(false))
@@ -36,6 +51,12 @@ onBeforeUnmount(() => setNoIndex(false))
     <p v-if="status === 'loading'" class="input-field-help" role="status">포트폴리오를 불러오는 중이에요.</p>
     <div v-else-if="status === 'missing'" class="empty-state" role="status"><p>이 링크는 닫혔거나 기간이 지났어요. 링크를 보낸 사람에게 새 링크를 받아 주세요.</p></div>
     <div v-else-if="status === 'error'" class="empty-state" role="alert"><p>포트폴리오를 불러오지 못했어요. 잠시 뒤 다시 시도해 주세요.</p><button type="button" class="button-secondary" @click="load">다시 시도</button></div>
+    <form v-else-if="locked" class="card public-portfolio-lock" @submit.prevent="unlock">
+      <p>이 포트폴리오는 비밀번호로 보호돼 있어요. 링크를 보낸 사람에게 받은 비밀번호를 넣어 주세요.</p>
+      <label>비밀번호<input v-model="password" type="password" autocomplete="current-password" maxlength="100" :aria-invalid="unlockMessage ? 'true' : undefined" aria-describedby="public-portfolio-lock-help" /></label>
+      <p id="public-portfolio-lock-help" class="input-field-help" :data-state="unlockMessage ? 'error' : undefined" :role="unlockMessage ? 'alert' : undefined">{{ unlockMessage || '열 번 틀리면 이 링크가 잠겨요.' }}</p>
+      <button type="submit" class="primary" :disabled="!password || unlocking" :aria-busy="unlocking ? 'true' : undefined">{{ unlocking ? '확인하는 중' : '열기' }}</button>
+    </form>
     <template v-else>
       <article v-for="(item, index) in items" :key="index" class="card public-portfolio-item">
         <h2>{{ item.title }}</h2>
@@ -69,6 +90,10 @@ onBeforeUnmount(() => setNoIndex(false))
 .public-portfolio-links h3 { margin: var(--space-md) 0 var(--space-xs); font-size: var(--type-body-sm-size); }
 .public-portfolio-links ul { margin: 0; padding-left: var(--space-xl); }
 .public-portfolio-links a { overflow-wrap: anywhere; }
+.public-portfolio-lock { display: grid; gap: var(--space-md); padding: var(--space-xxl); }
+.public-portfolio-lock p { margin: 0; }
+.public-portfolio-lock label { display: grid; gap: var(--space-xs); font-weight: 600; }
+.public-portfolio-lock button { justify-self: start; }
 /* 좁은 화면에서는 본문 폭을 넓히려고 바깥·안쪽 여백을 줄인다 */
 @media (max-width: 480px) { .public-portfolio { padding: var(--space-xl) var(--space-lg); } .public-portfolio-item { padding: var(--space-lg); } }
 </style>

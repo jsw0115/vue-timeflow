@@ -2,7 +2,7 @@
 
 기준 2026-10-10. 생성 명령: frontend에서 npm run docs:api. 현재 컨트롤러의 단일 문자열 매핑 형식에 한정된 생성기입니다.
 
-총 330개. 기존 지정 계약 검증 10, 서비스 연결 307, 외부 제공자 경계 13, 미구현 stub 0, 공용 메모리 시연 0.
+총 331개. 기존 지정 계약 검증 10, 서비스 연결 308, 외부 제공자 경계 13, 미구현 stub 0, 공용 메모리 시연 0.
 
 | 상태 | 의미 |
 |---|---|
@@ -324,6 +324,7 @@ ChatController의 19개 경로는 CHAT_ENABLED=true일 때 등록됩니다. [채
 | GET | /api/work/portfolio-links | 서비스 연결 · 검증 범위 별도 | JWT | PortfolioLinkController |
 | DELETE | /api/work/portfolio-links/{id} | 서비스 연결 · 검증 범위 별도 | JWT | PortfolioLinkController |
 | GET | /api/public/portfolios/{token} | 서비스 연결 · 검증 범위 별도 | 공개 | PortfolioLinkController |
+| POST | /api/public/portfolios/{token}/unlock | 서비스 연결 · 검증 범위 별도 | 공개 | PortfolioLinkController |
 | GET | /api/work/records | 서비스 연결 · 검증 범위 별도 | JWT | WorkController |
 | GET | /api/work/records/{id} | 서비스 연결 · 검증 범위 별도 | JWT | WorkController |
 | POST | /api/work/records | 서비스 연결 · 검증 범위 별도 | JWT | WorkController |

@@ -3,13 +3,16 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { apiRequest } from '../features/auth/apiRequest.js'
-import { LINK_DAYS, SCOPES, createPortfolioLinkClient, expiryText, linkErrorText, publicPagePath, scopeLabel } from '../features/career/portfolioLinks.mjs'
+import { LINK_DAYS, PASSWORD_MAX, PASSWORD_MIN, SCOPES, createPortfolioLinkClient, expiryText, linkErrorText, publicPagePath, scopeLabel } from '../features/career/portfolioLinks.mjs'
 
 const props = defineProps({ items: { type: Array, default: () => [] } })
 const router = useRouter()
 const client = createPortfolioLinkClient(apiRequest)
 const selected = ref([])
 const scope = ref('link')
+// 링크 공개의 선택 비밀번호(Q-39). 비우면 비밀번호 없이 만든다
+const password = ref('')
+const passwordOk = computed(() => !password.value || (password.value.length >= PASSWORD_MIN && password.value.length <= PASSWORD_MAX))
 const days = ref(7)
 const links = ref([])
 const status = ref('loading')
@@ -18,7 +21,7 @@ const created = ref(null)
 const busy = ref(false)
 const titleOf = (id) => props.items.find((item) => item.id === id)?.title ?? '지운 항목'
 const absoluteUrl = (token) => new URL(router.resolve(publicPagePath(token)).href, window.location.href).href
-const canCreate = computed(() => selected.value.length > 0 && !busy.value)
+const canCreate = computed(() => selected.value.length > 0 && !busy.value && (scope.value !== 'link' || passwordOk.value))
 
 async function load() {
   status.value = 'loading'
@@ -30,9 +33,9 @@ async function create() {
   if (!canCreate.value) return
   busy.value = true; message.value = ''; created.value = null
   try {
-    const row = await client.create({ itemIds: selected.value, scope: scope.value, expiresInDays: days.value })
+    const row = await client.create({ itemIds: selected.value, scope: scope.value, expiresInDays: days.value, password: scope.value === 'link' ? password.value : '' })
     created.value = { ...row, href: absoluteUrl(row.token) }
-    selected.value = []
+    selected.value = []; password.value = ''
     await load()
   } catch (error) { message.value = linkErrorText(error) } finally { busy.value = false }
 }
@@ -61,6 +64,8 @@ async function copy(text) {
       <legend>공개 범위</legend>
       <label v-for="s in SCOPES" :key="s.id" class="portfolio-check"><input v-model="scope" type="radio" name="portfolio-scope" :value="s.id" /><span><b>{{ s.label }}</b><small>{{ s.desc }}</small></span></label>
       <label v-if="scope === 'link'" class="portfolio-days">열어 둘 기간<select v-model.number="days"><option v-for="d in LINK_DAYS" :key="d" :value="d">{{ d }}일</option></select></label>
+      <label v-if="scope === 'link'" class="portfolio-days">비밀번호(선택)<input v-model="password" type="password" autocomplete="new-password" :maxlength="PASSWORD_MAX" :aria-invalid="passwordOk ? undefined : 'true'" aria-describedby="portfolio-password-help" /></label>
+      <p v-if="scope === 'link'" id="portfolio-password-help" class="input-field-help" :data-state="passwordOk ? undefined : 'error'">넣으면 받는 사람이 이 비밀번호를 알아야 볼 수 있어요. {{ PASSWORD_MIN }}~{{ PASSWORD_MAX }}자이고, 열 번 틀리면 링크가 잠겨요. 비밀번호는 링크와 다른 길로 알려 주세요.</p>
     </fieldset>
     <button type="button" class="button-secondary" :disabled="!canCreate" :aria-busy="busy ? 'true' : undefined" @click="create">{{ busy ? '만드는 중' : '링크 만들기' }}</button>
 
@@ -76,7 +81,7 @@ async function copy(text) {
     <p v-if="status === 'loading'" class="input-field-help" role="status">링크를 불러오는 중이에요.</p>
     <ul v-else-if="links.length" class="portfolio-link-list">
       <li v-for="link in links" :key="link.id">
-        <span class="portfolio-link-info"><b>{{ scopeLabel(link.scope) }}</b> · {{ link.itemIds.map(titleOf).join(', ') }}<small>{{ expiryText(link) }}<template v-if="link.token"> · <a :href="absoluteUrl(link.token)" target="_blank" rel="noopener noreferrer">공개 화면 열기</a></template></small></span>
+        <span class="portfolio-link-info"><b>{{ scopeLabel(link.scope) }}</b> · {{ link.itemIds.map(titleOf).join(', ') }}<small>{{ expiryText(link) }}<template v-if="link.protected"> · 비밀번호 있음</template><template v-if="link.token"> · <a :href="absoluteUrl(link.token)" target="_blank" rel="noopener noreferrer">공개 화면 열기</a></template></small></span>
         <button type="button" class="button-secondary" :disabled="busy" :aria-label="scopeLabel(link.scope) + ' 링크 닫기'" @click="revoke(link)">닫기</button>
       </li>
     </ul>

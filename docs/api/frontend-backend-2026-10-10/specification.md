@@ -2607,6 +2607,22 @@ KRW 정수. type=in은 양수, out은 음수. 0은 거부한다.
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 
+## POST /api/public/portfolios/{token}/unlock
+
+인증은 JWT이며 소스는 PortfolioLinkController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | token | String | 예 | 없음 |
+
+| 본문 필드 | 타입 | 필수 | 제약 |
+|---|---|---|---|
+| password | string | 예 | 길이 ≤ 100 |
+
+비밀번호가 걸린 링크 열기(Q-39). 맞으면 공개 항목, 틀리면 401, 틀린 횟수가 10번이 되면 403(잠김). 비밀번호가 없는 링크는 바로 내용을 준다. 만료·닫힘은 404.
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
 ## GET /api/record-links
 
 인증은 JWT이며 소스는 RecordLinkController.java다. 성공 HTTP는 200다.
@@ -3860,8 +3876,9 @@ file을 multipart/form-data로 전달한다. boundary는 HTTP 클라이언트가
 | itemIds | array | 예 | 기능 규약 참조 |
 | scope | string | 아니오 | public/link |
 | expiresInDays | integer | 아니오 | 1/7/30 |
+| password | string | 아니오 | 길이 ≤ 100 |
 
-고른 포트폴리오 항목만 여는 링크(Q-22). scope 기본 link: 1·7·30일(기본 7) 뒤 만료, 주소는 이 응답에서 한 번만 보인다. public: 만료 없음, 목록에서 주소를 다시 보인다. 열린 링크는 20개까지(넘으면 409).
+고른 포트폴리오 항목만 여는 링크(Q-22). scope 기본 link: 1·7·30일(기본 7) 뒤 만료, 주소는 이 응답에서 한 번만 보인다. public: 만료 없음, 목록에서 주소를 다시 보인다. 열린 링크는 20개까지(넘으면 409). password(Q-39)는 link에만 선택으로 받고 해시만 저장한다. public에 보내면 400.
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 

@@ -24,7 +24,7 @@ public class SecurityConfig {
             "/api/auth/signup", "/api/auth/login", "/api/auth/refresh",
             "/v3/api-docs/**", "/demo-ui.html", "/swagger-ui/**",
             "/actuator/health",
-            "/api/public/portfolios/*",
+            "/api/public/portfolios/*", "/api/public/portfolios/*/unlock",
     };
 
     @Bean

@@ -1,6 +1,6 @@
 # API 목록
 
-기준 2026-10-10. 총 330개 매핑이며 wildcard 경로는 허용된 값을 선택한다. 채팅은 CHAT_ENABLED=true 조건부 등록이다. 구현·검증 범위는 [검증 기록](verification.md)을 확인한다.
+기준 2026-10-10. 총 331개 매핑이며 wildcard 경로는 허용된 값을 선택한다. 채팅은 CHAT_ENABLED=true 조건부 등록이다. 구현·검증 범위는 [검증 기록](verification.md)을 확인한다.
 
 | 메서드 | 경로 | 인증 | 처리 | 소스 |
 |---|---|---|---|---|
@@ -206,6 +206,7 @@
 | GET | `/api/planner/weekly` | JWT | 실제 처리 소스 있음 | PlannerViewController |
 | GET | `/api/planner/yearly` | JWT | 실제 처리 소스 있음 | PlannerViewController |
 | GET | `/api/public/portfolios/{token}` | 공개 | 실제 처리 소스 있음 | PortfolioLinkController |
+| POST | `/api/public/portfolios/{token}/unlock` | JWT | 실제 처리 소스 있음 | PortfolioLinkController |
 | GET | `/api/record-links` | JWT | 실제 처리 소스 있음 | RecordLinkController |
 | GET | `/api/reports/{reportKey}` | JWT | 실제 처리 소스 있음 | ReportController |
 | POST | `/api/reports/{reportKey}` | JWT | 실제 처리 소스 있음 | ReportController |

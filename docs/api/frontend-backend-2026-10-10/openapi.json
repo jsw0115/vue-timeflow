@@ -24443,6 +24443,149 @@
                         "expiresAt": {
                           "type": "string",
                           "format": "date-time"
+                        },
+                        "protected": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "items",
+                        "scope"
+                      ],
+                      "additionalProperties": false,
+                      "description": "비밀번호가 걸린 링크는 items를 비우고 protected=true만 준다. 내용은 unlock으로 연다."
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 검증 오류.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "없음·타인 리소스·만료.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "버전·현재 상태 충돌.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-implementation-status": "서비스 연결 · 검증 범위 별도",
+        "x-source": "PortfolioLinkController.java",
+        "x-admin-required": false,
+        "x-test-evidence": "verification.md"
+      }
+    },
+    "/api/public/portfolios/{token}/unlock": {
+      "post": {
+        "operationId": "PortfolioLinkController_post__api_public_portfolios__token__unlock",
+        "tags": [
+          "PortfolioLinkController"
+        ],
+        "summary": "POST /api/public/portfolios/{token}/unlock",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "password": {
+                    "type": "string",
+                    "maxLength": 100
+                  }
+                },
+                "required": [
+                  "password"
+                ],
+                "additionalProperties": false,
+                "description": "비밀번호가 걸린 링크 열기(Q-39). 맞으면 공개 항목, 틀리면 401, 틀린 횟수가 10번이 되면 403(잠김). 비밀번호가 없는 링크는 바로 내용을 준다. 만료·닫힘은 404."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "성공. 세부 정책은 README와 기능 규약을 따른다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/PublicPortfolioItem"
+                          },
+                          "maxItems": 500
+                        },
+                        "scope": {
+                          "type": "string",
+                          "enum": [
+                            "public",
+                            "link"
+                          ]
+                        },
+                        "expiresAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "protected": {
+                          "type": "boolean"
                         }
                       },
                       "required": [
@@ -24470,6 +24613,26 @@
           },
           "400": {
             "description": "입력 검증 오류.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 필요 또는 폐기된 토큰.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "역할·회원 권한 부족.",
             "content": {
               "application/json": {
                 "schema": {
@@ -36612,6 +36775,9 @@
                             "type": "string",
                             "maxLength": 43
                           },
+                          "protected": {
+                            "type": "boolean"
+                          },
                           "expiresAt": {
                             "type": "string",
                             "format": "date-time"
@@ -36745,13 +36911,18 @@
                       7,
                       30
                     ]
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 4,
+                    "maxLength": 100
                   }
                 },
                 "required": [
                   "itemIds"
                 ],
                 "additionalProperties": false,
-                "description": "고른 포트폴리오 항목만 여는 링크(Q-22). scope 기본 link: 1·7·30일(기본 7) 뒤 만료, 주소는 이 응답에서 한 번만 보인다. public: 만료 없음, 목록에서 주소를 다시 보인다. 열린 링크는 20개까지(넘으면 409)."
+                "description": "고른 포트폴리오 항목만 여는 링크(Q-22). scope 기본 link: 1·7·30일(기본 7) 뒤 만료, 주소는 이 응답에서 한 번만 보인다. public: 만료 없음, 목록에서 주소를 다시 보인다. 열린 링크는 20개까지(넘으면 409). password(Q-39)는 link에만 선택으로 받고 해시만 저장한다. public에 보내면 400."
               }
             }
           }
@@ -36796,6 +36967,9 @@
                         "url": {
                           "type": "string",
                           "maxLength": 200
+                        },
+                        "protected": {
+                          "type": "boolean"
                         },
                         "expiresAt": {
                           "type": "string",

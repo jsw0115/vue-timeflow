@@ -55,3 +55,28 @@ test('화면: 수정 버튼과 충돌 비교, 공개 주의 문구, 공개 화�
   assert.match(pub, /v-for="link in safeLinks\(item\)"/)
   assert.doesNotMatch(pub, /activityIds|experienceId/)
 })
+
+test('Q-39 링크 비밀번호: 링크 공개에만 보내고, 공개 화면은 비밀번호를 본문으로 보내 연다', async () => {
+  const { createPortfolioLinkClient, unlockPublic, unlockErrorText, PASSWORD_MIN, PASSWORD_MAX } = await import('../src/features/career/portfolioLinks.mjs')
+  const calls = []
+  const request = async (path, options = {}) => { calls.push([path, options.method ?? 'GET', options.body ? JSON.parse(options.body) : null]); return {} }
+  const client = createPortfolioLinkClient(request)
+  await client.create({ itemIds: ['p1'], scope: 'link', expiresInDays: 7, password: 'secret-1' })
+  await client.create({ itemIds: ['p1'], scope: 'public', password: 'secret-1' })
+  await client.create({ itemIds: ['p1'], scope: 'link', expiresInDays: 7 })
+  await unlockPublic(request, 'A'.repeat(43), 'secret-1')
+  assert.deepEqual(calls.map((c) => c[2]), [
+    { itemIds: ['p1'], scope: 'link', expiresInDays: 7, password: 'secret-1' },
+    { itemIds: ['p1'], scope: 'public' },
+    { itemIds: ['p1'], scope: 'link', expiresInDays: 7 },
+    { password: 'secret-1' },
+  ])
+  assert.equal(calls[3][0], `/api/public/portfolios/${'A'.repeat(43)}/unlock`)
+  assert.doesNotMatch(calls[3][0], /secret/)
+  const server = read('../backend/src/main/java/kr/timebar/diary/work/PortfolioLinkController.java')
+  assert.match(server, new RegExp(`PASSWORD_MIN = ${PASSWORD_MIN}, PASSWORD_MAX = ${PASSWORD_MAX}, MAX_FAILED = 10`))
+  assert.match(unlockErrorText({ status: 401 }), /비밀번호가 맞지 않아요/)
+  const pub = read('src/views/share/PublicPortfolioView.vue')
+  assert.match(pub, /type="password" autocomplete="current-password"/)
+  assert.match(read('src/components/PortfolioLinkPanel.vue'), /비밀번호는 링크와 다른 길로 알려 주세요/)
+})
