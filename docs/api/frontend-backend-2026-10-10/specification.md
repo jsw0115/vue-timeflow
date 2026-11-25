@@ -658,6 +658,87 @@ status는 관심(interested)·준비 중(preparing)·지원 완료(applied)·서
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 
+## GET /api/career/applications/{id}/documents
+
+인증은 JWT이며 소스는 DocumentVersionController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | id | String | 예 | 없음 |
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## POST /api/career/applications/{id}/documents
+
+인증은 JWT이며 소스는 DocumentVersionController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | id | String | 예 | 없음 |
+
+| 본문 필드 | 타입 | 필수 | 제약 |
+|---|---|---|---|
+| versionId | string | 예 | 길이 ≤ 100 |
+
+지원 건에 문서 버전을 제출본으로 잇는다(PR-25). 지원마다 문서 종류별 하나이며 같은 종류의 다른 버전이 있으면 이 버전으로 바꾼다. 없거나 다른 계정의 지원·버전은 같은 404.
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## DELETE /api/career/applications/{id}/documents/{versionId}
+
+인증은 JWT이며 소스는 DocumentVersionController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | id | String | 예 | 없음 |
+| path | versionId | String | 예 | 없음 |
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## GET /api/career/document-versions
+
+인증은 JWT이며 소스는 DocumentVersionController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| query | document | String | 아니오 | 없음 |
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## POST /api/career/document-versions
+
+인증은 JWT이며 소스는 DocumentVersionController.java다. 성공 HTTP는 201다.
+
+| 본문 필드 | 타입 | 필수 | 제약 |
+|---|---|---|---|
+| document | string | 예 | resume/career/portfolio |
+| label | string | 아니오 | 길이 ≤ 100 |
+| note | string | 아니오 | 길이 ≤ 500 |
+
+지금 저장된 이력서(resume)·경력기술서 항목(career)·포트폴리오 항목(portfolio)을 서버가 복사해 고정 버전을 만든다(PR-25). 내용은 요청으로 받지 않는다. 번호는 문서마다 1부터 늘고 ID는 "문서-번호"다. 저장된 내용이 없거나 문서마다 100개를 넘으면 409. 버전은 고치는 경로가 없다.
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## DELETE /api/career/document-versions/{id}
+
+인증은 JWT이며 소스는 DocumentVersionController.java다. 성공 HTTP는 204다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | id | String | 예 | 없음 |
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## GET /api/career/document-versions/{id}
+
+인증은 JWT이며 소스는 DocumentVersionController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | id | String | 예 | 없음 |
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
 ## PUT /api/chat/communities/{communityId}/room
 
 인증은 JWT이며 소스는 ChatController.java다. 성공 HTTP는 200다.

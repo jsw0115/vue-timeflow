@@ -15,6 +15,7 @@ import { aiSettings, isFeatureOn } from '../../store/aiSettings'
 import { useCapabilityStatus } from '../../features/integrations/useCapabilityStatus.mjs'
 import HelpPopover from '../../components/HelpPopover.vue'
 import PortfolioLinkPanel from '../../components/PortfolioLinkPanel.vue'
+import DocumentVersionPanel from '../../components/DocumentVersionPanel.vue'
 import { exportPdf, exportWord, sectionsToHtml } from '../../store/docExport'
 
 /**
@@ -362,6 +363,7 @@ function onVisibilityChange(v) {
       <template v-else-if="aiStatus.available === false">AI 기능은 준비 중이에요. 지금은 규칙 기반으로 만들어요.</template>
       <template v-else-if="aiStatus.available === true">AI 다듬기는 설정 &gt; 자동화 &gt; AI 연동에서 민감 데이터 사용에 동의해야 켜집니다.</template>
     </p>
+    <DocumentVersionPanel v-if="onServer" document="career" />
   </template>
 
   <!-- 이력서 -->
@@ -383,6 +385,7 @@ function onVisibilityChange(v) {
         <p v-if="resumeStore.state.error" class="input-field-help" data-state="error" role="status">이력서를 불러오지 못했어요. 새로고침한 뒤 다시 시도해 주세요.</p>
       </template>
     </section>
+    <DocumentVersionPanel v-if="onServer" document="resume" />
   </template>
 
   <!-- 포트폴리오 -->
@@ -428,6 +431,7 @@ function onVisibilityChange(v) {
         </span>
       </div>
     </section>
+    <DocumentVersionPanel v-if="onServer" document="portfolio" />
   </template>
 
   <!-- 보안 설정 -->

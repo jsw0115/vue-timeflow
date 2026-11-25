@@ -21,6 +21,8 @@ public class RecordLinks {
     public static final String TASK = "task", SCHEDULE = "schedule", ACTUAL = "actual";
     /** 커리어 활동과 그 근거 원본(PR-24, IM-15 4단계). 활동 → 일정·실제 기록·WBS 작업 방향으로 저장한다. */
     public static final String ACTIVITY = "activity", WBS = "wbs";
+    /** 지원 건과 거기에 제출한 문서 버전(PR-25). 지원 → 문서 버전 방향으로 저장한다. */
+    public static final String APPLICATION = "application", DOC_VERSION = "doc-version";
     private static final Set<String> KINDS = Set.of(TASK, SCHEDULE, ACTUAL);
     private final JdbcTemplate jdbc;
     private final FeatureStore store;
@@ -103,6 +105,8 @@ public class RecordLinks {
             case ACTUAL -> store.optional(owner, FeatureType.ACTUAL_SESSION, id).map(row -> Objects.toString(row.get("title"), ""));
             case ACTIVITY -> store.optional(owner, FeatureType.CAREER_ACTIVITY, id).map(row -> Objects.toString(row.get("title"), ""));
             case WBS -> store.optional(owner, FeatureType.WBS, id).map(row -> Objects.toString(row.get("title"), ""));
+            case APPLICATION -> store.optional(owner, FeatureType.JOB_APPLICATION, id).map(row -> Objects.toString(row.get("title"), ""));
+            case DOC_VERSION -> store.optional(owner, FeatureType.DOC_VERSION, id).map(kr.timebar.diary.career.DocumentVersions::title);
             default -> Optional.empty();
         };
     }

@@ -5,6 +5,7 @@ import Modal from '../../components/Modal.vue'
 import SaveStatus from '../../components/SaveStatus.vue'
 import ConflictCompare from '../../components/ConflictCompare.vue'
 import PageActions from '../../components/PageActions.vue'
+import ApplicationDocumentsPanel from '../../components/ApplicationDocumentsPanel.vue'
 import { session } from '../../features/auth/session.js'
 import { applicationStore } from '../../store/careerLedger'
 import { createSaveState, saveFailureMessage } from '../../features/records/saveState.mjs'
@@ -185,6 +186,8 @@ async function remove(item) {
     </div>
     <label>급여 범위(선택)<input v-model="editor.draft.salaryRange" maxlength="200" /></label>
     <label>메모 · 면접 질문 · 회고(선택)<textarea v-model="editor.draft.body" rows="4"></textarea></label>
+    <ApplicationDocumentsPanel v-if="editor.base?.id && typeof editor.base.id === 'string'" :application-id="editor.base.id" />
+    <p v-else class="input-field-help">지원을 저장한 뒤 다시 열면 제출한 이력서·경력기술서·포트폴리오 버전을 고를 수 있어요.</p>
     <p v-if="saving.state.fieldMessage" class="input-field-help" data-state="error" role="alert">{{ saving.state.fieldMessage }}</p>
     <ConflictCompare v-if="conflict" :rows="compareRows" :busy="saving.state.status === 'saving'" @keep-mine="keepMine" @use-latest="useLatest" />
     <SaveStatus :state="saving.state" mode="server" @retry="save" />

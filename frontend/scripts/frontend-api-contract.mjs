@@ -94,7 +94,7 @@ const arrays = { tags: array(string()), achievements: array(string()), skillTags
 const featureSource = java.find(source => source.includes('public enum FeatureType'))
 for (const match of featureSource.matchAll(/(\w+)\("([^"]*)",\s*"([^"]*)"\)/g)) {
   const [_, name, fields, required] = match
-  if (['ACTUAL_SESSION', 'BACKUP_JOB'].includes(name)) continue // 서버 명령 전용 저장 종류는 일반 CRUD 입력을 노출하지 않는다.
+  if (['ACTUAL_SESSION', 'BACKUP_JOB', 'DOC_VERSION'].includes(name)) continue // 서버 명령 전용 저장 종류는 일반 CRUD 입력을 노출하지 않는다.
   const properties = {}
   for (const field of fields.split(' ')) {
     properties[field] = booleans.has(field) ? boolean : numbers[field] ?? arrays[field] ?? (['date', 'startDate', 'endDate', 'from', 'to', 'deadline', 'appliedDate', 'interviewDate'].includes(field) ? date : ['startedAt', 'endedAt'].includes(field) ? { type: 'string', format: 'date-time' } : field === 'value' ? { oneOf: [{ type: 'object', additionalProperties: true }, { type: 'array', items: {} }] } : field === 'recurrence' ? ref('Recurrence') : field === 'goal' ? ref('Goal') : string(['body', 'handover'].includes(field) ? 20000 : 200))
@@ -137,6 +137,8 @@ const custom = {
   'POST /api/planner/recordings/{id}/resume': { ...object({ version: integer(1) }, ['version']), description: '일시정지(PAUSED) 기록의 마지막 일시정지를 서버 현재 시각으로 닫고 다시 시작한다. 상태나 version이 다르면 409.' },
   'POST /api/planner/recordings/{id}/cancel': { ...object({ version: integer(1) }, ['version']), description: '끝내지 않은 기록을 지우고 원본 연결도 지운다. 끝낸 기록은 409, 다른 계정 기록은 404.' },
   'POST /api/memos/{id}/convert-to-task': object({ version: integer(1), due: date, category: string() }, ['version']),
+  'POST /api/career/document-versions': { ...object({ document: choice('resume', 'career', 'portfolio'), label: string(100), note: string(500) }, ['document']), description: '지금 저장된 이력서(resume)·경력기술서 항목(career)·포트폴리오 항목(portfolio)을 서버가 복사해 고정 버전을 만든다(PR-25). 내용은 요청으로 받지 않는다. 번호는 문서마다 1부터 늘고 ID는 "문서-번호"다. 저장된 내용이 없거나 문서마다 100개를 넘으면 409. 버전은 고치는 경로가 없다.' },
+  'POST /api/career/applications/{id}/documents': { ...object({ versionId: string(100) }, ['versionId']), description: '지원 건에 문서 버전을 제출본으로 잇는다(PR-25). 지원마다 문서 종류별 하나이며 같은 종류의 다른 버전이 있으면 이 버전으로 바꾼다. 없거나 다른 계정의 지원·버전은 같은 404.' },
   'POST /api/career/activities/{id}/sources': { ...object({ kind: { type: 'string', enum: ['schedule', 'actual', 'wbs'] }, id: string(100) }, ['kind', 'id']), description: '커리어 활동에 근거 원본(일정·실제 기록·WBS 작업)을 잇는다(PR-24). 같은 계정의 기록만, 활동마다 50개까지(넘으면 409). 없는 원본·다른 계정 원본은 같은 404. 응답은 근거 목록이고, 지워진 원본은 title 없이 broken=true로 보인다.' },
   'POST /api/contacts/{id}/account': { ...object({ version: integer(1) }, ['version']), description: '연락처 이메일과 정확히 같은 활성 계정을 찾아 accountId·accountNickname을 넣는다(Q-21). 이메일이 없으면 400, 없는 계정·자기 자신·차단은 같은 404, 사람 찾기와 같은 1분 20번 제한(429). 일반 저장에서는 이 두 값을 받지 않고, 이메일이 바뀌면 연결을 끊는다.' },
   'POST /api/events/templates/{id}/apply': object({ date, startTime: string(5) }, ['date', 'startTime']),
@@ -193,6 +195,9 @@ schemas.TimeBlock = object({ id: { type: ['integer', 'string'] }, title: string(
 schemas.StatSource = object({ kind: choice('schedule', 'planner', 'recording', 'focus'), id: string(), recordId: string(), title: string(), date, minutes: integer(0), category: string() }, ['kind', 'id', 'recordId', 'title', 'date', 'minutes', 'category'])
 schemas.StatTaskSource = object({ kind: { const: 'task' }, id: string(), recordId: string(), title: string(), date: { type: ['string', 'null'], format: 'date' }, done: boolean }, ['kind', 'id', 'recordId', 'title', 'date', 'done'])
 schemas.StatSources = object({ planned: array(ref('StatSource')), actual: array(ref('StatSource')), focus: array(ref('StatSource')), tasks: array(ref('StatTaskSource')) }, ['planned', 'actual', 'focus', 'tasks'])
+schemas.DocumentVersion = object({ id: string(100), document: choice('resume', 'career', 'portfolio'), number: integer(1), label: string(100), note: string(500), title: string(), createdAt: instant, applicationCount: integer(0) }, ['id', 'document', 'number', 'title'])
+schemas.DocumentVersionDetail = { ...object({ ...schemas.DocumentVersion.properties, content: flexible({ resume: flexible({}), items: array(flexible({ id: string(100), sourceVersion: integer(1) })), sourceVersion: integer(1) }) }, ['id', 'document', 'number', 'title', 'content']), description: 'content.resume(이력서) 또는 content.items(경력기술서·포트폴리오 항목, 원본 id와 그때의 version 포함). 원본을 고쳐도 바뀌지 않는다.' }
+schemas.AttachedDocument = { ...object({ ...schemas.DocumentVersion.properties, broken: boolean }, ['id']), description: '보통은 버전 정보다. 연결된 버전은 지울 수 없어 broken=true는 예외 상황에서만 보인다.' }
 schemas.Stats = object({ from: date, to: date, timeZone: string(64), dayStartHour: integer(0, 6), plannedMinutes: integer(0), actualMinutes: integer(0), focusMinutes: { ...integer(0), description: '집중 세션(FOCUS)과 집중 타이머(mode가 있는 실제 기록)의 분. 타이머 기록은 actualMinutes에도 들어가고, sources.focus에는 kind recording 행으로 온다.' }, completedTasks: integer(0), totalTasks: integer(0), categories: array(ref('CategoryStats')), timeBlocks: array(ref('TimeBlock')), focusSessions: array(ref('FOCUSResponse')), sources: ref('StatSources') }, ['from', 'to', 'timeZone', 'dayStartHour', 'plannedMinutes', 'actualMinutes', 'focusMinutes', 'completedTasks', 'totalTasks', 'categories', 'timeBlocks', 'focusSessions', 'sources'])
 // ownerName은 목록에만 있다(PR-10 5단계)
 schemas.Attachment = object({ id: string(), ownerId: string(), ownerName: string(), groupId: { type: ['string', 'null'] }, name: string(), sizeBytes: integer(1, 10485760), expiresAt: { type: ['string', 'null'], format: 'date-time' }, createdAt: { type: 'string', format: 'date-time' } }, ['id', 'ownerId', 'groupId', 'name', 'sizeBytes', 'expiresAt', 'createdAt'])
@@ -202,6 +207,8 @@ schemas.POSTResponse.properties = { ...schemas.POSTResponse.properties, authorId
 schemas.Profile = object({ id: string(), nickname: string(80), email: { type: 'string', format: 'email' }, timeZone: string(64), extra: flexible({ intro: string(), mode: choice('J', 'P', 'B'), dayStartHour: integer(0, 6) }) }, ['id', 'nickname', 'email', 'timeZone', 'extra'])
 schemas.SharedOccurrence = { ...object({ ownerId: string(36), ownerName: string(80), level: choice('busy', 'title', 'detail'), startDate: date, endDate: date, startTime: string(5), endTime: string(5), title: string(200), body: string(20000), category: string(200), color: string(200) }, ['ownerId', 'ownerName', 'level', 'startDate', 'endDate', 'startTime', 'endTime']), description: '그룹 멤버가 고른 범위만큼만 담는다. busy는 시간만, title은 제목까지, detail은 내용·분류·색까지. 일정 ID는 어느 범위에도 없다.' }
 const responseOverrides = {
+  'GET /api/career/document-versions': array(ref('DocumentVersion')), 'POST /api/career/document-versions': ref('DocumentVersionDetail'), 'GET /api/career/document-versions/{id}': ref('DocumentVersionDetail'),
+  'GET /api/career/applications/{id}/documents': array(ref('AttachedDocument')), 'POST /api/career/applications/{id}/documents': array(ref('AttachedDocument')), 'DELETE /api/career/applications/{id}/documents/{versionId}': array(ref('AttachedDocument')),
   'PUT /api/share/groups/{id}/share-level': object({ groupId: string(100), level: choice('none', 'busy', 'title', 'detail') }, ['groupId', 'level']),
   'GET /api/share/groups/{id}/schedules': array(ref('SharedOccurrence')),
   'GET /api/share/groups/{id}/preview': array(ref('SharedOccurrence')),

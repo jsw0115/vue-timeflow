@@ -48,6 +48,7 @@ public class FeatureTestConfig {
     @Bean WorkService work(FeatureStore store, kr.timebar.diary.common.IdempotencyKeys idempotency) { return new WorkService(store, idempotency); }
     @Bean kr.timebar.diary.career.CareerService career(FeatureStore store, kr.timebar.diary.common.IdempotencyKeys idempotency, RecordLinks links) { return new kr.timebar.diary.career.CareerService(store, idempotency, links); }
     @Bean kr.timebar.diary.career.ActivitySources activitySources(RecordLinks links, JdbcTemplate jdbc) { return new kr.timebar.diary.career.ActivitySources(links, jdbc); }
+    @Bean kr.timebar.diary.career.DocumentVersions documentVersions(FeatureStore store, RecordLinks links, JdbcTemplate jdbc) { return new kr.timebar.diary.career.DocumentVersions(store, links, jdbc); }
     @Bean UserRepository users() { return mock(UserRepository.class); }
     @Bean RefreshTokenRepository tokens() { return mock(RefreshTokenRepository.class); }
     @Bean PasswordEncoder encoder() { return new BCryptPasswordEncoder(); }

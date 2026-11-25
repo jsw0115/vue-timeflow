@@ -1,6 +1,6 @@
 # API 목록
 
-기준 2026-10-10. 총 317개 매핑이며 wildcard 경로는 허용된 값을 선택한다. 채팅은 CHAT_ENABLED=true 조건부 등록이다. 구현·검증 범위는 [검증 기록](verification.md)을 확인한다.
+기준 2026-10-10. 총 324개 매핑이며 wildcard 경로는 허용된 값을 선택한다. 채팅은 CHAT_ENABLED=true 조건부 등록이다. 구현·검증 범위는 [검증 기록](verification.md)을 확인한다.
 
 | 메서드 | 경로 | 인증 | 처리 | 소스 |
 |---|---|---|---|---|
@@ -56,6 +56,13 @@
 | DELETE | `/api/career/applications/{id}` | JWT | 실제 처리 소스 있음 | CareerController |
 | GET | `/api/career/applications/{id}` | JWT | 실제 처리 소스 있음 | CareerController |
 | PUT | `/api/career/applications/{id}` | JWT | 실제 처리 소스 있음 | CareerController |
+| GET | `/api/career/applications/{id}/documents` | JWT | 실제 처리 소스 있음 | DocumentVersionController |
+| POST | `/api/career/applications/{id}/documents` | JWT | 실제 처리 소스 있음 | DocumentVersionController |
+| DELETE | `/api/career/applications/{id}/documents/{versionId}` | JWT | 실제 처리 소스 있음 | DocumentVersionController |
+| GET | `/api/career/document-versions` | JWT | 실제 처리 소스 있음 | DocumentVersionController |
+| POST | `/api/career/document-versions` | JWT | 실제 처리 소스 있음 | DocumentVersionController |
+| DELETE | `/api/career/document-versions/{id}` | JWT | 실제 처리 소스 있음 | DocumentVersionController |
+| GET | `/api/career/document-versions/{id}` | JWT | 실제 처리 소스 있음 | DocumentVersionController |
 | PUT | `/api/chat/communities/{communityId}/room` | JWT | 실제 처리 소스 있음 | ChatController |
 | GET | `/api/chat/events` | JWT | 실제 처리 소스 있음 | ChatController |
 | GET | `/api/chat/mentions` | JWT | 실제 처리 소스 있음 | ChatController |

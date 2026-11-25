@@ -49,6 +49,8 @@ public class CareerService {
         store.delete(user, type, id, version);
         // 활동을 지우면 그 활동의 근거 연결도 지운다(원본은 남는다, PR-24)
         if (type == FeatureType.CAREER_ACTIVITY && links != null) links.forget(user, kr.timebar.diary.records.RecordLinks.ACTIVITY, id);
+        // 지원 건을 지우면 제출 문서 연결도 지운다. 문서 버전 자체는 남는다(PR-25)
+        if (type == FeatureType.JOB_APPLICATION && links != null) links.forget(user, kr.timebar.diary.records.RecordLinks.APPLICATION, id);
     }
 
     /**
