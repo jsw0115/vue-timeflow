@@ -74,6 +74,15 @@ const noResult = computed(() => query.value.trim() && !filteredGroups.value.leng
       <p v-if="noResult" class="empty-state" role="status">{{ t('noSettingResult') }}</p>
     </nav>
 
+    <!-- 760px 이하에서는 위 목록이 숨겨진다(styles.css). 좁은 화면에서도 다른 구역으로 갈 수 있게 선택 상자를 둔다 -->
+    <label class="setting-mobile-pick" :lang="locale">{{ t('settingsSection') }}
+      <select :value="activeId" @change="select(SETTINGS_SECTIONS.find((s) => s.id === $event.target.value))">
+        <optgroup v-for="g in SETTINGS_GROUPS" :key="g.label" :label="settingsGroupLabel(g.label, locale)">
+          <option v-for="item in g.items" :key="item.id" :value="item.id">{{ settingLabel(item, locale) }}</option>
+        </optgroup>
+      </select>
+    </label>
+
     <div class="setting-pane">
       <component :is="active.component" />
     </div>
@@ -81,6 +90,11 @@ const noResult = computed(() => query.value.trim() && !filteredGroups.value.leng
 </template>
 
 <style scoped>
+.setting-mobile-pick { display: none; }
+@media (max-width: 760px) {
+  .setting-mobile-pick { display: grid; gap: var(--space-xs); margin: 0 0 var(--space-md); font-size: var(--type-body-sm-size); font-weight: 600; }
+  .setting-mobile-pick select { width: 100%; min-height: var(--input-height); font-weight: 400; }
+}
 /* 목록 버튼 규칙(.setting-menu button: 폭 100%·여백)이 검색칸의 지우기 버튼에도 걸려 입력칸이 0px로 줄었다. 지우기 버튼만 작은 크기로 되돌린다 */
 .setting-menu-search button { flex: none; width: 24px; height: 24px; padding: 0; border-bottom: 0; justify-content: center; align-items: center; }
 </style>

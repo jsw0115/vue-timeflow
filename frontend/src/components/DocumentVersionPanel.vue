@@ -2,6 +2,7 @@
 // 이력서·경력기술서·포트폴리오의 버전 기록(PR-25). 지금 서버에 저장된 내용을 그대로 고정해 두고, 지원 기록에 제출본으로 이을 수 있다.
 import { computed, onMounted, ref } from 'vue'
 import DocumentVersionViewer from './DocumentVersionViewer.vue'
+import DocumentVersionCompare from './DocumentVersionCompare.vue'
 import { apiRequest } from '../features/auth/apiRequest.js'
 import { MAX_VERSIONS, createDocumentVersionClient, documentLabel, savedAt, versionErrorText, versionName } from '../features/career/documentVersions.mjs'
 
@@ -15,10 +16,15 @@ const busy = ref(false)
 const message = ref('')
 const announce = ref('')
 const viewing = ref(null)
+// 비교(PR-25): 기본은 바로 앞 버전 → 최신 버전이다
+const compareBase = ref('')
+const compareTarget = ref('')
+const comparing = ref(null)
+function resetCompare() { compareTarget.value = versions.value[0]?.id ?? ''; compareBase.value = versions.value[1]?.id ?? '' }
 const name = computed(() => documentLabel(props.document))
 
 async function load() {
-  try { versions.value = (await client.list(props.document)) ?? []; status.value = 'ready' } catch (error) { status.value = 'error'; message.value = versionErrorText(error) }
+  try { versions.value = (await client.list(props.document)) ?? []; status.value = 'ready'; resetCompare() } catch (error) { status.value = 'error'; message.value = versionErrorText(error) }
 }
 onMounted(load)
 async function save() {
@@ -57,9 +63,15 @@ async function remove(version) {
       </li>
     </ul>
     <p v-else-if="status === 'ready'" class="input-field-help">아직 저장한 버전이 없어요.</p>
+    <div v-if="versions.length >= 2" class="version-compare">
+      <label>기준 버전<select v-model="compareBase"><option v-for="v in versions" :key="v.id" :value="v.id">{{ versionName(v) }}</option></select></label>
+      <label>비교할 버전<select v-model="compareTarget"><option v-for="v in versions" :key="v.id" :value="v.id">{{ versionName(v) }}</option></select></label>
+      <button type="button" class="button-secondary" :disabled="!compareBase || !compareTarget || compareBase === compareTarget" @click="comparing = { baseId: compareBase, targetId: compareTarget }">비교하기</button>
+    </div>
     <p class="sr-only" role="status">{{ announce }}</p>
     <p v-if="message" class="input-field-help" data-state="error" role="alert">{{ message }}</p>
     <DocumentVersionViewer v-if="viewing" :version-id="viewing" @close="viewing = null" />
+    <DocumentVersionCompare v-if="comparing" :base-id="comparing.baseId" :target-id="comparing.targetId" @close="comparing = null" />
   </section>
 </template>
 
@@ -68,6 +80,8 @@ async function remove(version) {
 .document-versions h3, .document-versions p { margin: 0; }
 .version-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); align-items: end; gap: var(--space-sm); }
 .version-form label { display: grid; gap: var(--space-xs); margin: 0; }
+.version-compare { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); align-items: end; gap: var(--space-sm); }
+.version-compare label { display: grid; gap: var(--space-xs); margin: 0; }
 .version-list { display: grid; gap: var(--space-xs); margin: 0; padding: 0; list-style: none; }
 .version-list li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-xs) var(--space-md); padding: var(--space-sm) 0; border-top: 1px solid var(--color-hairline); }
 .version-name { display: grid; gap: 2px; min-width: 0; overflow-wrap: anywhere; }

@@ -78,3 +78,11 @@ test('앱 셸은 문구를 언어별로 고르고, 바뀐 부분에만 lang을 �
   assert.match(env, /@change="chooseLocale\(l\.id\)"/)
   assert.match(read('src/views/settings/SettingsView.vue'), /settingLabel\(item, locale\)/)
 })
+
+test('좁은 화면(760px 이하)에서도 설정 구역을 고를 수 있다', () => {
+  const view = read('src/views/settings/SettingsView.vue')
+  assert.match(view, /class="setting-mobile-pick"/)
+  assert.match(view, /@media \(max-width: 760px\) \{\n {2}\.setting-mobile-pick \{ display: grid;/)
+  assert.match(view, /\.setting-mobile-pick \{ display: none; \}/)
+  assert.equal(shellText('settingsSection', 'en'), 'Settings section')
+})

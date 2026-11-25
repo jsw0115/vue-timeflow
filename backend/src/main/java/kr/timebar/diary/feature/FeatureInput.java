@@ -15,7 +15,7 @@ public final class FeatureInput {
     private static final Set<String> NUMBERS = Set.of("amount", "duration", "alarm", "leaveDays", "expense", "md", "progress", "years", "capacity", "reminderMinutes", "days", "minMinutes");
     private static final Set<String> ARRAYS = Set.of("tags", "notifyDays", "blocks", "columns", "cards", "achievements", "attendeeIds", "itemIds", "skillTags", "links", "activityIds");
     /** 20000자까지 받는 긴 글 필드. 포트폴리오의 문제·과정·성과·개인 기여(PR-26)를 더했다. */
-    private static final Set<String> LONG_TEXTS = Set.of("body", "handover", "problem", "process", "outcome", "contribution");
+    private static final Set<String> LONG_TEXTS = Set.of("body", "handover", "problem", "process", "outcome", "contribution", "duties");
     /** 포트폴리오 항목 하나에 이을 수 있는 커리어 활동 수. 원문에 없는 제안값이다. */
     public static final int PORTFOLIO_ACTIVITY_LIMIT = 20;
     private static final Set<String> DATES = Set.of("date", "startDate", "endDate", "from", "to", "deadline", "appliedDate", "interviewDate");

@@ -60,3 +60,23 @@ test('경력 화면 세 탭과 지원 수정 창에 연결되고, 로그인 상�
   assert.match(viewer, /지금 문서를 고쳐도 이 버전은 바뀌지 않아요/)
   for (const file of ['src/components/DocumentVersionPanel.vue', 'src/components/ApplicationDocumentsPanel.vue', 'src/components/DocumentVersionViewer.vue']) assert.doesNotMatch(read(file), /을\(를\)|를\(을\)|이\(가\)|\}을 /)
 })
+
+test('버전 비교: 원본 ID로 항목을 맞춰 바뀐 칸·추가·삭제를 나누고, 다른 문서끼리는 비교하지 않는다(PR-25)', async () => {
+  const { compareVersions } = await import('../src/features/career/documentVersions.mjs')
+  const v1 = { document: 'career', content: { items: [{ id: 'c1', title: '결제', role: '개발', achievements: ['A'] }, { id: 'c2', title: '근태', role: '백엔드' }] } }
+  const v2 = { document: 'career', content: { items: [{ id: 'c1', title: '결제 리뉴얼', role: '개발', achievements: ['A', 'B'] }, { id: 'c3', title: '위키', role: '기획' }] } }
+  const diff = compareVersions(v1, v2)
+  assert.deepEqual(diff.changed, [{ heading: '결제 리뉴얼', fields: [{ label: '제목', before: '결제', after: '결제 리뉴얼' }, { label: '성과', before: 'A', after: 'A\nB' }] }])
+  assert.deepEqual(diff.added, [{ heading: '위키' }])
+  assert.deepEqual(diff.removed, [{ heading: '근태' }])
+  assert.equal(diff.unchanged, 0)
+  const r1 = { document: 'resume', content: { resume: { name: '김지수', headline: '첫 소개' } } }
+  const r2 = { document: 'resume', content: { resume: { name: '김지수', headline: '' } } }
+  assert.deepEqual(compareVersions(r1, r2).changed, [{ heading: '기본 정보', fields: [{ label: '한 줄 소개', before: '첫 소개', after: '' }] }])
+  assert.equal(compareVersions(r1, r1).unchanged, 1)
+  assert.throws(() => compareVersions(r1, v1))
+  const panel = read('src/components/DocumentVersionPanel.vue')
+  assert.match(panel, /:disabled="!compareBase \|\| !compareTarget \|\| compareBase === compareTarget"/)
+  const view = read('src/components/DocumentVersionCompare.vue')
+  for (const word of ['>바뀜<', '>추가<', '>삭제<', '>이전<', '>이후<']) assert.ok(view.includes(word), word)
+})

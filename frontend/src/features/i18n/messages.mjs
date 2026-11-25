@@ -31,6 +31,7 @@ export const SHELL = {
   chatCallout: { ko: '채팅은 이동 가능한 대화 버튼에서 열 수 있어요.', en: 'Open chat from the movable chat button.' },
   today: { ko: '오늘', en: 'Today' },
   searchSettings: { ko: '설정 검색', en: 'Search settings' },
+  settingsSection: { ko: '설정 구역', en: 'Settings section' },
   clear: { ko: '지우기', en: 'Clear' },
   noSettingResult: { ko: '검색 결과가 없어요. 설정 이름의 일부만 입력해 보세요.', en: 'No settings found. Try part of a setting name.' },
 }

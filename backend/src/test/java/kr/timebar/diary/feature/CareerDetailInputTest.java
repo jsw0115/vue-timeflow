@@ -21,6 +21,8 @@ class CareerDetailInputTest {
         assertEquals("intern", FeatureInput.validate(FeatureType.CAREER, career("employmentType", "intern", "department", "결제팀", "startDate", "2025-07-01", "endDate", "2025-12-31", "employmentStatus", "ended")).get("employmentType"));
         assertEquals("current", FeatureInput.validate(FeatureType.CAREER, career("employmentType", "full-time", "startDate", "2026-01-02", "employmentStatus", "current")).get("employmentStatus"));
         assertEquals("2025.07 ~ 2025.12", FeatureInput.validate(FeatureType.CAREER, career("period", "2025.07 ~ 2025.12")).get("period"));
+        // 담당 업무(REQ-F25)는 긴 글이라 200자를 넘어도 된다
+        assertEquals(3000, FeatureInput.validate(FeatureType.CAREER, career("duties", "가".repeat(3000))).get("duties").toString().length());
     }
 
     @Test void rejectsUnknownValuesAndInconsistentDates() {

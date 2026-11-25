@@ -23,7 +23,7 @@ public enum FeatureType {
     WORK_RECORD("title body type owner projectId status startDate endDate startTime endTime half leaveDays location partner transport expense fromCompany toCompany role handover", "title type owner startDate endDate startTime endTime"),
     WBS("title body parentId md progress owner open startDate endDate", "title md progress"),
     WIKI("title body space parentId pinned", "title space"),
-    CAREER("title period role company stack achievements employmentType department startDate endDate employmentStatus", "title role"),
+    CAREER("title period role company stack achievements employmentType department startDate endDate employmentStatus duties", "title role"),
     RESUME("name headline years skills education", "name"),
     // 포트폴리오 항목(PR-26): 개편안 4.3·문서 유형 표의 소개(body)·문제·역할·기술·과정·성과·개인 기여·결과물 링크와 근거(커리어 활동·경력) 연결
     PORTFOLIO("title body kind role stack problem process outcome contribution links activityIds experienceId", "title kind"),

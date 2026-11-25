@@ -16,7 +16,7 @@ export const EMPLOYMENT_STATUSES = [
 /** 공백 안내 기준(일). 원문에는 기준 일수가 없어 정한 제안값이다. */
 export const GAP_NOTICE_DAYS = 31
 
-const DETAIL_FIELDS = ['employmentType', 'department', 'startDate', 'endDate', 'employmentStatus']
+const DETAIL_FIELDS = ['employmentType', 'department', 'startDate', 'endDate', 'employmentStatus', 'duties']
 const ISO = /^\d{4}-\d{2}-\d{2}$/
 
 export const employmentTypeLabel = (value) => EMPLOYMENT_TYPES.find((item) => item.value === value)?.label ?? ''

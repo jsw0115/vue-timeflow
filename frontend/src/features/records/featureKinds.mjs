@@ -35,7 +35,7 @@ export const achievementsFromText = (text) => String(text ?? '').split('\n').map
 /** 경력 프로젝트(PR-07 7단계). 서버 필수 값은 title·role이다. 고용 형태·부서·시작일·종료일·재직 상태는 선택이다(PR-24). */
 export const careerKind = {
   kind: 'career', path: '/api/work/career/projects',
-  fields: ['title', 'period', 'role', 'company', 'stack', 'achievements', 'employmentType', 'department', 'startDate', 'endDate', 'employmentStatus'], demoFields: ['title'],
+  fields: ['title', 'period', 'role', 'company', 'stack', 'achievements', 'employmentType', 'department', 'startDate', 'endDate', 'employmentStatus', 'duties'], demoFields: ['title'],
   toLocal: (row) => ({ ...row, achievements: row.achievements ?? [] }),
   toBody: careerBody,
 }

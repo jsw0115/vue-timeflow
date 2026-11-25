@@ -94,7 +94,7 @@ function openProject(p = null) {
     base: p ? { ...p } : null,
     draft: {
       title: p?.title ?? '', period: p?.period ?? '', role: p?.role ?? '', company: p?.company ?? '', stack: p?.stack ?? '', achievementsText: (p?.achievements ?? []).join('\n'),
-      employmentType: p?.employmentType ?? '', department: p?.department ?? '', startDate: p?.startDate ?? '', endDate: p?.endDate ?? '', employmentStatus: p?.employmentStatus ?? '',
+      employmentType: p?.employmentType ?? '', department: p?.department ?? '', startDate: p?.startDate ?? '', endDate: p?.endDate ?? '', employmentStatus: p?.employmentStatus ?? '', duties: p?.duties ?? '',
     },
   }
 }
@@ -103,7 +103,7 @@ async function saveProject() {
   if (!projectCanSave.value) return
   const values = {
     title: draft.title.trim(), period: draft.period, role: draft.role.trim(), company: draft.company, stack: draft.stack, achievements: achievementsFromText(draft.achievementsText),
-    employmentType: draft.employmentType, department: draft.department, startDate: draft.startDate, endDate: draft.employmentStatus === 'current' ? '' : draft.endDate, employmentStatus: draft.employmentStatus,
+    employmentType: draft.employmentType, department: draft.department, startDate: draft.startDate, endDate: draft.employmentStatus === 'current' ? '' : draft.endDate, employmentStatus: draft.employmentStatus, duties: draft.duties,
   }
   projectConflict.value = null
   const result = await projectSaving.run(() => (base ? careerStore.update(base, values) : careerStore.create(values)))
@@ -118,6 +118,7 @@ const projectCompareRows = computed(() => {
     { label: '기간 · 역할', mine: periodLabel(mine) + ' · ' + mine.role, latest: periodLabel(latest) + ' · ' + latest.role },
     { label: '회사 · 부서', mine: [mine.company, mine.department].filter(Boolean).join(' · '), latest: [latest.company, latest.department].filter(Boolean).join(' · ') },
     { label: '고용 형태 · 상태', mine: detailLabel(mine), latest: detailLabel(latest) },
+    { label: '담당 업무', mine: mine.duties ?? '', latest: latest.duties ?? '' },
     { label: '성과', mine: achievementsFromText(mine.achievementsText).join('\n'), latest: (latest.achievements ?? []).join('\n') },
   ]
 })
@@ -268,6 +269,7 @@ function buildDoc(kind) {
     projects.value.forEach((p) => {
       sections.push({ type: 'h2', text: p.title })
       sections.push({ type: 'meta', text: [periodLabel(p), p.role, companyLabel(p), p.department, employmentTypeLabel(p.employmentType)].filter(Boolean).join(' · ') })
+      if (p.duties) sections.push({ type: 'p', text: '담당 업무: ' + p.duties })
       sections.push({ type: 'list', items: p.achievements })
       sections.push({ type: 'p', text: '사용 기술: ' + p.stack })
     })
@@ -396,6 +398,7 @@ function onVisibilityChange(v) {
           </template>
         </span>
       </div>
+      <p v-if="p.duties" class="career-duties">담당 업무: {{ p.duties }}</p>
       <ul class="career-list">
         <li v-for="a in p.achievements" :key="a">{{ a }}</li>
       </ul>
@@ -540,6 +543,7 @@ function onVisibilityChange(v) {
     <p v-if="projectEditor.draft.employmentStatus === 'current'" id="career-end-help" class="input-field-help">재직 중이면 종료일 없이 저장해요.</p>
     <p v-if="!projectEditor.draft.startDate && projectEditor.draft.period" class="input-field-help">예전에 적은 기간: {{ projectEditor.draft.period }}. 시작일을 넣으면 날짜 기준으로 바뀌어요.</p>
     <p v-if="projectDetailError" class="input-field-help" data-state="error" role="alert">{{ projectDetailError }}</p>
+    <label>담당 업무<textarea v-model="projectEditor.draft.duties" rows="3" maxlength="20000"></textarea></label>
     <label>기술<input v-model="projectEditor.draft.stack" maxlength="200" /></label>
     <label>성과 (한 줄에 하나)<textarea v-model="projectEditor.draft.achievementsText" rows="5"></textarea></label>
     <p v-if="!projectEditor.draft.title.trim() || !projectEditor.draft.role.trim()" class="form-note">프로젝트와 역할을 입력해주세요.</p>
@@ -587,6 +591,7 @@ function onVisibilityChange(v) {
 .career-note { display: block; margin: 0 0 var(--space-md); }
 .career-period-notes { margin: 0 0 var(--space-md); padding: var(--space-md) var(--space-lg); border: 1px solid var(--color-hairline); border-radius: var(--radius-md); background: var(--color-card); }
 .career-period-notes ul { margin: var(--space-xs) 0; padding-left: var(--space-lg); }
+.career-duties { margin: var(--space-sm) 0 0; white-space: pre-line; overflow-wrap: anywhere; }
 .portfolio-title { display: grid; gap: 2px; min-width: 0; overflow-wrap: anywhere; }
 .portfolio-evidence { color: var(--color-muted); font-size: var(--type-caption-size); }
 .portfolio-public-note { margin: var(--space-md) 0 0; }

@@ -12,7 +12,7 @@ test('고용 형태 허용값은 서버 목록과 같다', () => {
   const server = read('../backend/src/main/java/kr/timebar/diary/feature/FeatureInput.java')
   const list = server.match(/EMPLOYMENT_TYPES = List\.of\(([^)]*)\)/)[1].match(/"([^"]+)"/g).map((value) => value.slice(1, -1))
   assert.deepEqual(EMPLOYMENT_TYPES.map((item) => item.value), list)
-  assert.match(read('../backend/src/main/java/kr/timebar/diary/feature/FeatureType.java'), /CAREER\("title period role company stack achievements employmentType department startDate endDate employmentStatus"/)
+  assert.match(read('../backend/src/main/java/kr/timebar/diary/feature/FeatureType.java'), /CAREER\("title period role company stack achievements employmentType department startDate endDate employmentStatus duties"/)
 })
 
 test('빈 상세 값은 보내지 않고, 재직 중이면 종료일을 빼며, 시작일이 있으면 기간 문구를 날짜로 다시 만든다', () => {
@@ -54,7 +54,7 @@ test('겹침은 하루라도 겹치면 알리고, 공백은 기준 일수보다 
 
 test('경력 화면은 상세 입력·충돌 비교·기간 안내를 갖고, 안내는 저장을 막지 않는다', () => {
   const view = read('src/views/work/CareerDocsView.vue')
-  for (const key of ['employmentType', 'department', 'startDate', 'endDate', 'employmentStatus']) assert.match(view, new RegExp('v-model="projectEditor\\.draft\\.' + key + '"'))
+  for (const key of ['employmentType', 'department', 'startDate', 'endDate', 'employmentStatus', 'duties']) assert.match(view, new RegExp('v-model="projectEditor\\.draft\\.' + key + '"'))
   assert.match(view, /label: '고용 형태 · 상태'/)
   assert.match(view, /:disabled="projectEditor\.draft\.employmentStatus === 'current'"/)
   assert.match(view, /’, ‘\{\{ b\.title \}\}’ 기간이 겹쳐요\. 겸직이나 동시 프로젝트라면 그대로 두셔도 돼요/)

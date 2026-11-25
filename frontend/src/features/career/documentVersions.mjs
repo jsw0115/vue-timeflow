@@ -60,7 +60,7 @@ export function snapshotSections(version, { maskCompany = false } = {}) {
     return items.map((item) => ({
       heading: item.title ?? '',
       rows: filled([
-        row('기간', periodLabel(item)), row('역할', item.role),
+        row('기간', periodLabel(item)), row('역할', item.role), row('담당 업무', item.duties),
         row('회사', maskCompany && item.company ? '회사명 비공개' : item.company), row('부서', item.department),
         row('고용 형태', employmentTypeLabel(item.employmentType)), row('재직 상태', EMPLOYMENT_STATUSES.find((s) => s.value === item.employmentStatus)?.label),
         row('기술', item.stack), row('성과', (item.achievements ?? []).join('\n')),
@@ -76,4 +76,36 @@ export function versionErrorText(error) {
   if (error?.status === 400) return error.message || '입력한 값을 확인해 주세요.'
   if (error?.status == null || error.status === 0) return '서버에 연결하지 못했어요. 연결을 확인하고 다시 시도해 주세요.'
   return '버전 작업을 마치지 못했어요. 잠시 뒤 다시 시도해 주세요.'
+}
+
+/** 비교용 항목 목록. 이력서는 하나, 경력기술서·포트폴리오는 원본 기록 ID로 묶는다(ID가 없으면 순서로). */
+function entries(version, options) {
+  const sections = snapshotSections(version, options)
+  if (version?.document === 'resume') return sections.map((s) => ({ key: 'resume', ...s }))
+  const items = Array.isArray(version?.content?.items) ? version.content.items : []
+  return sections.map((s, index) => ({ key: items[index]?.id ? 'id:' + items[index].id : 'at:' + index, ...s }))
+}
+
+/**
+ * 두 버전 비교(PR-25, 개편안 "문서 버전·수정 이력·비교"). base는 기준(이전), target은 비교할 버전이다. 같은 문서끼리만 비교한다.
+ * 반환: { added: [{ heading }], removed: [{ heading }], changed: [{ heading, fields: [{ label, before, after }] }], unchanged: 수 }
+ */
+export function compareVersions(base, target, options = {}) {
+  if (base?.document !== target?.document) throw new Error('같은 문서의 버전끼리만 비교할 수 있어요.')
+  const before = new Map(entries(base, options).map((e) => [e.key, e]))
+  const after = entries(target, options)
+  const result = { added: [], removed: [], changed: [], unchanged: 0 }
+  for (const entry of after) {
+    const old = before.get(entry.key)
+    if (!old) { result.added.push({ heading: entry.heading }); continue }
+    before.delete(entry.key)
+    const oldRows = new Map(old.rows), newRows = new Map(entry.rows)
+    const labels = [...new Set([...old.rows.map(([l]) => l), ...entry.rows.map(([l]) => l)])]
+    const fields = labels.filter((l) => (oldRows.get(l) ?? '') !== (newRows.get(l) ?? '')).map((l) => ({ label: l, before: oldRows.get(l) ?? '', after: newRows.get(l) ?? '' }))
+    if (old.heading !== entry.heading) fields.unshift({ label: '제목', before: old.heading, after: entry.heading })
+    if (fields.length) result.changed.push({ heading: entry.heading, fields })
+    else result.unchanged += 1
+  }
+  for (const entry of before.values()) result.removed.push({ heading: entry.heading })
+  return result
 }
