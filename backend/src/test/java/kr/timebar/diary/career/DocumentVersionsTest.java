@@ -121,4 +121,21 @@ class DocumentVersionsTest {
         versions.delete(me, v1);
         assertTrue(versions.list(me, null).isEmpty());
     }
+
+    /** 언어 표시(PR-32, Q-38 (3)): 기본은 ko, en을 고르면 그대로 남고, 다른 값은 막는다. 예전 버전(언어 없음)은 ko로 보인다. */
+    @Test void keepsLanguageTagPerVersion() {
+        resume(me, "백엔드 개발자");
+        var ko = versions.create(me, new HashMap<>(Map.of("document", "resume")));
+        assertEquals("ko", ko.get("language"));
+        resume(me, "Backend developer");
+        var en = versions.create(me, new HashMap<>(Map.of("document", "resume", "language", "en", "label", "English")));
+        assertEquals("en", en.get("language"));
+        assertEquals("en", versions.get(me, en.get("id").toString()).get("language"));
+        assertEquals("ko", versions.get(me, ko.get("id").toString()).get("language"));
+        assertEquals(ErrorCode.VALIDATION_FAILED, error(() -> versions.create(me, new HashMap<>(Map.of("document", "resume", "language", "ja")))));
+        assertEquals(ErrorCode.VALIDATION_FAILED, error(() -> versions.create(me, new HashMap<>(Map.of("document", "resume", "language", 1)))));
+        var legacy = new HashMap<String, Object>(Map.of("document", "resume", "number", 99, "content", Map.of()));
+        store.create(me, FeatureType.DOC_VERSION, "resume-99", legacy);
+        assertEquals("ko", versions.get(me, "resume-99").get("language"));
+    }
 }

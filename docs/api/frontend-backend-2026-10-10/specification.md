@@ -714,8 +714,9 @@ status는 관심(interested)·준비 중(preparing)·지원 완료(applied)·서
 | document | string | 예 | resume/career/portfolio/cover-letter |
 | label | string | 아니오 | 길이 ≤ 100 |
 | note | string | 아니오 | 길이 ≤ 500 |
+| language | string | 아니오 | ko/en |
 
-지금 저장된 이력서(resume)·경력기술서 항목(career)·포트폴리오 항목(portfolio)·자기소개서(cover-letter)를 서버가 복사해 고정 버전을 만든다(PR-25). 내용은 요청으로 받지 않는다. 번호는 문서마다 1부터 늘고 ID는 "문서-번호"다. 저장된 내용이 없거나 문서마다 100개를 넘으면 409. 버전은 고치는 경로가 없다.
+language는 버전 언어 표시다(PR-32, 09 Q-38 (3)). 빼면 ko다. 번역문이 원문을 덮어쓰지 않도록 언어별 내용을 새 버전으로 남긴다. 지금 저장된 이력서(resume)·경력기술서 항목(career)·포트폴리오 항목(portfolio)·자기소개서(cover-letter)를 서버가 복사해 고정 버전을 만든다(PR-25). 내용은 요청으로 받지 않는다. 번호는 문서마다 1부터 늘고 ID는 "문서-번호"다. 저장된 내용이 없거나 문서마다 100개를 넘으면 409. 버전은 고치는 경로가 없다.
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 

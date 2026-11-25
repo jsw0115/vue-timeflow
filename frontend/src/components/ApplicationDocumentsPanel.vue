@@ -49,7 +49,7 @@ async function choose(doc, versionId) {
       <div v-for="row in rows" :key="row.id" class="document-row">
         <label>{{ tr(row.label) }}<select :value="row.current?.id ?? ''" :disabled="busy || (!row.options.length && !row.current)" @change="choose(row, $event.target.value)">
           <option value="">{{ row.options.length ? tr('연결 안 함') : tr('저장한 버전이 없어요') }}</option>
-          <option v-for="v in row.options" :key="v.id" :value="v.id">{{ versionName(v, tr) }} ({{ savedAt(v.createdAt) }})</option>
+          <option v-for="v in row.options" :key="v.id" :value="v.id">{{ versionName(v, tr) }}{{ v.language === 'en' ? ' · ' + tr('영어') : '' }} ({{ savedAt(v.createdAt) }})</option>
         </select></label>
         <button v-if="row.current && !row.current.broken" type="button" class="button-text" :aria-label="tr('{name} 제출본 열기', { name: tr(row.label) })" @click="viewing = row.current.id">{{ tr('열기') }}</button>
       </div>

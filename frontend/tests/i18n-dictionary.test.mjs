@@ -42,13 +42,13 @@ test('영어가 없으면 한국어 원문, 자리표시를 채운다. 본문까
 
 test('목록에서 이름을 꺼내 tr에 넘기는 값(상태·문서·고용 형태·자기소개서·포트폴리오 항목·공개 범위)도 사전에 있다. 표시 함수는 저장값을 한국어로 둔다', async () => {
   const { ACTIVITY_TYPES, APPLICATION_STATUSES } = await import('../src/features/career/careerModel.mjs')
-  const { DOCUMENTS, snapshotSections, versionName, versionTitle } = await import('../src/features/career/documentVersions.mjs')
+  const { DOCUMENTS, LANGUAGES, snapshotSections, versionName, versionTitle } = await import('../src/features/career/documentVersions.mjs')
   const { EMPLOYMENT_TYPES, EMPLOYMENT_STATUSES, careerBody, periodLabel } = await import('../src/features/career/careerPeriods.mjs')
   const { COVER_LETTER_SECTIONS } = await import('../src/features/records/resumeStore.mjs')
   const { PORTFOLIO_SECTIONS } = await import('../src/features/career/portfolioItems.mjs')
   const { SCOPES, expiryText } = await import('../src/features/career/portfolioLinks.mjs')
   const en = (ko, vars) => translate(ko, 'en', vars)
-  const labels = [...ACTIVITY_TYPES, ...APPLICATION_STATUSES, ...DOCUMENTS, ...EMPLOYMENT_TYPES, ...EMPLOYMENT_STATUSES, ...COVER_LETTER_SECTIONS, ...PORTFOLIO_SECTIONS, ...SCOPES].map((item) => item.label)
+  const labels = [...ACTIVITY_TYPES, ...APPLICATION_STATUSES, ...DOCUMENTS, ...EMPLOYMENT_TYPES, ...EMPLOYMENT_STATUSES, ...COVER_LETTER_SECTIONS, ...PORTFOLIO_SECTIONS, ...SCOPES, ...LANGUAGES].map((item) => item.label)
   const descs = SCOPES.map((item) => item.desc)
   assert.deepEqual([...labels, ...descs].filter((ko) => !(ko in EN)), [])
   // 경력·포트폴리오 화면에서 목록·충돌 비교로 tr에 넘기는 이름(화면 파일 안의 배열·store/workPrivacy의 VISIBILITY)

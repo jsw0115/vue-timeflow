@@ -22,6 +22,9 @@ public class DocumentVersions {
     /** 문서마다 남길 수 있는 버전 수. 원문에 없는 제안값이다. */
     public static final int MAX_VERSIONS = 100;
     public static final int MAX_LABEL = 100, MAX_NOTE = 500;
+    /** 버전 언어 표시(PR-32, 09 Q-38 (3)). 원문을 번역으로 덮어쓰지 않고 언어별 버전을 따로 남긴다. 예전 버전은 ko로 본다. */
+    public static final List<String> LANGUAGES = List.of("ko", "en");
+    public static final String DEFAULT_LANGUAGE = "ko";
     private final FeatureStore store;
     private final RecordLinks links;
     private final JdbcTemplate jdbc;
@@ -37,7 +40,7 @@ public class DocumentVersions {
     /** 지금 저장된 문서 내용을 복사해 새 버전을 만든다. 저장된 내용이 없으면 만들지 않는다(409). */
     public Map<String, Object> create(String owner, Map<String, Object> body) {
         if (body == null) FeatureInput.fail("요청 본문이 필요합니다.");
-        FeatureInput.keys(body, Set.of("document", "label", "note"));
+        FeatureInput.keys(body, Set.of("document", "label", "note", "language"));
         String document = FeatureInput.requiredText(body, "document");
         if (!DOCUMENTS.contains(document)) FeatureInput.fail("문서는 resume·career·portfolio·cover-letter 중 하나입니다.");
         String label = FeatureInput.text(body, "label").trim(), note = FeatureInput.text(body, "note").trim();
@@ -45,6 +48,9 @@ public class DocumentVersions {
         if (body.get("note") != null && !(body.get("note") instanceof String)) FeatureInput.fail("note는 문자열이어야 합니다.");
         if (label.length() > MAX_LABEL) FeatureInput.fail("버전 이름은 " + MAX_LABEL + "자까지예요.");
         if (note.length() > MAX_NOTE) FeatureInput.fail("바뀐 점 메모는 " + MAX_NOTE + "자까지예요.");
+        if (body.get("language") != null && !(body.get("language") instanceof String)) FeatureInput.fail("language는 문자열이어야 합니다.");
+        String language = body.get("language") == null ? DEFAULT_LANGUAGE : ((String) body.get("language")).trim();
+        if (!LANGUAGES.contains(language)) FeatureInput.fail("언어는 ko·en 중 하나입니다.");
         var existing = rows(owner, document);
         if (existing.size() >= MAX_VERSIONS) throw new ApiException(ErrorCode.CONFLICT, NAMES.get(document) + " 버전은 " + MAX_VERSIONS + "개까지 남길 수 있어요. 쓰지 않는 버전을 먼저 지워 주세요.");
         int number = existing.stream().mapToInt(row -> ((Number) row.get("number")).intValue()).max().orElse(0) + 1;
@@ -52,6 +58,7 @@ public class DocumentVersions {
         data.put("document", document); data.put("number", number);
         if (!label.isEmpty()) data.put("label", label);
         if (!note.isEmpty()) data.put("note", note);
+        data.put("language", language);
         data.put("content", content(owner, document));
         // 같은 번호를 두 요청이 함께 만들면 기본 키가 겹쳐 뒤 요청이 409로 끝난다
         return view(store.create(owner, FeatureType.DOC_VERSION, document + "-" + number, data), true);
@@ -166,6 +173,8 @@ public class DocumentVersions {
         var result = new LinkedHashMap<String, Object>();
         for (String key : List.of("id", "document", "number", "label", "note", "createdAt")) if (row.get(key) != null) result.put(key, row.get(key));
         result.put("title", title(row));
+        Object language = row.get("language");
+        result.put("language", language != null && LANGUAGES.contains(language) ? language : DEFAULT_LANGUAGE);
         if (withContent) result.put("content", row.get("content"));
         return result;
     }

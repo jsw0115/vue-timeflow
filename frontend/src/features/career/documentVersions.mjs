@@ -9,6 +9,12 @@ export const DOCUMENTS = [
   { id: 'cover-letter', label: '자기소개서' },
 ]
 export const MAX_VERSIONS = 100
+/** 버전 언어 표시(PR-32, 09 Q-38 (3)). 서버 DocumentVersions.LANGUAGES와 같다. 언어가 없는 예전 버전은 한국어다. */
+export const LANGUAGES = [
+  { id: 'ko', label: '한국어' },
+  { id: 'en', label: '영어' },
+]
+export const languageLabel = (id) => LANGUAGES.find((item) => item.id === id)?.label ?? '한국어'
 export const documentLabel = (id) => DOCUMENTS.find((item) => item.id === id)?.label ?? '문서'
 
 const versionsPath = '/api/career/document-versions'
@@ -16,8 +22,9 @@ const appPath = (applicationId) => `/api/career/applications/${encodeURIComponen
 export function createDocumentVersionClient(request) {
   return {
     list: (document) => request(document ? `${versionsPath}?document=${encodeURIComponent(document)}` : versionsPath),
-    create: (document, { label = '', note = '' } = {}) => {
+    create: (document, { label = '', note = '', language = '' } = {}) => {
       const body = { document }
+      if (language) body.language = language
       if (label.trim()) body.label = label.trim()
       if (note.trim()) body.note = note.trim()
       return request(versionsPath, { method: 'POST', body: JSON.stringify(body) })

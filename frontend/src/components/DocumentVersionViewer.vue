@@ -3,7 +3,7 @@
 import { computed, onMounted, ref } from 'vue'
 import Modal from './Modal.vue'
 import { apiRequest } from '../features/auth/apiRequest.js'
-import { createDocumentVersionClient, documentLabel, savedAt, snapshotSections, versionErrorText, versionTitle } from '../features/career/documentVersions.mjs'
+import { createDocumentVersionClient, documentLabel, languageLabel, savedAt, snapshotSections, versionErrorText, versionTitle } from '../features/career/documentVersions.mjs'
 import { tr } from '../store/locale'
 import { workPrivacy } from '../store/workPrivacy'
 
@@ -23,7 +23,7 @@ const sections = computed(() => (version.value ? snapshotSections(version.value,
     <p v-if="!version && !message" class="input-field-help" role="status">{{ tr('버전을 불러오는 중이에요.') }}</p>
     <p v-if="message" class="input-field-help" data-state="error" role="alert">{{ tr(message) }}</p>
     <template v-if="version">
-      <p class="input-field-help version-meta">{{ tr(documentLabel(version.document)) }} <span class="figure">v{{ version.number }}</span> · {{ tr('저장 시각') }} <span class="figure">{{ savedAt(version.createdAt) }}</span><template v-if="version.applicationCount"> · {{ tr('지원 {n}건에 제출본으로 연결', { n: version.applicationCount }) }}</template></p>
+      <p class="input-field-help version-meta">{{ tr(documentLabel(version.document)) }} <span class="figure">v{{ version.number }}</span> · {{ tr(languageLabel(version.language)) }} · {{ tr('저장 시각') }} <span class="figure">{{ savedAt(version.createdAt) }}</span><template v-if="version.applicationCount"> · {{ tr('지원 {n}건에 제출본으로 연결', { n: version.applicationCount }) }}</template></p>
       <p v-if="version.note" class="version-note">{{ tr('바뀐 점: {note}', { note: version.note }) }}</p>
       <p class="input-field-help">{{ tr('저장한 때의 내용이에요. 지금 문서를 고쳐도 이 버전은 바뀌지 않아요.') }}</p>
       <section v-for="(section, index) in sections" :key="index" class="version-section">

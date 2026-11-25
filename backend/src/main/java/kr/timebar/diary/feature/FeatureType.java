@@ -35,7 +35,7 @@ public enum FeatureType {
     // 취업·이직 지원 관리(docs/design 04 FD-88 후보). 공고 자동 수집·자동 지원은 하지 않는다
     JOB_APPLICATION("title company postingUrl employmentType workType salaryRange deadline appliedDate interviewDate status body", "title company status"),
     // 이력서·경력기술서·포트폴리오의 고정 버전(PR-25, docs/design 06 career_document_version). 서버가 지금 저장된 내용을 복사해 만들고 고치지 않는다
-    DOC_VERSION("document number label note content", "document number content"),
+    DOC_VERSION("document number label note language content", "document number content"),
     CONTACT("name relation email favorite accountId accountNickname", "name"),
     NOTIFICATION("title kind link read", "title kind link"),
     REPORT("title body date category parentId", "title date"),

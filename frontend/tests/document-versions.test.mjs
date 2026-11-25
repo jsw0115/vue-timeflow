@@ -99,3 +99,17 @@ test('자기소개서(PR-25 Q-41): 칸은 서버와 같고, 버전 보기·비�
   assert.match(view, /\{ id: 'cover', label: '자기소개서' \}/)
   assert.match(view, /<DocumentVersionPanel v-if="onServer" document="cover-letter" \/>/)
 })
+
+test('버전 언어 표시(PR-32, Q-38 (3)): 서버와 같은 값, 고른 언어만 보내고, 예전 버전은 한국어로 보인다', async () => {
+  const { LANGUAGES, languageLabel, createDocumentVersionClient } = await import('../src/features/career/documentVersions.mjs')
+  const java = read('../backend/src/main/java/kr/timebar/diary/career/DocumentVersions.java')
+  assert.match(java, new RegExp(`LANGUAGES = List\\.of\\(${LANGUAGES.map((l) => `"${l.id}"`).join(', ')}\\)`))
+  const bodies = []
+  const client = createDocumentVersionClient(async (path, options = {}) => { bodies.push(JSON.parse(options.body)); return {} })
+  await client.create('resume', { label: 'English', language: 'en' })
+  await client.create('resume', {})
+  assert.deepEqual(bodies, [{ document: 'resume', language: 'en', label: 'English' }, { document: 'resume' }])
+  assert.equal(languageLabel(undefined), '한국어')
+  assert.equal(languageLabel('en'), '영어')
+})
+

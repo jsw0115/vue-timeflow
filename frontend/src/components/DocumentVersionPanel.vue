@@ -4,7 +4,7 @@ import { computed, onMounted, ref } from 'vue'
 import DocumentVersionViewer from './DocumentVersionViewer.vue'
 import DocumentVersionCompare from './DocumentVersionCompare.vue'
 import { apiRequest } from '../features/auth/apiRequest.js'
-import { MAX_VERSIONS, createDocumentVersionClient, documentLabel, savedAt, versionErrorText, versionName as plainName } from '../features/career/documentVersions.mjs'
+import { LANGUAGES, MAX_VERSIONS, createDocumentVersionClient, languageLabel, documentLabel, savedAt, versionErrorText, versionName as plainName } from '../features/career/documentVersions.mjs'
 import { tr } from '../store/locale'
 
 const props = defineProps({ document: { type: String, required: true } })
@@ -13,6 +13,7 @@ const versions = ref([])
 const status = ref('loading')
 const label = ref('')
 const note = ref('')
+const language = ref('ko')
 const busy = ref(false)
 const message = ref('')
 const announce = ref('')
@@ -32,7 +33,7 @@ onMounted(load)
 async function save() {
   busy.value = true; message.value = ''; announce.value = ''
   try {
-    const created = await client.create(props.document, { label: label.value, note: note.value })
+    const created = await client.create(props.document, { label: label.value, note: note.value, language: language.value })
     label.value = ''; note.value = ''
     announce.value = tr('‘{name}’ 버전을 저장했어요.', { name: versionName(created) })
     await load()
@@ -49,15 +50,17 @@ async function remove(version) {
   <section class="card document-versions" :aria-labelledby="'versions-' + document">
     <h3 :id="'versions-' + document">{{ tr('{name} 버전', { name }) }} <span class="figure">{{ versions.length }}/{{ MAX_VERSIONS }}</span></h3>
     <p class="input-field-help">{{ tr('지금 저장된 {name} 내용을 그대로 고정해 둬요. 나중에 고쳐도 저장한 버전은 바뀌지 않고, 지원 기록에 제출본으로 연결할 수 있어요. 저장하지 않은 수정은 버전에 들어가지 않아요.', { name }) }}</p>
+    <p class="input-field-help">{{ tr('영어본은 지금 문서를 영어로 고쳐 저장한 뒤 언어를 \'영어\'로 골라 버전으로 남겨요. 한국어 원문은 그 전에 한국어 버전으로 남겨 두면 덮어써도 버전에 그대로 있어요.') }}</p>
     <div class="version-form">
       <label>{{ tr('버전 이름(선택)') }}<input v-model="label" maxlength="100" :placeholder="tr('예: 가나다 제출용')" /></label>
       <label>{{ tr('바뀐 점(선택)') }}<input v-model="note" maxlength="500" :placeholder="tr('예: 성과 문장 수정')" /></label>
+      <label>{{ tr('버전 언어') }}<select v-model="language"><option v-for="l in LANGUAGES" :key="l.id" :value="l.id">{{ tr(l.label) }}</option></select></label>
       <button type="button" class="button-secondary" :disabled="busy || versions.length >= MAX_VERSIONS" :aria-busy="busy ? 'true' : undefined" @click="save">{{ tr('지금 내용으로 버전 저장') }}</button>
     </div>
     <p v-if="status === 'loading'" class="input-field-help" role="status">{{ tr('버전을 불러오는 중이에요.') }}</p>
     <ul v-else-if="versions.length" class="version-list">
       <li v-for="v in versions" :key="v.id">
-        <span class="version-name"><b>{{ versionName(v) }}</b><small>{{ tr('저장 시각') }} <span class="figure">{{ savedAt(v.createdAt) }}</span><template v-if="v.note"> · {{ v.note }}</template></small><small v-if="v.applicationCount">{{ tr('지원 {n}건에 제출본으로 연결돼 지울 수 없어요', { n: v.applicationCount }) }}</small></span>
+        <span class="version-name"><b>{{ versionName(v) }} <span class="tag">{{ tr(languageLabel(v.language)) }}</span></b><small>{{ tr('저장 시각') }} <span class="figure">{{ savedAt(v.createdAt) }}</span><template v-if="v.note"> · {{ v.note }}</template></small><small v-if="v.applicationCount">{{ tr('지원 {n}건에 제출본으로 연결돼 지울 수 없어요', { n: v.applicationCount }) }}</small></span>
         <span class="version-actions">
           <button type="button" class="button-text" :aria-label="tr('{name} 열기', { name: versionName(v) })" @click="viewing = v.id">{{ tr('열기') }}</button>
           <button type="button" class="button-text" :disabled="busy || v.applicationCount > 0" :aria-label="tr('{name} 지우기', { name: versionName(v) })" @click="remove(v)">{{ tr('지우기') }}</button>
