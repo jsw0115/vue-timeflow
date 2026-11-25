@@ -22540,6 +22540,469 @@
         "x-test-evidence": "verification.md"
       }
     },
+    "/api/planner/reschedule/apply": {
+      "post": {
+        "operationId": "RescheduleController_post__api_planner_reschedule_apply",
+        "tags": [
+          "RescheduleController"
+        ],
+        "summary": "POST /api/planner/reschedule/apply",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "moves": {
+                    "type": "array",
+                    "items": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "const": "block"
+                            },
+                            "id": {
+                              "type": "string",
+                              "maxLength": 100
+                            },
+                            "version": {
+                              "type": "integer",
+                              "minimum": 1
+                            },
+                            "startTime": {
+                              "type": "string",
+                              "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$"
+                            },
+                            "endTime": {
+                              "type": "string",
+                              "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$"
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "id",
+                            "version",
+                            "startTime",
+                            "endTime"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "const": "task"
+                            },
+                            "id": {
+                              "type": "string",
+                              "maxLength": 100
+                            },
+                            "version": {
+                              "type": "integer",
+                              "minimum": 1
+                            },
+                            "dueTime": {
+                              "type": "string",
+                              "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$"
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "id",
+                            "version",
+                            "dueTime"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
+                    },
+                    "maxItems": 50,
+                    "minItems": 1
+                  }
+                },
+                "required": [
+                  "moves"
+                ],
+                "additionalProperties": false,
+                "description": "고른 항목만 옮긴다. 항목마다 version이 지금 값과 다르면 옮기지 않고 conflicts(reason changed·missing)에 넣고, 나머지는 옮긴다. 되돌리기도 같은 경로로 원래 시각과 옮긴 뒤 version을 보낸다. 같은 순간의 동시 쓰기는 요청 전체가 409일 수 있다."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "성공. 세부 정책은 README와 기능 규약을 따른다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "moved": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/RescheduleMove"
+                          },
+                          "maxItems": 500
+                        },
+                        "conflicts": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": [
+                                  "block",
+                                  "task"
+                                ]
+                              },
+                              "id": {
+                                "type": "string",
+                                "maxLength": 100
+                              },
+                              "title": {
+                                "type": "string",
+                                "maxLength": 200
+                              },
+                              "reason": {
+                                "type": "string",
+                                "enum": [
+                                  "changed",
+                                  "missing"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "id",
+                              "reason"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "maxItems": 500
+                        }
+                      },
+                      "required": [
+                        "moved",
+                        "conflicts"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 검증 오류.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 필요 또는 폐기된 토큰.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "역할·회원 권한 부족.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "없음·타인 리소스·만료.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "버전·현재 상태 충돌.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-implementation-status": "서비스 연결 · 검증 범위 별도",
+        "x-source": "RescheduleController.java",
+        "x-admin-required": false,
+        "x-test-evidence": "verification.md"
+      }
+    },
+    "/api/planner/reschedule/preview": {
+      "post": {
+        "operationId": "RescheduleController_post__api_planner_reschedule_preview",
+        "tags": [
+          "RescheduleController"
+        ],
+        "summary": "POST /api/planner/reschedule/preview",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "from": {
+                    "type": "string",
+                    "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$",
+                    "description": "이 시각 이후 시작하는 계획 블록과 이후 마감인 할 일만 옮긴다"
+                  },
+                  "delayMinutes": {
+                    "type": "integer",
+                    "minimum": 5,
+                    "maximum": 480
+                  }
+                },
+                "required": [
+                  "date",
+                  "from",
+                  "delayMinutes"
+                ],
+                "additionalProperties": false,
+                "description": "재배치안(PR-19 UF-137, Q-36). 아무것도 바꾸지 않는다. 계획 블록은 (원래 시작+밀린 분)과 앞 블록 끝 중 늦은 때에 놓고, 일정·그 전에 시작한 블록과 겹치면 그 뒤로 민다. 마감 시각 있는 할 일은 마감을 밀린 분만큼 늦춘다. 자정을 넘으면 unplaced. 일정(SCHEDULE)은 옮기지 않는다."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "성공. 세부 정책은 README와 기능 규약을 따른다.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "const": true
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "date": {
+                          "type": "string",
+                          "format": "date"
+                        },
+                        "from": {
+                          "type": "string",
+                          "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$"
+                        },
+                        "delayMinutes": {
+                          "type": "integer",
+                          "minimum": 5,
+                          "maximum": 480
+                        },
+                        "fixed": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "title": {
+                                "type": "string",
+                                "maxLength": 200
+                              },
+                              "startTime": {
+                                "type": "string",
+                                "maxLength": 5
+                              },
+                              "endTime": {
+                                "type": "string",
+                                "maxLength": 5
+                              }
+                            },
+                            "required": [
+                              "title",
+                              "startTime",
+                              "endTime"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "maxItems": 500
+                        },
+                        "moves": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/RescheduleMove"
+                          },
+                          "maxItems": 500
+                        },
+                        "unplaced": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": [
+                                  "block",
+                                  "task"
+                                ]
+                              },
+                              "id": {
+                                "type": "string",
+                                "maxLength": 100
+                              },
+                              "title": {
+                                "type": "string",
+                                "maxLength": 200
+                              },
+                              "reason": {
+                                "const": "day-end"
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "id",
+                              "title",
+                              "reason"
+                            ],
+                            "additionalProperties": false
+                          },
+                          "maxItems": 500
+                        }
+                      },
+                      "required": [
+                        "date",
+                        "from",
+                        "delayMinutes",
+                        "fixed",
+                        "moves",
+                        "unplaced"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "message": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 검증 오류.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "인증 필요 또는 폐기된 토큰.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "역할·회원 권한 부족.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "없음·타인 리소스·만료.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "버전·현재 상태 충돌.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-implementation-status": "서비스 연결 · 검증 범위 별도",
+        "x-source": "RescheduleController.java",
+        "x-admin-required": false,
+        "x-test-evidence": "verification.md"
+      }
+    },
     "/api/planner/reviews/{date}": {
       "delete": {
         "operationId": "RecordActionsController_delete__api_planner_reviews__date_",
@@ -53207,6 +53670,75 @@
           "actual",
           "focus",
           "tasks"
+        ],
+        "additionalProperties": false
+      },
+      "RescheduleMove": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "block",
+              "task"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "before": {
+            "type": "object",
+            "properties": {
+              "startTime": {
+                "type": "string",
+                "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$"
+              },
+              "endTime": {
+                "type": "string",
+                "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$"
+              },
+              "dueTime": {
+                "type": "string",
+                "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$"
+              }
+            },
+            "additionalProperties": true
+          },
+          "after": {
+            "type": "object",
+            "properties": {
+              "startTime": {
+                "type": "string",
+                "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$"
+              },
+              "endTime": {
+                "type": "string",
+                "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$"
+              },
+              "dueTime": {
+                "type": "string",
+                "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$"
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "version",
+          "title",
+          "before",
+          "after"
         ],
         "additionalProperties": false
       },

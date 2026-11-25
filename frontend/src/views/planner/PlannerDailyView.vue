@@ -11,6 +11,10 @@ import { useRecording } from '../../features/recording/useRecording.js'
 import { recordingSeconds } from '../../features/recording/recordingClient.mjs'
 import LinkedRecords from '../../components/LinkedRecords.vue'
 import { dayBoundary, dayRange } from '../../features/records/dayBoundary.mjs'
+import { session } from '../../features/auth/session.js'
+import { apiRequest } from '../../features/auth/apiRequest.js'
+import { createRescheduleClient, timedBlocks } from '../../features/planner/reschedule.mjs'
+import RescheduleDialog from '../../components/RescheduleDialog.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -60,6 +64,18 @@ function planStyle(event) {
   const t = span(event)
   return blockStyle(t.start, t.end)
 }
+// 플래너 계획 블록(템플릿 적용 등으로 서버에 만든 항목, PR-19 UF-137). 일정과 같은 계획 줄에 그리고 "계획 블록"이라고 읽힌다
+const rescheduleClient = createRescheduleClient(apiRequest)
+const blockRows = ref([])
+async function loadBlocks() {
+  if (!session.userId) { blockRows.value = []; return }
+  try { blockRows.value = (await rescheduleClient.blocks(reviewDate.value)) ?? [] } catch { blockRows.value = [] }
+}
+watch(() => [reviewDate.value, session.userId], loadBlocks, { immediate: true })
+const dayBlocks = computed(() => timedBlocks(blockRows.value, reviewDate.value))
+const blockStyleOf = (b) => blockStyle(+new Date(reviewDate.value + 'T' + b.startTime + ':00'), +new Date(reviewDate.value + 'T' + b.endTime + ':00'))
+const rescheduling = ref(false)
+function afterReschedule() { loadBlocks(); taskStore.reload?.() }
 const browserZone = Intl.DateTimeFormat().resolvedOptions().timeZone
 const reviewText = ref('')
 watch(() => [reviewDate.value, plannerReviews.value.find(item => item.id === reviewDate.value)?.body], ([date]) => { reviewText.value = plannerReviews.value.find(item => item.id === date)?.body || '' }, { immediate: true })
@@ -94,6 +110,7 @@ watch(() => [reviewDate.value, plannerReviews.value.find(item => item.id === rev
           <button type="button" :aria-pressed="!fullDay" @click="fullDay = false">08~23시</button>
           <button type="button" :aria-pressed="fullDay" @click="fullDay = true">24시간</button>
         </div>
+        <button v-if="session.userId" type="button" class="button-text" @click="rescheduling = true">계획이 밀렸나요?</button>
         <ul class="timeline-legend" aria-label="범례">
           <li v-if="view !== 'Actual'"><i class="legend-plan" aria-hidden="true"></i>계획</li>
           <li v-if="view !== 'Plan'"><i class="legend-actual" aria-hidden="true"></i>실제 기록</li>
@@ -106,6 +123,7 @@ watch(() => [reviewDate.value, plannerReviews.value.find(item => item.id === rev
         <div class="hours" aria-hidden="true"><small v-for="h in hourLabels" :key="h">{{ h }}:00</small></div>
         <div class="grid">
           <div v-for="event in dayEvents" v-show="view !== 'Actual'" :key="event.occurrenceKey" class="plan" :style="planStyle(event)"><span class="sr-only">계획 · </span>{{ event.title }}</div>
+          <div v-for="b in dayBlocks" v-show="view !== 'Actual'" :key="'block:' + b.id" class="plan plan-block" :style="blockStyleOf(b)"><span class="sr-only">계획 블록 · {{ b.startTime }}~{{ b.endTime }} · </span><small class="plan-block-tag" aria-hidden="true">블록</small> {{ b.title }}</div>
           <div v-for="row in dayRecords" :key="row.id" v-show="view !== 'Plan'" class="block" :style="actualStyle(row)"><b>{{ row.title }}</b><small><span class="sr-only">실제 기록 · </span>{{ clock(recordingSeconds(row)) }}</small></div>
         </div>
       </div>
@@ -143,10 +161,13 @@ watch(() => [reviewDate.value, plannerReviews.value.find(item => item.id === rev
         <button type="button" class="button-secondary" @click="openPostComposer('회고', '', { date: reviewDate, body: reviewText })">{{ reviewText ? '회고 수정' : '회고 작성' }}</button>
       </div>
     </section>
+    <RescheduleDialog v-if="rescheduling" :date="reviewDate" @close="rescheduling = false" @changed="afterReschedule" />
   </div>
 </template>
 
 <style scoped>
+/* 계획 블록(플래너 항목)은 일정과 같은 계획 모양이고, 글자 "블록"으로 구분한다(색만으로 구분하지 않음) */
+.plan-block-tag { color: var(--color-muted); font-size: var(--type-caption-size); }
 /* 넓은 열은 타임바, 좁은 열(280~340px)은 할 일·회고. 하루 모드가 할 일을 앞에 두면 열 순서만 바뀐다 */
 .planner-day { grid-template-columns: minmax(0, 1fr) minmax(280px, 340px); align-items: start; }
 .planner-day.tasks-first { grid-template-columns: minmax(280px, 340px) minmax(0, 1fr); }

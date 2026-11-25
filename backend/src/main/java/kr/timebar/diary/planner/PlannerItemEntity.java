@@ -74,6 +74,9 @@ public class PlannerItemEntity extends BaseTimeEntity {
 
     public void changeStatus(PlannerItem.ItemStatus status) { this.status = status; }
 
+    /** 재배치(PR-19 UF-137): 같은 날짜 안에서 시작·끝 시각만 바꾼다. */
+    public void moveTo(LocalTime startTime, LocalTime endTime) { this.startTime = startTime; this.endTime = endTime; }
+
     public void apply(PlannerItem item) {
         this.type = item.type(); this.title = item.title(); this.category = item.category();
         this.date = item.date(); this.startTime = item.startTime(); this.endTime = item.endTime();

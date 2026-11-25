@@ -2425,6 +2425,32 @@ KRW 정수. type=in은 양수, out은 음수. 0은 거부한다.
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 
+## POST /api/planner/reschedule/apply
+
+인증은 JWT이며 소스는 RescheduleController.java다. 성공 HTTP는 200다.
+
+| 본문 필드 | 타입 | 필수 | 제약 |
+|---|---|---|---|
+| moves | array | 예 | 기능 규약 참조 |
+
+고른 항목만 옮긴다. 항목마다 version이 지금 값과 다르면 옮기지 않고 conflicts(reason changed·missing)에 넣고, 나머지는 옮긴다. 되돌리기도 같은 경로로 원래 시각과 옮긴 뒤 version을 보낸다. 같은 순간의 동시 쓰기는 요청 전체가 409일 수 있다.
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## POST /api/planner/reschedule/preview
+
+인증은 JWT이며 소스는 RescheduleController.java다. 성공 HTTP는 200다.
+
+| 본문 필드 | 타입 | 필수 | 제약 |
+|---|---|---|---|
+| date | string | 예 | date |
+| from | string | 예 | 이 시각 이후 시작하는 계획 블록과 이후 마감인 할 일만 옮긴다 |
+| delayMinutes | integer | 예 | 최소 5 · 최대 480 |
+
+재배치안(PR-19 UF-137, Q-36). 아무것도 바꾸지 않는다. 계획 블록은 (원래 시작+밀린 분)과 앞 블록 끝 중 늦은 때에 놓고, 일정·그 전에 시작한 블록과 겹치면 그 뒤로 민다. 마감 시각 있는 할 일은 마감을 밀린 분만큼 늦춘다. 자정을 넘으면 unplaced. 일정(SCHEDULE)은 옮기지 않는다.
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
 ## DELETE /api/planner/reviews/{date}
 
 인증은 JWT이며 소스는 RecordActionsController.java다. 성공 HTTP는 204다.
