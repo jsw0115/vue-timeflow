@@ -15,6 +15,8 @@ import { session } from '../../features/auth/session.js'
 import { apiRequest } from '../../features/auth/apiRequest.js'
 import { createRescheduleClient, timedBlocks } from '../../features/planner/reschedule.mjs'
 import RescheduleDialog from '../../components/RescheduleDialog.vue'
+import { bodyLocale, tr } from '../../store/locale'
+import { formatDate } from '../../features/i18n/locale.mjs'
 
 const router = useRouter()
 const route = useRoute()
@@ -27,7 +29,10 @@ function order(key) {
   return content.value.cardOrder[key]
 }
 
-const recordTitle = ref('실제 기록')
+// 기록 제목 기본값. 사용자가 바꿔 저장하는 값이라 화면을 연 때의 본문 언어로 한 번 정한다
+const recordTitle = ref(tr('실제 기록'))
+// 기록 시작·종료 시각. 예전에는 언어와 상관없이 ko-KR 형식이었다
+const when = (iso) => formatDate(iso, bodyLocale.value, { dateStyle: 'medium', timeStyle: 'medium' })
 const { active: recording, records, pending, error: recordError, busy: recordBusy, loaded: recordLoaded, saved, elapsed, refresh: refreshRecords, toggle: toggleRecord } = useRecording()
 function clock(sec) {
   return String(Math.floor(sec / 60)).padStart(2, '0') + ':' + String(sec % 60).padStart(2, '0')
@@ -86,62 +91,62 @@ watch(() => [reviewDate.value, plannerReviews.value.find(item => item.id === rev
   <div class="planner planner-day" :class="{ 'tasks-first': order('tasks') < order('timeline') }">
     <section class="card planner-timebar" :style="{ order: order('timeline') }" aria-labelledby="timebar-title">
       <div class="head">
-        <div><h3 id="timebar-title">오늘의 타임바</h3><p>점선은 계획, 실선은 실제 기록이에요</p></div>
-        <div class="segmented-tab" role="group" aria-label="타임바에 보일 기록"><button v-for="v in VIEWS" :key="v.id" type="button" :aria-pressed="view === v.id" @click="view = v.id">{{ v.label }}</button></div>
+        <div><h3 id="timebar-title">{{ tr('오늘의 타임바') }}</h3><p>{{ tr('점선은 계획, 실선은 실제 기록이에요') }}</p></div>
+        <div class="segmented-tab" role="group" :aria-label="tr('타임바에 보일 기록')"><button v-for="v in VIEWS" :key="v.id" type="button" :aria-pressed="view === v.id" @click="view = v.id">{{ tr(v.label) }}</button></div>
       </div>
 
       <!-- 빠른 실제 기록: 타임라인 위에 두어 화면을 내리지 않고 시작한다(DESIGN.md 1장 기록 우선) -->
       <form class="record-bar" @submit.prevent="toggleRecord(recordTitle)">
-        <label for="actual-record-title" class="record-bar-label">기록할 활동</label>
+        <label for="actual-record-title" class="record-bar-label">{{ tr('기록할 활동') }}</label>
         <div class="record-bar-row">
           <input id="actual-record-title" v-model="recordTitle" maxlength="200" :disabled="!!recording || recordBusy || !!pending" />
           <button type="submit" class="record" :class="{ 'record-on': recording }" :disabled="recordBusy || !recordLoaded" :aria-busy="recordBusy ? 'true' : undefined">
-            {{ recordBusy ? '서버 확인 중…' : pending ? '기록 저장 다시 시도' : recording ? '기록 종료' : '지금부터 기록' }}
+            {{ recordBusy ? tr('서버 확인 중…') : pending ? tr('기록 저장 다시 시도') : recording ? tr('기록 종료') : tr('지금부터 기록') }}
           </button>
         </div>
-        <p v-if="recording" class="record-status" role="status"><span class="record-dot" aria-hidden="true"></span>{{ recording.title }} · {{ pending?.kind === 'finish' ? '종료 저장 대기' : recording.state === 'PAUSED' ? '일시정지' : '기록 중' }} · <span class="figure">{{ clock(elapsed) }}</span></p>
-        <p v-if="recordError" class="input-field-help" data-state="error" role="alert">{{ recordError }}</p>
-        <button v-if="recordError" type="button" class="button-text" :disabled="recordBusy" @click="refreshRecords">서버 기록 다시 확인</button>
-        <p v-if="saved" class="input-field-help" data-state="success" role="status">저장했어요. <RouterLink :to="{ path: '/planner/daily', query: { date: reviewDate, recording: saved.id } }">{{ saved.title }} 상세 보기</RouterLink></p>
+        <p v-if="recording" class="record-status" role="status"><span class="record-dot" aria-hidden="true"></span>{{ recording.title }} · {{ pending?.kind === 'finish' ? tr('종료 저장 대기') : recording.state === 'PAUSED' ? tr('일시정지') : tr('기록 중') }} · <span class="figure">{{ clock(elapsed) }}</span></p>
+        <p v-if="recordError" class="input-field-help" data-state="error" role="alert">{{ tr(recordError) }}</p>
+        <button v-if="recordError" type="button" class="button-text" :disabled="recordBusy" @click="refreshRecords">{{ tr('서버 기록 다시 확인') }}</button>
+        <p v-if="saved" class="input-field-help" data-state="success" role="status">{{ tr('저장했어요.') }} <RouterLink :to="{ path: '/planner/daily', query: { date: reviewDate, recording: saved.id } }">{{ tr('{title} 상세 보기', { title: saved.title }) }}</RouterLink></p>
       </form>
 
       <div class="timeline-tools">
-        <div class="segmented-tab planner-range" role="group" aria-label="시간 범위">
-          <button type="button" :aria-pressed="!fullDay" @click="fullDay = false">08~23시</button>
-          <button type="button" :aria-pressed="fullDay" @click="fullDay = true">24시간</button>
+        <div class="segmented-tab planner-range" role="group" :aria-label="tr('시간 범위')">
+          <button type="button" :aria-pressed="!fullDay" @click="fullDay = false">{{ tr('08~23시') }}</button>
+          <button type="button" :aria-pressed="fullDay" @click="fullDay = true">{{ tr('24시간') }}</button>
         </div>
-        <button v-if="session.userId" type="button" class="button-text" @click="rescheduling = true">계획이 밀렸나요?</button>
-        <ul class="timeline-legend" aria-label="범례">
-          <li v-if="view !== 'Actual'"><i class="legend-plan" aria-hidden="true"></i>계획</li>
-          <li v-if="view !== 'Plan'"><i class="legend-actual" aria-hidden="true"></i>실제 기록</li>
+        <button v-if="session.userId" type="button" class="button-text" @click="rescheduling = true">{{ tr('계획이 밀렸나요?') }}</button>
+        <ul class="timeline-legend" :aria-label="tr('범례')">
+          <li v-if="view !== 'Actual'"><i class="legend-plan" aria-hidden="true"></i>{{ tr('계획') }}</li>
+          <li v-if="view !== 'Plan'"><i class="legend-actual" aria-hidden="true"></i>{{ tr('실제 기록') }}</li>
         </ul>
       </div>
-      <p v-if="startHour" class="form-note">하루를 <span class="figure">{{ String(startHour).padStart(2, '0') }}:00</span>에 시작해요. 그 전 기록은 전날에 들어가요.</p>
-      <p v-if="dayBoundary.state.timeZone && dayBoundary.state.timeZone !== browserZone" class="form-note">계정 시간대(<span class="figure">{{ dayBoundary.state.timeZone }}</span>)와 이 브라우저 시간대(<span class="figure">{{ browserZone }}</span>)가 달라요. 플래너는 이 브라우저 시간대로 그리고, 통계는 계정 시간대로 나눠요.</p>
+      <p v-if="startHour" class="form-note">{{ tr('하루를 {time}에 시작해요. 그 전 기록은 전날에 들어가요.', { time: String(startHour).padStart(2, '0') + ':00' }) }}</p>
+      <p v-if="dayBoundary.state.timeZone && dayBoundary.state.timeZone !== browserZone" class="form-note">{{ tr('계정 시간대({account})와 이 브라우저 시간대({browser})가 달라요. 플래너는 이 브라우저 시간대로 그리고, 통계는 계정 시간대로 나눠요.', { account: dayBoundary.state.timeZone, browser: browserZone }) }}</p>
       <!-- 모두 보기에서는 같은 시간축 위에 계획(왼쪽)과 실제 기록(오른쪽) 두 줄을 나란히 그려 겹치지 않게 비교한다 -->
       <div class="timeline" :class="{ 'full-day': fullDay, 'two-lanes': view === '모두' }">
         <div class="hours" aria-hidden="true"><small v-for="h in hourLabels" :key="h">{{ h }}:00</small></div>
         <div class="grid">
-          <div v-for="event in dayEvents" v-show="view !== 'Actual'" :key="event.occurrenceKey" class="plan" :style="planStyle(event)"><span class="sr-only">계획 · </span>{{ event.title }}</div>
-          <div v-for="b in dayBlocks" v-show="view !== 'Actual'" :key="'block:' + b.id" class="plan plan-block" :style="blockStyleOf(b)"><span class="sr-only">계획 블록 · {{ b.startTime }}~{{ b.endTime }} · </span><small class="plan-block-tag" aria-hidden="true">블록</small> {{ b.title }}</div>
-          <div v-for="row in dayRecords" :key="row.id" v-show="view !== 'Plan'" class="block" :style="actualStyle(row)"><b>{{ row.title }}</b><small><span class="sr-only">실제 기록 · </span>{{ clock(recordingSeconds(row)) }}</small></div>
+          <div v-for="event in dayEvents" v-show="view !== 'Actual'" :key="event.occurrenceKey" class="plan" :style="planStyle(event)"><span class="sr-only">{{ tr('계획 ·') }} </span>{{ event.title }}</div>
+          <div v-for="b in dayBlocks" v-show="view !== 'Actual'" :key="'block:' + b.id" class="plan plan-block" :style="blockStyleOf(b)"><span class="sr-only">{{ tr('계획 블록 · {from}~{to} · ', { from: b.startTime, to: b.endTime }) }}</span><small class="plan-block-tag" aria-hidden="true">{{ tr('블록') }}</small> {{ b.title }}</div>
+          <div v-for="row in dayRecords" :key="row.id" v-show="view !== 'Plan'" class="block" :style="actualStyle(row)"><b>{{ row.title }}</b><small><span class="sr-only">{{ tr('실제 기록 ·') }} </span>{{ clock(recordingSeconds(row)) }}</small></div>
         </div>
       </div>
 
       <div class="actual-list">
-        <h4>실제 기록 <span class="figure">{{ dayRecords.length }}</span></h4>
-        <p v-if="!recording && !dayRecords.length && recordLoaded" class="empty-state">이 날짜에 저장된 실제 기록이 없어요. 위에서 '지금부터 기록'으로 시작해 보세요.</p>
+        <h4>{{ tr('실제 기록') }} <span class="figure">{{ dayRecords.length }}</span></h4>
+        <p v-if="!recording && !dayRecords.length && recordLoaded" class="empty-state">{{ tr('이 날짜에 저장된 실제 기록이 없어요. 위에서 \'지금부터 기록\'으로 시작해 보세요.') }}</p>
         <ul v-if="dayRecords.length">
           <li v-for="row in dayRecords" :key="row.id"><RouterLink :to="{ path: '/planner/daily', query: { date: reviewDate, recording: row.id } }" :aria-current="selectedRecord?.id === row.id ? 'true' : undefined"><span>{{ row.title }}</span><span class="figure">{{ clock(recordingSeconds(row)) }}</span></RouterLink></li>
         </ul>
       </div>
-      <section v-if="selectedRecord" class="record-detail" aria-label="실제 기록 상세">
+      <section v-if="selectedRecord" class="record-detail" :aria-label="tr('실제 기록 상세')">
         <h3>{{ selectedRecord.title }}</h3>
         <dl>
-          <div><dt>시작</dt><dd class="figure">{{ new Date(selectedRecord.startedAt).toLocaleString('ko-KR') }}</dd></div>
-          <div v-if="selectedRecord.endedAt"><dt>종료</dt><dd class="figure">{{ new Date(selectedRecord.endedAt).toLocaleString('ko-KR') }} · {{ clock(recordingSeconds(selectedRecord)) }}</dd></div>
-          <div><dt>상태</dt><dd>{{ selectedRecord.state === 'COMPLETED' ? '서버 저장 완료' : selectedRecord.state === 'PAUSED' ? '일시정지' : '기록 중' }}</dd></div>
-          <div v-if="selectedRecord.pauses?.length"><dt>일시정지</dt><dd>{{ selectedRecord.pauses.length }}번 · 기록 시간에서 뺐어요</dd></div>
+          <div><dt>{{ tr('시작') }}</dt><dd class="figure">{{ when(selectedRecord.startedAt) }}</dd></div>
+          <div v-if="selectedRecord.endedAt"><dt>{{ tr('종료') }}</dt><dd class="figure">{{ when(selectedRecord.endedAt) }} · {{ clock(recordingSeconds(selectedRecord)) }}</dd></div>
+          <div><dt>{{ tr('상태') }}</dt><dd>{{ selectedRecord.state === 'COMPLETED' ? tr('서버 저장 완료') : selectedRecord.state === 'PAUSED' ? tr('일시정지') : tr('기록 중') }}</dd></div>
+          <div v-if="selectedRecord.pauses?.length"><dt>{{ tr('일시정지') }}</dt><dd>{{ tr('{n}번 · 기록 시간에서 뺐어요', { n: selectedRecord.pauses.length }) }}</dd></div>
         </dl>
         <LinkedRecords kind="actual" :id="selectedRecord.id" :record="selectedRecord" />
       </section>
@@ -149,16 +154,16 @@ watch(() => [reviewDate.value, plannerReviews.value.find(item => item.id === rev
 
     <section class="card planner-side" :style="{ order: order('tasks') }" aria-labelledby="day-tasks-title">
       <div class="head">
-        <div><h3 id="day-tasks-title">오늘의 할 일</h3><p>완료하면 리듬이 기록돼요</p></div>
-        <button type="button" class="icon-button" aria-label="할 일 추가" title="할 일 추가" @click="router.push({ path: '/tasks', query: { new: String(Date.now()) } })">+</button>
+        <div><h3 id="day-tasks-title">{{ tr('오늘의 할 일') }}</h3><p>{{ tr('완료하면 리듬이 기록돼요') }}</p></div>
+        <button type="button" class="icon-button" :aria-label="tr('할 일 추가')" :title="tr('할 일 추가')" @click="router.push({ path: '/tasks', query: { new: String(Date.now()) } })">+</button>
       </div>
       <label class="task" v-for="task in tasks" :key="task.id"><input type="checkbox" :checked="task.done" :aria-busy="taskStore.isPending(task) ? 'true' : undefined" @click.prevent="taskStore.toggle(task)" /><span><b :class="{ done: task.done }">{{ task.title }}</b><small>{{ task.category }}</small></span></label>
-      <p v-if="!tasks.length" class="empty-state">할 일이 없어요. '+'로 추가해 보세요.</p>
-      <p v-if="taskStore.notice.message" class="input-field-help" data-state="error" role="status">{{ taskStore.notice.message }}</p>
+      <p v-if="!tasks.length" class="empty-state">{{ tr('할 일이 없어요. \'+\'로 추가해 보세요.') }}</p>
+      <p v-if="taskStore.notice.message" class="input-field-help" data-state="error" role="status">{{ tr(taskStore.notice.message) }}</p>
       <div class="day-review">
-        <h3>하루 회고</h3>
-        <p>{{ reviewText || content.reviewPrompt }}</p>
-        <button type="button" class="button-secondary" @click="openPostComposer('회고', '', { date: reviewDate, body: reviewText })">{{ reviewText ? '회고 수정' : '회고 작성' }}</button>
+        <h3>{{ tr('하루 회고') }}</h3>
+        <p>{{ reviewText || tr(content.reviewPrompt) }}</p>
+        <button type="button" class="button-secondary" @click="openPostComposer('회고', '', { date: reviewDate, body: reviewText })">{{ reviewText ? tr('회고 수정') : tr('회고 작성') }}</button>
       </div>
     </section>
     <RescheduleDialog v-if="rescheduling" :date="reviewDate" @close="rescheduling = false" @changed="afterReschedule" />

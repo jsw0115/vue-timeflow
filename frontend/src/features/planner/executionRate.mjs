@@ -1,4 +1,5 @@
 // 계획 실행률(PR-19 UF-136, 09 Q-40) 화면 규칙: 요청 경로, 히트맵 단계, 기간, 최고 달성일. 서버 ExecutionRate가 계산한다.
+import { korean } from '../i18n/translate.mjs'
 
 export const fetchExecution = (request, from, to) => request(`/api/stat/execution?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`)
 
@@ -20,4 +21,5 @@ export function bestDay(days) {
   return (days ?? []).filter((d) => d.rate != null).reduce((best, d) => (!best || d.rate > best.rate ? d : best), null)
 }
 
-export const hoursText = (minutes) => { const m = Math.max(0, Math.round(Number(minutes) || 0)); return m < 60 ? `${m}분` : `${Math.floor(m / 60)}시간${m % 60 ? ` ${m % 60}분` : ''}` }
+/** 시간 문구. t는 화면 표시용 번역(기본 한국어)이다. */
+export const hoursText = (minutes, t = korean) => { const m = Math.max(0, Math.round(Number(minutes) || 0)); if (m < 60) return t('{n}분', { n: m }); const h = Math.floor(m / 60); return m % 60 ? t('{n}시간 {m}분', { n: h, m: m % 60 }) : t('{n}시간', { n: h }) }

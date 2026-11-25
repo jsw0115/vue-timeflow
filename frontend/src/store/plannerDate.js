@@ -1,5 +1,7 @@
 import { computed, ref } from 'vue'
 import { localDate } from '../utils/postValidation.mjs'
+import { formatDate } from '../features/i18n/locale.mjs'
+import { bodyLocale, tr } from './locale'
 
 /**
  * 플래너 기간 이동 — 일/주/월/연 화면이 같은 기준일을 공유한다.
@@ -35,8 +37,12 @@ function fmt(d) {
   return d.getMonth() + 1 + '.' + d.getDate()
 }
 
+// 기간 이름은 본문 언어를 따른다(PR-32). 한국어는 예전 모양 그대로다
+const ko = () => bodyLocale.value === 'ko'
+const shortDate = (d) => formatDate(d, bodyLocale.value, { month: 'short', day: 'numeric' })
 export const dayLabel = computed(() => {
   const d = cursor.value
+  if (!ko()) return formatDate(d, bodyLocale.value, { weekday: 'short', month: 'short', day: 'numeric' })
   return d.getMonth() + 1 + '월 ' + d.getDate() + '일 (' + WEEKDAYS[d.getDay()] + ')'
 })
 export const weekLabel = computed(() => {
@@ -44,10 +50,11 @@ export const weekLabel = computed(() => {
   const to = clone(from)
   to.setDate(to.getDate() + 6)
   const nth = Math.ceil(from.getDate() / 7)
-  return from.getMonth() + 1 + '월 ' + nth + '주차 (' + fmt(from) + ' ~ ' + fmt(to) + ')'
+  const month = ko() ? from.getMonth() + 1 + '월' : formatDate(from, bodyLocale.value, { month: 'long' })
+  return tr('{month} {nth}주차 ({from} ~ {to})', { month, nth, from: ko() ? fmt(from) : shortDate(from), to: ko() ? fmt(to) : shortDate(to) })
 })
-export const monthLabel = computed(() => cursor.value.getFullYear() + '년 ' + (cursor.value.getMonth() + 1) + '월')
-export const yearLabel = computed(() => cursor.value.getFullYear() + '년 로드맵')
+export const monthLabel = computed(() => (ko() ? cursor.value.getFullYear() + '년 ' + (cursor.value.getMonth() + 1) + '월' : formatDate(cursor.value, bodyLocale.value, { year: 'numeric', month: 'long' })))
+export const yearLabel = computed(() => tr('{year}년 로드맵', { year: cursor.value.getFullYear() }))
 
 /** 이 달의 날짜 격자 — 앞뒤 달 날짜는 out으로 표시 */
 export const monthGrid = computed(() => {

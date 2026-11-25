@@ -1,8 +1,7 @@
 // 경력 상세 필드(PR-24, REQ-F25)의 허용값·기간 표시·요청 본문과, 저장을 막지 않는 기간 겹침·공백 안내를 정한다.
-import { translate } from '../i18n/translate.mjs'
+import { korean } from '../i18n/translate.mjs'
 
-/** 화면 문구 번역 함수의 기본값. 한국어 원문 그대로다. */
-export const korean = (ko, vars) => translate(ko, 'ko', vars)
+export { korean }
 
 /** 서버 FeatureInput.EMPLOYMENT_TYPES와 같은 순서다. */
 export const EMPLOYMENT_TYPES = [

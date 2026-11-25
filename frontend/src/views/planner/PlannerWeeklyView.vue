@@ -2,8 +2,14 @@
 // 주간 플래너: 일주일 시간표와 카테고리별 시간, 계획 대비 실제 비율. 블록과 수치는 아직 시연용 예시 데이터다.
 import { weekDays } from '../../store/plannerDate'
 import { localDate } from '../../utils/postValidation.mjs'
+import { bodyLocale, tr } from '../../store/locale'
+import { formatDate } from '../../features/i18n/locale.mjs'
 
 const todayKey = localDate()
+// 요일 이름. 예시 블록은 한국어 요일(d.label)로 찾으므로 그 값은 두고 보이는 글자만 본문 언어로 바꾼다
+const ko = () => bodyLocale.value === 'ko'
+const dayName = (d) => (ko() ? d.label : formatDate(new Date(d.key + 'T00:00:00'), bodyLocale.value, { weekday: 'short' }))
+const dayAria = (d) => (ko() ? `${d.label}요일 ${d.date}일` : formatDate(new Date(d.key + 'T00:00:00'), bodyLocale.value, { weekday: 'long', month: 'long', day: 'numeric' }))
 // 08~23시를 그린다. 블록의 top·height는 그 범위 안의 비율(%)이다
 const HOURS = [8, 11, 14, 17, 20, 23]
 const hourTop = (h) => ((h - 8) / 15) * 100 + '%'
@@ -39,45 +45,45 @@ const syncRate = Math.round((ACTUAL_HOURS / PLAN_HOURS) * 100)
 
 <template>
   <!-- 기간 이동은 앱이 그리는 PlannerViewSettings 한 줄에 있다 -->
-  <p class="sample-label planner-sample">이 화면의 시간표·시간 합계는 시연용 예시 데이터예요. 실제 기록으로 계산하지 않아요.</p>
+  <p class="sample-label planner-sample">{{ tr('이 화면의 시간표·시간 합계는 시연용 예시 데이터예요. 실제 기록으로 계산하지 않아요.') }}</p>
   <div class="planner planner-week">
     <section class="card" aria-labelledby="week-table-title">
-      <div class="head"><div><h3 id="week-table-title">주간 시간표</h3><p>요일마다 08~23시 기록을 같은 시간축에 놓았어요</p></div></div>
+      <div class="head"><div><h3 id="week-table-title">{{ tr('주간 시간표') }}</h3><p>{{ tr('요일마다 08~23시 기록을 같은 시간축에 놓았어요') }}</p></div></div>
       <div class="week-table">
         <div class="week-corner" aria-hidden="true"></div>
         <div v-for="d in weekDays" :key="d.key" class="week-day-head" :class="{ today: d.key === todayKey }">
-          <span>{{ d.label }}</span><b class="figure">{{ d.date }}</b>
+          <span>{{ dayName(d) }}<template v-if="d.key === todayKey"> · {{ tr('오늘') }}</template></span><b class="figure">{{ d.date }}</b>
         </div>
         <div class="week-hours" aria-hidden="true"><small v-for="h in HOURS" :key="h" class="figure" :style="{ top: hourTop(h) }">{{ String(h).padStart(2, '0') }}</small></div>
-        <div v-for="d in weekDays" :key="d.key + '-col'" class="week-col" :class="{ today: d.key === todayKey }" role="list" :aria-label="`${d.label}요일 ${d.date}일`">
+        <div v-for="d in weekDays" :key="d.key + '-col'" class="week-col" :class="{ today: d.key === todayKey }" role="list" :aria-label="dayAria(d)">
           <div
             v-for="(b, i) in blocksByDay[d.label]"
             :key="i"
             class="week-block"
             role="listitem"
             :style="{ top: b.top + '%', height: b.height + '%', '--content-color': CATEGORY[b.category] }"
-            :title="`${b.title} · ${b.category}`"
-          ><b>{{ b.title }}</b><small>{{ b.category }}</small></div>
+            :title="`${b.title} · ${tr(b.category)}`"
+          ><b>{{ b.title }}</b><small>{{ tr(b.category) }}</small></div>
         </div>
       </div>
     </section>
     <div class="planner-week-side">
       <section class="card" aria-labelledby="week-top-title">
-        <h3 id="week-top-title">이번 주 카테고리 시간</h3>
+        <h3 id="week-top-title">{{ tr('이번 주 카테고리 시간') }}</h3>
         <ul class="hour-bars">
           <li v-for="c in top5" :key="c.label">
-            <span class="hour-bar-label"><i :style="{ background: CATEGORY[c.label] }" aria-hidden="true"></i>{{ c.label }}</span>
+            <span class="hour-bar-label"><i :style="{ background: CATEGORY[c.label] }" aria-hidden="true"></i>{{ tr(c.label) }}</span>
             <span class="hour-bar-track" aria-hidden="true"><em :style="{ width: (c.hours / maxHours) * 100 + '%' }"></em></span>
-            <b class="figure">{{ c.hours }}시간</b>
+            <b class="figure">{{ tr('{n}시간', { n: c.hours }) }}</b>
           </li>
         </ul>
       </section>
       <section class="card" aria-labelledby="week-sync-title">
-        <h3 id="week-sync-title">계획 대비 실제</h3>
-        <p class="week-sync"><b class="figure">{{ syncRate }}<small>%</small></b><span>계획한 시간 중 실제로 기록한 비율</span></p>
+        <h3 id="week-sync-title">{{ tr('계획 대비 실제') }}</h3>
+        <p class="week-sync"><b class="figure">{{ syncRate }}<small>%</small></b><span>{{ tr('계획한 시간 중 실제로 기록한 비율') }}</span></p>
         <dl class="plan-actual-bars">
-          <div><dt>계획</dt><dd><span class="pa-bar pa-plan" style="width: 100%"></span><b class="figure">{{ PLAN_HOURS }}시간</b></dd></div>
-          <div><dt>실제 기록</dt><dd><span class="pa-bar pa-actual" :style="{ width: syncRate + '%' }"></span><b class="figure">{{ ACTUAL_HOURS }}시간</b></dd></div>
+          <div><dt>{{ tr('계획') }}</dt><dd><span class="pa-bar pa-plan" style="width: 100%"></span><b class="figure">{{ tr('{n}시간', { n: PLAN_HOURS }) }}</b></dd></div>
+          <div><dt>{{ tr('실제 기록') }}</dt><dd><span class="pa-bar pa-actual" :style="{ width: syncRate + '%' }"></span><b class="figure">{{ tr('{n}시간', { n: ACTUAL_HOURS }) }}</b></dd></div>
         </dl>
       </section>
     </div>
@@ -92,7 +98,6 @@ const syncRate = Math.round((ACTUAL_HOURS / PLAN_HOURS) * 100)
 .week-day-head { display: flex; flex-direction: column; align-items: center; gap: 2px; padding-bottom: var(--space-sm); font-size: var(--type-caption-size); color: var(--color-muted); }
 .week-day-head b { font-size: var(--type-body-sm-size); font-weight: 600; color: var(--color-foreground); }
 .week-day-head.today b { display: grid; place-items: center; width: 28px; height: 28px; border-radius: var(--radius-full); box-shadow: inset 0 0 0 2px var(--color-accent); color: var(--color-accent); }
-.week-day-head.today span::after { content: ' · 오늘'; }
 .week-hours { position: relative; }
 .week-hours small { position: absolute; right: var(--space-xs); transform: translateY(-50%); font-size: var(--type-caption-size); color: var(--color-muted); }
 .week-hours small:first-child { transform: none; }

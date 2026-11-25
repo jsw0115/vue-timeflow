@@ -6,4 +6,6 @@ export function translate(ko, locale, vars = {}) {
   const text = (locale === 'en' && EN[ko]) || ko
   return text.replace(/\{(\w+)\}/g, (_, name) => String(vars[name] ?? ''))
 }
+/** 표시 함수의 번역 인자 기본값. 한국어 원문 그대로다(자리표시만 채움). */
+export const korean = (ko, vars) => translate(ko, 'ko', vars)
 export const hasEnglish = (ko) => Object.prototype.hasOwnProperty.call(EN, ko)

@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { navGroups } from './router'
 import { isGroupCollapsed, setGroupCollapsed } from './store/navCollapse'
-import { localeState, setBodyLocale } from './store/locale'
+import { localeState, setBodyLocale, tr } from './store/locale'
 import { formatDate, groupLabel, modeText, navName, navTitle, shellText } from './features/i18n/locale.mjs'
 import { documentLang } from './features/i18n/translatedRoutes.mjs'
 import { composer, openPostComposer } from './store/appState'
@@ -67,11 +67,12 @@ const pageName = computed(() => {
   if (route.name === '홈') return t('today')
   if (route.path.startsWith('/settings')) return t('settings')
   if (currentNav.value) return navName(currentNav.value, locale.value)
-  return route.name ?? route.meta?.label ?? ''
+  // 메뉴에 없는 화면(플래너 일·주·월·연 등)은 라우트 이름표를 본문 언어로 보인다
+  return route.name ?? (route.meta?.label ? tr(route.meta.label) : '')
 })
 const pageDesc = computed(() => {
   if (route.path.startsWith('/settings')) return ''
-  const desc = route.name === '홈' ? todayLabel.value : currentNav.value ? navTitle(currentNav.value, locale.value) : route.meta?.title ?? ''
+  const desc = route.name === '홈' ? todayLabel.value : currentNav.value ? navTitle(currentNav.value, locale.value) : route.meta?.title ? tr(route.meta.title) : ''
   return desc === pageName.value ? '' : desc
 })
 const pageGroup = computed(() => {

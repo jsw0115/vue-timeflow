@@ -12,8 +12,8 @@ const files = (dir) => readdirSync(dir).flatMap((name) => { const p = join(dir, 
 const used = new Map()
 for (const file of files(root)) {
   const source = readFileSync(file, 'utf8')
-  // features/career의 표시 함수는 번역 함수를 t로 받는다(기본값은 한국어 그대로). App.vue 등의 t('키')는 다른 사전이라 이 폴더만 본다
-  const pattern = file.includes('/features/career/') ? /\b(?:tr|t)\('((?:\\'|[^'])*)'/g : /\btr\('((?:\\'|[^'])*)'/g
+  // features/career·planner의 표시 함수는 번역 함수를 t로 받는다(기본값은 한국어 그대로). App.vue 등의 t('키')는 다른 사전이라 이 폴더만 본다
+  const pattern = /\/features\/(career|planner)\//.test(file) ? /\b(?:tr|t)\('((?:\\'|[^'])*)'/g : /\btr\('((?:\\'|[^'])*)'/g
   for (const m of source.matchAll(pattern)) used.set(m[1].replaceAll("\\'", "'"), file.slice(root.length))
 }
 const names = (text) => [...text.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort()
@@ -44,6 +44,7 @@ test('목록에서 이름을 꺼내 tr에 넘기는 값(상태·문서·고용 �
   const { COVER_LETTER_SECTIONS } = await import('../src/features/records/resumeStore.mjs')
   const { PORTFOLIO_SECTIONS } = await import('../src/features/career/portfolioItems.mjs')
   const { SCOPES, expiryText } = await import('../src/features/career/portfolioLinks.mjs')
+  const en = (ko, vars) => translate(ko, 'en', vars)
   const labels = [...ACTIVITY_TYPES, ...APPLICATION_STATUSES, ...DOCUMENTS, ...EMPLOYMENT_TYPES, ...EMPLOYMENT_STATUSES, ...COVER_LETTER_SECTIONS, ...PORTFOLIO_SECTIONS, ...SCOPES].map((item) => item.label)
   const descs = SCOPES.map((item) => item.desc)
   assert.deepEqual([...labels, ...descs].filter((ko) => !(ko in EN)), [])
@@ -57,7 +58,16 @@ test('목록에서 이름을 꺼내 tr에 넘기는 값(상태·문서·고용 �
   assert.deepEqual(Object.values(VISIBILITY).flatMap((v) => [v.label, v.desc]).filter((ko) => !(ko in EN)), [])
   assert.equal(expiryText({ expiresAt: '2026-11-28T00:00:00Z' }, Date.parse('2026-11-25T00:00:00Z'), (ko, vars) => translate(ko, 'en', vars)), 'Closes in 3 days')
   assert.equal(expiryText({}), '닫을 때까지 열려 있어요')
-  const en = (ko, vars) => translate(ko, 'en', vars)
+  // 플래너(5단계): 보기 이름·실행률 단계·연결 종류·재배치 종류·시간 문구
+  const { plannerViews } = await import('../src/store/plannerPreferences.js')
+  const { LEVELS, hoursText } = await import('../src/features/planner/executionRate.mjs')
+  const { KIND_LABEL } = await import('../src/features/records/recordLinks.mjs')
+  const { kindLabel, moveText } = await import('../src/features/planner/reschedule.mjs')
+  const planner = [...plannerViews.map((v) => v.label), ...LEVELS, ...Object.values(KIND_LABEL), kindLabel('task'), kindLabel('block')]
+  assert.deepEqual(planner.filter((ko) => !(ko in EN)), [])
+  assert.equal(hoursText(90, en), '1 h 30 min')
+  assert.equal(hoursText(90), '1시간 30분')
+  assert.equal(moveText({ kind: 'task', before: { dueTime: '10:00' }, after: { dueTime: '10:30' } }, en), 'Due 10:00 → 10:30')
   const current = { startDate: '2026-01-05', employmentStatus: 'current' }
   assert.equal(periodLabel(current, en), '2026.01 ~ Current')
   assert.equal(periodLabel(current), '2026.01 ~ 재직 중')

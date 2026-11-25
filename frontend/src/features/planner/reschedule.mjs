@@ -1,4 +1,5 @@
 // 재배치 제안(PR-19 UF-137, Q-36)과 플래너 계획 블록: 요청 경로, 시각 정리, 고른 항목만 보내는 적용 본문, 되돌리기 본문.
+import { korean } from '../i18n/translate.mjs'
 // 서버 Rescheduler가 안을 만들고 version을 확인한다. 일정(SCHEDULE)은 언제나 고정이라 보내지 않는다.
 
 export const MIN_DELAY = 5
@@ -34,8 +35,9 @@ export const applyBody = (moves, chosen) => moves.filter((m) => chosen.has(m.kin
 /** 되돌리기 본문: 옮긴 뒤 version으로 원래 시각을 보낸다. 그사이 바뀌었으면 서버가 충돌로 돌려준다. */
 export const undoBody = (moved) => moved.map((m) => ({ kind: m.kind, id: m.id, version: m.version, ...m.before }))
 
-export function moveText(move) {
-  if (move.kind === 'task') return `마감 ${move.before.dueTime} → ${move.after.dueTime}`
+/** t는 화면 표시용 번역(기본 한국어)이다. */
+export function moveText(move, t = korean) {
+  if (move.kind === 'task') return t('마감 {from} → {to}', { from: move.before.dueTime, to: move.after.dueTime })
   return `${move.before.startTime}–${move.before.endTime} → ${move.after.startTime}–${move.after.endTime}`
 }
 export const kindLabel = (kind) => (kind === 'task' ? '할 일' : '계획 블록')
