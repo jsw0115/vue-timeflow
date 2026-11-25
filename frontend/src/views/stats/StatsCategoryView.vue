@@ -1,4 +1,5 @@
 <script setup>
+import { tr } from '../../store/locale'
 import { computed, ref } from 'vue'
 
 /** 카테고리 통계 — 탭을 고르면 추이 그래프와 지표가 함께 바뀐다. */
@@ -25,20 +26,20 @@ function hm(min) {
 </script>
 
 <template>
-  <div class="crumbs">최근 8주 · 카테고리별 추이</div>
+  <div class="crumbs">{{ tr('최근 8주 · 카테고리별 추이') }}</div>
 
   <section class="card" style="margin-bottom: 16px">
     <div class="filter" style="width: fit-content; margin-bottom: 16px">
-      <button v-for="c in CATS" :key="c.label" :class="{ selected: active === c.label }" @click="active = c.label">{{ c.label }}</button>
+      <button v-for="c in CATS" :key="c.label" :class="{ selected: active === c.label }" @click="active = c.label">{{ tr(c.label) }}</button>
     </div>
 
     <div class="head">
       <div>
-        <h3 style="margin: 0">{{ current.label }} 시간 추이</h3>
-        <p style="margin: 4px 0 0">주 평균 {{ hm(current.avgMin) }}</p>
+        <h3 style="margin: 0">{{ tr('{name} 시간 추이', { name: tr(current.label) }) }}</h3>
+        <p style="margin: 4px 0 0">{{ tr('주 평균 {time}', { time: hm(current.avgMin) }) }}</p>
       </div>
       <span class="badge" :class="current.change >= 0 ? 'ok' : 'warn'">
-        지난 기간 대비 {{ current.change >= 0 ? '+' : '' }}{{ current.change }}%
+        {{ tr('지난 기간 대비 {change}%', { change: (current.change >= 0 ? '+' : '') + current.change }) }}
       </span>
     </div>
 
@@ -58,16 +59,16 @@ function hm(min) {
   </section>
 
   <div class="metrics">
-    <article><span>{{ current.label }} 주 평균</span><b class="figure">{{ hm(current.avgMin) }}</b></article>
-    <article><span>최대 주</span><b class="figure">{{ peak }}<small>%</small></b><small>목표 대비</small></article>
-    <article><span>최소 주</span><b class="figure">{{ low }}<small>%</small></b><small>목표 대비</small></article>
-    <article><span>변화</span><b class="figure">{{ current.change >= 0 ? '+' : '' }}{{ current.change }}<small>%</small></b></article>
+    <article><span>{{ tr('{name} 주 평균', { name: tr(current.label) }) }}</span><b class="figure">{{ hm(current.avgMin) }}</b></article>
+    <article><span>{{ tr('최대 주') }}</span><b class="figure">{{ peak }}<small>%</small></b><small>{{ tr('목표 대비') }}</small></article>
+    <article><span>{{ tr('최소 주') }}</span><b class="figure">{{ low }}<small>%</small></b><small>{{ tr('목표 대비') }}</small></article>
+    <article><span>{{ tr('변화') }}</span><b class="figure">{{ current.change >= 0 ? '+' : '' }}{{ current.change }}<small>%</small></b></article>
   </div>
 
   <section class="card" style="margin-top: 16px">
-    <h3>카테고리 비교</h3>
+    <h3>{{ tr('카테고리 비교') }}</h3>
     <div v-for="c in CATS" :key="c.label" class="rate-row">
-      <button class="cat-compare" :class="{ selected: active === c.label }" @click="active = c.label">{{ c.label }}</button>
+      <button class="cat-compare" :class="{ selected: active === c.label }" @click="active = c.label">{{ tr(c.label) }}</button>
       <div class="progress"><em :style="{ width: (c.avgMin / 1100) * 100 + '%' }"></em></div>
       <b class="figure">{{ hm(c.avgMin) }}</b>
     </div>

@@ -1,4 +1,6 @@
 <script setup>
+import { bodyLocale, tr } from '../../store/locale'
+import { formatDate } from '../../features/i18n/locale.mjs'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { localDate } from '../../utils/postValidation.mjs'
@@ -42,7 +44,7 @@ function goToday() {
   cursor.value = new Date(TODAY)
   selected.value = TODAY
 }
-const monthLabel = computed(() => cursor.value.getFullYear() + '년 ' + (cursor.value.getMonth() + 1) + '월')
+const monthLabel = computed(() => (bodyLocale.value === 'ko' ? cursor.value.getFullYear() + '년 ' + (cursor.value.getMonth() + 1) + '월' : formatDate(cursor.value, bodyLocale.value, { year: 'numeric', month: 'long' })))
 
 /** 날짜 → 항목 목록 */
 const itemsByDate = computed(() => {
@@ -58,14 +60,14 @@ const itemsByDate = computed(() => {
       const date = new Date((event.startDate < from ? from : event.startDate) + 'T12:00:00')
       while (iso(date) <= event.endDate && iso(date) <= to) {
         // 반복 일정은 그 회차를 연 상태로 일정 화면에 연결한다(PR-22 2단계). 회차만 바꾼 일정은 그 사실을 함께 보인다
-        add(iso(date), { kind: 'event', title: event.title, meta: (event.category ?? event.tag ?? '') + (event.overridden ? ' · 이 회차만 변경' : ''), link: occurrenceLink(event) })
+        add(iso(date), { kind: 'event', title: event.title, meta: tr(event.category ?? event.tag ?? '') + (event.overridden ? ' · ' + tr('이 회차만 변경') : ''), link: occurrenceLink(event) })
         date.setDate(date.getDate() + 1)
       }
     }
   }
-  if (on.value.dday) ddays.value.forEach((d) => add(d.date, { kind: 'dday', title: d.title, meta: d.dday, link: '/dday/' + d.id }))
+  if (on.value.dday) ddays.value.forEach((d) => add(d.isoDate, { kind: 'dday', title: d.title, meta: d.dday, link: '/dday/' + d.id }))
   if (on.value.task) {
-    tasks.value.forEach(t => add(t.date, { kind: 'task', title: t.title, meta: t.done ? '완료' : t.category, link: '/tasks/' + t.id, done: t.done }))
+    tasks.value.forEach(t => add(t.date, { kind: 'task', title: t.title, meta: t.done ? tr('완료') : tr(t.category), link: '/tasks/' + t.id, done: t.done }))
   }
   if (on.value.post) posts.value.filter((p) => p.author === ME).forEach((p) => add(p.at, { kind: 'post', title: p.title, meta: p.kind, link: p.link }))
   return map
@@ -95,33 +97,36 @@ const upcomingDdays = computed(() => ddays.value.filter((d) => !isPast(d.dday)).
 function colorOf(kind) {
   return KINDS.find((k) => k.id === kind)?.color ?? 'var(--color-hairline)'
 }
-const dayFormat = new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })
-const dayName = (c) => dayFormat.format(new Date(c.key + 'T12:00:00')) + (c.today ? ', 오늘' : '')
-const selectedLabel = computed(() => dayFormat.format(new Date(selected.value + 'T12:00:00')) + (selected.value === TODAY ? ' · 오늘' : ''))
+// 날짜 이름은 본문 언어 형식이다(예전에는 늘 ko-KR이었다)
+const dayFormat = computed(() => new Intl.DateTimeFormat(bodyLocale.value === 'ko' ? 'ko-KR' : 'en-US', { month: 'long', day: 'numeric', weekday: 'short' }))
+// 요일 머리글(일요일부터). 2024-01-07은 일요일이다
+const weekdayName = (i) => (bodyLocale.value === 'ko' ? WEEKDAYS[i] : formatDate(new Date(2024, 0, 7 + i), bodyLocale.value, { weekday: 'short' }))
+const dayName = (c) => dayFormat.value.format(new Date(c.key + 'T12:00:00')) + (c.today ? tr(', 오늘') : '')
+const selectedLabel = computed(() => dayFormat.value.format(new Date(selected.value + 'T12:00:00')) + (selected.value === TODAY ? ' · ' + tr('오늘') : ''))
 function labelOf(kind) {
-  return KINDS.find((k) => k.id === kind)?.label ?? kind
+  return tr(KINDS.find((k) => k.id === kind)?.label ?? kind)
 }
 </script>
 
 <template>
   <!-- 달 이동(왼쪽)과 종류 켜기·끄기(오른쪽)를 한 줄에 둔다. 종류는 색과 모양(동그라미·마름모·네모·고리)을 함께 쓴다 -->
   <div class="cal-toolbar">
-    <div class="cal-period" role="group" aria-label="달 이동">
-      <button type="button" class="icon-button" aria-label="이전 달" title="이전 달" @click="shiftMonth(-1)">‹</button>
+    <div class="cal-period" role="group" :aria-label="tr('달 이동')">
+      <button type="button" class="icon-button" :aria-label="tr('이전 달')" :title="tr('이전 달')" @click="shiftMonth(-1)">‹</button>
       <h2 class="cal-month" aria-live="polite">{{ monthLabel }}</h2>
-      <button type="button" class="icon-button" aria-label="다음 달" title="다음 달" @click="shiftMonth(1)">›</button>
-      <button type="button" class="button-text" @click="goToday">오늘</button>
-      <span class="cal-count">이 달 <b class="figure">{{ monthCount }}</b>개</span>
+      <button type="button" class="icon-button" :aria-label="tr('다음 달')" :title="tr('다음 달')" @click="shiftMonth(1)">›</button>
+      <button type="button" class="button-text" @click="goToday">{{ tr('오늘') }}</button>
+      <span class="cal-count">{{ tr('이 달') }} <b class="figure">{{ monthCount }}</b><template v-if="bodyLocale === 'ko'">개</template></span>
     </div>
-    <div class="segmented-tab cal-kinds" role="group" aria-label="보일 종류">
-      <button v-for="k in KINDS" :key="k.id" type="button" :aria-pressed="on[k.id]" @click="toggleKind(k.id)"><i class="kind-mark" :class="'kind-' + k.id" :style="{ '--kind-color': k.color }" aria-hidden="true"></i>{{ k.label }}</button>
+    <div class="segmented-tab cal-kinds" role="group" :aria-label="tr('보일 종류')">
+      <button v-for="k in KINDS" :key="k.id" type="button" :aria-pressed="on[k.id]" @click="toggleKind(k.id)"><i class="kind-mark" :class="'kind-' + k.id" :style="{ '--kind-color': k.color }" aria-hidden="true"></i>{{ tr(k.label) }}</button>
     </div>
   </div>
 
   <div class="cal-layout">
-    <section class="card cal-board" aria-label="월간 캘린더">
+    <section class="card cal-board" :aria-label="tr('월간 캘린더')">
       <div class="cal-grid cal-head" aria-hidden="true">
-        <span v-for="w in WEEKDAYS" :key="w">{{ w }}</span>
+        <span v-for="(w, i) in WEEKDAYS" :key="w">{{ weekdayName(i) }}</span>
       </div>
       <div class="cal-grid">
         <button
@@ -131,7 +136,7 @@ function labelOf(kind) {
           class="cal-cell"
           :class="{ out: c.out, today: c.today, selected: selected === c.key }"
           :aria-pressed="selected === c.key"
-          :aria-label="dayName(c) + (c.items.length ? `, 항목 ${c.items.length}개` : '')"
+          :aria-label="dayName(c) + (c.items.length ? tr(', 항목 {n}개', { n: c.items.length }) : '')"
           @click="selected = c.key"
         >
           <b class="cal-date">{{ c.date }}</b>
@@ -148,7 +153,7 @@ function labelOf(kind) {
 
     <aside class="card cal-side" aria-labelledby="cal-day-title">
       <h3 id="cal-day-title">{{ selectedLabel }}</h3>
-      <p class="cal-side-count">{{ selectedItems.length ? `항목 ${selectedItems.length}개` : '항목 없음' }}</p>
+      <p class="cal-side-count">{{ selectedItems.length ? tr('항목 {n}개', { n: selectedItems.length }) : tr('항목 없음') }}</p>
       <ul v-if="selectedItems.length" class="cal-day-list">
         <li v-for="(it, i) in selectedItems" :key="i">
           <RouterLink :to="it.link">
@@ -157,19 +162,19 @@ function labelOf(kind) {
           </RouterLink>
         </li>
       </ul>
-      <p v-else class="empty-state">이 날에는 기록이 없어요. 다른 날짜를 고르거나 '새 글 작성'으로 남겨 보세요.</p>
+      <p v-else class="empty-state">{{ tr('이 날에는 기록이 없어요. 다른 날짜를 고르거나 \'새 글 작성\'으로 남겨 보세요.') }}</p>
 
-      <h4 class="cal-side-sub">다가오는 D-Day</h4>
+      <h4 class="cal-side-sub">{{ tr('다가오는 D-Day') }}</h4>
       <ul v-if="upcomingDdays.length" class="cal-day-list">
         <li v-for="d in upcomingDdays" :key="d.id">
           <RouterLink :to="'/dday/' + d.id">
             <i class="kind-mark kind-dday" :style="{ '--kind-color': colorOf('dday') }" aria-hidden="true"></i>
-            <span><b>{{ d.title }}</b><small class="figure">{{ d.date }}</small></span>
+            <span><b>{{ d.title }}</b><small class="figure">{{ bodyLocale === 'ko' || !d.isoDate ? tr(d.date) : formatDate(d.isoDate + 'T00:00:00', bodyLocale, { month: 'short', day: 'numeric' }) }}</small></span>
             <b class="figure cal-dday">{{ d.dday }}</b>
           </RouterLink>
         </li>
       </ul>
-      <p v-else class="empty-state">예정된 D-Day가 없어요. D-Day 관리에서 기념일을 추가해 보세요.</p>
+      <p v-else class="empty-state">{{ tr('예정된 D-Day가 없어요. D-Day 관리에서 기념일을 추가해 보세요.') }}</p>
     </aside>
   </div>
 </template>

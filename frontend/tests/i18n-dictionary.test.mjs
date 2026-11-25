@@ -13,7 +13,7 @@ const used = new Map()
 for (const file of files(root)) {
   const source = readFileSync(file, 'utf8')
   // features/career·planner의 표시 함수는 번역 함수를 t로 받는다(기본값은 한국어 그대로). App.vue 등의 t('키')는 다른 사전이라 이 폴더만 본다
-  const pattern = /\/features\/(career|planner)\//.test(file) ? /\b(?:tr|t)\('((?:\\'|[^'])*)'/g : /\btr\('((?:\\'|[^'])*)'/g
+  const pattern = /\/features\/(career|planner|stats)\//.test(file) ? /\b(?:tr|t)\('((?:\\'|[^'])*)'/g : /\btr\('((?:\\'|[^'])*)'/g
   for (const m of source.matchAll(pattern)) used.set(m[1].replaceAll("\\'", "'").replaceAll('\\n', '\n'), file.slice(root.length))
 }
 const names = (text) => [...text.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort()
@@ -24,7 +24,9 @@ test('tr로 부르는 문구는 모두 영어 사전에 있다', () => {
 })
 
 test('영어에 한글이 없고 자리표시 이름이 같다', () => {
-  assert.deepEqual(Object.entries(EN).filter(([, en]) => !en || /[가-힣]/.test(en)).map(([ko]) => ko), [])
+  // 빠른 입력은 한국어 날짜·시간만 읽으므로, 이 두 안내는 영어 문장 안에 한국어 입력 예시를 그대로 보인다
+  const koreanExamples = new Set(['일정은 날짜와 시간이 필요해요. "내일 오후 3시"처럼 적거나 자세히 쓰기로 열어 주세요.', '"내일 오후 3시 치과"처럼 적으면 날짜·시간을 찾아 미리 보여 줘요. 확인하고 저장하세요.'])
+  assert.deepEqual(Object.entries(EN).filter(([ko, en]) => !en || (/[가-힣]/.test(en) && !koreanExamples.has(ko))).map(([ko]) => ko), [])
   assert.deepEqual(Object.entries(EN).filter(([ko, en]) => names(ko).join() !== names(en).join()).map(([ko]) => ko), [])
 })
 
@@ -36,7 +38,7 @@ test('영어가 없으면 한국어 원문, 자리표시를 채운다. 본문까
   assert.equal(translate(7, 'en'), '7')
   assert.equal(translate('내 분류 {x}', 'en'), '내 분류 {x}')
   for (const path of TRANSLATED_PATHS) assert.equal(documentLang('en', path), 'en')
-  assert.equal(documentLang('en', '/stats'), 'ko')
+  assert.equal(documentLang('en', '/settings'), 'ko')
   assert.equal(documentLang('ko', '/career'), 'ko')
 })
 
@@ -107,6 +109,13 @@ test('목록에서 이름을 꺼내 tr에 넘기는 값(상태·문서·고용 �
   assert.ok(canvasValues.length >= 8)
   assert.deepEqual([...nine, ...canvasValues].filter((ko) => !(ko in EN)), [])
   assert.equal(documentLang('en', '/dday/3'), 'en')
+  // 11단계: 통계 수치 문구·단위 표
+  const { formatMinutes, figureSummary } = await import('../src/features/stats/statsClient.mjs')
+  assert.equal(formatMinutes(90, en), '1 h 30 min')
+  assert.equal(formatMinutes(90), '1시간 30분')
+  assert.equal(figureSummary({ actualMinutes: 0, sources: {} }, 'actual', en).text, 'No records yet.')
+  const { UNITS_EN, UNIT_WORDS_EN } = await import('../src/features/i18n/dictionary.mjs')
+  assert.deepEqual(Object.values({ ...UNITS_EN, ...UNIT_WORDS_EN }).filter((v) => /[가-힣]/.test(v)), [])
   const current = { startDate: '2026-01-05', employmentStatus: 'current' }
   assert.equal(periodLabel(current, en), '2026.01 ~ Current')
   assert.equal(periodLabel(current), '2026.01 ~ 재직 중')

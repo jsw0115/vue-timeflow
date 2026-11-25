@@ -1,5 +1,5 @@
 <script setup>
-import { tr } from '../../store/locale'
+import { tr, unit } from '../../store/locale'
 import { computed, ref } from 'vue'
 
 /**
@@ -97,10 +97,10 @@ const bucketName = (b, i) => tr(b.label.endsWith('일') ? '{n}일째' : b.label.
     </section>
 
     <div class="metrics" style="margin-bottom: 16px">
-      <article><span>{{ tr('작성일') }}</span><b class="figure">{{ written }}<small>{{ tr('일') }}</small></b><small>{{ tr('전체 {n}일 중', { n: dayCount }) }}</small></article>
+      <article><span>{{ tr('작성일') }}</span><b class="figure">{{ written }}<small>{{ unit('일') }}</small></b><small>{{ tr('전체 {n}일 중', { n: dayCount }) }}</small></article>
       <article><span>{{ tr('작성률') }}</span><b class="figure">{{ Math.round((written / dayCount) * 100) }}<small>%</small></b></article>
       <article><span>{{ tr('가장 많은 감정') }}</span><b class="figure" style="font-size: 1.1875rem">{{ tr(topMood) }}</b></article>
-      <article><span>{{ tr('하이라이트') }}</span><b class="figure">{{ highlights }}<small>{{ tr('건') }}</small></b></article>
+      <article><span>{{ tr('하이라이트') }}</span><b class="figure">{{ highlights }}<small>{{ unit('건') }}</small></b></article>
     </div>
 
     <section class="card">

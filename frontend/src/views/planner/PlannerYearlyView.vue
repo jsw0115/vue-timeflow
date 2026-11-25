@@ -3,7 +3,7 @@
 // 로그인 상태는 연간 실행률과 날짜별 칸을 서버가 계정 기록으로 계산한다(PR-19 UF-136, Q-40). 나머지 수치와 로그아웃 상태는 시연용 예시다.
 import { computed, ref, watch } from 'vue'
 import { cursor } from '../../store/plannerDate'
-import { bodyLocale, tr } from '../../store/locale'
+import { bodyLocale, tr, unit } from '../../store/locale'
 import { formatDate } from '../../features/i18n/locale.mjs'
 import { session } from '../../features/auth/session.js'
 import { apiRequest } from '../../features/auth/apiRequest.js'
@@ -40,11 +40,11 @@ const months = computed(() => {
   <p v-if="real" class="input-field-help planner-sample">{{ tr('실행률과 월별 칸은 계정 기록으로 계산해요(칸 하나가 하루). 실행률은 계획 시간 중 실제 기록이 겹친 비율이고, 계획 없는 날은 실패로 세지 않아요. 표시가 붙은 나머지 수치는 예시예요.') }}</p>
   <p v-else class="sample-label planner-sample">{{ tr('이 화면의 연간 수치·히트맵은 시연용 예시 데이터예요.') }} {{ session.userId ? (status === 'loading' ? tr('계정 기록을 불러오는 중이에요.') : tr('계정 기록을 불러오지 못했어요.')) : tr('로그인하면 실행률을 계정 기록으로 계산해요.') }}</p>
   <div class="metrics">
-    <article><span>{{ tr('올해 총 집중 시간') }}<template v-if="real"> {{ tr('(예시)') }}</template></span><b>612<small>{{ tr('시간') }}</small></b></article>
+    <article><span>{{ tr('올해 총 집중 시간') }}<template v-if="real"> {{ tr('(예시)') }}</template></span><b>612<small>{{ unit('시간') }}</small></b></article>
     <article v-if="real"><span>{{ tr('연간 실행률') }}</span><b>{{ execution.totals.rate == null ? '–' : execution.totals.rate }}<small v-if="execution.totals.rate != null">%</small></b></article>
     <article v-else><span>{{ tr('연간 평균 실행률') }}</span><b>71<small>%</small></b></article>
-    <article><span>{{ tr('완료한 D-Day') }}<template v-if="real"> {{ tr('(예시)') }}</template></span><b>9<small>{{ tr('건') }}</small></b></article>
-    <article><span>{{ tr('최장 연속 기록') }}<template v-if="real"> {{ tr('(예시)') }}</template></span><b>23<small>{{ tr('일') }}</small></b></article>
+    <article><span>{{ tr('완료한 D-Day') }}<template v-if="real"> {{ tr('(예시)') }}</template></span><b>9<small>{{ unit('건') }}</small></b></article>
+    <article><span>{{ tr('최장 연속 기록') }}<template v-if="real"> {{ tr('(예시)') }}</template></span><b>23<small>{{ unit('일') }}</small></b></article>
   </div>
   <section class="card" aria-labelledby="year-heat-title">
     <div class="head">
