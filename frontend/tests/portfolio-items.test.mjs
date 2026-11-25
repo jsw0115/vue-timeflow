@@ -46,7 +46,7 @@ test('근거 상태: 목록을 다 불러온 뒤에만 지워진 근거로 본�
 
 test('화면: 수정 버튼과 충돌 비교, 공개 주의 문구, 공개 화면 링크는 새 창·nofollow, 근거는 공개 화면에 없음', () => {
   const view = read('src/views/work/CareerDocsView.vue')
-  assert.match(view, /@click="openPortfolio\(p\)">수정<\/button>/)
+  assert.match(view, /@click="openPortfolio\(p\)">\{\{ tr\('수정'\) \}\}<\/button>/)
   assert.match(view, /<ConflictCompare v-if="portfolioConflict"/)
   assert.match(view, /회사 기밀·개인정보·비공개 저장소 내용은 적지 마세요/)
   assert.match(view, /근거 연결\(활동·경력\)은 내보내지 않는다/)

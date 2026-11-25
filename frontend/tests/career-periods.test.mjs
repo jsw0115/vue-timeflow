@@ -57,7 +57,7 @@ test('경력 화면은 상세 입력·충돌 비교·기간 안내를 갖고, �
   for (const key of ['employmentType', 'department', 'startDate', 'endDate', 'employmentStatus', 'duties']) assert.match(view, new RegExp('v-model="projectEditor\\.draft\\.' + key + '"'))
   assert.match(view, /label: '고용 형태 · 상태'/)
   assert.match(view, /:disabled="projectEditor\.draft\.employmentStatus === 'current'"/)
-  assert.match(view, /’, ‘\{\{ b\.title \}\}’ 기간이 겹쳐요\. 겸직이나 동시 프로젝트라면 그대로 두셔도 돼요/)
+  assert.match(view, /’, ‘\{b\}’ 기간이 겹쳐요\. 겸직이나 동시 프로젝트라면 그대로 두셔도 돼요/)
   assert.doesNotMatch(view, /’와 ‘|’과 ‘|을\(를\)|와\(과\)/)
   assert.doesNotMatch(view, /projectCanSave = computed\([^\n]*periodNotes/)
 })

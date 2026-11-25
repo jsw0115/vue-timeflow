@@ -78,7 +78,7 @@ test('버전 비교: 원본 ID로 항목을 맞춰 바뀐 칸·추가·삭제를
   const panel = read('src/components/DocumentVersionPanel.vue')
   assert.match(panel, /:disabled="!compareBase \|\| !compareTarget \|\| compareBase === compareTarget"/)
   const view = read('src/components/DocumentVersionCompare.vue')
-  for (const word of ['>바뀜<', '>추가<', '>삭제<', '>이전<', '>이후<']) assert.ok(view.includes(word), word)
+  for (const word of ['바뀜', '추가', '삭제', '이전', '이후']) assert.ok(view.includes(`>{{ tr('${word}') }}<`), word)
 })
 
 test('자기소개서(PR-25 Q-41): 칸은 서버와 같고, 버전 보기·비교가 되며, 경력 화면 탭과 버전 묶음이 있다', async () => {

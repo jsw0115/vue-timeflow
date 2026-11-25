@@ -1,5 +1,7 @@
 // 포트폴리오 공개 링크(Q-22): 만들기·목록·닫기 요청과 화면 문구. 링크 공개는 주소가 만들 때 한 번만 보이고, 전체 공개는 목록에 남는다.
 
+import { korean } from './careerPeriods.mjs'
+
 export const LINK_PATH = '/api/work/portfolio-links'
 export const SCOPES = [
   { id: 'link', label: '링크 공개', desc: '링크를 받은 사람만 볼 수 있어요. 기간이 지나면 닫히고, 검색에 나오지 않게 해요.' },
@@ -22,13 +24,13 @@ export function createPortfolioLinkClient(request) {
 export const publicPagePath = (token) => `/p/${token}`
 export const scopeLabel = (scope) => SCOPES.find((s) => s.id === scope)?.label ?? '링크 공개'
 
-/** 만료 문구. 전체 공개는 만료가 없다. */
-export function expiryText(link, now = Date.now()) {
-  if (!link?.expiresAt) return '닫을 때까지 열려 있어요'
+/** 만료 문구. 전체 공개는 만료가 없다. t는 화면 표시용 번역(기본 한국어)이다. */
+export function expiryText(link, now = Date.now(), t = korean) {
+  if (!link?.expiresAt) return t('닫을 때까지 열려 있어요')
   const left = Date.parse(link.expiresAt) - now
-  if (!(left > 0)) return '기간이 지났어요'
+  if (!(left > 0)) return t('기간이 지났어요')
   const days = Math.ceil(left / 86400000)
-  return `${days}일 뒤 닫혀요`
+  return days === 1 ? t('1일 뒤 닫혀요') : t('{n}일 뒤 닫혀요', { n: days })
 }
 
 /** 공개 화면: 비밀번호가 걸린 링크 열기(Q-39). 비밀번호는 주소에 넣지 않고 본문으로 보낸다. */
