@@ -1,4 +1,9 @@
 <script setup>
+import { bodyLocale, tr } from '../../store/locale'
+import { formatDate } from '../../features/i18n/locale.mjs'
+// 날짜 이름은 저장소가 한국어로 만든다("12월 10일"). 다른 언어는 ISO 날짜로 다시 만든다
+const shownDate = (d) => (bodyLocale.value === 'ko' || !d.isoDate ? tr(d.date) : formatDate(d.isoDate + 'T00:00:00', bodyLocale.value, { month: 'short', day: 'numeric' }))
+
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { openPostComposer } from '../../store/appState'
@@ -48,7 +53,7 @@ const visible = computed(() => {
 
 function openModal() { openPostComposer('D-Day') }
 async function remove(d) {
-  if (!window.confirm('‘' + d.title + '’ D-Day를 삭제할까요?')) return
+  if (!window.confirm(tr('‘{title}’ D-Day를 삭제할까요?', { title: d.title }))) return
   ddayNotice.message = ''
   try { await removeDday(d.id) } catch (error) {
     if (error.kind !== 'stale' && error.kind !== 'notFound') ddayNotice.message = error.kind === 'conflict' ? '다른 곳에서 먼저 고쳐서 삭제하지 않았어요. 최신 내용을 확인한 뒤 다시 삭제해 주세요.' : saveFailureMessage(error).replace('저장하지', '삭제하지')
@@ -58,40 +63,40 @@ async function remove(d) {
 
 <template>
   <div class="page-tools">
-    <span class="form-note" style="margin: 0">D-Day 화면과 같은 목록이에요</span>
+    <span class="form-note" style="margin: 0">{{ tr('D-Day 화면과 같은 목록이에요') }}</span>
     <span></span>
-    <PageActions><button class="primary" @click="openModal">+ 새 D-Day</button></PageActions>
+    <PageActions><button class="primary" @click="openModal">{{ tr('+ 새 D-Day') }}</button></PageActions>
   </div>
   <StorageNote :mode="ddayMode" />
-  <p v-if="ddayNotice.message" class="input-field-help" data-state="error" role="status">{{ ddayNotice.message }}</p>
+  <p v-if="ddayNotice.message" class="input-field-help" data-state="error" role="status">{{ tr(ddayNotice.message) }}</p>
 
   <ListFilterBar
     v-model:query="query"
     v-model:filters="filters"
     :groups="FILTER_GROUPS"
-    placeholder="이름·분류 검색"
+    :placeholder="tr('이름·분류 검색')"
     :result-count="visible.length"
     :total-count="ddays.length"
   />
 
   <section class="card list">
     <div class="list-head" style="grid-template-columns: 2fr 1fr .8fr 1.4fr .8fr 1.2fr">
-      <span>이름</span><span>날짜</span><span>D-Day</span><span>알림</span><span>고정</span><span>관리</span>
+      <span>{{ tr('이름') }}</span><span>{{ tr('날짜') }}</span><span>D-Day</span><span>{{ tr('알림') }}</span><span>{{ tr('고정') }}</span><span>{{ tr('관리') }}</span>
     </div>
     <div class="row" style="grid-template-columns: 2fr 1fr .8fr 1.4fr .8fr 1.2fr" v-for="d in visible" :key="d.id" :style="{ opacity: isPast(d.dday) ? 0.55 : 1 }">
-      <label>{{ d.title }}<small style="display: block; color: var(--color-muted)">{{ d.category }}</small></label>
-      <span>{{ d.date }}</span>
+      <label>{{ d.title }}<small style="display: block; color: var(--color-muted)">{{ tr(d.category) }}</small></label>
+      <span>{{ shownDate(d) }}</span>
       <b class="figure">{{ d.dday }}</b>
-      <span class="tag">{{ notifyLabel(d) }}</span>
+      <span class="tag">{{ notifyLabel(d, tr) }}</span>
       <span>
-        <button class="person-info" :title="d.pinned ? '고정 해제' : '고정하기'" aria-label="d.pinned ? '고정 해제' : '고정하기'" @click="togglePin(d)">{{ d.pinned ? '★' : '☆' }}</button>
+        <button class="person-info" :title="d.pinned ? tr('고정 해제') : tr('고정하기')" :aria-label="d.pinned ? tr('{name} 고정 해제', { name: d.title }) : tr('{name} 고정하기', { name: d.title })" @click="togglePin(d)">{{ d.pinned ? '★' : '☆' }}</button>
       </span>
       <span style="display: flex; gap: 6px">
-        <button class="review" style="margin: 0" @click="router.push('/dday/' + d.id)">상세</button>
-        <button class="review" style="margin: 0" @click="remove(d)">삭제</button>
+        <button class="review" style="margin: 0" @click="router.push('/dday/' + d.id)">{{ tr('상세') }}</button>
+        <button class="review" style="margin: 0" @click="remove(d)">{{ tr('삭제') }}</button>
       </span>
     </div>
-    <p v-if="!visible.length" class="empty-state" role="status">조건에 맞는 D-Day가 없어요. 검색어나 필터를 바꿔 보세요.</p>
+    <p v-if="!visible.length" class="empty-state" role="status">{{ tr('조건에 맞는 D-Day가 없어요. 검색어나 필터를 바꿔 보세요.') }}</p>
   </section>
 
 </template>

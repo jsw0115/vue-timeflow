@@ -36,7 +36,7 @@ test('영어가 없으면 한국어 원문, 자리표시를 채운다. 본문까
   assert.equal(translate(7, 'en'), '7')
   assert.equal(translate('내 분류 {x}', 'en'), '내 분류 {x}')
   for (const path of TRANSLATED_PATHS) assert.equal(documentLang('en', path), 'en')
-  assert.equal(documentLang('en', '/routines'), 'ko')
+  assert.equal(documentLang('en', '/work/wbs'), 'ko')
   assert.equal(documentLang('ko', '/career'), 'ko')
 })
 
@@ -95,6 +95,10 @@ test('목록에서 이름을 꺼내 tr에 넘기는 값(상태·문서·고용 �
   const memo = readFileSync(new URL('../src/views/memo/MemoInboxView.vue', import.meta.url), 'utf8')
   const lists = [...events.matchAll(/(?:name|label): '([^']+)'/g), ...memo.matchAll(/label: '([^']+)'/g)].map((m) => m[1])
   assert.deepEqual([...templates, ...lists].filter((ko) => !(ko in EN)), [])
+  // 8단계: 루틴·D-Day·머니로그 목록 값, 외부 연동 검토 항목, 반복·알림 이름
+  const eight = ['views/routines/RoutineListView.vue', 'views/home/DdayView.vue', 'views/events/DdayManageView.vue', 'views/money/MoneyLogView.vue']
+    .flatMap((file) => [...readFileSync(new URL('../src/' + file, import.meta.url), 'utf8').matchAll(/(?:label|name|verdict|detail|risk): '([^']+)'/g)].map((m) => m[1]))
+  assert.deepEqual(eight.filter((ko) => !(ko in EN)), [])
   const current = { startDate: '2026-01-05', employmentStatus: 'current' }
   assert.equal(periodLabel(current, en), '2026.01 ~ Current')
   assert.equal(periodLabel(current), '2026.01 ~ 재직 중')

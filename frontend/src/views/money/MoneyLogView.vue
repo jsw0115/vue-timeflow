@@ -1,4 +1,6 @@
 <script setup>
+import { bodyLocale, tr } from '../../store/locale'
+import { formatWon } from '../../features/i18n/locale.mjs'
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { moneyEntries as entries, moneyStore } from '../../store/money'
@@ -48,7 +50,8 @@ const visible = computed(() => {
 const income = computed(() => monthly.value.filter((e) => e.amount > 0).reduce((a, e) => a + e.amount, 0))
 const expense = computed(() => monthly.value.filter((e) => e.amount < 0).reduce((a, e) => a + e.amount, 0))
 const balance = computed(() => income.value + expense.value)
-const won = (n) => (n < 0 ? '-' : '+') + Math.abs(n).toLocaleString('ko-KR') + '원'
+// 금액은 늘 원화다. 한국어는 예전처럼 "+12,000원", 다른 언어는 통화 기호(₩)로 보인다
+const won = (n) => (n < 0 ? '-' : '+') + (bodyLocale.value === 'ko' ? Math.abs(n).toLocaleString('ko-KR') + '원' : formatWon(Math.abs(n), bodyLocale.value))
 
 const byCategory = computed(() => {
   const total = Math.abs(expense.value) || 1
@@ -63,7 +66,7 @@ const byCategory = computed(() => {
 
 function openAdd() { openPostComposer('머니로그') }
 async function removeEntry(e) {
-  if (!window.confirm('‘' + e.title + '’ 내역을 삭제할까요?')) return
+  if (!window.confirm(tr('‘{title}’ 내역을 삭제할까요?', { title: e.title }))) return
   moneyMessage.value = ''
   try { await moneyStore.remove(e) } catch (error) {
     if (error.kind !== 'stale' && error.kind !== 'notFound') moneyMessage.value = error.kind === 'conflict' ? '다른 곳에서 먼저 고쳐서 삭제하지 않았어요. 최신 내용을 확인한 뒤 다시 삭제해 주세요.' : saveFailureMessage(error).replace('저장하지', '삭제하지')
@@ -119,7 +122,7 @@ function importCsv(event) {
         failed += 1
       }
     }
-    importNotice.value = added || failed ? added + '건을 가져왔어요.' + (failed ? ' ' + failed + '건은 저장하지 못했어요. 날짜 형식(YYYY-MM-DD)과 연결을 확인해 주세요.' : '') : '읽을 수 있는 행이 없어요. 날짜,내용,금액 형식인지 확인해주세요.'
+    importNotice.value = added || failed ? tr('{n}건을 가져왔어요.', { n: added }) + (failed ? ' ' + tr('{n}건은 저장하지 못했어요. 날짜 형식(YYYY-MM-DD)과 연결을 확인해 주세요.', { n: failed }) : '') : tr('읽을 수 있는 행이 없어요. 날짜,내용,금액 형식인지 확인해주세요.')
     setTimeout(() => (importNotice.value = ''), failed ? 8000 : 4000)
   }
   reader.readAsText(file)
@@ -132,23 +135,23 @@ function importCsv(event) {
     <input type="month" v-model="month" style="margin-left: 0" />
     <span></span>
     <span class="currency-picker">₩ {{ currency }}</span>
-    <button class="review" style="margin: 0" @click="showIntegration = true">외부 연동</button>
-    <PageActions><button class="primary" @click="openAdd">+ 내역 추가</button></PageActions>
+    <button class="review" style="margin: 0" @click="showIntegration = true">{{ tr('외부 연동') }}</button>
+    <PageActions><button class="primary" @click="openAdd">{{ tr('+ 내역 추가') }}</button></PageActions>
   </div>
   <StorageNote :mode="moneyMode" />
-  <p v-if="moneyMessage" class="input-field-help" data-state="error" role="status">{{ moneyMessage }}</p>
+  <p v-if="moneyMessage" class="input-field-help" data-state="error" role="status">{{ tr(moneyMessage) }}</p>
 
   <div class="money-summary">
-    <article><span>이번 달 수입</span><b class="in figure">{{ won(income) }}</b></article>
-    <article><span>이번 달 지출</span><b class="out figure">{{ won(expense) }}</b></article>
-    <article><span>순 잔액</span><b class="figure">{{ won(balance) }}</b></article>
+    <article><span>{{ tr('이번 달 수입') }}</span><b class="in figure">{{ won(income) }}</b></article>
+    <article><span>{{ tr('이번 달 지출') }}</span><b class="out figure">{{ won(expense) }}</b></article>
+    <article><span>{{ tr('순 잔액') }}</span><b class="figure">{{ won(balance) }}</b></article>
   </div>
 
   <ListFilterBar
     v-model:query="query"
     v-model:filters="filters"
     :groups="FILTER_GROUPS"
-    placeholder="내역·분류 검색"
+    :placeholder="tr('내역·분류 검색')"
     :result-count="visible.length"
     :total-count="monthly.length"
   />
@@ -156,53 +159,53 @@ function importCsv(event) {
   <div class="planner">
     <section class="card list">
       <div class="list-head" style="grid-template-columns: 2fr 1fr 1fr 1.2fr .6fr">
-        <span>내역</span><span>분류</span><span>날짜</span><span>금액</span><span></span>
+        <span>{{ tr('내역') }}</span><span>{{ tr('분류') }}</span><span>{{ tr('날짜') }}</span><span>{{ tr('금액') }}</span><span></span>
       </div>
       <div class="row" style="grid-template-columns: 2fr 1fr 1fr 1.2fr .6fr" v-for="e in visible" :key="e.id">
         <label>{{ e.title }}</label>
-        <span class="tag">{{ e.category }}</span>
+        <span class="tag">{{ tr(e.category) }}</span>
         <span class="figure">{{ e.date.slice(5) }}</span>
         <b class="figure" :class="e.type">{{ won(e.amount) }}</b>
-        <span><button class="review" style="margin: 0; padding: 4px 8px" @click="removeEntry(e)">삭제</button></span>
+        <span><button class="review" style="margin: 0; padding: 4px 8px" @click="removeEntry(e)">{{ tr('삭제') }}</button></span>
       </div>
-      <p v-if="!visible.length" class="empty-state">이 달에는 머니로그 기록이 없어요. '+ 내역 추가'로 수입이나 지출을 남겨 보세요.</p>
+      <p v-if="!visible.length" class="empty-state">{{ tr('이 달에는 머니로그 기록이 없어요. \'+ 내역 추가\'로 수입이나 지출을 남겨 보세요.') }}</p>
     </section>
 
     <section class="card">
-      <h3>지출 카테고리</h3>
+      <h3>{{ tr('지출 카테고리') }}</h3>
       <div v-for="c in byCategory" :key="c.category" class="rate-row">
-        <span>{{ c.category }}</span>
+        <span>{{ tr(c.category) }}</span>
         <div class="progress"><em :style="{ width: c.pct + '%' }"></em></div>
         <b class="figure">{{ c.pct }}%</b>
       </div>
-      <p v-if="!byCategory.length" class="empty-state">지출 기록이 없어요. 지출 내역을 추가하면 분류별 비중이 여기에 나와요.</p>
+      <p v-if="!byCategory.length" class="empty-state">{{ tr('지출 기록이 없어요. 지출 내역을 추가하면 분류별 비중이 여기에 나와요.') }}</p>
     </section>
   </div>
 
-<Modal v-if="showIntegration" title="외부 연동 검토" wide @close="showIntegration = false">
+<Modal v-if="showIntegration" :title="tr('외부 연동 검토')" wide @close="showIntegration = false">
     <p class="form-note" style="margin-top: 0">
-      은행·카드 자동 연동을 실제로 붙일 수 있는지 검토한 결과예요. 지금 바로 쓸 수 있는 방법은 CSV 가져오기입니다.
+      {{ tr('은행·카드 자동 연동을 실제로 붙일 수 있는지 검토한 결과예요. 지금 바로 쓸 수 있는 방법은 CSV 가져오기입니다.') }}
     </p>
     <div class="integration-row" v-for="i in INTEGRATIONS" :key="i.name">
       <div>
-        <b>{{ i.name }}</b>
-        <p>{{ i.detail }}</p>
+        <b>{{ tr(i.name) }}</b>
+        <p>{{ tr(i.detail) }}</p>
       </div>
       <div class="integration-verdict">
-        <span class="badge" :class="i.verdict === '바로 가능' ? 'ok' : i.verdict === '조건부 가능' ? 'warn' : 'danger'">{{ i.verdict }}</span>
-        <small>구현 난이도 {{ i.risk }}</small>
+        <span class="badge" :class="i.verdict === '바로 가능' ? 'ok' : i.verdict === '조건부 가능' ? 'warn' : 'danger'">{{ tr(i.verdict) }}</span>
+        <small>{{ tr('구현 난이도 {level}', { level: tr(i.risk) }) }}</small>
       </div>
     </div>
 
     <div class="callout" style="margin-top: 16px">
-      <b>지금 쓸 수 있는 방법 · CSV 가져오기</b>
-      <p>카드사에서 내려받은 명세서를 <b>날짜,내용,금액</b> 순서의 CSV로 저장한 뒤 올려주세요. 파일은 브라우저에서만 처리되고 서버로 전송되지 않아요.</p>
+      <b>{{ tr('지금 쓸 수 있는 방법 · CSV 가져오기') }}</b>
+      <p>{{ tr('카드사에서 내려받은 명세서를') }} <b>{{ tr('날짜,내용,금액') }}</b> {{ tr('순서의 CSV로 저장한 뒤 올려주세요. 파일은 브라우저에서만 처리되고 서버로 전송되지 않아요.') }}</p>
       <input type="file" accept=".csv,text/csv" @change="importCsv" style="margin-top: 10px" />
       <p v-if="importNotice" class="badge ok" style="display: inline-block; margin-top: 8px">{{ importNotice }}</p>
     </div>
 
     <template #footer>
-      <button class="primary" @click="showIntegration = false">닫기</button>
+      <button class="primary" @click="showIntegration = false">{{ tr('닫기') }}</button>
     </template>
   </Modal>
 </template>
