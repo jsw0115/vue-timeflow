@@ -1,8 +1,8 @@
 # 현재 데이터베이스 ERD와 테이블 정의서
 
-작성일 2026-11-19. 수정일 2026-11-19. 상태는 현재 격리 개발 설치의 물리 스키마입니다.
+작성일 2026-11-22. 수정일 2026-11-22. 상태는 현재 격리 개발 설치의 물리 스키마입니다.
 
-MySQL 8.4.11의 `timeflow_chat_dev`에서 메타데이터만 읽었습니다. 사용자 데이터와 비밀값은 포함하지 않습니다. 총 29개 테이블 중 Flyway 이력 2개를 제외한 애플리케이션 테이블은 27개이며, 컬럼 213개와 물리 FK 16개를 확인했습니다.
+MySQL 8.4.11의 `timeflow_chat_dev`에서 메타데이터만 읽었습니다. 사용자 데이터와 비밀값은 포함하지 않습니다. 총 31개 테이블 중 Flyway 이력 2개를 제외한 애플리케이션 테이블은 29개이며, 컬럼 232개와 물리 FK 16개를 확인했습니다.
 
 운영 DB가 동일하다는 보장은 아닙니다. 기존 DB는 실제 Flyway 이력과 별도 비교합니다. 과거 V1의 37개 `tbl_*`와 40개 목표 설계는 이 문서의 현재 설치와 다릅니다. 현재 앱은 신규 기록 다수를 `feature_record`의 종류별 JSON으로 저장합니다.
 
@@ -20,6 +20,11 @@ MySQL 8.4.11의 `timeflow_chat_dev`에서 메타데이터만 읽었습니다. �
 
 ```mermaid
 erDiagram
+    challenge_checkin {
+        varchar challenge_id PK
+        varchar user_id PK
+        date check_date PK
+    }
     chat_member {
         char room_id PK
         varchar user_id PK
@@ -90,6 +95,13 @@ erDiagram
     planner_preference {
         varchar user_id PK
     }
+    record_link {
+        varchar owner_id PK
+        varchar source_kind PK
+        varchar source_id PK
+        varchar target_kind PK
+        varchar target_id PK
+    }
     refresh_token {
         varchar id PK
     }
@@ -142,6 +154,7 @@ erDiagram
 
 | 테이블 | 역할 |
 | --- | --- |
+| [challenge_checkin](#challenge-checkin) | 커뮤니티 챌린지의 날짜별 직접 인증과 실제 기록 인증 |
 | [chat_member](#chat-member) | 대화방 참여·탈퇴와 읽음 위치 |
 | [chat_mention](#chat-mention) | 메시지의 사용자 멘션과 읽음 상태 |
 | [chat_message](#chat-message) | 영속 메시지와 재전송 중복 방지 |
@@ -164,6 +177,7 @@ erDiagram
 | [login_throttle](#login-throttle) | 로그인 시도 제한과 잠금 상태 |
 | [planner_item](#planner-item) | 사용자 소유의 구형 수동 플래너 항목 |
 | [planner_preference](#planner-preference) | 사용자별 기본 플래너 보기 |
+| [record_link](#record-link) | 할 일·일정·실제 기록 사이의 계정별 연결 |
 | [refresh_token](#refresh-token) | 해시된 갱신 토큰과 폐기·만료 이력 |
 | [routine](#routine) | 구형 루틴 정의 |
 | [routine_log](#routine-log) | 루틴의 날짜별 수행 상태 |
@@ -175,6 +189,31 @@ erDiagram
 ## 테이블 정의
 
 NULL 허용은 DB 정의이며 API의 필수 입력과 다를 수 있습니다. 기본값 NULL과 값 없음의 차이는 `SHOW CREATE TABLE` 및 실제 마이그레이션으로 최종 확인합니다. 시각의 문자열 저장과 구형 축약 필드는 현재 구조를 그대로 기록한 것이며 신규 표준을 뜻하지 않습니다.
+
+<a id="challenge-checkin"></a>
+### `challenge_checkin`
+
+커뮤니티 챌린지의 날짜별 직접 인증과 실제 기록 인증.
+
+엔진 `InnoDB`, 비교 규칙 `utf8mb4_0900_ai_ci`입니다.
+
+| 컬럼 | DB 타입 | NULL 허용 | 기본값 | 키·추가 속성 | 의미 |
+| --- | --- | --- | --- | --- | --- |
+| `challenge_id` | varchar(100) | NO | NULL | PRI | 챌린지 식별자 |
+| `user_id` | varchar(36) | NO | NULL | PRI | 사용자 식별자 |
+| `check_date` | date | NO | NULL | PRI | 인증 날짜 |
+| `method` | varchar(10) | NO | NULL | 없음 | 인증 방식(self 직접·record 실제 기록) |
+| `session_id` | varchar(100) | YES | NULL | 없음 | 인증에 쓴 실제 기록 식별자 |
+| `session_title` | varchar(200) | YES | NULL | 없음 | 인증에 쓴 실제 기록 제목 스냅샷 |
+| `started_at` | datetime(6) | YES | NULL | 없음 | 실제 기록 서버 시작 시각 |
+| `ended_at` | datetime(6) | YES | NULL | 없음 | 실제 기록 서버 종료 시각 |
+| `minutes` | int | YES | NULL | 없음 | 실제 기록 분 |
+| `created_at` | datetime(6) | NO | NULL | 없음 | 생성 시각. 실제 저장 타입·API 시간대 규칙 확인 |
+
+인덱스와 제약은 다음과 같습니다.
+
+- `PRIMARY`. 고유 인덱스 `(challenge_id, user_id, check_date)`.
+- `uk_challenge_checkin_session`. 고유 인덱스 `(challenge_id, user_id, session_id)`.
 
 <a id="chat-member"></a>
 ### `chat_member`
@@ -311,13 +350,16 @@ DM·그룹 대화방과 방별 순번.
 | `last_sequence` | bigint | NO | 0 | 없음 | 방의 마지막 메시지 순번 |
 | `created_at` | datetime(6) | NO | CURRENT_TIMESTAMP(6) | DEFAULT_GENERATED | 생성 시각. 실제 저장 타입·API 시간대 규칙 확인 |
 | `updated_at` | datetime(6) | NO | CURRENT_TIMESTAMP(6) | DEFAULT_GENERATED | 수정 시각. 실제 저장 타입·API 시간대 규칙 확인 |
+| `community_id` | char(26) | YES | NULL | UNI | 커뮤니티 채팅방의 커뮤니티 식별자. 그룹 방만 가능 |
 
 인덱스와 제약은 다음과 같습니다.
 
 - `ix_chat_room_owner`. 일반 인덱스 `(owner_id)`.
 - `PRIMARY`. 고유 인덱스 `(id)`.
 - `uk_chat_direct`. 고유 인덱스 `(direct_key)`.
+- `uk_chat_room_community`. 고유 인덱스 `(community_id)`.
 - `fk_chat_room_owner`. `(owner_id)` → `chat_user(user_id)`. DELETE `NO ACTION`, UPDATE `NO ACTION`.
+- `ck_chat_room_community`. CHECK `((`community_id` is null) or (`kind` = _utf8mb4\'GROUP\'))`.
 - `ck_chat_room_kind`. CHECK `(((`kind` = _utf8mb4\'DM\') and (`direct_key` is not null)) or ((`kind` = _utf8mb4\'GROUP\') and (`direct_key` is null) and (`name` is not null)))`.
 - `ck_chat_room_sequence`. CHECK `(`last_sequence` >= 0)`.
 
@@ -498,6 +540,7 @@ DM·그룹 대화방과 방별 순번.
 | `status` | varchar(20) | NO | NULL | 없음 | 처리·참여 상태 |
 | `message` | varchar(2000) | NO |  | 없음 | 참여 요청 메시지 |
 | `updated_at` | varchar(40) | NO | NULL | 없음 | 수정 시각. 실제 저장 타입·API 시간대 규칙 확인 |
+| `share_level` | varchar(10) | NO | none | 없음 | 그룹에 내 일정을 보이는 범위(none·busy·title·detail) |
 
 인덱스와 제약은 다음과 같습니다.
 
@@ -669,6 +712,27 @@ Core·workspace 마이그레이션 이력.
 
 - `PRIMARY`. 고유 인덱스 `(user_id)`.
 
+<a id="record-link"></a>
+### `record_link`
+
+할 일·일정·실제 기록 사이의 계정별 연결.
+
+엔진 `InnoDB`, 비교 규칙 `utf8mb4_0900_ai_ci`입니다.
+
+| 컬럼 | DB 타입 | NULL 허용 | 기본값 | 키·추가 속성 | 의미 |
+| --- | --- | --- | --- | --- | --- |
+| `owner_id` | varchar(36) | NO | NULL | PRI | 소유자 식별자 |
+| `source_kind` | varchar(20) | NO | NULL | PRI | 연결 출발 기록 종류(task·schedule·actual) |
+| `source_id` | varchar(100) | NO | NULL | PRI | 연결 출발 기록 식별자 |
+| `target_kind` | varchar(20) | NO | NULL | PRI | 연결 도착 기록 종류(task·schedule·actual) |
+| `target_id` | varchar(100) | NO | NULL | PRI | 연결 도착 기록 식별자 |
+| `created_at` | datetime(6) | NO | NULL | 없음 | 생성 시각. 실제 저장 타입·API 시간대 규칙 확인 |
+
+인덱스와 제약은 다음과 같습니다.
+
+- `ix_record_link_target`. 일반 인덱스 `(owner_id, target_kind, target_id)`.
+- `PRIMARY`. 고유 인덱스 `(owner_id, source_kind, source_id, target_kind, target_id)`.
+
 <a id="refresh-token"></a>
 ### `refresh_token`
 
@@ -767,7 +831,6 @@ Core·workspace 마이그레이션 이력.
 | `energy_lvl` | varchar(20) | NO | NULL | 없음 | 필요 에너지 수준 |
 | `duration_min` | int | NO | 30 | 없음 | 예상 소요 분 |
 | `due` | date | YES | NULL | 없음 | 마감 날짜 |
-| `due_time` | time | YES | NULL | 없음 | 마감 시각(선택, Q-31). V13 소스 기준으로 손으로 넣은 행이며 격리 DB 캡처 전이다(2026-11-22, Docker 데몬 없음). 다음 캡처 때 생성기가 다시 만든다 |
 | `cat_id` | varchar(26) | YES | NULL | 없음 | 분류 식별자 |
 | `cat_name` | varchar(60) | YES | NULL | 없음 | 분류 이름 스냅샷 |
 | `cat_color` | varchar(7) | YES | NULL | 없음 | 분류 색상 스냅샷 |
@@ -778,6 +841,7 @@ Core·workspace 마이그레이션 이력.
 | `u_at` | datetime(6) | NO | NULL | 없음 | 수정 UTC 시각 |
 | `d_at` | datetime(6) | YES | NULL | 없음 | 소프트 삭제 UTC 시각 |
 | `version` | bigint | NO | 0 | 없음 | 수정 충돌 검사 버전 |
+| `due_time` | time | YES | NULL | 없음 | 마감 시각(선택). NULL이면 시각 없음 |
 
 인덱스와 제약은 다음과 같습니다.
 
@@ -872,20 +936,25 @@ Core·workspace 마이그레이션 이력.
 | core | 7 | planner item version | 1 |
 | core | 8 | task version | 1 |
 | core | 9 | idempotency key | 1 |
+| core | 10 | record link | 1 |
+| core | 11 | group share level | 1 |
+| core | 12 | challenge checkin | 1 |
+| core | 13 | task due time | 1 |
 | chat | 0 | << Flyway Baseline >> | 1 |
 | chat | 1 | chat schema | 1 |
 | chat | 2 | mentions and tags | 1 |
 | chat | 3 | message search | 1 |
 | chat | 4 | legacy account ids | 1 |
+| chat | 5 | community rooms | 1 |
 
-기준은 Core V3, workspace V4·V6, Java Core V5, Chat V1~V4입니다. V2 baseline은 과거 V1을 재실행하지 않기 위한 이력이며 마이그레이션 SQL을 수동 실행하라는 뜻이 아닙니다.
+기준은 Core V3, workspace V4·V6~V13, Java Core V5, Chat V1~V5입니다. V2 baseline은 과거 V1을 재실행하지 않기 위한 이력이며 마이그레이션 SQL을 수동 실행하라는 뜻이 아닙니다.
 
 [스키마 메타데이터](current-schema.json)에 수집일·마이그레이션 소스의 UTF-8·LF 정규화 SHA-256을 함께 보관합니다. 운영체제 개행 차이는 해시 차이로 취급하지 않습니다. 생성기는 DB 사용자 행을 조회하거나 DDL을 실행하지 않습니다.
 
 ```powershell
 python scripts/docs/build_current_database.py --check
 # 격리 MySQL이 실행 중일 때만 메타데이터를 다시 캡처합니다.
-python scripts/docs/build_current_database.py --capture-container timeflow-chat-mysql-1 --as-of 2026-10-31
+python scripts/docs/build_current_database.py --capture-container timeflow-chat-mysql-1 --as-of 2026-11-22
 ```
 
 기존 DB의 변경·복구는 [DB 환경과 마이그레이션 안내](environment.md)를 따릅니다. 운영 스키마와 자동 동기화하거나 과거 검토용 DDL을 적용하지 않습니다.
