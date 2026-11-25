@@ -1,4 +1,5 @@
 <script setup>
+import { tr } from '../store/locale'
 import { openProfile } from '../store/people'
 
 /**
@@ -15,6 +16,6 @@ defineProps({
   <span class="person-tag">
     <b v-if="bold">{{ name }}</b>
     <template v-else>{{ name }}</template>
-    <button class="person-info" type="button" :title="name + ' 프로필 보기'" :aria-label="name + ' 프로필 보기'" @click.stop="openProfile(name)">ⓘ</button>
+    <button class="person-info" type="button" :title="tr('{name} 프로필 보기', { name })" :aria-label="tr('{name} 프로필 보기', { name })" @click.stop="openProfile(name)">ⓘ</button>
   </span>
 </template>

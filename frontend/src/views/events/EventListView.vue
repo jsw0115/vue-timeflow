@@ -1,4 +1,6 @@
 <script setup>
+import { bodyLocale, tr } from '../../store/locale'
+import { formatDate } from '../../features/i18n/locale.mjs'
 import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { events, eventStore, openPostComposer } from '../../store/appState'
@@ -128,6 +130,8 @@ const detailDraft = ref({ title: '', category: '', color: '', attendeeIds: [] })
    이 회차만: 제목·시간만 바꾸는 회차 변경(override) / 이 회차부터: 반복을 둘로 나눔 / 전체 반복: 기존 수정 */
 const SCOPES = [{ id: 'this', label: '이 회차만' }, { id: 'following', label: '이 회차부터' }, { id: 'all', label: '전체 반복' }]
 const WEEKDAY = ['일', '월', '화', '수', '목', '금', '토']
+// 회차 요일은 본문 언어로 보인다
+const weekdayOf = (date) => (bodyLocale.value === 'ko' ? WEEKDAY[new Date(date + 'T00:00:00').getDay()] : formatDate(new Date(date + 'T00:00:00'), bodyLocale.value, { weekday: 'short' }))
 const occurrenceDate = ref('')
 const scope = ref('all')
 const occurrenceDraft = ref({ title: '', startTime: '', endTime: '' })
@@ -143,17 +147,17 @@ const occurrenceError = computed(() => {
   return recurrenceError(next.recurrence, next.startDate) || overridesError(next)
 })
 const scopeNote = computed(() => {
-  if (scope.value === 'this') return '이 회차의 제목과 시간만 바꿔요. 다른 회차와 반복 설정은 그대로예요. 건너뛴 회차는 일정 상세의 회차 예외에서 되돌릴 수 있어요.'
-  if (scope.value === 'following') return followingSplit.value ? occurrenceDate.value + ' 회차부터 바꿔요. 이전 회차는 그대로 남고, 반복이 둘로 나뉘어요.' : '첫 회차라 반복 전체를 바꿔요.'
-  return '모든 회차에 적용돼요. 따로 바꾼 회차는 바꾼 항목만 그대로 유지돼요.'
+  if (scope.value === 'this') return tr('이 회차의 제목과 시간만 바꿔요. 다른 회차와 반복 설정은 그대로예요. 건너뛴 회차는 일정 상세의 회차 예외에서 되돌릴 수 있어요.')
+  if (scope.value === 'following') return followingSplit.value ? tr('{date} 회차부터 바꿔요. 이전 회차는 그대로 남고, 반복이 둘로 나뉘어요.', { date: occurrenceDate.value }) : tr('첫 회차라 반복 전체를 바꿔요.')
+  return tr('모든 회차에 적용돼요. 따로 바꾼 회차는 바꾼 항목만 그대로 유지돼요.')
 })
 const draftExceptions = computed(() => [...(detailDraft.value.recurrence?.exceptions ?? [])].sort((a, b) => a.date.localeCompare(b.date)))
 function describeException(x) {
-  if (x.action === 'skip') return '건너뜀'
+  if (x.action === 'skip') return tr('건너뜀')
   const parts = []
-  if (x.title) parts.push('제목 "' + x.title + '"')
-  if (x.startTime || x.endTime) parts.push('시간 ' + (x.startTime ?? detailDraft.value.startTime) + '~' + (x.endTime ?? detailDraft.value.endTime))
-  return '이 회차만 변경 · ' + parts.join(', ')
+  if (x.title) parts.push(tr('제목 "{title}"', { title: x.title }))
+  if (x.startTime || x.endTime) parts.push(tr('시간 {from}~{to}', { from: x.startTime ?? detailDraft.value.startTime, to: x.endTime ?? detailDraft.value.endTime }))
+  return tr('이 회차만 변경 · {parts}', { parts: parts.join(', ') })
 }
 // 회차 예외 되돌리기는 다른 입력처럼 저장할 때 반영한다
 function restoreException(date) { detailDraft.value.recurrence = removeException(detailDraft.value.recurrence, date) }
@@ -204,7 +208,7 @@ async function run(action, retry) {
     return
   }
   const error = result.error
-  if (error.orphan) splitNotice.value = '이 회차부터 나눈 새 일정을 지우지 못해 회차가 겹칠 수 있어요. 목록에서 확인해 주세요.'
+  if (error.orphan) splitNotice.value = tr('이 회차부터 나눈 새 일정을 지우지 못해 회차가 겹칠 수 있어요. 목록에서 확인해 주세요.')
   if (error.kind === 'conflict') conflict.value = { latest: { ...(error.latest ?? active.value ?? base.value) } }
 }
 function saveDetail() {
@@ -268,7 +272,7 @@ const removeMessage = computed(() => {
 })
 async function removeActive() {
   if (!active.value) return
-  if (!confirm('이 일정을 삭제할까요?')) return
+  if (!confirm(tr('이 일정을 삭제할까요?'))) return
   const result = await removing.run(() => eventStore.remove(base.value ?? active.value))
   if (!result.ok && result.error?.kind !== 'notFound') return
   closeDetail()
@@ -287,101 +291,103 @@ watch(() => [route.query.id, route.query.occurrence, events.value.length], ([id,
 </script>
 
 <template>
-  <PageActions><button class="primary" @click="openModal">+ 새 일정</button></PageActions>
+  <PageActions><button class="primary" @click="openModal">{{ tr('+ 새 일정') }}</button></PageActions>
 
   <StorageNote :mode="eventMode" />
   <ListFilterBar
     v-model:query="query"
     v-model:filters="filters"
     :groups="FILTER_GROUPS"
-    placeholder="일정 제목·날짜·분류 검색"
+    :placeholder="tr('일정 제목·날짜·분류 검색')"
     :result-count="visibleEvents.length"
     :total-count="events.length"
   />
 
   <div class="manage">
     <section class="card list">
-      <div class="list-head"><span>일정</span><span>날짜</span><span>카테고리</span><span>상태</span></div>
+      <div class="list-head"><span>{{ tr('일정') }}</span><span>{{ tr('날짜') }}</span><span>{{ tr('카테고리') }}</span><span>{{ tr('상태') }}</span></div>
       <div class="row" :class="{ picked: activeId === e.id }" v-for="e in visibleEvents" :key="e.id" role="button" tabindex="0" @click="activeId = e.id; openDetail()" @keydown.enter.prevent="activeId = e.id; openDetail()" @keydown.space.prevent="activeId = e.id; openDetail()">
         <label><i :style="{ background: gradientFor(e.color), width: '4px', height: '18px', borderRadius: '3px', display: 'inline-block', marginRight: '8px', verticalAlign: 'middle' }"></i>{{ e.title }}</label>
         <span>{{ e.startDate }} {{ e.startTime }}<small class="date-end">~ {{ e.endDate }} {{ e.endTime }}</small></span>
-        <span class="tag">{{ e.category }}</span>
-        <span class="badge" :class="{ ok: e.state === '예정', info: e.state === '공유받음' }">{{ e.state }}</span>
+        <span class="tag">{{ tr(e.category) }}</span>
+        <span class="badge" :class="{ ok: e.state === '예정', info: e.state === '공유받음' }">{{ tr(e.state) }}</span>
       </div>
-      <p v-if="eventMode === 'server' && eventStore.state.loading && !eventStore.state.loaded" class="input-field-help" role="status">일정을 불러오는 중이에요.</p>
-      <div v-else-if="eventMode === 'server' && eventStore.state.error && !eventStore.state.loaded" class="empty-state" role="status"><p>일정을 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요.</p><button type="button" class="button-secondary" @click="eventStore.reload()">다시 시도</button></div>
-      <p v-else-if="!visibleEvents.length" class="empty-state" role="status">조건에 맞는 일정이 없어요. 검색어나 필터를 바꾸거나 '+ 새 일정'으로 추가해 보세요.</p>
+      <p v-if="eventMode === 'server' && eventStore.state.loading && !eventStore.state.loaded" class="input-field-help" role="status">{{ tr('일정을 불러오는 중이에요.') }}</p>
+      <div v-else-if="eventMode === 'server' && eventStore.state.error && !eventStore.state.loaded" class="empty-state" role="status"><p>{{ tr('일정을 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요.') }}</p><button type="button" class="button-secondary" @click="eventStore.reload()">{{ tr('다시 시도') }}</button></div>
+      <p v-else-if="!visibleEvents.length" class="empty-state" role="status">{{ tr('조건에 맞는 일정이 없어요. 검색어나 필터를 바꾸거나 \'+ 새 일정\'으로 추가해 보세요.') }}</p>
     </section>
     <aside class="card detail">
       <h3>{{ active?.title }}</h3>
       <p>{{ active?.startDate }} {{ active?.startTime }}<br />~ {{ active?.endDate }} {{ active?.endTime }}</p><RichText :text="active?.body ?? ''" />
-      <label>카테고리</label>
-      <p><span class="tag">{{ active?.category }}</span></p>
+      <label>{{ tr('카테고리') }}</label>
+      <p><span class="tag">{{ tr(active?.category) }}</span></p>
       <template v-if="eventMode === 'local'">
-      <label>참석자 ({{ attendeeNames(active?.attendeeIds).length }}명)</label>
+      <label>{{ tr('참석자 ({n}명)', { n: attendeeNames(active?.attendeeIds).length }) }}</label>
       <p v-if="attendeeNames(active?.attendeeIds).length" class="attendee-chips">
         <PersonTag v-for="n in attendeeNames(active?.attendeeIds)" :key="n" :name="n" />
       </p>
-      <p v-else class="empty-state">아직 참석자가 없어요. '상세 보기'에서 주소록의 사람을 추가해 보세요.</p>
+      <p v-else class="empty-state">{{ tr('아직 참석자가 없어요. \'상세 보기\'에서 주소록의 사람을 추가해 보세요.') }}</p>
       </template>
-      <button class="button-secondary" @click="openDetail()">상세 보기</button>
+      <button class="button-secondary" @click="openDetail()">{{ tr('상세 보기') }}</button>
     </aside>
   </div>
 
-<Modal v-if="showDetailModal" :title="occurrenceDate ? '일정 회차' : '일정 상세'" :edit-resource="'event:' + activeId" @close="closeDetail">
+<Modal v-if="showDetailModal" :title="occurrenceDate ? tr('일정 회차') : tr('일정 상세')" :edit-resource="'event:' + activeId" @close="closeDetail">
     <template v-if="occurrenceDate">
-      <p><b class="figure">{{ occurrenceDate }}</b> ({{ WEEKDAY[new Date(occurrenceDate + 'T00:00:00').getDay()] }}) 회차예요.</p>
-      <div class="segmented-tab" role="group" aria-label="수정 범위">
-        <button v-for="s in SCOPES" :key="s.id" type="button" :aria-pressed="scope === s.id" @click="selectScope(s.id)">{{ s.label }}</button>
+      <p>{{ tr('{date} ({day}) 회차예요.', { date: occurrenceDate, day: weekdayOf(occurrenceDate) }) }}</p>
+      <div class="segmented-tab" role="group" :aria-label="tr('수정 범위')">
+        <button v-for="s in SCOPES" :key="s.id" type="button" :aria-pressed="scope === s.id" @click="selectScope(s.id)">{{ tr(s.label) }}</button>
       </div>
       <p role="status">{{ scopeNote }}</p>
     </template>
 
     <template v-if="scope === 'this'">
-      <label>제목<input v-model="occurrenceDraft.title" maxlength="200" /></label>
+      <label>{{ tr('제목') }}<input v-model="occurrenceDraft.title" maxlength="200" /></label>
       <fieldset class="form-fieldset">
-        <legend>이 회차 시간</legend>
+        <legend>{{ tr('이 회차 시간') }}</legend>
         <div class="form-row">
-          <label>시작 시간<input v-model="occurrenceDraft.startTime" type="time" required /></label>
-          <label>종료 시간<input v-model="occurrenceDraft.endTime" type="time" required /></label>
+          <label>{{ tr('시작 시간') }}<input v-model="occurrenceDraft.startTime" type="time" required /></label>
+          <label>{{ tr('종료 시간') }}<input v-model="occurrenceDraft.endTime" type="time" required /></label>
         </div>
       </fieldset>
-      <p v-if="occurrenceEnd && occurrenceEnd !== occurrenceDate">종료일은 <span class="figure">{{ occurrenceEnd }}</span>이에요.</p>
-      <p role="status">{{ occurrenceError }}</p>
+      <p v-if="occurrenceEnd && occurrenceEnd !== occurrenceDate">{{ tr('종료일은 {date}이에요.', { date: occurrenceEnd }) }}</p>
+      <p role="status">{{ tr(occurrenceError) }}</p>
     </template>
 
     <template v-else>
-    <label>제목<input v-model="detailDraft.title" /></label>
+    <label>{{ tr('제목') }}<input v-model="detailDraft.title" /></label>
     <EventDateFields :draft="detailDraft" />
     <RepeatSettings v-model="detailDraft.recurrence" :start-date="detailDraft.startDate" />
-    <p v-if="!occurrenceDate && isRepeating(active)">반복 일정을 수정하면 전체 반복에 적용돼요. 한 회차만 바꾸려면 캘린더에서 그 날짜의 일정을 누르세요.</p>
+    <p v-if="!occurrenceDate && isRepeating(active)">{{ tr('반복 일정을 수정하면 전체 반복에 적용돼요. 한 회차만 바꾸려면 캘린더에서 그 날짜의 일정을 누르세요.') }}</p>
     <template v-if="draftExceptions.length">
-      <div class="section-label">회차 예외</div>
+      <div class="section-label">{{ tr('회차 예외') }}</div>
       <p v-for="x in draftExceptions" :key="x.date" style="display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-md); margin: var(--space-sm) 0">
         <small class="figure">{{ x.date }}</small>
         <span style="flex: 1; min-width: 0">{{ describeException(x) }}</span>
-        <button type="button" class="button-secondary" :aria-label="x.date + (x.action === 'skip' ? ' 건너뛴 회차 되돌리기' : ' 회차 변경 되돌리기')" @click="restoreException(x.date)">되돌리기</button>
+        <button type="button" class="button-secondary" :aria-label="x.action === 'skip' ? tr('{date} 건너뛴 회차 되돌리기', { date: x.date }) : tr('{date} 회차 변경 되돌리기', { date: x.date })" @click="restoreException(x.date)">{{ tr('되돌리기') }}</button>
       </p>
-      <p>되돌린 회차는 저장하면 원래대로 돌아와요.</p>
+      <p>{{ tr('되돌린 회차는 저장하면 원래대로 돌아와요.') }}</p>
     </template>
-    <label>내용 · 태그 · 멘션<TagMentionInput v-model="detailDraft.body" /></label>
-    <label>카테고리<select v-model="detailDraft.category"><option>업무</option><option>공부</option><option>건강</option><option>휴식</option><option>개인</option></select></label>
-    <label>색상</label>
+    <label>{{ tr('내용 · 태그 · 멘션') }}<TagMentionInput v-model="detailDraft.body" /></label>
+    <label>{{ tr('카테고리') }}<select v-model="detailDraft.category"><option value="업무">{{ tr('업무') }}</option><option value="공부">{{ tr('공부') }}</option><option value="건강">{{ tr('건강') }}</option><option value="휴식">{{ tr('휴식') }}</option><option value="개인">{{ tr('개인') }}</option></select></label>
+    <label>{{ tr('색상') }}</label>
     <div style="display: flex; gap: 8px; margin-top: 6px">
       <button
         v-for="c in COLOR_PRESETS"
         :key="c.base"
         type="button"
-        :title="c.name"
+        :title="tr(c.name)"
+        :aria-label="tr(c.name)"
+        :aria-pressed="detailDraft.color === c.base"
         :style="{ width: '28px', height: '28px', borderRadius: '50%', background: gradientFor(c.base), border: detailDraft.color === c.base ? '2px solid var(--color-foreground)' : '2px solid transparent', cursor: 'pointer' }"
         @click="detailDraft.color = c.base"
       ></button>
     </div>
 
-    <p v-if="eventMode === 'server'" class="input-field-help">로그인 상태에서는 참석자를 고를 수 없어요. 주소록은 아직 이 브라우저에만 있어서 계정에 참석자로 저장할 수 없어요.</p>
+    <p v-if="eventMode === 'server'" class="input-field-help">{{ tr('로그인 상태에서는 참석자를 고를 수 없어요. 주소록은 아직 이 브라우저에만 있어서 계정에 참석자로 저장할 수 없어요.') }}</p>
     <template v-else>
-    <div class="section-label">참석자 ({{ detailDraft.attendeeIds.length }}명)</div>
-    <input v-model="attendeeKeyword" placeholder="주소록에서 이름 검색" />
+    <div class="section-label">{{ tr('참석자 ({n}명)', { n: detailDraft.attendeeIds.length }) }}</div>
+    <input v-model="attendeeKeyword" :placeholder="tr('주소록에서 이름 검색')" />
     <div class="picker-list invite-list" style="margin-top: 10px; max-height: 180px">
       <label class="picker-row" v-for="c in attendeeCandidates" :key="c.id">
         <input type="checkbox" :checked="detailDraft.attendeeIds.includes(c.id)" @change="toggleAttendee(detailDraft.attendeeIds, c.id)" />
@@ -391,31 +397,31 @@ watch(() => [route.query.id, route.query.occurrence, events.value.length], ([id,
       </label>
     </div>
     </template>
-    <p class="form-note" role="status">{{ eventError(detailDraft) }}</p>
+    <p class="form-note" role="status">{{ tr(eventError(detailDraft)) }}</p>
     </template>
-    <p v-if="saving.state.field" id="event-field-error" class="input-field-help" data-state="error" role="alert">{{ { title: '제목', end: '종료 시간', recurrence: '반복' }[saving.state.field] }}: {{ saving.state.fieldMessage }}</p>
+    <p v-if="saving.state.field" id="event-field-error" class="input-field-help" data-state="error" role="alert">{{ tr({ title: '제목', end: '종료 시간', recurrence: '반복' }[saving.state.field]) }}: {{ tr(saving.state.fieldMessage) }}</p>
     <ConflictCompare v-if="conflict" :rows="compareRows" :busy="saving.state.status === 'saving'" @keep-mine="keepMine" @use-latest="useLatest" />
     <p v-if="splitNotice" class="input-field-help" data-state="error" role="alert">{{ splitNotice }}</p>
     <SaveStatus :state="saving.state" :mode="eventMode" @retry="retryAction?.()" />
     <template v-if="eventMode === 'server' && active">
-      <button type="button" class="button-secondary" style="margin-top: var(--space-lg)" :aria-busy="recordStart.state.status === 'saving' ? 'true' : undefined" @click="startRecord">{{ recordStart.state.status === 'saving' ? '기록을 시작하는 중' : '이 일정 기록 시작' }}</button>
-      <p v-if="recordRunning" role="status">진행 중인 기록이 있어 새로 시작하지 않았어요. <RouterLink to="/planner/daily">플래너에서 먼저 끝내기</RouterLink></p>
-      <p v-if="recordStart.state.status === 'failed'" class="input-field-help" data-state="error" role="status">{{ recordStart.state.error?.message }}</p>
+      <button type="button" class="button-secondary" style="margin-top: var(--space-lg)" :aria-busy="recordStart.state.status === 'saving' ? 'true' : undefined" @click="startRecord">{{ recordStart.state.status === 'saving' ? tr('기록을 시작하는 중') : tr('이 일정 기록 시작') }}</button>
+      <p v-if="recordRunning" role="status">{{ tr('진행 중인 기록이 있어 새로 시작하지 않았어요.') }} <RouterLink to="/planner/daily">{{ tr('플래너에서 먼저 끝내기') }}</RouterLink></p>
+      <p v-if="recordStart.state.status === 'failed'" class="input-field-help" data-state="error" role="status">{{ tr(recordStart.state.error?.message ?? '') }}</p>
       <LinkedRecords kind="schedule" :id="String(active.id)" />
     </template>
-    <p v-if="removeMessage" class="input-field-help" data-state="error" role="status">{{ removeMessage }}</p>
+    <p v-if="removeMessage" class="input-field-help" data-state="error" role="status">{{ tr(removeMessage) }}</p>
 
     <template #footer>
       <template v-if="scope === 'this'">
-        <button type="button" class="modal-secondary" @click="closeDetail">취소</button>
-        <button type="button" class="button-secondary" :disabled="saving.state.status === 'saving'" @click="skipOccurrence">이 회차 건너뛰기</button>
-        <button v-if="currentOverride" type="button" class="button-secondary" :disabled="saving.state.status === 'saving'" @click="revertOccurrence">변경 되돌리기</button>
-        <button class="primary" :disabled="!!occurrenceError || !!conflict" :aria-busy="saving.state.status === 'saving' ? 'true' : undefined" @click="saveOccurrence">{{ saving.state.status === 'saving' ? '저장하는 중' : '저장하기' }}</button>
+        <button type="button" class="modal-secondary" @click="closeDetail">{{ tr('취소') }}</button>
+        <button type="button" class="button-secondary" :disabled="saving.state.status === 'saving'" @click="skipOccurrence">{{ tr('이 회차 건너뛰기') }}</button>
+        <button v-if="currentOverride" type="button" class="button-secondary" :disabled="saving.state.status === 'saving'" @click="revertOccurrence">{{ tr('변경 되돌리기') }}</button>
+        <button class="primary" :disabled="!!occurrenceError || !!conflict" :aria-busy="saving.state.status === 'saving' ? 'true' : undefined" @click="saveOccurrence">{{ saving.state.status === 'saving' ? tr('저장하는 중') : tr('저장하기') }}</button>
       </template>
       <template v-else>
-        <button type="button" class="modal-secondary" @click="closeDetail">취소</button>
-        <button class="primary" :disabled="!!eventError(detailDraft) || !!conflict" :aria-busy="saving.state.status === 'saving' ? 'true' : undefined" @click="saveDetail">{{ saving.state.status === 'saving' ? '저장하는 중' : '저장하기' }}</button>
-        <button v-if="scope === 'all'" style="width: 100%; margin-top: 8px; color: var(--color-status-danger); font-weight: 700; padding: 10px" :aria-busy="removing.state.status === 'saving' ? 'true' : undefined" @click="removeActive">{{ removing.state.status === 'saving' ? '삭제하는 중' : isRepeating(active) ? '반복 전체 삭제하기' : '삭제하기' }}</button>
+        <button type="button" class="modal-secondary" @click="closeDetail">{{ tr('취소') }}</button>
+        <button class="primary" :disabled="!!eventError(detailDraft) || !!conflict" :aria-busy="saving.state.status === 'saving' ? 'true' : undefined" @click="saveDetail">{{ saving.state.status === 'saving' ? tr('저장하는 중') : tr('저장하기') }}</button>
+        <button v-if="scope === 'all'" style="width: 100%; margin-top: 8px; color: var(--color-status-danger); font-weight: 700; padding: 10px" :aria-busy="removing.state.status === 'saving' ? 'true' : undefined" @click="removeActive">{{ removing.state.status === 'saving' ? tr('삭제하는 중') : isRepeating(active) ? tr('반복 전체 삭제하기') : tr('삭제하기') }}</button>
       </template>
     </template>
   </Modal>

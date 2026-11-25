@@ -33,7 +33,7 @@ function preset(days) { emit('update:modelValue', { ...rule.value, frequency: 'w
       <div class="repeat-weekdays" role="group" :aria-label="tr('반복 요일')"><button v-for="index in [0, 1, 2, 3, 4, 5, 6]" :key="index" type="button" :aria-label="dayLong(index)" :aria-pressed="rule.weekdays.includes(index)" @click="toggle(index)">{{ dayShort(index) }}</button></div>
     </template>
     <div v-if="rule.frequency !== 'none'" class="repeat-fields">
-      <label :for="id + '-end'">{{ tr('종료') }}<select :aria-label="tr('반복 종료')" :id="id + '-end'" :value="rule.endMode" @change="update('endMode', $event.target.value)"><option value="never">{{ tr('종료 없이') }}</option><option value="until">{{ tr('날짜 지정') }}</option><option value="count">{{ tr('횟수 지정') }}</option></select></label>
+      <label :for="id + '-end'">{{ tr('종료 조건') }}<select :aria-label="tr('반복 종료')" :id="id + '-end'" :value="rule.endMode" @change="update('endMode', $event.target.value)"><option value="never">{{ tr('종료 없이') }}</option><option value="until">{{ tr('날짜 지정') }}</option><option value="count">{{ tr('횟수 지정') }}</option></select></label>
       <label v-if="rule.endMode === 'until'" :for="id + '-until'">{{ tr('마지막 날짜') }}<input :id="id + '-until'" type="date" :min="startDate" :value="rule.until" @input="update('until', $event.target.value)" /></label>
       <label v-if="rule.endMode === 'count'" :for="id + '-count'">{{ tr('반복 횟수') }}<input :id="id + '-count'" type="number" min="1" max="999" :value="rule.count" @input="update('count', $event.target.valueAsNumber)" /></label>
     </div>

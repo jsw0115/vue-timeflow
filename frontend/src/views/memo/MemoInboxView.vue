@@ -1,4 +1,5 @@
 <script setup>
+import { tr } from '../../store/locale'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { isAutomationOn } from '../../store/automations'
@@ -78,7 +79,7 @@ async function convertToTasks() {
   converting.value = false
   convertedCount.value = saved
   if (saved < picked.length) {
-    convertError.value = (saved ? saved + '건은 할 일로 옮겼어요. ' : '') + (picked.length - saved) + '건을 저장하지 못했어요. 연결을 확인하고 다시 시도해 주세요.'
+    convertError.value = saved ? tr('{saved}건은 할 일로 옮겼어요. {failed}건을 저장하지 못했어요. 연결을 확인하고 다시 시도해 주세요.', { saved, failed: picked.length - saved }) : tr('{failed}건을 저장하지 못했어요. 연결을 확인하고 다시 시도해 주세요.', { failed: picked.length - saved })
     return
   }
   showConvert.value = false
@@ -87,51 +88,51 @@ async function convertToTasks() {
 </script>
 
 <template>
-  <PageActions><button class="primary" @click="openEditor">+ 메모 작성</button></PageActions>
+  <PageActions><button class="primary" @click="openEditor">{{ tr('+ 메모 작성') }}</button></PageActions>
 
   <ListFilterBar
     v-model:query="query"
     v-model:filters="filters"
     :groups="FILTER_GROUPS"
-    placeholder="메모 제목·내용 검색"
+    :placeholder="tr('메모 제목·내용 검색')"
     :result-count="visibleMemos.length"
     :total-count="memos.length"
   />
   <div class="form-note" v-if="isAutomationOn('memo-to-task')">
-    자동화 켜짐 · 실행 가능한 메모는 자동으로 표시돼요 ·
-    <RouterLink to="/settings/automation" class="inline-link">설정</RouterLink>
+    {{ tr('자동화 켜짐 · 실행 가능한 메모는 자동으로 표시돼요 ·') }}
+    <RouterLink to="/settings/automation" class="inline-link">{{ tr('설정') }}</RouterLink>
   </div>
   <div class="memo-grid">
     <section class="card memo-card" :class="m.color" style="break-inside: avoid; margin-bottom: 12px" v-for="m in visibleMemos" :key="m.id">
       <div style="display: flex; justify-content: space-between; align-items: start; gap: 8px">
         <b>{{ m.title }}</b>
-        <button type="button" class="button-text memo-convert" @click.stop="openConvert(m)">할 일로 변환</button>
+        <button type="button" class="button-text memo-convert" @click.stop="openConvert(m)">{{ tr('할 일로 변환') }}</button>
       </div>
       <p v-if="m.body"><RichText :text="m.body" /></p>
-      <p v-else class="form-note" style="margin: 6px 0 0">내용 없음</p>
+      <p v-else class="form-note" style="margin: 6px 0 0">{{ tr('내용 없음') }}</p>
       <small>{{ m.time }}</small>
       <span v-if="m.offline" class="tag" :class="{ warn: m.offline === 'review' }" style="margin-left: var(--space-sm)">{{ OFFLINE_LABEL[m.offline] }}</span>
     </section>
-    <p v-if="visibleMemos.length === 0">조건에 맞는 메모가 없어요.</p>
+    <p v-if="visibleMemos.length === 0">{{ tr('조건에 맞는 메모가 없어요.') }}</p>
   </div>
 
-<Modal v-if="showConvert" title="할 일로 변환" wide @close="showConvert = false">
-    <p class="form-note" style="margin: 0 0 10px">메모에서 실행 가능한 문장을 뽑았어요. 필요한 항목만 골라 할 일로 옮기세요.</p>
+<Modal v-if="showConvert" :title="tr('할 일로 변환')" wide @close="showConvert = false">
+    <p class="form-note" style="margin: 0 0 10px">{{ tr('메모에서 실행 가능한 문장을 뽑았어요. 필요한 항목만 골라 할 일로 옮기세요.') }}</p>
     <section class="card" style="box-shadow: none; margin-bottom: 12px">
-      <span class="pill">원본 메모</span>
+      <span class="pill">{{ tr('원본 메모') }}</span>
       <p style="margin-top: 8px">{{ convertSource?.body }}</p>
     </section>
     <label class="task" v-for="c in candidates" :key="c.id">
       <input type="checkbox" v-model="c.checked" />
       <span style="flex: 1"><b>{{ c.title }}</b></span>
     </label>
-    <p v-if="candidates.length === 0">변환할 만한 문장을 찾지 못했어요.</p>
+    <p v-if="candidates.length === 0">{{ tr('변환할 만한 문장을 찾지 못했어요.') }}</p>
     <p v-if="convertError" class="input-field-help" data-state="error" role="status">{{ convertError }}</p>
 
     <template #footer>
-      <button type="button" class="modal-secondary" @click="showConvert = false">취소</button>
+      <button type="button" class="modal-secondary" @click="showConvert = false">{{ tr('취소') }}</button>
       <button class="primary" :disabled="!candidates.some((c) => c.checked)" :aria-busy="converting ? 'true' : undefined" @click="convertToTasks">
-      {{ converting ? '할 일로 옮기는 중' : '선택한 ' + candidates.filter((c) => c.checked).length + '건 할 일로 변환' }}
+      {{ converting ? tr('할 일로 옮기는 중') : tr('선택한 {n}건 할 일로 변환', { n: candidates.filter((c) => c.checked).length }) }}
           </button>
     </template>
   </Modal>
