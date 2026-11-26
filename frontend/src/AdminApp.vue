@@ -34,6 +34,7 @@ function toggleGroup(label) {
 // 권한은 서버가 정한다. 관리자 지표 API가 403이면 화면과 메뉴를 보이지 않고 안내만 둔다(PR-10 5단계, UF-117·UT-199)
 watch(() => session.userId, (id) => refreshAdminAccess(Boolean(id)), { immediate: true })
 const allowed = computed(() => adminAccess.state === 'allowed')
+const skipToMain = () => document.getElementById('main-content')?.focus()
 // 서버에 연결한 관리 화면. 나머지는 아직 시연 데이터라 화면 위에 알린다
 const SERVER_PATHS = new Set(['/admin', '/admin/stats', '/admin/cs', '/admin/notices', '/admin/content', '/admin/audit', '/admin/logs', '/admin/moderation', '/admin/settings'])
 const demo = computed(() => route.path.startsWith('/admin') && !SERVER_PATHS.has(route.path))
@@ -47,6 +48,8 @@ function backToApp() {
 
 <template>
   <div class="app admin-shell">
+    <!-- 본문 바로가기(BUG-013) -->
+    <a class="skip-link" href="#main-content" @click.prevent="skipToMain">{{ tr('본문 바로가기') }}</a>
     <aside class="sidebar" :class="{ open: mobileNav }">
       <div class="brand"><BrandMark class="brand-mark" label="" /><span class="brand-name">Timebar Diary</span><small class="admin-chip">{{ tr('관리자') }}</small></div>
       <button class="workspace" @click="backToApp">
@@ -71,7 +74,7 @@ function backToApp() {
 
     <div v-if="mobileNav" class="scrim" @click="mobileNav = false"></div>
 
-    <main>
+    <main id="main-content" tabindex="-1">
       <header>
         <button class="hamburger" :aria-label="tr('메뉴 열기')" @click="mobileNav = true"><AppIcon name="menu" /></button>
         <div><p class="eyebrow">{{ tr('관리자 콘솔') }}</p><h1>{{ allowed ? pageTitle : tr('관리자 화면') }}</h1></div>

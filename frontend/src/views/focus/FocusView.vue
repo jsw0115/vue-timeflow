@@ -108,7 +108,7 @@ onBeforeUnmount(() => stopShare())
       </label>
       <button v-if="active && !finishing" type="button" class="button-secondary timer-cancel" :disabled="busy" @click="onCancel">{{ tr('기록하지 않고 취소') }}</button>
       <p v-if="error" class="form-error" role="alert">{{ tr(error) }}</p>
-      <p v-if="saved" role="status">{{ tr('{title} {time}을(를) 실제 기록으로 저장했어요.', { title: saved.title, time: formatMinutes(minutesOf(saved), tr) }) }} <RouterLink :to="{ path: '/planner/daily', query: { date: dateIn(Date.parse(saved.startedAt), zone), recording: saved.id } }">{{ tr('플래너에서 보기') }}</RouterLink></p>
+      <p v-if="saved" role="status">{{ tr('{title} {time}을(를) 실제 기록으로 저장했어요.', { title: saved.title, time: formatMinutes(minutesOf(saved), tr) }) }} <RouterLink class="inline-link" :to="{ path: '/planner/daily', query: { date: dateIn(Date.parse(saved.startedAt), zone), recording: saved.id } }">{{ tr('플래너에서 보기') }}</RouterLink></p>
       <p>{{ tr('OS 방해 금지 제어는 지원하지 않습니다. 필요한 경우 기기 설정에서 직접 켜주세요.') }}</p>
     </div>
     <div>

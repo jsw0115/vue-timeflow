@@ -50,7 +50,7 @@ onMounted(load)
         </div>
       </dl>
 
-      <p class="form-note policy-note">{{ tr('로그인 유지 시간처럼 바꿀 수 있는 값은 배포 설정(환경 변수)에서 바꾸고 다시 배포해요. 계정 역할은') }} <router-link to="/admin">{{ tr('사용자 관리') }}</router-link>{{ tr('에서, 관리자 조치 기록은') }} <router-link to="/admin/audit">{{ tr('감사 로그') }}</router-link>{{ tr('에서 봐요.') }}</p>
+      <p class="form-note policy-note">{{ tr('로그인 유지 시간처럼 바꿀 수 있는 값은 배포 설정(환경 변수)에서 바꾸고 다시 배포해요. 계정 역할은') }} <router-link class="inline-link" to="/admin">{{ tr('사용자 관리') }}</router-link>{{ tr('에서, 관리자 조치 기록은') }} <router-link class="inline-link" to="/admin/audit">{{ tr('감사 로그') }}</router-link>{{ tr('에서 봐요.') }}</p>
     </section>
   </div>
 </template>

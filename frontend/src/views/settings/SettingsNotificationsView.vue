@@ -136,7 +136,6 @@ function save() {
       </div>
 
       <p v-if="kakao.notice" class="badge warn" style="display: inline-block">{{ tr(kakao.notice) }}</p>
-      <p class="form-note">{{ tr('알림톡은 승인된 템플릿으로만 발송돼요. 실패하면 자동으로 문자(LMS)로 대체 발송됩니다.') }}</p>
     </div>
     <div class="section-label">
       {{ tr('카테고리별 알림') }} <span class="badge new">{{ tr('보충 반영 · SET-004-F03') }}</span>

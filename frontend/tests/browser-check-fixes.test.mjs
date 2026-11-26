@@ -1,4 +1,4 @@
-// 2026-11-26 전체 화면 점검에서 찾은 버그(BUG-007~BUG-011)와 개선(IMP-015~IMP-018, docs/quality/browser-test-2026-11-26.md)이 되돌아가지 않는지 검사한다.
+// 전체 화면 점검에서 찾은 버그·개선(2026-11-26 BUG-007~BUG-011·IMP-015~IMP-018, 2026-11-27 BUG-012~BUG-014·IMP-019~IMP-022)이 되돌아가지 않는지 검사한다.
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
@@ -117,4 +117,60 @@ test('IMP-018 점검 안내에 "공지 자세히 보기" 버튼이 없다', () =
   const source = read('views/system/MaintenanceView.vue')
   assert.doesNotMatch(source, /공지 자세히 보기/)
   assert.doesNotMatch(source, /useRouter|router\./)
+})
+
+test('BUG-012 문장 속 RouterLink는 .inline-link로 accent 색을 쓰고, 화면 카드는 글자색 토큰을 쓴다', () => {
+  const css = read('styles.css')
+  // 전역 규칙은 그대로 둔다. 넓히면 class=""인 탭·태그 링크까지 accent로 바뀐다
+  assert.match(css, /\na:not\(\[class\]\)\{color:var\(--color-accent\)/)
+  assert.match(css, /\.screen-card\{[^}]*color:var\(--color-foreground\)/)
+  assert.match(read('design-system/components.css'), /\.inline-link \{ color: var\(--color-accent\)/)
+  const links = [
+    ['components/DayRecords.vue', 2], ['views/admin/AdminSettingsView.vue', 2], ['components/LinkedRecords.vue', 2],
+    ['views/focus/FocusView.vue', 1], ['views/tasks/TaskDetailView.vue', 1], ['views/events/EventListView.vue', 1],
+  ]
+  for (const [file, n] of links) assert.equal([...read(file).matchAll(/<(?:RouterLink|router-link)[^>]*class="inline-link"/g)].length, n, file)
+})
+
+test('BUG-013 사용자·관리자 화면 맨 앞에 본문 바로가기가 있고 본문으로 초점을 옮긴다', () => {
+  for (const file of ['App.vue', 'AdminApp.vue']) {
+    const source = read(file)
+    assert.ok(source.indexOf('class="skip-link"') < source.indexOf('<aside'), file)
+    assert.match(source, /<main id="main-content" tabindex="-1"/, file)
+    assert.match(source, /const skipToMain = \(\) => document\.getElementById\('main-content'\)\?\.focus\(\)/, file)
+    assert.match(source, /href="#main-content"[^>]*@click\.prevent="skipToMain"/, file)
+  }
+  assert.match(read('styles.css'), /\.skip-link:focus\{transform:none\}/)
+  assert.equal(EN['본문 바로가기'], 'Skip to main content')
+})
+
+test('BUG-014 서버 인증 오류 문구가 영어 사전에 있다', () => {
+  for (const ko of ['이메일 또는 비밀번호가 올바르지 않습니다.', '이미 가입된 이메일입니다.', '로그인 시도가 너무 많아 잠시 후 다시 시도해주세요.', '비밀번호는 8~72자여야 합니다.', '접근 권한이 없습니다.']) assert.ok(ko in EN, ko)
+  assert.match(read('views/auth/LoginView.vue'), /\{\{ tr\(notice\) \}\}/)
+  assert.match(read('features/auth/views/SignupView.vue'), /\{\{ tr\(serverError\) \}\}/)
+})
+
+test('IMP-019 메모 카드에서 수정 창을 열고, 저장은 version을 담아 고치고 삭제는 확인 뒤 지운다', () => {
+  const source = read('views/memo/MemoInboxView.vue')
+  assert.match(source, /class="memo-open"[^>]*@click="openEdit\(m\)"/)
+  assert.match(source, /memoStore\.update\(editing\.value, \{ title: editDraft\.value\.title\.trim\(\), body: editDraft\.value\.body \}\)/)
+  assert.match(source, /window\.confirm\(tr\('‘\{title\}’ 메모를 삭제할까요\?'/)
+  assert.match(source, /memoStore\.remove\(editing\.value\)/)
+  assert.match(source, /<ConflictCompare v-if="conflict"/)
+  for (const key of ['메모 수정', '‘{title}’ 메모 수정', '‘{title}’ 메모를 삭제할까요?', '메모 저장']) assert.ok(key in EN, key)
+})
+
+test('IMP-021 관리자 버튼은 /api/auth/me의 역할로 정하고 실패하면 숨긴다', async () => {
+  const { checkAdminRole } = await import('../src/features/admin/adminClient.mjs')
+  const calls = []
+  const reply = (value) => async (path) => { calls.push(path); if (value instanceof Error) throw value; return value }
+  assert.equal(await checkAdminRole(reply({ role: 'ADMIN' }), true), true)
+  assert.equal(await checkAdminRole(reply({ role: 'USER' }), true), false)
+  assert.equal(await checkAdminRole(reply(Object.assign(new Error('x'), { status: 401 })), true), false)
+  assert.equal(await checkAdminRole(reply({ role: 'ADMIN' }), false), false)
+  assert.deepEqual(calls, ['/api/auth/me', '/api/auth/me', '/api/auth/me'])
+})
+
+test('IMP-022 알림 설정에 없는 LMS 대체 발송을 사실처럼 적지 않는다', () => {
+  assert.doesNotMatch(read('views/settings/SettingsNotificationsView.vue'), /LMS/)
 })

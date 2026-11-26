@@ -46,10 +46,10 @@ const others = computed(() => state.value.links.filter((link) => !(origin.value 
     <template v-else-if="state.status === 'ready'">
       <p v-if="origin">{{ tr('원본 {kind}', { kind: tr(KIND_LABEL[origin.kind]) }) }} ·
         <span v-if="origin.deleted">{{ origin.title }}</span>
-        <RouterLink v-else :to="linkRoute(origin)">{{ origin.title }}</RouterLink>
+        <RouterLink v-else class="inline-link" :to="linkRoute(origin)">{{ origin.title }}</RouterLink>
       </p>
       <ul v-if="others.length">
-        <li v-for="link in others" :key="link.kind + ':' + link.id">{{ tr(KIND_LABEL[link.kind]) }} · <RouterLink :to="linkRoute(link)">{{ link.title }}</RouterLink></li>
+        <li v-for="link in others" :key="link.kind + ':' + link.id">{{ tr(KIND_LABEL[link.kind]) }} · <RouterLink class="inline-link" :to="linkRoute(link)">{{ link.title }}</RouterLink></li>
       </ul>
       <p v-else-if="!origin" class="empty-state">{{ tr('아직 연결된 기록이 없어요. 할 일이나 일정에서 기록을 시작하면 여기에 보여요.') }}</p>
     </template>

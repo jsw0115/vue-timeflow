@@ -4,6 +4,7 @@
 /** 앱 공통 화면 문구. 키는 화면 코드가 쓰는 이름이다. */
 export const SHELL = {
   homeLink: { ko: 'Timebar Diary 오늘 화면으로', en: 'Timebar Diary, go to today' },
+  skipToContent: { ko: '본문 바로가기', en: 'Skip to main content' },
   dayMode: { ko: '하루 모드', en: 'Day mode' },
   chooseDayMode: { ko: '하루 모드 선택', en: 'Choose day mode' },
   chooseDayModeHelp: { ko: '하루를 보내는 방식을 선택하세요', en: 'Choose how you spend your day' },

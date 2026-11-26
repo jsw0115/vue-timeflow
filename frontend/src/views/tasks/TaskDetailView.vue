@@ -215,7 +215,7 @@ async function remove() {
         <button type="button" class="button-secondary" :disabled="!!slotError" :aria-busy="placing.state.status === 'saving' ? 'true' : undefined" @click="place">{{ placing.state.status === 'saving' ? tr('일정에 넣는 중') : tr('일정에 배치') }}</button>
         <button type="button" class="button-secondary" :aria-busy="recordStart.state.status === 'saving' ? 'true' : undefined" @click="startRecord">{{ recordStart.state.status === 'saving' ? tr('기록을 시작하는 중') : tr('이 할 일 기록 시작') }}</button>
       </div>
-      <p v-if="recordRunning" role="status">{{ tr('진행 중인 기록이 있어 새로 시작하지 않았어요.') }} <RouterLink to="/planner/daily">{{ tr('플래너에서 먼저 끝내기') }}</RouterLink></p>
+      <p v-if="recordRunning" role="status">{{ tr('진행 중인 기록이 있어 새로 시작하지 않았어요.') }} <RouterLink class="inline-link" to="/planner/daily">{{ tr('플래너에서 먼저 끝내기') }}</RouterLink></p>
       <p v-if="recordStart.state.status === 'failed'" class="input-field-help" data-state="error" role="status">{{ tr(recordStart.state.error?.message ?? '') }}</p>
       <LinkedRecords kind="task" :id="String(task.id)" :refresh-key="linkVersion" />
     </section>

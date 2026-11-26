@@ -405,7 +405,7 @@ watch(() => [route.query.id, route.query.occurrence, events.value.length], ([id,
     <SaveStatus :state="saving.state" :mode="eventMode" @retry="retryAction?.()" />
     <template v-if="eventMode === 'server' && active">
       <button type="button" class="button-secondary" style="margin-top: var(--space-lg)" :aria-busy="recordStart.state.status === 'saving' ? 'true' : undefined" @click="startRecord">{{ recordStart.state.status === 'saving' ? tr('기록을 시작하는 중') : tr('이 일정 기록 시작') }}</button>
-      <p v-if="recordRunning" role="status">{{ tr('진행 중인 기록이 있어 새로 시작하지 않았어요.') }} <RouterLink to="/planner/daily">{{ tr('플래너에서 먼저 끝내기') }}</RouterLink></p>
+      <p v-if="recordRunning" role="status">{{ tr('진행 중인 기록이 있어 새로 시작하지 않았어요.') }} <RouterLink class="inline-link" to="/planner/daily">{{ tr('플래너에서 먼저 끝내기') }}</RouterLink></p>
       <p v-if="recordStart.state.status === 'failed'" class="input-field-help" data-state="error" role="status">{{ tr(recordStart.state.error?.message ?? '') }}</p>
       <LinkedRecords kind="schedule" :id="String(active.id)" />
     </template>

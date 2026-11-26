@@ -115,7 +115,10 @@ test('사이드바는 커리어를 메인 다음 묶음으로 두고 기존 경�
   for (const path of ['/career', '/career/activities', '/career/applications', '/work/career', '/work/wbs', '/work/wiki', '/work']) assert.match(router, new RegExp(`path: '${path}'`))
   const app = read('frontend/src/App.vue')
   assert.match(app, /v-if="canOpenAdmin"[^>]*openAdmin\('\/admin'\)/)
-  assert.match(app, /adminAccess\.state === 'allowed'/)
+  // 버튼은 서버가 DB에서 읽은 내 역할(/api/auth/me)로 정한다(IMP-021). 콘솔은 들어갈 때 관리자 지표 API로 다시 확인한다
+  assert.match(app, /const canOpenAdmin = computed\(\(\) => adminButton\.visible\)/)
+  assert.match(read('frontend/src/features/admin/adminClient.mjs'), /request\('\/api\/auth\/me'\)\)\?\.role === 'ADMIN'/)
+  assert.match(read('frontend/src/AdminApp.vue'), /adminAccess\.state === 'allowed'/)
 })
 
 test('지원 달력은 월요일 시작 주로 만들고 마감·면접을 날짜 칸에 넣으며 끝난 지원을 표시한다', async () => {

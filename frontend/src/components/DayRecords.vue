@@ -45,8 +45,8 @@ const clock = (iso) => new Date(iso).toLocaleTimeString('ko-KR', { hour: '2-digi
   <section class="day-records" :aria-label="tr('이 날의 일정과 실제 기록')">
     <div class="section-label">{{ tr('이 날의 일정과 실제 기록') }}</div>
     <ul v-if="schedules.length || actuals.length">
-      <li v-for="o in schedules" :key="o.occurrenceKey">{{ tr('일정 ·') }} <span class="figure">{{ o.startTime }}</span> <RouterLink :to="{ path: '/events', query: { id: o.sourceId ?? o.id, occurrence: o.startDate } }">{{ o.title }}</RouterLink></li>
-      <li v-for="row in actuals" :key="row.id">{{ tr('실제 기록 ·') }} <span class="figure">{{ clock(row.startedAt) }}</span> <RouterLink :to="{ path: '/planner/daily', query: { date, recording: row.id } }">{{ row.title }}</RouterLink></li>
+      <li v-for="o in schedules" :key="o.occurrenceKey">{{ tr('일정 ·') }} <span class="figure">{{ o.startTime }}</span> <RouterLink class="inline-link" :to="{ path: '/events', query: { id: o.sourceId ?? o.id, occurrence: o.startDate } }">{{ o.title }}</RouterLink></li>
+      <li v-for="row in actuals" :key="row.id">{{ tr('실제 기록 ·') }} <span class="figure">{{ clock(row.startedAt) }}</span> <RouterLink class="inline-link" :to="{ path: '/planner/daily', query: { date, recording: row.id } }">{{ row.title }}</RouterLink></li>
     </ul>
     <p v-else-if="recordings.status !== 'loading'" class="empty-state">{{ tr('이 날 남긴 일정과 실제 기록이 아직 없어요. 일정을 만들거나 플래너에서 기록을 남기면 여기에 보여요.') }}</p>
     <p v-if="recordings.status === 'loading'" class="input-field-help" role="status">{{ tr('실제 기록을 불러오는 중이에요.') }}</p>

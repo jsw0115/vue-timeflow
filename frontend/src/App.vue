@@ -34,7 +34,7 @@ import { apiRequest } from './features/auth/apiRequest.js'
 import { themeState, THEMES, ACCENTS } from './store/theme'
 import { createThemeAccount, sameTheme } from './features/settings/themeAccount.mjs'
 import { unreadMentions as unreadPostMentions } from './store/tagging'
-import { adminAccess, refreshAdminAccess } from './features/admin/admin.js'
+import { adminButton, refreshAdminButton } from './features/admin/admin.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -53,6 +53,8 @@ provide('pageActionSlot', {
 // 표시 언어(PR-32 1단계): 사이드바·머리글 문구만 바꾸고 화면 본문은 한국어 그대로다. 바뀐 부분에만 lang을 붙인다
 const locale = computed(() => localeState.locale)
 const t = (key, vars) => shellText(key, locale.value, vars)
+// 본문 바로가기: 주소(해시 라우터 포함)를 건드리지 않고 본문 영역으로 초점만 옮긴다
+const skipToMain = () => document.getElementById('main-content')?.focus()
 // 본문까지 옮긴 화면에서만 문서 언어와 본문 문구(tr)를 바꾼다(대화 상자 포함). 나머지 화면은 본문이 한국어라 ko다
 watch(() => [locale.value, route.path], () => {
   const lang = documentLang(locale.value, route.path)
@@ -97,9 +99,9 @@ watch(() => session.userId, async (id) => {
     if (saved && session.userId === id && !sameTheme(saved, themeState)) Object.assign(themeState, saved)
   } catch { /* 이 브라우저 테마를 그대로 쓴다 */ }
 }, { immediate: true })
-// 관리자 콘솔 진입 버튼은 서버가 관리자 권한을 확인한 계정에만 보인다. 메뉴 숨김은 보안 통제가 아니며 관리자 API는 서버가 매 요청 검사한다(docs/design 03 §8-5, 09 §2)
-watch(() => session.userId, (id) => refreshAdminAccess(Boolean(id)), { immediate: true })
-const canOpenAdmin = computed(() => adminAccess.state === 'allowed')
+// 관리자 콘솔 진입 버튼은 서버가 DB에서 읽어 준 내 역할(/api/auth/me)이 관리자인 계정에만 보인다(IMP-021). 메뉴 숨김은 보안 통제가 아니며 관리자 API는 서버가 매 요청 검사하고, 콘솔은 들어갈 때 권한을 다시 확인한다(docs/design 03 §8-5, 09 §2)
+watch(() => session.userId, (id) => refreshAdminButton(id), { immediate: true })
+const canOpenAdmin = computed(() => adminButton.visible)
 function isNavActive(item) {
   if (item.path === '/planner') return ['/planner', '/planner/daily', '/planner/weekly', '/planner/monthly', '/planner/yearly'].includes(route.path)
   return route.path === item.path
@@ -168,6 +170,8 @@ watch(() => route.path, () => { mobileNav.value = false; workspaceOpen.value = f
 <template>
   <router-view v-if="isBare" />
   <div v-else class="app">
+    <!-- 본문 바로가기(BUG-013): 첫 Tab에서 보이고, 누르면 사이드바를 건너뛰어 본문으로 초점을 옮긴다. 해시 주소를 바꾸지 않는다 -->
+    <a class="skip-link" href="#main-content" :lang="locale" @click.prevent="skipToMain">{{ t('skipToContent') }}</a>
     <aside class="sidebar" :class="{ open: mobileNav }" :lang="locale">
       <router-link to="/" class="brand" :aria-label="t('homeLink')"><BrandMark class="brand-mark" label="" /><span class="brand-name">Timebar Diary</span></router-link>
       <div class="workspace-switcher" @keydown.esc.stop="workspaceOpen = false" @focusout="!$event.currentTarget.contains($event.relatedTarget) && (workspaceOpen = false)">
@@ -218,7 +222,7 @@ watch(() => route.path, () => { mobileNav.value = false; workspaceOpen.value = f
       <router-link v-else to="/auth/login" class="account"><i aria-hidden="true">?</i><span><b>{{ t('signIn') }}</b><small>{{ t('signInHelp') }}</small></span></router-link>
     </aside>
     <div v-if="mobileNav" class="scrim" @click="mobileNav = false"></div>
-    <main :class="{ 'chat-shell': isChat }">
+    <main id="main-content" tabindex="-1" :class="{ 'chat-shell': isChat }">
       <div v-if="isChat" class="chat-mobile-menu"><button :aria-label="t('openFullMenu')" @click="mobileNav = true"><AppIcon name="menu" /></button><span :lang="locale">{{ t('chatTitle') }}</span></div>
       <header v-else>
         <button class="hamburger" :aria-label="t('openMenu')" @click="mobileNav = true"><AppIcon name="menu" /></button>
