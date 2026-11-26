@@ -6,6 +6,7 @@ import { join } from 'node:path'
 import { EN } from '../src/features/i18n/dictionary.mjs'
 import { translate } from '../src/features/i18n/translate.mjs'
 import { TRANSLATED_PATHS, documentLang } from '../src/features/i18n/translatedRoutes.mjs'
+import { relativeLabelIn, relativeTimeIn } from '../src/features/notifications/notificationClient.mjs'
 
 const root = new URL('../src/', import.meta.url).pathname
 const files = (dir) => readdirSync(dir).flatMap((name) => { const p = join(dir, name); return statSync(p).isDirectory() ? files(p) : /\.(vue|js|mjs)$/.test(name) ? [p] : [] })
@@ -38,10 +39,11 @@ test('영어가 없으면 한국어 원문, 자리표시를 채운다. 본문까
   assert.equal(translate(7, 'en'), '7')
   assert.equal(translate('내 분류 {x}', 'en'), '내 분류 {x}')
   for (const path of TRANSLATED_PATHS) assert.equal(documentLang('en', path), 'en')
-  // 환경설정(12단계)·공유·커뮤니티(13단계)는 옮겼다. 아직 옮기지 않은 채팅 화면은 ko다
+  // 16단계에서 남은 화면까지 옮겼다. 라우터에 없는 경로만 ko다
   assert.equal(documentLang('en', '/settings/env'), 'en')
   assert.equal(documentLang('en', '/share/groups/7'), 'en')
-  assert.equal(documentLang('en', '/chat'), 'ko')
+  assert.equal(documentLang('en', '/chat'), 'en')
+  assert.equal(documentLang('en', '/없는-화면'), 'ko')
   assert.equal(documentLang('en', '/admin/audit'), 'en')
   assert.equal(documentLang('en', '/auth/login'), 'en')
   assert.equal(documentLang('ko', '/career'), 'ko')
@@ -195,4 +197,40 @@ test('로그인·가입·온보딩(PR-32 15단계)의 검사·서버 연결 문�
     assert.deepEqual(shown.filter((ko) => !(ko in EN)), [], file)
   }
   assert.ok('서버에 연결하지 못했습니다. 잠시 후 다시 시도해주세요.' in EN)
+})
+
+test('남은 화면(PR-32 16단계): 라우터의 모든 화면이 옮긴 목록에 있고, 타이머·화면 공유·채팅·주소록·앱 셸이 tr에 넘기는 값도 사전에 있다', () => {
+  const router = readFileSync(new URL('../src/router/index.js', import.meta.url), 'utf8')
+  const paths = [...new Set([...router.matchAll(/(?:path: |\[)'(\/[^']*)'/g)].map((m) => m[1]))]
+  assert.ok(paths.length > 80, String(paths.length))
+  assert.deepEqual(paths.filter((path) => documentLang('en', path.replace(/:[a-z]+\??/gi, '1')) !== 'en'), [])
+  const pick = /(?:\b(?:label|title|meta|kind|text|conflict|invalid|notFound|memo|task)\s*:\s*|error = |notice\.value = |return |throw new Error\(|fail\(|\? '' : |\? | : )'([^'\n]*[가-힣][^'\n]*)'/g
+  // 시연 대화·같이 집중의 사람 이름과 방 이름은 한국어 그대로 둔다
+  const demo = new Set(['지수', '서연', '민준', '목요일 회고 모임', '박민준', '이서연', '나'])
+  const files = ['features/recording/timer.mjs', 'store/mediaShare.js', 'features/chat/api/chatApi.js', 'features/chat/api/demoChatApi.js', 'features/chat/model/chatStore.js', 'store/migration.js', 'components/OutboxPanel.vue', 'views/focus/CoFocusView.vue', 'components/patterns/PatternChat.vue', 'components/patterns/PatternKanban.vue', 'features/career/portfolioLinks.mjs']
+  for (const file of files) {
+    const source = readFileSync(new URL('../src/' + file, import.meta.url), 'utf8').split('\n').filter((line) => !/^\s*(\/\/|\*|\/\*|<!--)/.test(line)).join('\n').replace(/\btr\('(?:\\'|[^'])*'/g, '')
+    const shown = [...new Set([...source.matchAll(pick)].map((m) => m[1]))].filter((ko) => !demo.has(ko))
+    assert.ok(shown.length > 0, file)
+    assert.deepEqual(shown.filter((ko) => !(ko in EN)), [], file)
+  }
+  for (const ko of ['정상', '검토 필요', '보류', '처리 완료', '업무', '공부', '건강', '가족', '자기계발', '인증/온보딩', '법적 고지', '알 수 없음', '메뉴·설정', '환경설정']) assert.ok(ko in EN, ko)
+})
+
+test('알림 시각은 사전 대신 Intl로 옮긴다("{n}분 전"은 사전에서 알림 몇 분 전이라는 다른 뜻이다)', () => {
+  assert.equal(EN['{n}분 전'], '{n} min before')
+  const now = Date.parse('2026-11-22T12:00:00Z')
+  assert.deepEqual(['방금', '30분 전', '2시간 전', '어제', '모르는 문구'].map((label) => relativeLabelIn(label, 'en')), ['now', '30 minutes ago', '2 hours ago', 'yesterday', '모르는 문구'])
+  assert.deepEqual([relativeTimeIn('2026-11-22T11:48:00Z', 'en', now), relativeTimeIn('2026-11-22T09:00:00Z', 'en', now), relativeTimeIn('2026-11-21T09:00:00Z', 'en', now), relativeTimeIn('잘못된 값', 'en', now)], ['12 minutes ago', '3 hours ago', 'yesterday', ''])
+  for (const file of ['views/home/NotificationsView.vue', 'components/SidePanel.vue']) {
+    const source = readFileSync(new URL('../src/' + file, import.meta.url), 'utf8')
+    assert.match(source, /relativeTimeIn\(n\.createdAt, bodyLocale\.value\) : relativeLabelIn\(n\.at, bodyLocale\.value\)/, file)
+  }
+})
+
+test('약관 본문은 한국어 원문이라 lang="ko"로 표시하고, 탭 이름은 저장값을 그대로 비교한다', () => {
+  const view = readFileSync(new URL('../src/views/legal/LegalViewerView.vue', import.meta.url), 'utf8')
+  assert.match(view, /class="legal-doc-body" lang="ko"/)
+  assert.match(view, /v-for="doc in DOCS" :key="doc" :class="\{ selected: tab === doc \}" @click="tab = doc">\{\{ tr\(doc\) \}\}/)
+  for (const doc of ['개인정보처리방침', '이용약관', '오픈소스 라이선스']) assert.ok(doc in EN, doc)
 })

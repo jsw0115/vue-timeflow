@@ -1,4 +1,5 @@
 <script setup>
+import { tr, bodyLocale } from '../../store/locale'
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -22,18 +23,17 @@ function close() {
         <div style="display: flex; align-items: center; gap: 12px">
           <span style="cursor: pointer" @click="router.back()">←</span>
           <div>
-            <p class="eyebrow" style="margin: 0">약관/정책 뷰어</p>
-            <h1 style="font-size: 1.0625rem; margin-top: 4px">{{ tab }}</h1>
+            <p class="eyebrow" style="margin: 0">{{ tr('약관/정책 뷰어') }}</p>
+            <h1 style="font-size: 1.0625rem; margin-top: 4px">{{ tr(tab) }}</h1>
           </div>
-          <small style="margin-left: auto; color: var(--color-muted)">v2.3 · 2026.06.01 시행</small>
+          <small style="margin-left: auto; color: var(--color-muted)">{{ tr('v2.3 · 2026.06.01 시행') }}</small>
         </div>
         <div class="filter" style="margin-top: 14px; width: fit-content">
-          <button :class="{ selected: tab === '개인정보처리방침' }" @click="tab = '개인정보처리방침'">개인정보처리방침</button>
-          <button :class="{ selected: tab === '이용약관' }" @click="tab = '이용약관'">이용약관</button>
-          <button :class="{ selected: tab === '오픈소스 라이선스' }" @click="tab = '오픈소스 라이선스'">오픈소스 라이선스</button>
+          <button v-for="doc in DOCS" :key="doc" :class="{ selected: tab === doc }" @click="tab = doc">{{ tr(doc) }}</button>
         </div>
       </div>
-      <div class="legal-doc-body">
+      <div class="legal-doc-body" lang="ko">
+        <p v-if="bodyLocale !== 'ko'" class="sample-label" :lang="bodyLocale">{{ tr('약관 본문은 한국어로만 제공해요.') }}</p>
         <h3>1. 수집하는 개인정보 항목</h3>
         <p>타임바 다이어리(이하 "회사")는 회원가입, 서비스 이용 과정에서 다음과 같은 정보를 수집합니다: 이메일, 닉네임, 프로필 사진(선택), 서비스 이용 기록, 접속 로그.</p>
         <h3>2. 개인정보의 수집 및 이용 목적</h3>
@@ -44,7 +44,7 @@ function close() {
         <p>2026.06.01 v2.3 — 커뮤니티 기능 관련 조항 추가 · 2026.01.15 v2.2 — 최초 시행</p>
       </div>
       <div style="padding: 20px 32px; border-top: 1px solid var(--color-hairline); background: var(--color-surface)">
-        <button class="primary" style="width: 100%" @click="close">확인했어요</button>
+        <button class="primary" style="width: 100%" @click="close">{{ tr('확인했어요') }}</button>
       </div>
     </div>
   </div>

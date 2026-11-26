@@ -1,5 +1,6 @@
 <script setup>
 // 링크로 여는 공개 포트폴리오(Q-22). 로그인 없이 보이고, 고른 항목만 글자로 보인다. 링크 공개는 검색 수집을 막는다.
+import { tr } from '../../store/locale'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { apiRequest } from '../../features/auth/apiRequest.js'
@@ -47,30 +48,30 @@ onBeforeUnmount(() => setNoIndex(false))
 
 <template>
   <main class="public-portfolio">
-    <h1>공개 포트폴리오</h1>
-    <p v-if="status === 'loading'" class="input-field-help" role="status">포트폴리오를 불러오는 중이에요.</p>
-    <div v-else-if="status === 'missing'" class="empty-state" role="status"><p>이 링크는 닫혔거나 기간이 지났어요. 링크를 보낸 사람에게 새 링크를 받아 주세요.</p></div>
-    <div v-else-if="status === 'error'" class="empty-state" role="alert"><p>포트폴리오를 불러오지 못했어요. 잠시 뒤 다시 시도해 주세요.</p><button type="button" class="button-secondary" @click="load">다시 시도</button></div>
+    <h1>{{ tr('공개 포트폴리오') }}</h1>
+    <p v-if="status === 'loading'" class="input-field-help" role="status">{{ tr('포트폴리오를 불러오는 중이에요.') }}</p>
+    <div v-else-if="status === 'missing'" class="empty-state" role="status"><p>{{ tr('이 링크는 닫혔거나 기간이 지났어요. 링크를 보낸 사람에게 새 링크를 받아 주세요.') }}</p></div>
+    <div v-else-if="status === 'error'" class="empty-state" role="alert"><p>{{ tr('포트폴리오를 불러오지 못했어요. 잠시 뒤 다시 시도해 주세요.') }}</p><button type="button" class="button-secondary" @click="load">{{ tr('다시 시도') }}</button></div>
     <form v-else-if="locked" class="card public-portfolio-lock" @submit.prevent="unlock">
-      <p>이 포트폴리오는 비밀번호로 보호돼 있어요. 링크를 보낸 사람에게 받은 비밀번호를 넣어 주세요.</p>
-      <label>비밀번호<input v-model="password" type="password" autocomplete="current-password" maxlength="100" :aria-invalid="unlockMessage ? 'true' : undefined" aria-describedby="public-portfolio-lock-help" /></label>
-      <p id="public-portfolio-lock-help" class="input-field-help" :data-state="unlockMessage ? 'error' : undefined" :role="unlockMessage ? 'alert' : undefined">{{ unlockMessage || '열 번 틀리면 이 링크가 잠겨요.' }}</p>
-      <button type="submit" class="primary" :disabled="!password || unlocking" :aria-busy="unlocking ? 'true' : undefined">{{ unlocking ? '확인하는 중' : '열기' }}</button>
+      <p>{{ tr('이 포트폴리오는 비밀번호로 보호돼 있어요. 링크를 보낸 사람에게 받은 비밀번호를 넣어 주세요.') }}</p>
+      <label>{{ tr('비밀번호') }}<input v-model="password" type="password" autocomplete="current-password" maxlength="100" :aria-invalid="unlockMessage ? 'true' : undefined" aria-describedby="public-portfolio-lock-help" /></label>
+      <p id="public-portfolio-lock-help" class="input-field-help" :data-state="unlockMessage ? 'error' : undefined" :role="unlockMessage ? 'alert' : undefined">{{ unlockMessage ? tr(unlockMessage) : tr('열 번 틀리면 이 링크가 잠겨요.') }}</p>
+      <button type="submit" class="primary" :disabled="!password || unlocking" :aria-busy="unlocking ? 'true' : undefined">{{ unlocking ? tr('확인하는 중') : tr('열기') }}</button>
     </form>
     <template v-else>
       <article v-for="(item, index) in items" :key="index" class="card public-portfolio-item">
         <h2>{{ item.title }}</h2>
-        <p v-if="item.kind" class="tag">{{ item.kind }}</p>
+        <p v-if="item.kind" class="tag">{{ tr(item.kind) }}</p>
         <!-- 구성 칸과 결과물 링크(PR-26). 서버가 공개 필드만 보낸다 -->
         <dl v-if="filledSections(item).length" class="public-portfolio-sections">
-          <template v-for="sec in filledSections(item)" :key="sec.key"><dt>{{ sec.label }}</dt><dd class="public-portfolio-body">{{ sec.value }}</dd></template>
+          <template v-for="sec in filledSections(item)" :key="sec.key"><dt>{{ tr(sec.label) }}</dt><dd class="public-portfolio-body">{{ sec.value }}</dd></template>
         </dl>
         <div v-if="safeLinks(item).length" class="public-portfolio-links">
-          <h3>결과물</h3>
+          <h3>{{ tr('결과물') }}</h3>
           <ul><li v-for="link in safeLinks(item)" :key="link"><a :href="link" target="_blank" rel="noopener noreferrer nofollow">{{ link }}</a></li></ul>
         </div>
       </article>
-      <p v-if="!items.length" class="empty-state">공개된 항목이 없어요. 링크를 보낸 사람에게 다시 확인해 주세요.</p>
+      <p v-if="!items.length" class="empty-state">{{ tr('공개된 항목이 없어요. 링크를 보낸 사람에게 다시 확인해 주세요.') }}</p>
     </template>
   </main>
 </template>

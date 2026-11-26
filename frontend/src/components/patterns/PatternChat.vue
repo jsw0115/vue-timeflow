@@ -1,4 +1,5 @@
 <script setup>
+import { tr } from '../../store/locale'
 import { ref, computed } from 'vue'
 import { items as buildItems } from '../../data/mock'
 
@@ -26,11 +27,11 @@ const messages = [
     <section class="chat-room">
       <div class="chat-room-head"><b>{{ active?.person }}</b><small>{{ screen.name }}</small></div>
       <div class="chat-bubbles">
-        <div class="bubble" v-for="(m, i) in messages" :key="i" :class="{ mine: m.mine }">{{ m.text }}</div>
+        <div class="bubble" v-for="(m, i) in messages" :key="i" :class="{ mine: m.mine }">{{ tr(m.text) }}</div>
       </div>
       <form class="chat-input" @submit.prevent>
-        <input placeholder="메시지를 입력하세요" />
-        <button class="primary" type="submit">전송</button>
+        <input :placeholder="tr('메시지를 입력하세요')" />
+        <button class="primary" type="submit">{{ tr('전송') }}</button>
       </form>
     </section>
   </div>

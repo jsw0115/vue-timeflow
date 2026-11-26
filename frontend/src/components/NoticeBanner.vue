@@ -2,6 +2,7 @@
 // 로그인한 사용자에게 지금 노출 중인 공지를 보인다. 띠 공지는 헤더 아래, 팝업 공지는 한 번 뜨는 창이다(PR-10 7-2).
 // 닫은 공지는 이 브라우저에만 기억한다(공지를 고치면 다시 보인다). 서버 공지를 불러오지 못하면 아무것도 보이지 않는다.
 import { computed, ref, watch } from 'vue'
+import { tr } from '../store/locale'
 import Modal from './Modal.vue'
 import { session } from '../features/auth/session.js'
 import { apiRequest } from '../features/auth/apiRequest.js'
@@ -33,16 +34,16 @@ const popup = computed(() => open.value.find((notice) => notice.popup === true) 
 </script>
 
 <template>
-  <section v-if="banners.length" class="notice-strip" aria-label="공지">
+  <section v-if="banners.length" class="notice-strip" :aria-label="tr('공지')">
     <article v-for="notice in banners" :key="notice.id" class="notice-item">
       <div class="notice-copy"><b>{{ notice.title }}</b><p>{{ notice.body }}</p></div>
-      <button type="button" class="button-text" :aria-label="notice.title + ' 공지 닫기'" @click="dismiss(notice)">닫기</button>
+      <button type="button" class="button-text" :aria-label="tr('{name} 공지 닫기', { name: notice.title })" @click="dismiss(notice)">{{ tr('닫기') }}</button>
     </article>
   </section>
   <Modal v-if="popup" :title="popup.title" @close="dismiss(popup)">
     <p class="notice-popup-body">{{ popup.body }}</p>
     <template #footer>
-      <button type="button" class="primary" @click="dismiss(popup)">확인</button>
+      <button type="button" class="primary" @click="dismiss(popup)">{{ tr('확인') }}</button>
     </template>
   </Modal>
 </template>

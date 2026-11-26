@@ -1,4 +1,5 @@
 <script setup>
+import { tr } from '../../../store/locale'
 import { computed, nextTick, ref, useId, watch } from 'vue'
 const props = defineProps({ modelValue: { type: String, default: '' }, disabled: Boolean, members: { type: Array, default: () => [] }, mentions: { type: Array, default: () => [] } })
 const emit = defineEmits(['update:modelValue', 'send', 'typing', 'mention', 'unmention'])
@@ -46,14 +47,14 @@ async function pick(member) {
 </script>
 <template>
   <form class="chat-compose" @submit.prevent="emit('send')">
-    <div v-if="showMentions" :id="id + '-list'" class="chat-mention-picker" role="listbox" aria-label="멘션할 참여자"><button v-for="(member, index) in candidates" :id="id + '-option-' + index" :key="member.userId" type="button" role="option" :aria-selected="index === active" @pointerdown.prevent @click="pick(member)">@{{ member.nickname }}</button><span v-if="!candidates.length">일치하는 참여자가 없어요.</span></div>
-    <div v-if="mentions.length" class="chat-mention-chips"><button v-for="id in mentions" :key="id" type="button" :aria-label="`${members.find(member => member.userId === id)?.nickname || '참여자'} 멘션 취소`" @click="emit('unmention', id)">@{{ members.find(member => member.userId === id)?.nickname || '참여자' }} ×</button></div>
-    <label class="chat-sr" for="chat-message">메시지</label>
-    <textarea ref="textarea" id="chat-message" :value="modelValue" rows="2" maxlength="4000" :disabled="disabled" placeholder="메시지 입력 · @로 참여자 멘션" :aria-controls="showMentions ? id + '-list' : undefined" :aria-activedescendant="showMentions && candidates.length ? id + '-option-' + active : undefined" @input="input" @click="caret = $event.target.selectionStart; dismissed = false" @keyup="caret = $event.target.selectionStart" @focus="focused = true" @blur="focused = false" @keydown="keydown" @compositionstart="composing = true" @compositionend="composing = false" />
+    <div v-if="showMentions" :id="id + '-list'" class="chat-mention-picker" role="listbox" :aria-label="tr('멘션할 참여자')"><button v-for="(member, index) in candidates" :id="id + '-option-' + index" :key="member.userId" type="button" role="option" :aria-selected="index === active" @pointerdown.prevent @click="pick(member)">@{{ member.nickname }}</button><span v-if="!candidates.length">{{ tr('일치하는 참여자가 없어요.') }}</span></div>
+    <div v-if="mentions.length" class="chat-mention-chips"><button v-for="id in mentions" :key="id" type="button" :aria-label="tr('{name} 멘션 취소', { name: members.find(member => member.userId === id)?.nickname || tr('참여자') })" @click="emit('unmention', id)">@{{ members.find(member => member.userId === id)?.nickname || tr('참여자') }} ×</button></div>
+    <label class="chat-sr" for="chat-message">{{ tr('메시지') }}</label>
+    <textarea ref="textarea" id="chat-message" :value="modelValue" rows="2" maxlength="4000" :disabled="disabled" :placeholder="tr('메시지 입력 · @로 참여자 멘션')" :aria-controls="showMentions ? id + '-list' : undefined" :aria-activedescendant="showMentions && candidates.length ? id + '-option-' + active : undefined" @input="input" @click="caret = $event.target.selectionStart; dismissed = false" @keyup="caret = $event.target.selectionStart" @focus="focused = true" @blur="focused = false" @keydown="keydown" @compositionstart="composing = true" @compositionend="composing = false" />
     <div class="chat-compose-foot">
-      <button class="chat-compose-mention" type="button" aria-label="참여자 멘션" :aria-expanded="!!showMentions" :disabled="disabled" @click="manual = !manual">@</button>
-      <small>Enter 전송 · Shift+Enter 줄바꿈 <span v-if="modelValue.length > 3500">· {{ modelValue.length.toLocaleString() }}/4,000</span></small>
-      <button class="chat-primary" type="submit" aria-label="메시지 보내기" :disabled="disabled || !modelValue.trim()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m12 19 0-14m-6 6 6-6 6 6"/></svg></button>
+      <button class="chat-compose-mention" type="button" :aria-label="tr('참여자 멘션')" :aria-expanded="!!showMentions" :disabled="disabled" @click="manual = !manual">@</button>
+      <small>{{ tr('Enter 전송 · Shift+Enter 줄바꿈') }} <span v-if="modelValue.length > 3500">· {{ modelValue.length.toLocaleString() }}/4,000</span></small>
+      <button class="chat-primary" type="submit" :aria-label="tr('메시지 보내기')" :disabled="disabled || !modelValue.trim()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m12 19 0-14m-6 6 6-6 6 6"/></svg></button>
     </div>
   </form>
 </template>

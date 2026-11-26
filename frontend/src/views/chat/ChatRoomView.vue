@@ -1,4 +1,5 @@
 <script setup>
+import { tr } from '../../store/locale'
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -12,7 +13,7 @@ onMounted(() => router.replace('/chat'))
 
 <template>
   <section class="card">
-    <p>채팅 화면으로 이동하고 있어요.</p>
-    <button class="primary" @click="router.replace('/chat')">채팅으로 가기</button>
+    <p>{{ tr('채팅 화면으로 이동하고 있어요.') }}</p>
+    <button class="primary" @click="router.replace('/chat')">{{ tr('채팅으로 가기') }}</button>
   </section>
 </template>

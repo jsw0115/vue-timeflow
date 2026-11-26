@@ -1,10 +1,10 @@
 <script setup>
-import { tr } from '../../store/locale'
+import { tr, bodyLocale } from '../../store/locale'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import ListFilterBar from '../../components/ListFilterBar.vue'
 import { notifications, unreadNotifications, markRead, markAllRead, removeNotification, loadNotifications, notificationState, actOnNotification } from '../../store/people'
-import { canAct } from '../../features/notifications/notificationClient.mjs'
+import { canAct, relativeLabelIn, relativeTimeIn } from '../../features/notifications/notificationClient.mjs'
 import { session } from '../../features/auth/session.js'
 import PageActions from '../../components/PageActions.vue'
 
@@ -47,6 +47,8 @@ function open(n) {
   markRead(n)
   router.push(n.link)
 }
+// 알림 시각: 한국어는 저장한 문구, 다른 언어는 서버 시각으로 다시 만들고 시연 알림은 저장한 문구를 바꾼다('{n}분 전'은 사전에서 다른 뜻이다)
+const atText = (n) => (bodyLocale.value === 'ko' ? n.at : n.createdAt ? relativeTimeIn(n.createdAt, bodyLocale.value) : relativeLabelIn(n.at, bodyLocale.value))
 </script>
 
 <template>
@@ -72,7 +74,7 @@ function open(n) {
     <div class="notif-row" v-for="n in visible" :key="n.id" :class="{ unread: !n.read }">
       <button class="notif-main" @click="open(n)">
         <span class="tag">{{ tr(n.kind) }}</span>
-        <span><b>{{ n.title }}</b><small>{{ n.at }}</small></span>
+        <span><b>{{ n.title }}</b><small>{{ atText(n) }}</small></span>
       </button>
       <template v-if="canAct(n)">
         <button type="button" class="button-secondary" :aria-label="tr('{name} 할 일 완료', { name: n.title })" @click="actOnNotification(n, 'complete')">{{ tr('완료') }}</button>

@@ -1,4 +1,5 @@
 <script setup>
+import { tr, bodyLocale } from '../store/locale'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { SETTINGS_SECTIONS } from '../router/settingsSections'
@@ -50,25 +51,25 @@ async function openHit(hit) {
 </script>
 <template>
   <div class="unified-search-panel">
-    <label class="unified-search-input"><span>{{ roomId ? '이 대화 검색' : '통합 검색' }}</span><input v-model="query" type="search" maxlength="100" autofocus :placeholder="chatOnly ? '모든 대화의 메시지 검색' : '메뉴, 글, 메모, 일정, 채팅 메시지 검색'" /></label>
-    <label v-if="!chatOnly" class="unified-search-scope">검색 범위<select v-model="scope"><option v-for="kind in scopes" :key="kind">{{ kind }}</option></select></label>
-    <p v-if="!query.trim()" class="form-note">{{ chatOnly ? '이전 메시지도 함께 찾아요.' : '제목과 본문, 태그와 멘션을 함께 찾아요.' }}</p>
-    <p v-if="localBusy || chatBusy" class="form-note" role="status">검색 중…</p>
-    <p v-if="includeChat && indexing" class="form-note" role="status">이전 메시지의 검색 색인을 준비하고 있어요. <button type="button" @click="searchChat()">다시 검색</button></p>
-    <p v-if="error" class="form-note" role="alert">{{ error }} <button type="button" @click="searchChat()">다시 시도</button></p>
+    <label class="unified-search-input"><span>{{ roomId ? tr('이 대화 검색') : tr('통합 검색') }}</span><input v-model="query" type="search" maxlength="100" autofocus :placeholder="chatOnly ? tr('모든 대화의 메시지 검색') : tr('메뉴, 글, 메모, 일정, 채팅 메시지 검색')" /></label>
+    <label v-if="!chatOnly" class="unified-search-scope">{{ tr('검색 범위') }}<select v-model="scope"><option v-for="kind in scopes" :key="kind" :value="kind">{{ tr(kind) }}</option></select></label>
+    <p v-if="!query.trim()" class="form-note">{{ chatOnly ? tr('이전 메시지도 함께 찾아요.') : tr('제목과 본문, 태그와 멘션을 함께 찾아요.') }}</p>
+    <p v-if="localBusy || chatBusy" class="form-note" role="status">{{ tr('검색 중…') }}</p>
+    <p v-if="includeChat && indexing" class="form-note" role="status">{{ tr('이전 메시지의 검색 색인을 준비하고 있어요.') }} <button type="button" @click="searchChat()">{{ tr('다시 검색') }}</button></p>
+    <p v-if="error" class="form-note" role="alert">{{ tr(error) }} <button type="button" @click="searchChat()">{{ tr('다시 시도') }}</button></p>
     <div class="unified-search-hits">
       <template v-if="!chatOnly && scope !== '채팅'">
-        <p v-if="result.total" class="form-note">내 기록 {{ result.total.toLocaleString() }}개 · {{ offset + 1 }}–{{ offset + result.items.length }}</p>
-        <button v-for="entry in result.items" :key="entry.id" type="button" class="unified-search-hit" @click="go(entry)"><span class="tag">{{ entry.kind }}</span><span><b>{{ entry.title }}</b><small>{{ entry.meta }}</small><span>{{ entry.body?.slice(0, 140) }}</span></span></button>
-        <div v-if="result.total > 40" class="unified-search-pagination"><button :disabled="offset === 0" @click="offset -= 40; searchLocal()">이전</button><button :disabled="offset + 40 >= result.total" @click="offset += 40; searchLocal()">다음</button></div>
+        <p v-if="result.total" class="form-note">{{ tr('내 기록 {n}개', { n: result.total.toLocaleString() }) }} · {{ offset + 1 }}–{{ offset + result.items.length }}</p>
+        <button v-for="entry in result.items" :key="entry.id" type="button" class="unified-search-hit" @click="go(entry)"><span class="tag">{{ tr(entry.kind) }}</span><span><b>{{ tr(entry.title) }}</b><small>{{ tr(entry.meta) }}</small><span>{{ entry.body?.slice(0, 140) }}</span></span></button>
+        <div v-if="result.total > 40" class="unified-search-pagination"><button :disabled="offset === 0" @click="offset -= 40; searchLocal()">{{ tr('이전') }}</button><button :disabled="offset + 40 >= result.total" @click="offset += 40; searchLocal()">{{ tr('다음') }}</button></div>
       </template>
       <template v-if="includeChat">
-        <p v-if="chatHits.length" class="form-note">채팅 {{ chatHits.length }}개{{ chatCursor ? ' 이상' : '' }}</p>
-        <button v-for="hit in chatHits" :key="hit.message.id" type="button" class="unified-search-hit" @click="openHit(hit)"><span class="tag">채팅</span><span><b>{{ hit.roomName }} · {{ hit.message.senderName }}</b><small>{{ new Date(hit.message.createdAt).toLocaleString('ko-KR') }}</small><span>{{ hit.message.body }}</span></span></button>
-        <button v-if="chatCursor" type="button" :disabled="chatBusy" class="review" @click="searchChat(true)">이전 검색 결과 더 보기</button>
+        <p v-if="chatHits.length" class="form-note">{{ chatCursor ? tr('채팅 {n}개 이상', { n: chatHits.length }) : tr('채팅 {n}개', { n: chatHits.length }) }}</p>
+        <button v-for="hit in chatHits" :key="hit.message.id" type="button" class="unified-search-hit" @click="openHit(hit)"><span class="tag">{{ tr('채팅') }}</span><span><b>{{ hit.roomName }} · {{ hit.message.senderName }}</b><small>{{ new Date(hit.message.createdAt).toLocaleString(bodyLocale === 'ko' ? 'ko-KR' : bodyLocale) }}</small><span>{{ hit.message.body }}</span></span></button>
+        <button v-if="chatCursor" type="button" :disabled="chatBusy" class="review" @click="searchChat(true)">{{ tr('이전 검색 결과 더 보기') }}</button>
       </template>
     </div>
-    <p v-if="query.trim() && !localBusy && !chatBusy && !error && !indexing && !chatHits.length && (chatOnly || !result.total)" class="empty-state" role="status">검색 결과가 없어요. 다른 낱말이나 더 짧은 검색어로 찾아보세요.</p>
+    <p v-if="query.trim() && !localBusy && !chatBusy && !error && !indexing && !chatHits.length && (chatOnly || !result.total)" class="empty-state" role="status">{{ tr('검색 결과가 없어요. 다른 낱말이나 더 짧은 검색어로 찾아보세요.') }}</p>
   </div>
 </template>
 <style>

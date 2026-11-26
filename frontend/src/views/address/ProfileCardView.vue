@@ -1,4 +1,5 @@
 <script setup>
+import { tr } from '../../store/locale'
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { openProfile } from '../../store/people'
@@ -16,7 +17,7 @@ onMounted(() => {
 
 <template>
   <section class="card">
-    <p>주소록으로 이동하고 있어요. 사람 이름 옆 ⓘ 를 누르면 언제든 프로필을 볼 수 있어요.</p>
-    <button class="primary" @click="router.replace('/address')">주소록으로 가기</button>
+    <p>{{ tr('주소록으로 이동하고 있어요. 사람 이름 옆 ⓘ 를 누르면 언제든 프로필을 볼 수 있어요.') }}</p>
+    <button class="primary" @click="router.replace('/address')">{{ tr('주소록으로 가기') }}</button>
   </section>
 </template>

@@ -1,8 +1,12 @@
 <script setup>
+import { tr, bodyLocale } from '../../store/locale'
+import { formatDate } from '../../features/i18n/locale.mjs'
 import { color } from '../../data/mock'
 
 const props = defineProps({ screen: { type: Object, required: true } })
 const days = ['월', '화', '수', '목', '금', '토', '일']
+// 월요일부터 시작한다. 2024-01-08이 월요일이다
+const dayName = (i) => (bodyLocale.value === 'ko' ? days[i] : formatDate(new Date(2024, 0, 8 + i), bodyLocale.value, { weekday: 'short' }))
 const hours = ['06', '09', '12', '15', '18', '21']
 
 function blocksFor(day) {
@@ -15,12 +19,12 @@ function blocksFor(day) {
 </script>
 
 <template>
-  <div class="toolbar"><b>이번 주</b><span></span><button class="selected">주간</button><button>월간</button></div>
+  <div class="toolbar"><b>{{ tr('이번 주') }}</b><span></span><button class="selected">{{ tr('주간') }}</button><button>{{ tr('월간') }}</button></div>
   <section class="card">
     <div class="timetable">
       <div class="hours tt-hours"><small v-for="h in hours" :key="h">{{ h }}:00</small></div>
-      <div class="tt-day" v-for="d in days" :key="d">
-        <small>{{ d }}</small>
+      <div class="tt-day" v-for="(d, di) in days" :key="d">
+        <small>{{ dayName(di) }}</small>
         <div class="grid tt-grid">
           <div class="block" v-for="(b, i) in blocksFor(d)" :key="i" :class="b.color" :style="{ top: b.top + '%', height: b.height + '%' }"></div>
         </div>

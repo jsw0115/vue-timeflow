@@ -1,4 +1,6 @@
 <script setup>
+import { tr, bodyLocale } from '../../store/locale'
+import { formatDate } from '../../features/i18n/locale.mjs'
 import { computed } from 'vue'
 import { percent } from '../../data/mock'
 
@@ -17,7 +19,8 @@ function grid(n, offset = 0) {
 
 const months = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월']
 const monthCells = grid(35)
-const yearCells = months.map((m, i) => ({ label: m, cells: grid(28, i * 40) }))
+const yearCells = months.map((m, i) => ({ label: m, index: i, cells: grid(28, i * 40) }))
+const monthName = (m) => (bodyLocale.value === 'ko' ? m.label : formatDate(new Date(2024, m.index, 1), bodyLocale.value, { month: 'short' }))
 const streakCells = grid(42)
 </script>
 
@@ -25,13 +28,13 @@ const streakCells = grid(42)
   <div class="heatmap-pattern card">
     <div class="head">
       <div><p class="eyebrow">{{ screen.id }}</p><h3>{{ screen.name }}</h3></div>
-      <div class="legend"><span>낮음</span><i v-for="n in 4" :key="n" :style="{ opacity: n * 0.22 + 0.15 }"></i><span>높음</span></div>
+      <div class="legend"><span>{{ tr('낮음') }}</span><i v-for="n in 4" :key="n" :style="{ opacity: n * 0.22 + 0.15 }"></i><span>{{ tr('높음') }}</span></div>
     </div>
 
     <template v-if="variant === 'year'">
       <div class="year-heatmap">
         <div class="year-month" v-for="m in yearCells" :key="m.label">
-          <small>{{ m.label }}</small>
+          <small>{{ monthName(m) }}</small>
           <div class="heat-cells mini">
             <i v-for="(v, i) in m.cells" :key="i" :style="{ opacity: v / 100 }"></i>
           </div>
@@ -43,7 +46,7 @@ const streakCells = grid(42)
       <div class="heat-cells streak">
         <i v-for="(v, i) in streakCells" :key="i" :class="{ done: v > 40 }"></i>
       </div>
-      <p>최근 42일 중 {{ streakCells.filter((v) => v > 40).length }}일 수행 · 연속 {{ Math.max(...streakCells.map((v,i)=> v>40? i:0)) % 7 + 1 }}일 유지</p>
+      <p>{{ tr('최근 42일 중 {n}일 수행 · 연속 {streak}일 유지', { n: streakCells.filter((v) => v > 40).length, streak: Math.max(...streakCells.map((v,i)=> v>40? i:0)) % 7 + 1 }) }}</p>
     </template>
 
     <template v-else-if="variant === 'simple'">

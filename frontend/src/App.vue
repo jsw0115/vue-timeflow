@@ -63,7 +63,7 @@ const todayLabel = computed(() => formatDate(new Date(), locale.value))
 const currentNav = computed(() => navGroups.flatMap((group) => group.items).find((item) => item.path === route.path))
 const modeName = (mode) => modeText(mode, locale.value, modeMeta(mode)).name
 const pageName = computed(() => {
-  if (route.name === '화면 상세') return route.params.id ? `${route.params.id} 화면 미리보기` : '화면 상세'
+  if (route.name === '화면 상세') return route.params.id ? tr('{id} 화면 미리보기', { id: route.params.id }) : tr('화면 상세')
   if (route.name === '홈') return t('today')
   if (route.path.startsWith('/settings')) return t('settings')
   if (currentNav.value) return navName(currentNav.value, locale.value)
@@ -85,7 +85,7 @@ const pageGroupText = computed(() => groupLabel(pageGroup.value, locale.value))
 // 머리글은 메뉴에 있는 화면·홈·환경설정만 옮긴다. 상세 화면 제목은 한국어 그대로라 그때는 lang을 붙이지 않는다
 const headingLang = computed(() => (locale.value !== 'ko' && (currentNav.value || route.name === '홈' || route.path.startsWith('/settings')) ? locale.value : undefined))
 // 사이드바 계정 영역은 로그인한 계정만 보인다. 로그아웃이면 로그인 안내다(시연 계정을 실제 계정처럼 보이지 않는다).
-const accountName = computed(() => session.nickname || session.email || '내 계정')
+const accountName = computed(() => session.nickname || session.email || tr('내 계정'))
 const accountInitial = computed(() => (accountName.value || '나').trim().slice(0, 1).toUpperCase())
 
 // 계정에 저장한 화면 테마가 있으면 로그인할 때 그 테마를 쓴다(다른 기기에서 적용한 테마). 저장한 적이 없거나 서버에 닿지 못하면 이 브라우저 테마를 그대로 둔다.

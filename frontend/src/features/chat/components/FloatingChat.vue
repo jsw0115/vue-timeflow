@@ -1,4 +1,5 @@
 <script setup>
+import { tr } from '../../../store/locale'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import ChatWorkspace from '../views/ChatWorkspace.vue'
@@ -63,11 +64,11 @@ onBeforeUnmount(() => window.removeEventListener('resize', resize))
 
 <template>
   <Teleport to="body">
-    <section v-if="loaded" v-show="open" id="floating-chat" ref="panel" class="floating-chat" role="dialog" aria-label="채팅" tabindex="-1" @keydown.esc.stop="close">
-      <div class="floating-chat-bar"><span>Timebar Diary · 대화</span><div><button @click="reset">버튼 위치 초기화</button><button aria-label="채팅 최소화" @click="close">−</button></div></div>
+    <section v-if="loaded" v-show="open" id="floating-chat" ref="panel" class="floating-chat" role="dialog" :aria-label="tr('채팅')" tabindex="-1" @keydown.esc.stop="close">
+      <div class="floating-chat-bar"><span>{{ tr('Timebar Diary · 대화') }}</span><div><button @click="reset">{{ tr('버튼 위치 초기화') }}</button><button :aria-label="tr('채팅 최소화')" @click="close">−</button></div></div>
       <ChatWorkspace embedded :active="open" />
     </section>
-    <button ref="launcher" class="floating-chat-launcher" :style="buttonStyle" :aria-expanded="open" aria-controls="floating-chat" aria-label="채팅 열기 · 드래그 또는 방향키로 위치 이동" title="채팅 · 끌어서 위치를 바꿀 수 있어요" @pointerdown="start" @pointermove="move" @pointerup="end" @pointercancel="end" @lostpointercapture="end" @keydown="keyboard" @click="toggle">
+    <button ref="launcher" class="floating-chat-launcher" :style="buttonStyle" :aria-expanded="open" aria-controls="floating-chat" :aria-label="tr('채팅 열기 · 드래그 또는 방향키로 위치 이동')" :title="tr('채팅 · 끌어서 위치를 바꿀 수 있어요')" @pointerdown="start" @pointermove="move" @pointerup="end" @pointercancel="end" @lostpointercapture="end" @keydown="keyboard" @click="toggle">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M20 11.5a8 8 0 0 1-8 8H5l-3 2v-10a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8Z"/><path d="M7 9h8M7 13h5"/></svg>
       <span v-if="unreadChats" class="floating-chat-badge">{{ unreadChats > 99 ? '99+' : unreadChats }}</span>
     </button>
