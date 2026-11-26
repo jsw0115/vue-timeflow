@@ -90,7 +90,7 @@ function save() {
 
     <!-- 표시 언어(PR-32 1단계). 저장이 끝난 뒤에만 바꾸고, 기록 내용은 바꾸지 않는다 -->
     <div class="section-label" style="margin-top: 22px">{{ tr('표시 언어') }}</div>
-    <p class="form-note" style="margin-top: 0">{{ tr('영어를 고르면 메뉴와 대부분의 화면 본문이 영어로 바뀌어요. 채팅·관리자·로그인 등 일부 화면 본문, 내가 쓴 기록, 내보내는 문서는 그대로예요.') }}</p>
+    <p class="form-note" style="margin-top: 0">{{ tr('영어를 고르면 메뉴와 대부분의 화면 본문이 영어로 바뀌어요. 채팅·로그인 등 일부 화면 본문, 내가 쓴 기록, 내보내는 문서는 그대로예요.') }}</p>
     <fieldset class="locale-picker">
       <legend class="sr-only">{{ tr('표시 언어') }}</legend>
       <label v-for="l in LOCALES" :key="l.id" class="locale-option" :class="{ selected: localeState.locale === l.id }" :lang="l.id">

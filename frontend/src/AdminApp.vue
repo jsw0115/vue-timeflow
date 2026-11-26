@@ -8,6 +8,8 @@ import { NAV_ICONS } from './components/icons/iconPaths.mjs'
 import { session } from './features/auth/session.js'
 import { adminAccess, refreshAdminAccess } from './features/admin/admin.js'
 import { ADMIN_ACCESS_TEXT } from './features/admin/adminClient.mjs'
+import { localeState, setBodyLocale, tr } from './store/locale'
+import { documentLang } from './features/i18n/translatedRoutes.mjs'
 
 /**
  * 관리자 전용 셸 — 사용자 화면과 완전히 분리된 레이아웃이다.
@@ -17,7 +19,13 @@ const route = useRoute()
 const router = useRouter()
 const mobileNav = ref(false)
 
-const pageTitle = computed(() => route.meta?.title ?? '')
+// 관리자 창은 사용자 셸(App.vue)을 거치지 않아, 표시 언어에 맞춘 본문 언어와 <html lang>을 여기서도 정한다(PR-32 14단계)
+watch(() => [localeState.locale, route.path], () => {
+  const lang = documentLang(localeState.locale, route.path)
+  setBodyLocale(lang)
+  if (typeof document !== 'undefined') document.documentElement.lang = lang
+}, { immediate: true })
+const pageTitle = computed(() => (route.meta?.title ? tr(route.meta.title) : ''))
 const collapsed = ref({})
 function toggleGroup(label) {
   collapsed.value[label] = !collapsed.value[label]
@@ -29,7 +37,7 @@ const allowed = computed(() => adminAccess.state === 'allowed')
 // 서버에 연결한 관리 화면. 나머지는 아직 시연 데이터라 화면 위에 알린다
 const SERVER_PATHS = new Set(['/admin', '/admin/stats', '/admin/cs', '/admin/notices', '/admin/content', '/admin/audit', '/admin/logs', '/admin/moderation', '/admin/settings'])
 const demo = computed(() => route.path.startsWith('/admin') && !SERVER_PATHS.has(route.path))
-const accountName = computed(() => session.nickname || session.email || '관리자')
+const accountName = computed(() => session.nickname || session.email || tr('관리자'))
 
 function backToApp() {
   // 사용자 화면은 별도 창이므로, 이 창에서 나갈 때는 홈으로 보낸다
@@ -40,47 +48,47 @@ function backToApp() {
 <template>
   <div class="app admin-shell">
     <aside class="sidebar" :class="{ open: mobileNav }">
-      <div class="brand"><BrandMark class="brand-mark" label="" /><span class="brand-name">Timebar Diary</span><small class="admin-chip">관리자</small></div>
+      <div class="brand"><BrandMark class="brand-mark" label="" /><span class="brand-name">Timebar Diary</span><small class="admin-chip">{{ tr('관리자') }}</small></div>
       <button class="workspace" @click="backToApp">
-        <i aria-hidden="true"><AppIcon name="chevronLeft" :size="18" /></i><span><b>사용자 화면으로</b><small>관리자 창 닫기</small></span>
+        <i aria-hidden="true"><AppIcon name="chevronLeft" :size="18" /></i><span><b>{{ tr('사용자 화면으로') }}</b><small>{{ tr('관리자 창 닫기') }}</small></span>
       </button>
       <nav v-if="allowed">
         <template v-for="group in adminGroups" :key="group.label">
           <button type="button" class="nav-section" :class="{ collapsed: collapsed[group.label] }" @click="toggleGroup(group.label)">
-            {{ group.label }}<i class="chev" aria-hidden="true"><AppIcon name="chevronDown" :size="14" /></i>
+            {{ tr(group.label) }}<i class="chev" aria-hidden="true"><AppIcon name="chevronDown" :size="14" /></i>
           </button>
           <template v-if="!collapsed[group.label]">
             <router-link v-for="item in group.items" :key="item.path" :to="item.path" custom v-slot="{ navigate }">
               <button :class="{ active: route.path === item.path }" :aria-current="route.path === item.path ? 'page' : undefined" @click="navigate(); mobileNav = false">
-                <span class="nav-icon"><AppIcon :name="NAV_ICONS[item.path]" :fallback="item.icon" /></span><span class="nav-text">{{ item.name }}</span>
+                <span class="nav-icon"><AppIcon :name="NAV_ICONS[item.path]" :fallback="item.icon" /></span><span class="nav-text">{{ tr(item.name) }}</span>
               </button>
             </router-link>
           </template>
         </template>
       </nav>
-      <div v-if="allowed" class="account"><i>{{ accountName.slice(0, 1) }}</i><span><b>{{ accountName }}</b><small>관리자</small></span></div>
+      <div v-if="allowed" class="account"><i>{{ accountName.slice(0, 1) }}</i><span><b>{{ accountName }}</b><small>{{ tr('관리자') }}</small></span></div>
     </aside>
 
     <div v-if="mobileNav" class="scrim" @click="mobileNav = false"></div>
 
     <main>
       <header>
-        <button class="hamburger" aria-label="메뉴 열기" @click="mobileNav = true"><AppIcon name="menu" /></button>
-        <div><p class="eyebrow">관리자 콘솔</p><h1>{{ allowed ? pageTitle : '관리자 화면' }}</h1></div>
+        <button class="hamburger" :aria-label="tr('메뉴 열기')" @click="mobileNav = true"><AppIcon name="menu" /></button>
+        <div><p class="eyebrow">{{ tr('관리자 콘솔') }}</p><h1>{{ allowed ? pageTitle : tr('관리자 화면') }}</h1></div>
         <div v-if="allowed" class="actions">
-          <button class="review" style="margin: 0" @click="router.push('/admin/audit')">감사 로그</button>
+          <button class="review" style="margin: 0" @click="router.push('/admin/audit')">{{ tr('감사 로그') }}</button>
         </div>
       </header>
       <template v-if="allowed">
-        <p v-if="demo" class="input-field-help admin-demo-note" role="note">이 화면은 아직 시연 데이터예요. 바꾼 내용은 서버에 저장되지 않아요.</p>
+        <p v-if="demo" class="input-field-help admin-demo-note" role="note">{{ tr('이 화면은 아직 시연 데이터예요. 바꾼 내용은 서버에 저장되지 않아요.') }}</p>
         <router-view />
       </template>
-      <p v-else-if="adminAccess.state === 'checking'" class="input-field-help" role="status">관리자 권한을 확인하는 중이에요.</p>
+      <p v-else-if="adminAccess.state === 'checking'" class="input-field-help" role="status">{{ tr('관리자 권한을 확인하는 중이에요.') }}</p>
       <section v-else class="card">
-        <div class="empty-state" role="alert"><p>{{ ADMIN_ACCESS_TEXT[adminAccess.state] ?? ADMIN_ACCESS_TEXT.error }}</p>
-          <button v-if="adminAccess.state === 'signedOut'" type="button" class="button-secondary" @click="router.push('/auth/login')">로그인하기</button>
-          <button v-else-if="adminAccess.state === 'error'" type="button" class="button-secondary" @click="refreshAdminAccess(Boolean(session.userId))">다시 시도</button>
-          <button v-else type="button" class="button-secondary" @click="backToApp">사용자 화면으로</button>
+        <div class="empty-state" role="alert"><p>{{ tr(ADMIN_ACCESS_TEXT[adminAccess.state] ?? ADMIN_ACCESS_TEXT.error) }}</p>
+          <button v-if="adminAccess.state === 'signedOut'" type="button" class="button-secondary" @click="router.push('/auth/login')">{{ tr('로그인하기') }}</button>
+          <button v-else-if="adminAccess.state === 'error'" type="button" class="button-secondary" @click="refreshAdminAccess(Boolean(session.userId))">{{ tr('다시 시도') }}</button>
+          <button v-else type="button" class="button-secondary" @click="backToApp">{{ tr('사용자 화면으로') }}</button>
         </div>
       </section>
     </main>

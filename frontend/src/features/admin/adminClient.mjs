@@ -24,7 +24,8 @@ export async function checkAdminAccess(request, signedIn) {
   }
 }
 
-export const USER_STATUS = { ACTIVE: '활성', SUSPENDED: '정지', DELETED: '삭제' }
+// 삭제 상태는 '삭제됨'이다. '삭제'는 버튼 이름(영어 "Delete")과 겹친다(PR-32 14단계)
+export const USER_STATUS = { ACTIVE: '활성', SUSPENDED: '정지', DELETED: '삭제됨' }
 export const USER_ROLE = { USER: '일반', ADMIN: '관리자' }
 
 /** 서버 사용자 행을 화면 행으로 바꾼다. */

@@ -42,6 +42,7 @@ test('영어가 없으면 한국어 원문, 자리표시를 채운다. 본문까
   assert.equal(documentLang('en', '/settings/env'), 'en')
   assert.equal(documentLang('en', '/share/groups/7'), 'en')
   assert.equal(documentLang('en', '/chat'), 'ko')
+  assert.equal(documentLang('en', '/admin/audit'), 'en')
   assert.equal(documentLang('ko', '/career'), 'ko')
 })
 
@@ -170,4 +171,16 @@ test('공유·커뮤니티(PR-32 13단계)가 저장소에서 꺼내 tr에 넘�
     assert.deepEqual(shown.filter((ko) => !(ko in EN)), [], file)
   }
   for (const ko of ['운동', '공부', '일상', '갓생', '다시 가입 신청', '승인 대기', '초대받음']) assert.ok(ko in EN, ko)
+})
+
+test('관리자(PR-32 14단계)가 저장소에서 꺼내 tr에 넘기는 이름표·상태·오류 문구도 사전에 있다. 시연 결제·문의의 사람 이름과 제목은 한국어 그대로 둔다', () => {
+  const pick = /(?:\b(?:label|desc|title|name|note|unit|domain|text|at|type|message|state|category|plan)\s*:\s*|\.value = |return |throw new Error\(|flash\()'([^'\n]*[가-힣][^'\n]*)'/g
+  const demo = new Set(['최지우', '한소율', '정우진', '박민준', '이서연', '결제가 중복으로 됐어요', '루틴 알림이 안 와요', '계정 삭제 요청', '에러율 1% 초과', '평균 응답 500ms 초과', '결제 실패 5건 초과', 'CS 미답변 48시간 초과'])
+  const files = ['features/admin/adminClient.mjs', 'features/admin/auditLog.mjs', 'features/admin/contentClient.mjs', 'features/admin/policy.mjs', 'features/admin/moderation.mjs', 'features/notices/notices.mjs', 'store/adminOps.js']
+  for (const file of files) {
+    const source = readFileSync(new URL('../src/' + file, import.meta.url), 'utf8').split('\n').filter((line) => !/^\s*(\/\/|\*|\/\*)/.test(line)).join('\n')
+    const shown = [...new Set([...source.matchAll(pick)].map((m) => m[1]))].filter((ko) => !demo.has(ko))
+    assert.deepEqual(shown.filter((ko) => !(ko in EN)), [], file)
+  }
+  for (const ko of ['운영', '콘텐츠', '시스템', '삭제됨', '활성', '정지']) assert.ok(ko in EN, ko)
 })
