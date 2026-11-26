@@ -15,7 +15,7 @@ const filtered = computed(() =>
   <section class="card setting-content">
     <h2>{{ tr('위젯 설정') }} <span class="badge new">{{ tr('보충 반영 · SET-009') }}</span></h2>
     <p>{{ tr('홈 화면에 표시할 위젯을 켜고, 드래그로 순서를 바꿔보세요. 크기는 홈 화면 편집 모드에서 바꿀 수 있어요.') }}</p>
-    <input v-model="query" :placeholder="tr('위젯 검색')" style="display: block; width: 100%; margin: 12px 0; border: 1px solid var(--color-hairline); border-radius: var(--radius-sm); padding: 10px; background: var(--color-card)" />
+    <input v-model="query" :aria-label="tr('위젯 검색')" :placeholder="tr('위젯 검색')" style="display: block; width: 100%; margin: 12px 0; border: 1px solid var(--color-hairline); border-radius: var(--radius-sm); padding: 10px; background: var(--color-card)" />
     <div class="widget-row" v-for="w in filtered" :key="w.id">
       <span class="grip">⠿</span>
       <i>▦</i>

@@ -160,6 +160,8 @@ const statsOn = computed(() => statsLayout.value.filter((p) => p.visible).length
           <button
             type="button"
             class="switch"
+            role="switch"
+            :aria-checked="f.locked || isOn(editingDomain, f.key) ? 'true' : 'false'"
             :class="{ on: f.locked || isOn(editingDomain, f.key) }"
             :disabled="f.locked"
             @click="toggleField(editingDomain, f.key, f.locked)"

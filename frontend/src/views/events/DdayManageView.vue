@@ -9,6 +9,8 @@ import { useRouter } from 'vue-router'
 import { openPostComposer } from '../../store/appState'
 import ListFilterBar from '../../components/ListFilterBar.vue'
 import { ddays, isPast, togglePin, removeDday, notifyLabel, ddayNotice, ddayStore } from '../../store/ddays'
+import ListLoadState from '../../components/ListLoadState.vue'
+import { listPending } from '../../features/records/listLoadState.mjs'
 import { saveFailureMessage } from '../../features/records/saveState.mjs'
 import StorageNote from '../../components/StorageNote.vue'
 import PageActions from '../../components/PageActions.vue'
@@ -96,7 +98,8 @@ async function remove(d) {
         <button class="review" style="margin: 0" @click="remove(d)">{{ tr('삭제') }}</button>
       </span>
     </div>
-    <p v-if="!visible.length" class="empty-state" role="status">{{ tr('조건에 맞는 D-Day가 없어요. 검색어나 필터를 바꿔 보세요.') }}</p>
+    <ListLoadState :store="ddayStore" loading="D-Day를 불러오는 중이에요." failed="D-Day를 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요." />
+    <p v-if="!visible.length && !listPending(ddayStore)" class="empty-state" role="status">{{ tr('조건에 맞는 D-Day가 없어요. 검색어나 필터를 바꿔 보세요.') }}</p>
   </section>
 
 </template>

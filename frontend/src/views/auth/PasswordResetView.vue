@@ -38,7 +38,7 @@ function changePassword() {}
       <section class="card" style="text-align: center">
         <h3>{{ tr('비밀번호를 잊으셨나요?') }}</h3>
         <p>{{ tr('가입하신 이메일 주소를 입력하시면') }}<br />{{ tr('재설정 링크를 보내드립니다.') }}</p>
-        <input v-model="email" type="email" :placeholder="tr('이메일 주소')" style="text-align: center; margin-top: 12px" @keyup.enter="sendLink" />
+        <input v-model="email" type="email" autocomplete="email" :aria-label="tr('이메일 주소')" :placeholder="tr('이메일 주소')" style="text-align: center; margin-top: 12px" @keyup.enter="sendLink" />
         <p v-if="email && emailError" class="form-note">{{ emailError }}</p>
         <button class="primary" disabled aria-describedby="reset-pending" @click="sendLink">{{ tr('메일 발송 준비 중') }}</button>
         <p id="reset-pending" class="input-field-help">{{ tr('아직 메일 발송 서비스가 연결되지 않아 재설정 링크를 보낼 수 없어요.') }}</p>

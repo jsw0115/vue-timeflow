@@ -185,7 +185,7 @@ async function addNode() {
         <span>{{ n.title }}<small v-if="n.startDate" class="date-end">{{ n.startDate }} ~ {{ n.endDate }}</small></span>
       </label>
       <span class="tag">{{ tr(n.owner) }}</span>
-      <span v-if="isLeaf(n)"><input class="labor-input" type="number" min="0" step="0.5" :value="n.md" @change="setMd(n, $event)" /></span>
+      <span v-if="isLeaf(n)"><input class="labor-input" type="number" min="0" step="0.5" :value="n.md" :aria-label="tr('{name} 공수(MD)', { name: n.title })" @change="setMd(n, $event)" /></span>
       <span v-else class="figure">{{ rollupMd(n) }} <small style="color: var(--color-muted)">{{ tr('합계') }}</small></span>
       <span style="display: flex; align-items: center; gap: 8px">
         <div class="progress" style="flex: 1; margin: 0"><em :style="{ width: rollupProgress(n) + '%' }"></em></div>

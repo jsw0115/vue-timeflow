@@ -4,6 +4,8 @@ import { formatWon } from '../../features/i18n/locale.mjs'
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { moneyEntries as entries, moneyStore } from '../../store/money'
+import ListLoadState from '../../components/ListLoadState.vue'
+import { listPending } from '../../features/records/listLoadState.mjs'
 import { saveFailureMessage } from '../../features/records/saveState.mjs'
 import StorageNote from '../../components/StorageNote.vue'
 const moneyMode = moneyStore.mode
@@ -132,7 +134,7 @@ function importCsv(event) {
 
 <template>
   <div class="page-tools">
-    <input type="month" v-model="month" style="margin-left: 0" />
+    <input type="month" v-model="month" :aria-label="tr('조회할 달')" style="margin-left: 0" />
     <span></span>
     <span class="currency-picker">₩ {{ currency }}</span>
     <button class="review" style="margin: 0" @click="showIntegration = true">{{ tr('외부 연동') }}</button>
@@ -168,7 +170,8 @@ function importCsv(event) {
         <b class="figure" :class="e.type">{{ won(e.amount) }}</b>
         <span><button class="review" style="margin: 0; padding: 4px 8px" @click="removeEntry(e)">{{ tr('삭제') }}</button></span>
       </div>
-      <p v-if="!visible.length" class="empty-state">{{ tr('이 달에는 머니로그 기록이 없어요. \'+ 내역 추가\'로 수입이나 지출을 남겨 보세요.') }}</p>
+      <ListLoadState :store="moneyStore" loading="머니로그를 불러오는 중이에요." failed="머니로그를 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요." />
+      <p v-if="!visible.length && !listPending(moneyStore)" class="empty-state">{{ tr('이 달에는 머니로그 기록이 없어요. \'+ 내역 추가\'로 수입이나 지출을 남겨 보세요.') }}</p>
     </section>
 
     <section class="card">
@@ -178,7 +181,7 @@ function importCsv(event) {
         <div class="progress"><em :style="{ width: c.pct + '%' }"></em></div>
         <b class="figure">{{ c.pct }}%</b>
       </div>
-      <p v-if="!byCategory.length" class="empty-state">{{ tr('지출 기록이 없어요. 지출 내역을 추가하면 분류별 비중이 여기에 나와요.') }}</p>
+      <p v-if="!byCategory.length && !listPending(moneyStore)" class="empty-state">{{ tr('지출 기록이 없어요. 지출 내역을 추가하면 분류별 비중이 여기에 나와요.') }}</p>
     </section>
   </div>
 

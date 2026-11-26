@@ -3,7 +3,9 @@ import { bodyLocale, tr } from '../../store/locale'
 import { formatDate } from '../../features/i18n/locale.mjs'
 import { ref, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { diaries } from '../../store/writing'
+import { diaries, diaryStore } from '../../store/writing'
+import ListLoadState from '../../components/ListLoadState.vue'
+import { listPending } from '../../features/records/listLoadState.mjs'
 import { moodLabel } from '../../utils/mood.mjs'
 import { openPostComposer } from '../../store/appState'
 import { localDate } from '../../utils/postValidation.mjs'
@@ -40,6 +42,7 @@ const dayEntries = day => visible.value.filter(d => Number(d.date.slice(-2)) ===
         <button @click="router.push({ path: '/diary/entry', query: { id: entry.id } })">{{ tr('열기 →') }}</button></div>
       <p><RichText :text="entry.body" /></p>
     </article>
-    <section v-if="!visible.length" class="card"><h3>{{ tr('아직 기록이 없어요') }}</h3><p>{{ tr('새 글 작성에서 오늘의 생각을 남겨보세요.') }}</p></section>
+    <ListLoadState :store="diaryStore" loading="다이어리를 불러오는 중이에요." failed="다이어리를 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요." />
+    <section v-if="!visible.length && !listPending(diaryStore)" class="card"><h3>{{ tr('아직 기록이 없어요') }}</h3><p>{{ tr('새 글 작성에서 오늘의 생각을 남겨보세요.') }}</p></section>
   </div>
 </template>

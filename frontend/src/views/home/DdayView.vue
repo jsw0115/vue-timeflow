@@ -9,6 +9,8 @@ import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { openPostComposer } from '../../store/appState'
 import { ddays, isPast, togglePin, notifyLabel, ddayNotice, ddayStore } from '../../store/ddays'
+import ListLoadState from '../../components/ListLoadState.vue'
+import { listPending } from '../../features/records/listLoadState.mjs'
 import StorageNote from '../../components/StorageNote.vue'
 import PageActions from '../../components/PageActions.vue'
 const ddayMode = ddayStore.mode
@@ -37,6 +39,7 @@ watch(() => route.query.new, value => { if (value) openPostComposer('D-Day') }, 
   </div>
   <StorageNote :mode="ddayMode" />
   <p v-if="ddayNotice.message" class="input-field-help" data-state="error" role="status">{{ tr(ddayNotice.message) }}</p>
+  <ListLoadState :store="ddayStore" loading="D-Day를 불러오는 중이에요." failed="D-Day를 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요." />
   <div class="metrics">
     <article v-for="d in filteredDdays" :key="d.id" class="dday-card" style="cursor: pointer" @click="router.push(`/dday/${d.id}`)">
       <div class="head">
@@ -48,7 +51,7 @@ watch(() => route.query.new, value => { if (value) openPostComposer('D-Day') }, 
       <b class="dday-num">{{ d.dday }}</b>
       <small class="dday-notify">{{ tr('알림 · {when}', { when: notifyLabel(d, tr) }) }}</small>
     </article>
-    <p v-if="filteredDdays.length === 0" style="grid-column: 1 / -1">{{ tr('표시할 항목이 없어요.') }}</p>
+    <p v-if="filteredDdays.length === 0 && !listPending(ddayStore)" style="grid-column: 1 / -1">{{ tr('표시할 항목이 없어요.') }}</p>
   </div>
 
 </template>

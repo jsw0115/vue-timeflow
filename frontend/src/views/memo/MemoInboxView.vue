@@ -6,7 +6,9 @@ import { isAutomationOn } from '../../store/automations'
 import Modal from '../../components/Modal.vue'
 import RichText from '../../components/RichText.vue'
 import ListFilterBar from '../../components/ListFilterBar.vue'
-import { memos } from '../../store/writing'
+import { memos, memoStore } from '../../store/writing'
+import ListLoadState from '../../components/ListLoadState.vue'
+import { listPending } from '../../features/records/listLoadState.mjs'
 import { taskStore, openPostComposer } from '../../store/appState'
 import { OFFLINE_LABEL } from '../../features/records/syncedCollection.mjs'
 import PageActions from '../../components/PageActions.vue'
@@ -113,7 +115,8 @@ async function convertToTasks() {
       <small>{{ m.time }}</small>
       <span v-if="m.offline" class="tag" :class="{ warn: m.offline === 'review' }" style="margin-left: var(--space-sm)">{{ OFFLINE_LABEL[m.offline] }}</span>
     </section>
-    <p v-if="visibleMemos.length === 0">{{ tr('조건에 맞는 메모가 없어요.') }}</p>
+    <ListLoadState :store="memoStore" loading="메모를 불러오는 중이에요." failed="메모를 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요." />
+    <p v-if="visibleMemos.length === 0 && !listPending(memoStore)">{{ tr('조건에 맞는 메모가 없어요.') }}</p>
   </div>
 
 <Modal v-if="showConvert" :title="tr('할 일로 변환')" wide @close="showConvert = false">

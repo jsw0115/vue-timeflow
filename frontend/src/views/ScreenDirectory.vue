@@ -36,7 +36,7 @@ function linkOf(s) {
 <template>
   <div class="sitemap-tools">
     <div class="filter"><button v-for="t in phaseTabs" :key="t.v" :class="{ selected: phase === t.v }" @click="phase = t.v">{{ tr(t.label) }}</button></div>
-    <input v-model="search" :placeholder="tr('화면 ID, 이름, 기능으로 검색 (예: PLAN, 캘린더, 채팅)')" />
+    <input v-model="search" :aria-label="tr('화면 검색')" :placeholder="tr('화면 ID, 이름, 기능으로 검색 (예: PLAN, 캘린더, 채팅)')" />
   </div>
   <p style="margin-bottom:18px">{{ tr('design-implementation-plan.md 기준 기능 도메인 {d}개 · 전체 화면 {total}개 중 {n}개 표시 · 카드를 누르면 실제 화면으로 이동해요.', { d: DOMAINS.length, total: SCREENS.length, n: filtered.length }) }}</p>
 

@@ -139,6 +139,8 @@ function download(kind) {
     <PageActions><button class="primary" @click="openCreate">{{ tr('인수인계 문서 생성') }}</button></PageActions>
   </div>
 
+  <!-- 업무 유형별 시간과 인수인계 문서는 아직 실제 기록에서 집계하지 않는 고정 예시다(BUG-008) -->
+  <p class="sample-label">{{ tr('업무 유형별 누적 시간과 인수인계 문서 목록은 시연용 예시예요. 실제 업무 기록에서 집계한 값이 아니에요. 문서 생성과 내려받기는 이 기기에서 동작해요.') }}</p>
   <div class="metrics" style="--metric-cols: 3; margin-bottom: 16px">
     <article><span>{{ tr('총 누적 시간') }}</span><b class="figure">{{ totalHours }}<small>h</small></b></article>
     <article><span>{{ tr('업무 유형') }}</span><b class="figure">{{ types.length }}<small v-if="bodyLocale === 'ko'">종</small></b></article>

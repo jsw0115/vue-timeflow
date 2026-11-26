@@ -122,11 +122,11 @@ function fixAll() {
     <div class="list-head labor-grid"><span>{{ tr('프로젝트 · 역할') }}</span><span>{{ tr('인원') }}</span><span>{{ tr('기간(일)') }}</span><span>{{ tr('투입률') }}</span><span>{{ tr('산정 MD') }}</span><span>{{ tr('실제 MD') }}</span><span>{{ tr('비용') }}</span><span>{{ tr('상태') }}</span></div>
     <div class="row labor-grid" v-for="r in rows" :key="r.id">
       <label>{{ r.title }}<small style="display: block; color: var(--color-muted)">{{ tr(r.role) }}</small></label>
-      <span><input class="labor-input" type="number" min="1" step="1" v-model.number="r.people" /></span>
-      <span><input class="labor-input" type="number" min="1" step="1" v-model.number="r.days" /></span>
-      <span><input class="labor-input" type="number" min="10" max="100" step="10" v-model.number="r.ratio" /></span>
+      <span><input class="labor-input" type="number" min="1" step="1" v-model.number="r.people" :aria-label="tr('{name} 인원', { name: r.title })" /></span>
+      <span><input class="labor-input" type="number" min="1" step="1" v-model.number="r.days" :aria-label="tr('{name} 기간(일)', { name: r.title })" /></span>
+      <span><input class="labor-input" type="number" min="10" max="100" step="10" v-model.number="r.ratio" :aria-label="tr('{name} 투입률', { name: r.title })" /></span>
       <span class="figure">{{ plannedMd(r) }}</span>
-      <span><input class="labor-input" type="number" min="0" step="0.5" v-model.number="r.actualMd" /></span>
+      <span><input class="labor-input" type="number" min="0" step="0.5" v-model.number="r.actualMd" :aria-label="tr('{name} 실제 MD', { name: r.title })" /></span>
       <span class="figure">{{ won(costOf(r)) }}</span>
       <span style="display: flex; align-items: center; gap: 6px">
         <span class="badge" :class="stateOf(r).cls">{{ stateOf(r).label }}</span>

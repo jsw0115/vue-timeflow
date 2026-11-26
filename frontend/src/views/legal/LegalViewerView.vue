@@ -24,7 +24,7 @@ function close() {
     <div class="legal-doc">
       <div class="legal-doc-head">
         <div style="display: flex; align-items: center; gap: 12px">
-          <span style="cursor: pointer" @click="router.back()">←</span>
+          <button type="button" class="icon" :aria-label="tr('뒤로 가기')" :title="tr('뒤로 가기')" @click="close">←</button>
           <div>
             <p class="eyebrow" style="margin: 0">{{ tr('약관/정책 뷰어') }}</p>
             <h1 style="font-size: 1.0625rem; margin-top: 4px">{{ tr(tab) }}</h1>
