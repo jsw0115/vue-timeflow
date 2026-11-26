@@ -2,6 +2,8 @@
 // 가입 직후 시작 구성(분류 → 커리어 목표, PR-23 Q-34)과 하루 모드(J·P·B)를 고르는 화면. 회원가입 때의 역할 설정이 이 커리어 목표다(Q-32).
 // 커리어 목표는 로그인 계정의 환경설정(career)에, 하루 모드·메뉴 즐겨찾기·홈 위젯은 이 브라우저에 저장된다.
 // 목표는 대시보드 순서만 바꾸고 권한·공개 범위는 바꾸지 않는다(docs/design 03 §5, DEC-02).
+import { bodyLocale, tr } from '../../store/locale'
+import { modeText } from '../../features/i18n/locale.mjs'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import BrandMark from '../../components/brand/BrandMark.vue'
@@ -31,27 +33,27 @@ async function start() {
   <div class="auth-page onboarding">
     <div class="onboarding-inner">
       <div class="auth-brand-row"><BrandMark class="auth-mark" label="" /><span>Timebar Diary</span></div>
-      <p class="eyebrow">가입 완료 · 시작 구성과 하루 모드 고르기</p>
-      <h1>{{ session.nickname ? `${session.nickname}님에게` : '지금' }} 맞는 시작 구성을 골라요</h1>
-      <p class="onboarding-lead">분류를 고르면 맞는 커리어 목표와 메뉴·홈 위젯 구성을 보여 드려요. 환경설정에서 언제든 바꾸거나 이전 구성으로 되돌릴 수 있어요.</p>
+      <p class="eyebrow">{{ tr('가입 완료 · 시작 구성과 하루 모드 고르기') }}</p>
+      <h1>{{ session.nickname ? tr('{name}님에게 맞는 시작 구성을 골라요', { name: session.nickname }) : tr('지금 맞는 시작 구성을 골라요') }}</h1>
+      <p class="onboarding-lead">{{ tr('분류를 고르면 맞는 커리어 목표와 메뉴·홈 위젯 구성을 보여 드려요. 환경설정에서 언제든 바꾸거나 이전 구성으로 되돌릴 수 있어요.') }}</p>
       <StartPresetPicker v-model:category="category" v-model:goal="goal" v-model:apply-layout="applyLayout" :mode="mode" />
 
-      <h2 class="onboarding-sub">하루는 어떻게 보내고 싶나요?</h2>
-      <p class="onboarding-lead">고른 모드에 맞춰 홈 화면 구성과 글양식 기본값을 준비해요. 사이드바의 '하루 모드'에서 언제든 바꿀 수 있어요.</p>
-      <div class="mode-options" role="radiogroup" aria-label="하루 모드">
+      <h2 class="onboarding-sub">{{ tr('하루는 어떻게 보내고 싶나요?') }}</h2>
+      <p class="onboarding-lead">{{ tr('고른 모드에 맞춰 홈 화면 구성과 글양식 기본값을 준비해요. 사이드바의 \'하루 모드\'에서 언제든 바꿀 수 있어요.') }}</p>
+      <div class="mode-options" role="radiogroup" :aria-label="tr('하루 모드')">
         <label v-for="m in MODES" :key="m" class="mode-option" :class="{ selected: mode === m }">
           <input v-model="mode" type="radio" name="day-mode" :value="m" />
           <span class="mode-letter" aria-hidden="true">{{ m }}</span>
-          <span class="mode-copy"><b>{{ modeMeta(m).name }}</b><small>{{ modeMeta(m).desc }}</small></span>
-          <span v-if="mode === m" class="mode-check">선택됨</span>
+          <span class="mode-copy"><b>{{ modeText(m, bodyLocale, modeMeta(m)).name }}</b><small>{{ modeText(m, bodyLocale, modeMeta(m)).desc }}</small></span>
+          <span v-if="mode === m" class="mode-check">{{ tr('선택됨') }}</span>
         </label>
       </div>
 
       <div class="onboarding-actions">
-        <button type="button" class="button-text" @click="router.push('/')">나중에 고를게요</button>
-        <button type="button" class="primary" :disabled="startPreset.status === 'saving'" :aria-busy="startPreset.status === 'saving' ? 'true' : undefined" @click="start">{{ startPreset.status === 'saving' ? '저장하는 중' : '이대로 시작하기' }}</button>
+        <button type="button" class="button-text" @click="router.push('/')">{{ tr('나중에 고를게요') }}</button>
+        <button type="button" class="primary" :disabled="startPreset.status === 'saving'" :aria-busy="startPreset.status === 'saving' ? 'true' : undefined" @click="start">{{ startPreset.status === 'saving' ? tr('저장하는 중') : tr('이대로 시작하기') }}</button>
       </div>
-      <p class="input-field-help" role="status" :data-state="startPreset.status === 'failed' ? 'error' : undefined">{{ startPreset.status === 'failed' ? startPreset.message : (session.userId ? '커리어 목표는 계정에, 하루 모드·메뉴 즐겨찾기·홈 위젯은 이 브라우저에 저장돼요.' : '로그아웃 상태라 커리어 목표와 하루 모드·메뉴 즐겨찾기·홈 위젯을 이 브라우저에 저장해요.') }}</p>
+      <p class="input-field-help" role="status" :data-state="startPreset.status === 'failed' ? 'error' : undefined">{{ startPreset.status === 'failed' ? tr(startPreset.message) : (session.userId ? tr('커리어 목표는 계정에, 하루 모드·메뉴 즐겨찾기·홈 위젯은 이 브라우저에 저장돼요.') : tr('로그아웃 상태라 커리어 목표와 하루 모드·메뉴 즐겨찾기·홈 위젯을 이 브라우저에 저장해요.')) }}</p>
     </div>
   </div>
 </template>

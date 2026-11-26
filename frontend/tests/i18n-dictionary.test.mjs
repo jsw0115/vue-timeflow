@@ -43,6 +43,7 @@ test('영어가 없으면 한국어 원문, 자리표시를 채운다. 본문까
   assert.equal(documentLang('en', '/share/groups/7'), 'en')
   assert.equal(documentLang('en', '/chat'), 'ko')
   assert.equal(documentLang('en', '/admin/audit'), 'en')
+  assert.equal(documentLang('en', '/auth/login'), 'en')
   assert.equal(documentLang('ko', '/career'), 'ko')
 })
 
@@ -183,4 +184,15 @@ test('관리자(PR-32 14단계)가 저장소에서 꺼내 tr에 넘기는 이름
     assert.deepEqual(shown.filter((ko) => !(ko in EN)), [], file)
   }
   for (const ko of ['운영', '콘텐츠', '시스템', '삭제됨', '활성', '정지']) assert.ok(ko in EN, ko)
+})
+
+test('로그인·가입·온보딩(PR-32 15단계)의 검사·서버 연결 문구도 사전에 있다', () => {
+  const pick = /(?:\breturn |throw new Error\(|\? '' : )'([^'\n]*[가-힣][^'\n]*)'/g
+  for (const file of ['features/auth/passwordPolicy.mjs', 'features/auth/views/SignupView.vue', 'views/auth/LoginView.vue']) {
+    const source = readFileSync(new URL('../src/' + file, import.meta.url), 'utf8')
+    const shown = [...new Set([...source.matchAll(pick)].map((m) => m[1]))]
+    assert.ok(shown.length > 0, file)
+    assert.deepEqual(shown.filter((ko) => !(ko in EN)), [], file)
+  }
+  assert.ok('서버에 연결하지 못했습니다. 잠시 후 다시 시도해주세요.' in EN)
 })
