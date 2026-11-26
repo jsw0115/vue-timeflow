@@ -163,3 +163,13 @@ test('accent 채움은 주 버튼·현재 위치·선택 표식·상태 점·콘
   }
   assert.deepEqual(found.filter(entry => !ACCENT_FILL_ALLOWED.has(entry)), [])
 })
+
+test('hero 카드 안 주 버튼도 주 버튼 글자색(on-accent)을 쓴다. styles.css의 .hero button(accent 글자색)이 .primary보다 우선해 글자가 배경과 같아지던 문제(같이 집중 화면)', () => {
+  const components = postcss.parse(read('frontend/src/design-system/components.css'))
+  let rule
+  components.walkRules('.hero .primary', (r) => { rule = r })
+  assert.ok(rule, '.hero .primary 규칙이 있어야 한다')
+  const color = rule.nodes.find((n) => n.prop === 'color')
+  assert.equal(color?.value, 'var(--color-on-accent)')
+  assert.match(read('frontend/src/styles.css'), /\.hero button,\.head button,\.dday button\{[^}]*color:var\(--color-accent\)/)
+})

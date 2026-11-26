@@ -45,6 +45,7 @@
 - [버전별 변경·릴리스 노트](releases/README.md).
 - [날짜별 개선·버그·문서 체크리스트](releases/backlog.md).
 - [테스트 계획·케이스·실행 명령](quality/test-plan.md).
+- [전체 화면 브라우저 점검 결과(2026-11-26)](quality/browser-test-2026-11-26.md).
 - [트러블슈팅·문제 해결](development/troubleshooting.md).
 - [문서 기준·중복 통합·갱신 규칙](project/document-register.md).
 - [이번 통합 작업 검증](development/documentation-system-2026-10-31/verification.md).

@@ -22,6 +22,8 @@
 .primary:hover:not(:disabled):not([aria-busy='true']) { background-color: var(--color-accent-hover); transform: none; box-shadow: none; }
 .primary:is(:disabled, [aria-disabled='true']) { opacity: var(--opacity-disabled); cursor: not-allowed; transform: none; box-shadow: none; }
 .primary[aria-busy='true'] { cursor: progress; }
+/* styles.css의 `.hero button`(글자색 accent, 안쪽 여백 0)이 .primary보다 우선해, hero 카드 안 주 버튼의 글자가 배경과 같은 색이 되던 문제를 막는다(같이 집중 화면) */
+.hero .primary { padding: 0 var(--space-xxl); color: var(--color-on-accent); font-size: var(--type-control-size); }
 
 /* ---------- Button: secondary ---------- */
 .button-secondary, button.modal-secondary {

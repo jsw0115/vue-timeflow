@@ -7,6 +7,7 @@ import { EN } from '../src/features/i18n/dictionary.mjs'
 import { translate } from '../src/features/i18n/translate.mjs'
 import { TRANSLATED_PATHS, documentLang } from '../src/features/i18n/translatedRoutes.mjs'
 import { relativeLabelIn, relativeTimeIn } from '../src/features/notifications/notificationClient.mjs'
+import { SearchIndex } from '../src/utils/searchIndex.mjs'
 
 const root = new URL('../src/', import.meta.url).pathname
 const files = (dir) => readdirSync(dir).flatMap((name) => { const p = join(dir, name); return statSync(p).isDirectory() ? files(p) : /\.(vue|js|mjs)$/.test(name) ? [p] : [] })
@@ -231,6 +232,21 @@ test('알림 시각은 사전 대신 Intl로 옮긴다("{n}분 전"은 사전에
 test('약관 본문은 한국어 원문이라 lang="ko"로 표시하고, 탭 이름은 저장값을 그대로 비교한다', () => {
   const view = readFileSync(new URL('../src/views/legal/LegalViewerView.vue', import.meta.url), 'utf8')
   assert.match(view, /class="legal-doc-body" lang="ko"/)
-  assert.match(view, /v-for="doc in DOCS" :key="doc" :class="\{ selected: tab === doc \}" @click="tab = doc">\{\{ tr\(doc\) \}\}/)
+  assert.match(view, /v-for="doc in DOCS" :key="doc" type="button" :class="\{ selected: tab === doc \}" :aria-pressed="tab === doc \? 'true' : 'false'" @click="tab = doc">\{\{ tr\(doc\) \}\}/)
+  // 이용약관·오픈소스 라이선스는 원문이 없어 내용을 만들지 않고 준비 중으로 안내한다(개인정보처리방침 본문을 다른 탭에 보이지 않는다)
+  assert.match(view, /<div v-if="tab !== PRIVACY" class="legal-doc-body">\s*<p class="empty-state" role="status">\{\{ tr\('이 문서의 본문은 아직 준비 중이에요\.'\) \}\}<\/p>/)
   for (const doc of ['개인정보처리방침', '이용약관', '오픈소스 라이선스']) assert.ok(doc in EN, doc)
+})
+
+test('통합 검색은 메뉴·설정을 영어 이름(keywords)으로도 찾고, 사용자가 쓴 글은 원문으로만 찾는다', () => {
+  const index = new SearchIndex()
+  index.sync([
+    { id: 'menu:/calendar', kind: '메뉴·설정', title: '캘린더', body: '일정·D-Day·기록을 한눈에', keywords: ['Calendar', 'Events, D-Days and records at a glance'] },
+    { id: 'post:1', kind: '메모', title: '회의 메모', body: '캘린더 정리' },
+  ])
+  assert.deepEqual(index.search('calendar').items.map((item) => item.id), ['menu:/calendar'])
+  assert.deepEqual(index.search('캘린더').items.map((item) => item.id).sort(), ['menu:/calendar', 'post:1'])
+  const panel = readFileSync(new URL('../src/components/SearchPanel.vue', import.meta.url), 'utf8')
+  assert.match(panel, /keywords: \[settingLabel\(section, 'en'\), settingDesc\(section, 'en'\), 'Settings'\]/)
+  assert.match(panel, /keywords: \[en\.title, en\.body\]/)
 })

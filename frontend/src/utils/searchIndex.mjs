@@ -11,7 +11,7 @@ export class SearchIndex {
     const ids = new Set(entries.map(entry => String(entry.id)))
     for (const id of this.documents.keys()) if (!ids.has(id)) this.remove(id)
     for (const entry of entries) {
-      const id = String(entry.id), text = normalizeSearch([entry.title, entry.body, entry.meta].join(' ')), previous = this.documents.get(id)
+      const id = String(entry.id), text = normalizeSearch([entry.title, entry.body, entry.meta, ...(entry.keywords ?? [])].join(' ')), previous = this.documents.get(id)
       if (previous?.text === text) { previous.entry = entry; continue }
       this.remove(id)
       const tokens = grams(text)

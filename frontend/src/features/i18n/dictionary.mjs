@@ -3415,6 +3415,7 @@ export const EN = {
   "D-day": "D-Day",
   "동료": "Coworker",
   "지인": "Acquaintance",
+  "이 문서의 본문은 아직 준비 중이에요.": "This document's text is still being prepared.",
 }
 
 /** 숫자 뒤 단위("12일", "9건"). 이름표와 같은 글자라도 뜻이 달라 사전과 따로 둔다. 없으면 영어에서는 단위를 붙이지 않는다. */

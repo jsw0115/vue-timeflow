@@ -3,6 +3,8 @@ import { tr, bodyLocale } from '../store/locale'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { SETTINGS_SECTIONS } from '../router/settingsSections'
+import { navName, navTitle, settingDesc, settingLabel } from '../features/i18n/locale.mjs'
+import { translate } from '../features/i18n/translate.mjs'
 import { posts } from '../store/tagging'
 import '../store/postIndex'
 import { wiki } from '../store/wiki'
@@ -12,9 +14,18 @@ import { chat, selectRoom } from '../features/chat/model/chatStore'
 const props = defineProps({ roomId: String, chatOnly: Boolean })
 const emit = defineEmits(['close', 'room'])
 const router = useRouter(), query = ref(''), scope = ref(props.chatOnly ? '채팅' : '전체')
+// 메뉴 항목: 사이드바 영어 이름(navName)이 있으면 그것을, 없으면 사전의 영어를 쓴다
+function menuEntry(route) {
+  const title = route.meta.label ?? route.name ?? '플래너', body = route.meta.title
+  const item = { path: route.path, name: title, title: body }
+  const en = { title: navName(item, 'en') !== title ? navName(item, 'en') : translate(title, 'en'), body: navTitle(item, 'en') !== (body ?? '') ? navTitle(item, 'en') : translate(body ?? '', 'en') }
+  return { id: 'menu:' + route.path, kind: '메뉴·설정', title, body, meta: '메뉴·설정', path: route.path, en, keywords: [en.title, en.body] }
+}
+const shown = (entry, key) => (bodyLocale.value !== 'ko' && entry.en?.[key]) || (key === 'title' ? tr(entry.title) : entry[key])
 const entries = computed(() => [
-  ...SETTINGS_SECTIONS.map(section => ({ id: 'setting:' + section.id, kind: '메뉴·설정', title: section.label, body: section.desc, meta: '환경설정', path: '/settings/' + section.id })),
-  ...router.getRoutes().filter(route => !route.path.includes(':') && !route.meta.admin && !route.meta.bare && (route.meta.label || route.meta.title)).map(route => ({ id: 'menu:' + route.path, kind: '메뉴·설정', title: route.meta.label ?? route.name ?? '플래너', body: route.meta.title, meta: '메뉴·설정', path: route.path })),
+  // 메뉴·설정은 영어 이름(keywords)으로도 찾고, 영어 화면에서는 영어 이름(en)을 보인다. 사용자가 쓴 글은 원문으로만 찾는다
+  ...SETTINGS_SECTIONS.map(section => ({ id: 'setting:' + section.id, kind: '메뉴·설정', title: section.label, body: section.desc, meta: '환경설정', path: '/settings/' + section.id, en: { title: settingLabel(section, 'en'), body: settingDesc(section, 'en') }, keywords: [settingLabel(section, 'en'), settingDesc(section, 'en'), 'Settings'] })),
+  ...router.getRoutes().filter(route => !route.path.includes(':') && !route.meta.admin && !route.meta.bare && (route.meta.label || route.meta.title)).map(route => menuEntry(route)),
   ...posts.value.map(post => ({ id: 'post:' + post.id, kind: post.kind, title: post.title, body: post.body, meta: [post.kind, post.author, post.at].filter(Boolean).join(' · '), path: post.link })),
   ...wiki.docs.map(doc => ({ id: 'wiki:' + doc.id, kind: '업무 위키', title: doc.title, body: doc.body, meta: doc.space, path: '/work/wiki?id=' + doc.id })),
 ])
@@ -60,7 +71,7 @@ async function openHit(hit) {
     <div class="unified-search-hits">
       <template v-if="!chatOnly && scope !== '채팅'">
         <p v-if="result.total" class="form-note">{{ tr('내 기록 {n}개', { n: result.total.toLocaleString() }) }} · {{ offset + 1 }}–{{ offset + result.items.length }}</p>
-        <button v-for="entry in result.items" :key="entry.id" type="button" class="unified-search-hit" @click="go(entry)"><span class="tag">{{ tr(entry.kind) }}</span><span><b>{{ tr(entry.title) }}</b><small>{{ tr(entry.meta) }}</small><span>{{ entry.body?.slice(0, 140) }}</span></span></button>
+        <button v-for="entry in result.items" :key="entry.id" type="button" class="unified-search-hit" @click="go(entry)"><span class="tag">{{ tr(entry.kind) }}</span><span><b>{{ shown(entry, 'title') }}</b><small>{{ tr(entry.meta) }}</small><span>{{ shown(entry, 'body')?.slice(0, 140) }}</span></span></button>
         <div v-if="result.total > 40" class="unified-search-pagination"><button :disabled="offset === 0" @click="offset -= 40; searchLocal()">{{ tr('이전') }}</button><button :disabled="offset + 40 >= result.total" @click="offset += 40; searchLocal()">{{ tr('다음') }}</button></div>
       </template>
       <template v-if="includeChat">
