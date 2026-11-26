@@ -1,5 +1,5 @@
 <script setup>
-import { bodyLocale, tr } from '../../store/locale'
+import { bodyLocale, storedDefault, tr } from '../../store/locale'
 // 지표 단위 "개"는 한국어에만 붙인다(영어는 숫자만 보인다)
 import PageActions from '../../components/PageActions.vue'
 import { computed, ref } from 'vue'
@@ -122,7 +122,7 @@ function createColumn() {
   newColumn.value = ''
 }
 function onRemoveColumn(col) {
-  if (!window.confirm(tr('‘{title}’ 컬럼과 그 안의 카드 {n}개를 모두 삭제할까요?', { title: col.title, n: countOf(col.id) }))) return
+  if (!window.confirm(tr('‘{title}’ 컬럼과 그 안의 카드 {n}개를 모두 삭제할까요?', { title: storedDefault(col.title), n: countOf(col.id) }))) return
   removeColumn(col.id)
 }
 function onReset() {
@@ -190,7 +190,7 @@ function priorityLabel(id) {
       @drop="onDropColumn(col.id)"
     >
       <div class="kanban-col-head" :class="{ 'wip-over': isWipExceeded(col) }">
-        {{ col.title }}
+        {{ storedDefault(col.title) }}
         <span>{{ countOf(col.id) }}<template v-if="col.wip"> / {{ col.wip }}</template></span>
       </div>
 
@@ -244,7 +244,7 @@ function priorityLabel(id) {
       <label style="flex: 1">{{ tr('담당자') }}<input v-model="draft.assignee" :placeholder="tr('예: 지수')" /></label>
       <label style="flex: 1">{{ tr('마감일') }}<input type="date" v-model="draft.due" /></label>
       <label style="flex: 1">{{ tr('컬럼') }}
-        <select v-model="draft.columnId"><option v-for="c in board.columns" :key="c.id" :value="c.id">{{ c.title }}</option></select>
+        <select v-model="draft.columnId"><option v-for="c in board.columns" :key="c.id" :value="c.id">{{ storedDefault(c.title) }}</option></select>
       </label>
     </div>
 
@@ -286,7 +286,7 @@ function priorityLabel(id) {
   <Modal v-if="showColumns" :title="tr('컬럼 관리')" wide @close="showColumns = false">
     <p class="form-note" style="margin-top: 0">{{ tr('WIP 제한을 0으로 두면 제한 없이 쌓을 수 있어요.') }}</p>
     <div class="column-row" v-for="col in board.columns" :key="col.id">
-      <input :value="col.title" @change="renameColumn(col.id, $event.target.value)" />
+      <input :value="storedDefault(col.title)" @change="renameColumn(col.id, $event.target.value)" />
       <label class="wip-field">WIP<input type="number" min="0" max="20" :value="col.wip" @change="setWip(col.id, $event.target.value)" /></label>
       <span class="badge" :class="isWipExceeded(col) ? 'danger' : ''">{{ tr('카드 {n}개', { n: countOf(col.id) }) }}</span>
       <button class="review" style="margin: 0" :disabled="board.columns.length <= 1" @click="onRemoveColumn(col)">{{ tr('삭제') }}</button>

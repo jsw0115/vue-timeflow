@@ -1,8 +1,8 @@
-// 2026-11-26 전체 화면 점검에서 찾은 버그(BUG-007~BUG-011, docs/quality/browser-test-2026-11-26.md)가 다시 생기지 않는지 검사한다.
+// 2026-11-26 전체 화면 점검에서 찾은 버그(BUG-007~BUG-011)와 개선(IMP-015~IMP-018, docs/quality/browser-test-2026-11-26.md)이 되돌아가지 않는지 검사한다.
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { EN } from '../src/features/i18n/dictionary.mjs'
+import { EN, STORED_DEFAULTS_EN, UNITS_EN, UNITS_EN_ONE } from '../src/features/i18n/dictionary.mjs'
 import { listFailed, listLoading, listPending } from '../src/features/records/listLoadState.mjs'
 
 const read = (file) => readFileSync(new URL('../src/' + file, import.meta.url), 'utf8')
@@ -76,4 +76,45 @@ test('BUG-011 약관 뷰어의 뒤로 가기는 이름 있는 버튼이다', () 
   assert.match(source, /<button type="button" class="icon" :aria-label="tr\('뒤로 가기'\)" :title="tr\('뒤로 가기'\)" @click="close">←<\/button>/)
   assert.doesNotMatch(source, /<span[^>]*@click="router\.back\(\)"/)
   assert.ok('뒤로 가기' in EN)
+})
+
+test('IMP-015 소셜 연동 "G" 글자는 기본 글자색 토큰을 쓴다', () => {
+  const source = read('views/auth/SocialLoginView.vue')
+  assert.doesNotMatch(source, /#[0-9a-fA-F]{6}/)
+  assert.match(source, /color: var\(--color-foreground\); font-weight: 700; display: flex; align-items: center; justify-content: center; font-style: normal">G</)
+})
+
+test('IMP-016 일정 템플릿·공수 계산의 고정 예시 값에 시연 표시가 있다', () => {
+  for (const file of ['views/events/EventTemplatesView.vue', 'views/work/LaborReportView.vue']) {
+    const label = read(file).match(/<p class="sample-label">\{\{ tr\('([^']+)'\) \}\}<\/p>/)
+    assert.ok(label, file)
+    assert.match(label[1], /시연용 예시/)
+    assert.match(label[1], /저장되지 않아/)
+    assert.ok(label[1] in EN, label[1])
+  }
+})
+
+test('IMP-017 캔버스 열 이름과 루틴 단위 "회"는 처음 값일 때만 화면에서 번역한다', () => {
+  assert.deepEqual(Object.keys(STORED_DEFAULTS_EN), ['할 일', '진행중', '검토', '완료'])
+  assert.equal(UNITS_EN['회'], ' times')
+  assert.equal(UNITS_EN_ONE['회'], ' time')
+  const locale = read('store/locale.js')
+  assert.match(locale, /export const storedDefault = \(value\) => \(bodyLocale\.value === 'ko' \? value : STORED_DEFAULTS_EN\[value\] \?\? value\)/)
+  const canvas = read('views/planner/ProjectCanvasView.vue')
+  assert.doesNotMatch(canvas, /\{\{ col\.title \}\}/)
+  assert.match(canvas, /\{\{ storedDefault\(col\.title\) \}\}/)
+  assert.match(canvas, /:value="c\.id">\{\{ storedDefault\(c\.title\) \}\}<\/option>/)
+  assert.match(canvas, /<input :value="storedDefault\(col\.title\)" @change="renameColumn\(col\.id, \$event\.target\.value\)" \/>/)
+  // 저장값은 바꾸지 않는다: 처음 값은 한국어 그대로다
+  assert.match(read('store/canvas.js'), /\{ id: 'todo', title: '할 일', wip: 0 \}/)
+  const routine = read('views/routines/RoutineListView.vue')
+  assert.match(routine, /u === '회' \? count \+ unit\('회', Number\(count\)\) : count \+ u/)
+  assert.doesNotMatch(routine, /\{\{ r\.goal\?\.count \}\}\{\{ r\.goal\?\.unit \}\}/)
+  assert.match(routine, /goalUnit: '회'/)
+})
+
+test('IMP-018 점검 안내에 "공지 자세히 보기" 버튼이 없다', () => {
+  const source = read('views/system/MaintenanceView.vue')
+  assert.doesNotMatch(source, /공지 자세히 보기/)
+  assert.doesNotMatch(source, /useRouter|router\./)
 })

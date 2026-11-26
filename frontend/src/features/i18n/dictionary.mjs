@@ -3434,11 +3434,18 @@ export const EN = {
   "다이어리를 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요.": "Couldn't load diary entries. Check your connection and try again.",
   "머니로그를 불러오는 중이에요.": "Loading money log.",
   "머니로그를 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요.": "Couldn't load the money log. Check your connection and try again.",
+  "템플릿 목록과 사용 횟수는 시연용 예시예요. 추가·수정·삭제한 내용은 저장되지 않아 화면을 다시 열면 처음 목록으로 돌아가요.": "The templates and their use counts are demo examples. Templates you add, edit or delete aren't saved, so the original list comes back when you reopen this screen.",
+  "공수 항목과 실제 MD·일단가는 시연용 예시예요. 실제 업무 기록에서 가져온 값이 아니에요. 추가·확정한 내용은 저장되지 않아 화면을 다시 열면 처음 상태로 돌아가요.": "The effort items, actual MD and day rates are demo examples, not values from your work records. Items you add or confirm aren't saved, so the screen resets when you reopen it.",
 }
 
 /** 숫자 뒤 단위("12일", "9건"). 이름표와 같은 글자라도 뜻이 달라 사전과 따로 둔다. 없으면 영어에서는 단위를 붙이지 않는다. */
-export const UNITS_EN = { 일: ' days', 건: ' items', 시간: ' h', 점: ' pts' }
+export const UNITS_EN = { 일: ' days', 건: ' items', 시간: ' h', 점: ' pts', 회: ' times' }
 /** 수가 1일 때의 단위("1 day"). 없으면 UNITS_EN을 쓴다. */
-export const UNITS_EN_ONE = { 일: ' day', 건: ' item', 점: ' pt' }
+export const UNITS_EN_ONE = { 일: ' day', 건: ' item', 점: ' pt', 회: ' time' }
 /** 문장 안 단위 이름("이번 주", "3주 전"). 영어 문장에 넣을 단수 이름이다. */
 export const UNIT_WORDS_EN = { 일: 'day', 주: 'week', 월: 'month', 년: 'year' }
+/**
+ * 사용자가 고칠 수 있는 저장값의 처음 값(IMP-017). 저장값은 한국어 그대로 두고, 글자가 처음 값과 똑같을 때만 화면에서 바꿔 보인다.
+ * 프로젝트 캔버스 열 이름이다. '할 일'은 사전에서 메뉴 이름("Task")이라 따로 둔다.
+ */
+export const STORED_DEFAULTS_EN = { '할 일': 'To do', 진행중: 'In progress', 검토: 'Review', 완료: 'Done' }

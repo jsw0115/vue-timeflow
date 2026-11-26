@@ -1,8 +1,6 @@
 <script setup>
 import { tr } from '../../store/locale'
-import { useRouter } from 'vue-router'
-
-const router = useRouter()</script>
+</script>
 
 <template>
   <div class="interstitial">
@@ -14,7 +12,6 @@ const router = useRouter()</script>
         <small style="color: var(--color-muted)">{{ tr('예상 종료 시각') }}</small>
         <b style="display: block; font-size: 1.25rem; letter-spacing: -0.6px; margin-top: 4px">{{ tr('오늘 04:00') }}</b>
       </section>
-      <button style="background: var(--color-surface); border-radius: 10px; padding: 11px 20px; font-size: 0.875rem; font-weight: 700" @click="router.push('/legal')">{{ tr('공지 자세히 보기') }}</button>
     </div>
   </div>
 </template>

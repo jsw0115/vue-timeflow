@@ -5,7 +5,7 @@ import { apiRequest } from '../features/auth/apiRequest.js'
 import { DEFAULT_LOCALE, cleanLocale } from '../features/i18n/locale.mjs'
 import { LOCALE_STORAGE_KEY, createLocaleAccount, localeErrorText } from '../features/i18n/localeAccount.mjs'
 import { translate } from '../features/i18n/translate.mjs'
-import { UNITS_EN, UNITS_EN_ONE, UNIT_WORDS_EN } from '../features/i18n/dictionary.mjs'
+import { STORED_DEFAULTS_EN, UNITS_EN, UNITS_EN_ONE, UNIT_WORDS_EN } from '../features/i18n/dictionary.mjs'
 
 const account = createLocaleAccount({ request: apiRequest })
 function readLocal() { try { return cleanLocale(localStorage.getItem(LOCALE_STORAGE_KEY)) } catch { return null } }
@@ -57,3 +57,5 @@ export const tr = (ko, vars) => translate(ko, bodyLocale.value, vars)
 export const unit = (ko, n) => (bodyLocale.value === 'ko' ? ko : (n === 1 ? UNITS_EN_ONE[ko] : undefined) ?? UNITS_EN[ko] ?? '')
 /** 문장 안에 넣는 단위 이름. 한국어는 그대로, 다른 언어는 단위 이름 표를 쓴다. */
 export const unitWord = (ko) => (bodyLocale.value === 'ko' ? ko : UNIT_WORDS_EN[ko] ?? ko)
+/** 사용자가 고칠 수 있는 저장값. 처음 값과 글자가 같을 때만 본문 언어로 보이고, 사용자가 바꾼 값은 쓴 그대로 보인다(IMP-017). */
+export const storedDefault = (value) => (bodyLocale.value === 'ko' ? value : STORED_DEFAULTS_EN[value] ?? value)

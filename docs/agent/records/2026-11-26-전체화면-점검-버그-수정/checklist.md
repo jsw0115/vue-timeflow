@@ -8,3 +8,12 @@
 - [x] 테스트/실제 증빙 기록(verification.md, dev-docs 07 RUN-289)
 - [x] 기존 사용자 변경 보존 확인, 자체 검증 변경만 의미 단위 커밋
 - [x] 중단·재개를 위한 마지막 결과와 다음 작업 기록
+
+## 이어서: IMP-015~IMP-018
+
+- [x] 사용자 결정 4건 확인(질문 답변)
+- [x] 최소 변경 구현: 색 토큰 1곳, 시연 표시 2곳, 화면용 처음 값 표(`STORED_DEFAULTS_EN`)와 `storedDefault()`, 루틴 단위 '회', 점검 버튼 제거
+- [x] 회귀 시험 4개 추가(`tests/browser-check-fixes.test.mjs`)
+- [x] 브라우저 확인과 기록(verification.md, dev-docs 07 RUN-290)
+- [x] 원장·점검 보고서·dev-docs 04·07·11·README 반영
+- [x] 자체 변경만 커밋

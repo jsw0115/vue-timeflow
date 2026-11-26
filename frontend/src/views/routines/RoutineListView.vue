@@ -1,5 +1,5 @@
 <script setup>
-import { bodyLocale, tr } from '../../store/locale'
+import { bodyLocale, tr, unit } from '../../store/locale'
 import { formatDate, modeText } from '../../features/i18n/locale.mjs'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -154,13 +154,19 @@ async function saveRoutine() {
   if (result.ok) { showModal.value = false; return }
   if (result.error.kind === 'conflict') conflict.value = { latest: { ...(result.error.latest ?? editingBase.value) } }
 }
+// 목표 단위는 사용자가 쓴 값이다. 처음 값 '회'만 본문 언어 단위로 보이고 저장값은 그대로 둔다(IMP-017)
+function goalText(goal) {
+  const count = goal?.count ?? ''
+  const u = goal?.unit ?? ''
+  return u === '회' ? count + unit('회', Number(count)) : count + u
+}
 const compareRows = computed(() => {
   if (!conflict.value) return []
   const latest = conflict.value.latest, mine = draft.value
   return [
     { label: '루틴 이름', mine: mine.title.trim(), latest: latest.title },
     { label: '시작 시간', mine: mine.time + ' · ' + mine.duration + '분', latest: latest.time + ' · ' + (latest.duration ?? 30) + '분' },
-    { label: '목표', mine: mine.goalCount + mine.goalUnit, latest: (latest.goal?.count ?? '') + (latest.goal?.unit ?? '') },
+    { label: '목표', mine: goalText({ count: mine.goalCount, unit: mine.goalUnit }), latest: goalText(latest.goal) },
     { label: '분류', mine: mine.category, latest: latest.category },
     { label: '반복 시작일', mine: mine.startDate, latest: latest.startDate ?? '' },
   ]
@@ -313,7 +319,7 @@ function removeRoutine(r) {
         <small style="color: var(--color-muted); margin-left: 6px">{{ r.time }} · {{ tr('{n}분', { n: r.duration ?? 30 }) }}<template v-if="isRestToday(r)"> {{ tr('· 오늘 쉬는 날') }}</template></small>
       </label>
       <span class="tag">{{ dayLabel(r, tr, dayName) }}</span>
-      <span class="figure">{{ r.goal?.count }}{{ r.goal?.unit }}</span>
+      <span class="figure">{{ goalText(r.goal) }}</span>
       <span v-if="routineMode === 'server'" class="figure">{{ r.historyLoaded ? r.rate4w + '%' : '–' }}<small style="color: var(--color-muted)"> · {{ tr('연속 {n}일', { n: r.historyLoaded ? r.streak : '–' }) }}</small></span>
       <span v-else class="figure">{{ tr('{n}일', { n: r.streak }) }}<small style="color: var(--color-muted)"> · {{ tr('최고 {n}', { n: r.best }) }}</small></span>
       <span class="week-dots">

@@ -111,6 +111,9 @@ function fixAll() {
     </div>
   </div>
 
+  <!-- 공수 항목은 화면 안에만 있는 고정 예시다. 실제 업무 기록에서 가져오지 않고 저장하지도 않는다(IMP-016) -->
+  <p class="sample-label">{{ tr('공수 항목과 실제 MD·일단가는 시연용 예시예요. 실제 업무 기록에서 가져온 값이 아니에요. 추가·확정한 내용은 저장되지 않아 화면을 다시 열면 처음 상태로 돌아가요.') }}</p>
+
   <div class="metrics" style="--metric-cols: 4; margin-bottom: 16px">
     <article><span>{{ tr('산정 공수') }}</span><b class="figure">{{ totalPlanned }}<small>MD</small></b><small>{{ (totalPlanned / MD_PER_MM).toFixed(2) }} MM</small></article>
     <article><span>{{ tr('실제 공수') }}</span><b class="figure">{{ totalActual }}<small>MD</small></b><small>{{ (totalActual / MD_PER_MM).toFixed(2) }} MM</small></article>

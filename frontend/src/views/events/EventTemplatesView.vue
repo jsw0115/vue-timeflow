@@ -82,6 +82,9 @@ function alarmLabel(min) {
     <PageActions><button class="primary" @click="openAdd">{{ tr('+ 템플릿 저장') }}</button></PageActions>
   </div>
 
+  <!-- 템플릿 목록과 사용 횟수는 화면 안에만 있는 고정 예시다. 저장하지 않는다(IMP-016) -->
+  <p class="sample-label">{{ tr('템플릿 목록과 사용 횟수는 시연용 예시예요. 추가·수정·삭제한 내용은 저장되지 않아 화면을 다시 열면 처음 목록으로 돌아가요.') }}</p>
+
   <ListFilterBar
     v-model:query="query"
     v-model:filters="filters"
