@@ -1,5 +1,6 @@
 <script setup>
 // 마감 알림 시점(Q-32). 로그인 계정 설정에 바로 저장한다. 알림은 앱·알림함을 열 때 서버가 만든다. 메일·메신저 발송은 아직 연결 전이다.
+import { tr } from '../store/locale'
 import { onMounted, ref } from 'vue'
 import { apiRequest } from '../features/auth/apiRequest.js'
 import { LEAD_DAYS, LEAD_MINUTES, createDueSettings } from '../features/notifications/dueSettings.mjs'
@@ -24,17 +25,17 @@ async function save(patch) {
 
 <template>
   <div class="due-settings">
-    <div class="section-label">마감 알림</div>
+    <div class="section-label">{{ tr('마감 알림') }}</div>
     <label class="task due-toggle">
       <input type="checkbox" :checked="form.enabled" :disabled="status === 'loading'" @change="save({ enabled: $event.target.checked })" />
-      <span><b>할 일·지원 마감 알림 받기</b><small>알림은 앱이나 알림함을 열 때 만들어져요.</small></span>
+      <span><b>{{ tr('할 일·지원 마감 알림 받기') }}</b><small>{{ tr('알림은 앱이나 알림함을 열 때 만들어져요.') }}</small></span>
     </label>
     <div v-if="form.enabled" class="form-row due-selects">
-      <label>할 일 마감<select :value="form.leadMinutes" :disabled="status === 'loading'" @change="save({ leadMinutes: Number($event.target.value) })"><option v-for="o in LEAD_MINUTES" :key="o.value" :value="o.value">{{ o.label }}</option></select></label>
-      <label>지원 마감·면접<select :value="form.leadDays ?? ''" :disabled="status === 'loading'" @change="save({ leadDays: $event.target.value === '' ? null : Number($event.target.value) })"><option value="">커리어 목표에 따라</option><option v-for="o in LEAD_DAYS" :key="o.value" :value="o.value">{{ o.label }}</option></select></label>
+      <label>{{ tr('할 일 마감') }}<select :value="form.leadMinutes" :disabled="status === 'loading'" @change="save({ leadMinutes: Number($event.target.value) })"><option v-for="o in LEAD_MINUTES" :key="o.value" :value="o.value">{{ tr(o.label) }}</option></select></label>
+      <label>{{ tr('지원 마감·면접') }}<select :value="form.leadDays ?? ''" :disabled="status === 'loading'" @change="save({ leadDays: $event.target.value === '' ? null : Number($event.target.value) })"><option value="">{{ tr('커리어 목표에 따라') }}</option><option v-for="o in LEAD_DAYS" :key="o.value" :value="o.value">{{ tr(o.label) }}</option></select></label>
     </div>
-    <p class="form-note">시각이 없는 할 일은 그날 하루가 시작될 때 알려요. 지원 일정은 커리어 목표가 취업·이직 준비면 3일 전, 그 밖에는 하루 전에 알려요. 메일·메신저로 받는 마감 알림은 발송 서비스를 연결한 뒤 켤 수 있어요(준비 중).</p>
-    <p v-if="message" class="input-field-help" role="status" :data-state="status === 'error' ? 'error' : status === 'saved' ? 'success' : undefined">{{ message }}</p>
+    <p class="form-note">{{ tr('시각이 없는 할 일은 그날 하루가 시작될 때 알려요. 지원 일정은 커리어 목표가 취업·이직 준비면 3일 전, 그 밖에는 하루 전에 알려요. 메일·메신저로 받는 마감 알림은 발송 서비스를 연결한 뒤 켤 수 있어요(준비 중).') }}</p>
+    <p v-if="message" class="input-field-help" role="status" :data-state="status === 'error' ? 'error' : status === 'saved' ? 'success' : undefined">{{ tr(message) }}</p>
   </div>
 </template>
 

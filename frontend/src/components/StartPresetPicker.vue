@@ -1,5 +1,8 @@
 <script setup>
 // 목적별 시작 구성 고르기(PR-23 UF-130, Q-34). 분류 → 그 분류의 커리어 목표 후보 → 적용 전 미리 보기 순서다. 저장은 부모가 store/startPreset으로 한다.
+import { bodyLocale, tr } from '../store/locale'
+import { groupLabel, modeText, navName } from '../features/i18n/locale.mjs'
+import { goalText } from '../features/i18n/careerMessages.mjs'
 import { computed, useId, watch } from 'vue'
 import { CAREER_GOALS } from '../features/career/careerModel.mjs'
 import { CATEGORIES, categoryOf, goalFor, startDiff } from '../features/start/startPresets.mjs'
@@ -19,7 +22,9 @@ const goals = computed(() => categoryOf(category.value).goals.map((g) => CAREER_
 // 분류를 바꿔 지금 목표가 후보에 없으면 그 분류의 첫 후보로 맞춘다
 watch(category, (value) => { goal.value = goalFor(value, goal.value) })
 
-const menuName = (path) => pinnableMenus().find((item) => item.path === path)?.name ?? path
+// 메뉴·묶음·위젯·모드 이름은 본문 언어로 보인다(PR-32)
+const menuName = (path) => { const item = pinnableMenus().find((entry) => entry.path === path); return item ? navName(item, bodyLocale.value) : path }
+const widgetName = (w) => (WIDGET_CATALOG[w]?.title ? tr(WIDGET_CATALOG[w].title) : w)
 const plan = computed(() => planStart({ category: category.value, goal: goal.value }))
 const diff = computed(() => {
   const now = currentStart(props.mode)
@@ -30,35 +35,35 @@ const diff = computed(() => {
 <template>
   <div class="start-picker">
     <fieldset class="start-group">
-      <legend>어떤 하루를 보내나요?</legend>
+      <legend>{{ tr('어떤 하루를 보내나요?') }}</legend>
       <div class="start-options">
         <label v-for="c in CATEGORIES" :key="c.id" class="start-option" :class="{ selected: category === c.id }">
           <input v-model="category" type="radio" :name="id + '-category'" :value="c.id" />
-          <span><b>{{ c.label }}</b><small>{{ c.desc }}</small></span><em v-if="category === c.id" class="start-check">선택됨</em>
+          <span><b>{{ tr(c.label) }}</b><small>{{ tr(c.desc) }}</small></span><em v-if="category === c.id" class="start-check">{{ tr('선택됨') }}</em>
         </label>
       </div>
     </fieldset>
     <fieldset class="start-group">
-      <legend>커리어 목표</legend>
-      <p class="input-field-help">고른 분류에 맞는 목표만 보여요. 목표는 커리어 대시보드 순서만 바꾸고 공개 범위나 권한은 바꾸지 않아요.</p>
+      <legend>{{ tr('커리어 목표') }}</legend>
+      <p class="input-field-help">{{ tr('고른 분류에 맞는 목표만 보여요. 목표는 커리어 대시보드 순서만 바꾸고 공개 범위나 권한은 바꾸지 않아요.') }}</p>
       <div class="start-options">
         <label v-for="g in goals" :key="g.id" class="start-option" :class="{ selected: goal === g.id }">
           <input v-model="goal" type="radio" :name="id + '-goal'" :value="g.id" />
-          <span><b>{{ g.label }}</b><small>{{ g.desc }}</small></span><em v-if="goal === g.id" class="start-check">선택됨</em>
+          <span><b>{{ goalText(g, bodyLocale).label }}</b><small>{{ goalText(g, bodyLocale).desc }}</small></span><em v-if="goal === g.id" class="start-check">{{ tr('선택됨') }}</em>
         </label>
       </div>
     </fieldset>
-    <label class="start-apply"><input v-model="applyLayout" type="checkbox" />메뉴 즐겨찾기와 홈 위젯도 이 구성으로 맞추기</label>
+    <label class="start-apply"><input v-model="applyLayout" type="checkbox" />{{ tr('메뉴 즐겨찾기와 홈 위젯도 이 구성으로 맞추기') }}</label>
     <section class="start-preview" :aria-labelledby="id + '-preview'">
-      <h3 :id="id + '-preview'">적용하면 바뀌는 것</h3>
+      <h3 :id="id + '-preview'">{{ tr('적용하면 바뀌는 것') }}</h3>
       <ul v-if="applyLayout">
-        <li>즐겨찾기(이 순서로): {{ plan.favorites.map(menuName).join(', ') }}</li>
-        <li v-if="diff.dropped.length">즐겨찾기 한도({{ MAX_FAVORITES }}개)를 넘어 빠지는 메뉴: {{ diff.dropped.map(menuName).join(', ') }}</li>
-        <li v-if="diff.folded.length">접는 메뉴 묶음: {{ diff.folded.join(', ') }}. 묶음 제목을 누르면 다시 펼쳐져요.</li>
-        <li>홈 위젯({{ modeMeta(mode).name }})에서 앞에 둘 위젯: {{ plan.widgets.map((w) => WIDGET_CATALOG[w]?.title ?? w).join(', ') }}<template v-if="diff.turnedOn.length"> · 새로 켜는 위젯: {{ diff.turnedOn.map((w) => WIDGET_CATALOG[w]?.title ?? w).join(', ') }}</template></li>
-        <li>숨기거나 지우는 메뉴, 끄는 위젯은 없어요. 적용한 뒤 환경설정에서 이전 구성으로 되돌릴 수 있어요.</li>
+        <li>{{ tr('즐겨찾기(이 순서로): {names}', { names: plan.favorites.map(menuName).join(', ') }) }}</li>
+        <li v-if="diff.dropped.length">{{ tr('즐겨찾기 한도({max}개)를 넘어 빠지는 메뉴: {names}', { max: MAX_FAVORITES, names: diff.dropped.map(menuName).join(', ') }) }}</li>
+        <li v-if="diff.folded.length">{{ tr('접는 메뉴 묶음: {names}. 묶음 제목을 누르면 다시 펼쳐져요.', { names: diff.folded.map((label) => groupLabel(label, bodyLocale)).join(', ') }) }}</li>
+        <li>{{ tr('홈 위젯({mode})에서 앞에 둘 위젯: {names}', { mode: modeText(mode, bodyLocale, modeMeta(mode)).name, names: plan.widgets.map(widgetName).join(', ') }) }}<template v-if="diff.turnedOn.length"> · {{ tr('새로 켜는 위젯: {names}', { names: diff.turnedOn.map(widgetName).join(', ') }) }}</template></li>
+        <li>{{ tr('숨기거나 지우는 메뉴, 끄는 위젯은 없어요. 적용한 뒤 환경설정에서 이전 구성으로 되돌릴 수 있어요.') }}</li>
       </ul>
-      <p v-else class="input-field-help">커리어 목표만 저장하고, 메뉴 즐겨찾기·묶음 접힘·홈 위젯은 지금 그대로 둬요.</p>
+      <p v-else class="input-field-help">{{ tr('커리어 목표만 저장하고, 메뉴 즐겨찾기·묶음 접힘·홈 위젯은 지금 그대로 둬요.') }}</p>
     </section>
   </div>
 </template>

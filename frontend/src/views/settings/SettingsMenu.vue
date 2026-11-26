@@ -1,4 +1,5 @@
 <script setup>
+import { tr } from '../../store/locale'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { navGroups } from '../../router'
@@ -10,7 +11,7 @@ const items = computed(() => navGroups.find((g) => g.label === '설정')?.items 
 <template>
   <nav class="setting-menu card">
     <router-link v-for="item in items" :key="item.path" :to="item.path" custom v-slot="{ navigate }">
-      <button :class="{ active: route.path === item.path }" @click="navigate">{{ item.name }}<span>›</span></button>
+      <button :class="{ active: route.path === item.path }" @click="navigate">{{ tr(item.name) }}<span>›</span></button>
     </router-link>
   </nav>
 </template>

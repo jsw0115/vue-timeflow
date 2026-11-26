@@ -1,4 +1,6 @@
 <script setup>
+import { bodyLocale, tr } from '../../store/locale'
+import { modeText } from '../../features/i18n/locale.mjs'
 import { computed, ref } from 'vue'
 import { modeState, modeMeta, modeContent } from '../../store/modeProfiles'
 import { session } from '../../features/auth/session.js'
@@ -77,81 +79,82 @@ const isDirty = computed(() => savedSnapshot.value !== snapshot())
 const savedNotice = ref('')
 function save() {
   savedSnapshot.value = snapshot()
-  savedNotice.value = '알림 설정을 저장했어요.'
+  savedNotice.value = tr('이 화면에서만 바꿨어요. 계정에는 저장되지 않아요.')
   setTimeout(() => (savedNotice.value = ''), 2500)
 }
 </script>
 
 <template>
   <section class="card setting-content">
-    <h2>알림</h2>
+    <h2>{{ tr('알림 설정') }}</h2>
     <!-- 마감 알림(Q-32)은 계정 설정에 바로 저장한다. 아래 채널·카테고리·방해 금지는 아직 이 화면의 예시다 -->
     <DueReminderSettings v-if="session.userId" />
-    <div class="section-label">채널</div>
+    <p class="sample-label">{{ tr('아래 채널·카카오톡 알림톡·카테고리별 알림·방해 금지는 아직 저장되지 않는 예시예요. 실제 알림을 보내지 않아요.') }}</p>
+    <div class="section-label">{{ tr('채널') }}</div>
     <div class="trow" v-for="c in channels" :key="c.id">
       <span style="flex: 1">
-        <b style="display: block">{{ c.title }}</b>
+        <b style="display: block">{{ tr(c.title) }}</b>
         <!-- 이메일 채널은 시연 주소 대신 로그인한 계정 이메일을 보인다 -->
-        <small style="color: var(--color-muted)">{{ c.id === 'email' ? (session.email || '로그인한 계정 이메일로 받아요') : c.desc }}</small>
+        <small style="color: var(--color-muted)">{{ c.id === 'email' ? (session.email || tr('로그인한 계정 이메일로 받아요')) : tr(c.desc) }}</small>
       </span>
-      <button type="button" role="switch" class="toggle" :aria-label="c.title" :aria-checked="c.on" :class="{ on: c.on }" @click="toggleChannel(c)"><em></em></button>
+      <button type="button" role="switch" class="toggle" :aria-label="tr(c.title)" :aria-checked="c.on" :class="{ on: c.on }" @click="toggleChannel(c)"><em></em></button>
     </div>
 
     <!-- 카카오톡 알림톡 설정 -->
     <div class="kakao-box">
       <div class="head">
-        <div><b>카카오톡 알림톡 설정</b><p style="margin: 4px 0 0">번호 인증과 수신 동의를 마치면 채널을 켤 수 있어요</p></div>
-        <span class="badge" :class="kakaoReady ? 'ok' : 'warn'">{{ kakaoReady ? '사용 가능' : '설정 필요' }}</span>
+        <div><b>{{ tr('카카오톡 알림톡 설정') }}</b><p style="margin: 4px 0 0">{{ tr('번호 인증과 수신 동의를 마치면 채널을 켤 수 있어요') }}</p></div>
+        <span class="badge" :class="kakaoReady ? 'ok' : 'warn'">{{ kakaoReady ? tr('사용 가능') : tr('설정 필요') }}</span>
       </div>
 
       <template v-if="!kakao.verified">
         <div class="form-row" style="margin-top: 12px">
-          <label style="flex: 1">휴대폰 번호<input v-model="kakao.phone" placeholder="010-1234-5678" inputmode="tel" /></label>
-          <button class="review" style="margin: 0; align-self: flex-end" @click="sendCode">인증번호 받기</button>
+          <label style="flex: 1">{{ tr('휴대폰 번호') }}<input v-model="kakao.phone" placeholder="010-1234-5678" inputmode="tel" /></label>
+          <button class="review" style="margin: 0; align-self: flex-end" @click="sendCode">{{ tr('인증번호 받기') }}</button>
         </div>
         <div class="form-row" v-if="kakao.sending">
-          <label style="flex: 1">인증번호<input v-model="kakao.code" placeholder="숫자 4~6자리" inputmode="numeric" /></label>
-          <button type="button" class="button-secondary" style="align-self: flex-end" @click="verifyCode">확인</button>
+          <label style="flex: 1">{{ tr('인증번호') }}<input v-model="kakao.code" :placeholder="tr('숫자 4~6자리')" inputmode="numeric" /></label>
+          <button type="button" class="button-secondary" style="align-self: flex-end" @click="verifyCode">{{ tr('확인') }}</button>
         </div>
       </template>
       <template v-else>
         <div class="form-row" style="margin-top: 12px; align-items: center">
-          <span class="badge ok">인증 완료 · {{ kakao.phone }}</span>
-          <button class="review" style="margin: 0" @click="resetKakao">번호 변경</button>
+          <span class="badge ok">{{ tr('인증 완료 · {phone}', { phone: kakao.phone }) }}</span>
+          <button class="review" style="margin: 0" @click="resetKakao">{{ tr('번호 변경') }}</button>
         </div>
       </template>
 
       <label class="task" style="border: 0; display: inline-flex;">
         <input type="checkbox" v-model="kakao.consent" />
-        <span style="flex: 1"><b>알림톡 수신에 동의합니다</b><small>정보성 알림만 보내며, 광고·마케팅 메시지는 보내지 않아요</small></span>
+        <span style="flex: 1"><b>{{ tr('알림톡 수신에 동의합니다') }}</b><small>{{ tr('정보성 알림만 보내며, 광고·마케팅 메시지는 보내지 않아요') }}</small></span>
       </label>
 
-      <div class="section-label">알림톡으로 받을 알림</div>
+      <div class="section-label">{{ tr('알림톡으로 받을 알림') }}</div>
       <div class="trow" v-for="t in KAKAO_TEMPLATES" :key="t.id">
-        <span style="flex: 1"><b style="display: block">{{ t.label }}</b><small style="color: var(--color-muted)">{{ t.desc }}</small></span>
-        <button type="button" role="switch" class="toggle" :aria-label="t.label" :aria-checked="kakaoTemplates[t.id] && kakaoChannel.on" :class="{ on: kakaoTemplates[t.id] && kakaoChannel.on }" @click="kakaoTemplates[t.id] = !kakaoTemplates[t.id]"><em></em></button>
+        <span style="flex: 1"><b style="display: block">{{ tr(t.label) }}</b><small style="color: var(--color-muted)">{{ tr(t.desc) }}</small></span>
+        <button type="button" role="switch" class="toggle" :aria-label="tr(t.label)" :aria-checked="kakaoTemplates[t.id] && kakaoChannel.on" :class="{ on: kakaoTemplates[t.id] && kakaoChannel.on }" @click="kakaoTemplates[t.id] = !kakaoTemplates[t.id]"><em></em></button>
       </div>
 
-      <p v-if="kakao.notice" class="badge warn" style="display: inline-block">{{ kakao.notice }}</p>
-      <p class="form-note">알림톡은 승인된 템플릿으로만 발송돼요. 실패하면 자동으로 문자(LMS)로 대체 발송됩니다.</p>
+      <p v-if="kakao.notice" class="badge warn" style="display: inline-block">{{ tr(kakao.notice) }}</p>
+      <p class="form-note">{{ tr('알림톡은 승인된 템플릿으로만 발송돼요. 실패하면 자동으로 문자(LMS)로 대체 발송됩니다.') }}</p>
     </div>
     <div class="section-label">
-      카테고리별 알림 <span class="badge new">보충 반영 · SET-004-F03</span>
-      <span class="form-note">{{ modeMeta(modeState.activeMode).name }} 추천 기본값이 적용돼 있어요</span>
+      {{ tr('카테고리별 알림') }} <span class="badge new">{{ tr('보충 반영 · SET-004-F03') }}</span>
+      <span class="form-note">{{ tr('{mode} 추천 기본값이 적용돼 있어요', { mode: modeText(modeState.activeMode, bodyLocale, modeMeta(modeState.activeMode)).name }) }}</span>
     </div>
-    <div class="trow" v-for="c in categories" :key="c.title"><b>{{ c.title }}</b><button type="button" role="switch" class="toggle" :aria-label="c.title + ' 알림'" :aria-checked="c.on" :class="{ on: c.on }" @click="c.on = !c.on"><em></em></button></div>
-    <div class="section-label">방해 금지</div>
+    <div class="trow" v-for="c in categories" :key="c.title"><b>{{ tr(c.title) }}</b><button type="button" role="switch" class="toggle" :aria-label="tr('{name} 알림', { name: tr(c.title) })" :aria-checked="c.on" :class="{ on: c.on }" @click="c.on = !c.on"><em></em></button></div>
+    <div class="section-label">{{ tr('방해 금지') }}</div>
     <label class="task" style="border: 0; display: inline-flex;">
       <input type="checkbox" v-model="dnd.on" />
-      <span style="flex: 1"><b>방해 금지 시간 사용</b><small>이 시간에는 알림을 보내지 않아요</small></span>
+      <span style="flex: 1"><b>{{ tr('방해 금지 시간 사용') }}</b><small>{{ tr('이 시간에는 알림을 보내지 않아요') }}</small></span>
     </label>
     <div class="form-row" v-if="dnd.on">
-      <label style="flex: 1">시작<input type="time" v-model="dnd.from" /></label>
-      <label style="flex: 1">종료<input type="time" v-model="dnd.to" /></label>
+      <label style="flex: 1">{{ tr('시작') }}<input type="time" v-model="dnd.from" /></label>
+      <label style="flex: 1">{{ tr('종료') }}<input type="time" v-model="dnd.to" /></label>
     </div>
 
-    <button class="primary" :disabled="!isDirty" @click="save">저장하기</button>
+    <button class="primary" :disabled="!isDirty" @click="save">{{ tr('저장하기') }}</button>
     <p v-if="savedNotice" class="badge ok" style="display: inline-block; margin-top: 8px">{{ savedNotice }}</p>
-    <p v-else-if="isDirty" class="form-note">저장하지 않은 변경사항이 있어요.</p>
+    <p v-else-if="isDirty" class="form-note">{{ tr('저장하지 않은 변경사항이 있어요.') }}</p>
   </section>
 </template>

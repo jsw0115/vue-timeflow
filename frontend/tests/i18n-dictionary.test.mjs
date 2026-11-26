@@ -38,7 +38,9 @@ test('영어가 없으면 한국어 원문, 자리표시를 채운다. 본문까
   assert.equal(translate(7, 'en'), '7')
   assert.equal(translate('내 분류 {x}', 'en'), '내 분류 {x}')
   for (const path of TRANSLATED_PATHS) assert.equal(documentLang('en', path), 'en')
-  assert.equal(documentLang('en', '/settings'), 'ko')
+  // 환경설정은 12단계에서 옮겼다. 아직 옮기지 않은 공유 화면은 ko다
+  assert.equal(documentLang('en', '/settings/env'), 'en')
+  assert.equal(documentLang('en', '/share'), 'ko')
   assert.equal(documentLang('ko', '/career'), 'ko')
 })
 
@@ -135,3 +137,22 @@ test('용어 목록 문서(docs/dev-docs/12, Q-38 (4))의 영어가 사전과 �
   assert.deepEqual(rows.filter(([ko, en]) => EN[ko] !== en), [])
 })
 
+
+test('환경설정(PR-32 12단계)이 저장소에서 꺼내 tr에 넘기는 이름표·안내·오류 문구도 사전에 있다. 시연 예시 제목은 한국어 그대로 둔다', () => {
+  const pick = /(?:\b(?:label|desc|title|name|note|unit|domain|text|at|type|message)\s*:\s*|\.value = |return |throw new Error\(|flash\(|row\()'([^'\n]*[가-힣][^'\n]*)'/g
+  const demoTitles = new Set(['분기 킥오프 미팅', '디자인 리뷰 아이디어', '세금 신고 준비', '주간 회고 메모', '헬스장 등록하기'])
+  const files = [
+    'store/theme.js', 'store/appearance.js', 'store/aiSettings.js', 'store/automations.js', 'store/dashboard.js', 'store/statsPortlets.js',
+    'features/start/startPresets.mjs', 'features/integrations/integrationStatus.mjs', 'features/integrations/useCapabilityStatus.mjs',
+    'features/settings/themeAccount.mjs', 'features/backup/backupClient.mjs', 'features/support/tickets.mjs', 'store/startPreset.js', 'store/locale.js',
+    'features/i18n/localeAccount.mjs', 'views/settings/SettingsNotificationsView.vue', 'views/settings/SettingsSecurityView.vue', 'views/settings/SettingsCategoryView.vue',
+    'views/settings/SettingsThemeView.vue', 'views/settings/SettingsWidgetsView.vue', 'views/settings/SettingsFormStyleView.vue', 'views/settings/SettingsDataView.vue',
+    'views/settings/SettingsSupportView.vue', 'views/trash/TrashView.vue', 'components/DueReminderSettings.vue', 'components/DayBoundarySettings.vue', 'features/notifications/dueSettings.mjs',
+  ]
+  for (const file of files) {
+    const source = readFileSync(new URL('../src/' + file, import.meta.url), 'utf8').split('\n').filter((line) => !/^\s*(\/\/|\*|\/\*)/.test(line)).join('\n')
+    const shown = [...new Set([...source.matchAll(pick)].map((m) => m[1]))].filter((ko) => !demoTitles.has(ko))
+    assert.deepEqual(shown.filter((ko) => !(ko in EN)), [], file)
+  }
+  assert.equal(documentLang('en', '/settings/profile'), 'en')
+})

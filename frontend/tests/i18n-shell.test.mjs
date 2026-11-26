@@ -74,7 +74,8 @@ test('앱 셸은 문구를 언어별로 고르고, 바뀐 부분에만 lang을 �
   assert.match(app, /\{\{ navName\(item, locale\) \}\}/)
   assert.match(read('index.html'), /<html lang="ko">/)
   const env = read('src/views/settings/SettingsEnvView.vue')
-  assert.match(env, /각 화면 본문과 내가 쓴 기록은 그대로예요/)
+  // PR-32 12단계: 본문 번역 범위가 넓어져 안내를 바꿨다
+  assert.match(env, /내가 쓴 기록, 내보내는 문서는 그대로예요/)
   assert.match(env, /@change="chooseLocale\(l\.id\)"/)
   assert.match(read('src/views/settings/SettingsView.vue'), /settingLabel\(item, locale\)/)
 })

@@ -1,5 +1,6 @@
 <script setup>
 // 고객지원. 로그인하면 1:1 문의를 서버(/api/support/tickets)에 남기고 내 문의의 처리 상태와 답변을 본다(PR-10 UF-117).
+import { tr } from '../../store/locale'
 import { computed, ref, watch } from 'vue'
 import { session } from '../../features/auth/session.js'
 import { apiRequest } from '../../features/auth/apiRequest.js'
@@ -44,44 +45,44 @@ const dateOf = (ticket) => String(ticket.createdAt ?? '').slice(0, 10)
 
 <template>
   <section class="card setting-content">
-    <h2>고객지원</h2>
-    <div class="section-label">자주 묻는 질문</div>
-    <div class="trow"><b>데이터는 얼마나 안전하게 보관되나요?</b><span>›</span></div>
-    <div class="trow"><b>플랜을 변경하고 싶어요</b><span>›</span></div>
-    <div class="trow"><b>계정을 삭제하면 어떻게 되나요?</b><span>›</span></div>
+    <h2>{{ tr('고객지원') }}</h2>
+    <div class="section-label">{{ tr('자주 묻는 질문') }}</div>
+    <div class="trow"><b>{{ tr('데이터는 얼마나 안전하게 보관되나요?') }}</b><span>›</span></div>
+    <div class="trow"><b>{{ tr('플랜을 변경하고 싶어요') }}</b><span>›</span></div>
+    <div class="trow"><b>{{ tr('계정을 삭제하면 어떻게 되나요?') }}</b><span>›</span></div>
 
-    <div class="section-label" id="support-inquiry">1:1 문의</div>
+    <div class="section-label" id="support-inquiry">{{ tr('1:1 문의') }}</div>
     <template v-if="!signedIn">
-      <p class="form-note">1:1 문의는 로그인한 계정으로 남기고, 답변도 그 계정에서 확인해요.</p>
-      <router-link class="button-secondary" to="/auth/login">로그인</router-link>
+      <p class="form-note">{{ tr('1:1 문의는 로그인한 계정으로 남기고, 답변도 그 계정에서 확인해요.') }}</p>
+      <router-link class="button-secondary" to="/auth/login">{{ tr('로그인') }}</router-link>
     </template>
     <template v-else>
-      <button v-if="!writing" type="button" class="button-secondary" @click="writing = true; send = { state: 'idle', message: '' }">문의하기</button>
+      <button v-if="!writing" type="button" class="button-secondary" @click="writing = true; send = { state: 'idle', message: '' }">{{ tr('문의하기') }}</button>
       <form v-else class="support-form" aria-labelledby="support-inquiry" @submit.prevent="submit">
-        <label>제목<input v-model="draft.title" maxlength="200" required /></label>
-        <label>내용<textarea v-model="draft.body" rows="5" maxlength="20000" required></textarea></label>
-        <p class="form-note">문의 내용은 운영 관리자만 볼 수 있어요. 비밀번호나 결제 카드 번호는 적지 마세요.</p>
+        <label>{{ tr('제목') }}<input v-model="draft.title" maxlength="200" required /></label>
+        <label>{{ tr('내용') }}<textarea v-model="draft.body" rows="5" maxlength="20000" required></textarea></label>
+        <p class="form-note">{{ tr('문의 내용은 운영 관리자만 볼 수 있어요. 비밀번호나 결제 카드 번호는 적지 마세요.') }}</p>
         <div class="support-actions">
-          <button type="button" class="button-secondary" @click="writing = false">취소</button>
-          <button type="submit" class="primary" :disabled="!canSend" :aria-busy="send.state === 'saving' ? 'true' : undefined">{{ send.state === 'saving' ? '보내는 중' : '문의 보내기' }}</button>
+          <button type="button" class="button-secondary" @click="writing = false">{{ tr('취소') }}</button>
+          <button type="submit" class="primary" :disabled="!canSend" :aria-busy="send.state === 'saving' ? 'true' : undefined">{{ send.state === 'saving' ? tr('보내는 중') : tr('문의 보내기') }}</button>
         </div>
       </form>
-      <p v-if="send.message" class="input-field-help" role="status" :data-state="send.state === 'failed' ? 'error' : 'success'">{{ send.message }}</p>
+      <p v-if="send.message" class="input-field-help" role="status" :data-state="send.state === 'failed' ? 'error' : 'success'">{{ tr(send.message) }}</p>
 
-      <h3 class="support-subhead">내 문의</h3>
-      <p v-if="load.state === 'loading'" class="input-field-help" role="status">내 문의를 불러오는 중이에요.</p>
-      <div v-else-if="load.state === 'error'" class="empty-state" role="status"><p>{{ load.message }}</p><button type="button" class="button-secondary" @click="reload">다시 시도</button></div>
-      <p v-else-if="!sorted.length" class="empty-state">아직 남긴 문의가 없어요. 궁금한 점이 있으면 문의하기를 눌러 남겨 주세요.</p>
+      <h3 class="support-subhead">{{ tr('내 문의') }}</h3>
+      <p v-if="load.state === 'loading'" class="input-field-help" role="status">{{ tr('내 문의를 불러오는 중이에요.') }}</p>
+      <div v-else-if="load.state === 'error'" class="empty-state" role="status"><p>{{ tr(load.message) }}</p><button type="button" class="button-secondary" @click="reload">{{ tr('다시 시도') }}</button></div>
+      <p v-else-if="!sorted.length" class="empty-state">{{ tr('아직 남긴 문의가 없어요. 궁금한 점이 있으면 문의하기를 눌러 남겨 주세요.') }}</p>
       <ul v-else class="support-list">
         <li v-for="ticket in sorted" :key="ticket.id">
-          <div class="support-row"><b>{{ ticket.title }}</b><span class="tag" :data-status="statusOf(ticket)">{{ statusLabel(ticket) }}</span></div>
-          <p class="input-field-help"><span class="figure">{{ dateOf(ticket) }}</span> 접수</p>
+          <div class="support-row"><b>{{ ticket.title }}</b><span class="tag" :data-status="statusOf(ticket)">{{ tr(statusLabel(ticket)) }}</span></div>
+          <p class="input-field-help"><span class="figure">{{ dateOf(ticket) }}</span> {{ tr('접수') }}</p>
           <p class="support-body">{{ ticket.body }}</p>
-          <div v-if="ticket.reply" class="support-reply"><b>답변</b><p>{{ ticket.reply }}</p></div>
+          <div v-if="ticket.reply" class="support-reply"><b>{{ tr('답변') }}</b><p>{{ ticket.reply }}</p></div>
         </li>
       </ul>
     </template>
-    <router-link to="/legal" custom v-slot="{ navigate }"><div class="trow" @click="navigate" style="cursor: pointer"><b>이용약관 및 개인정보처리방침</b><span>›</span></div></router-link>
+    <router-link to="/legal" custom v-slot="{ navigate }"><div class="trow" @click="navigate" style="cursor: pointer"><b>{{ tr('이용약관 및 개인정보처리방침') }}</b><span>›</span></div></router-link>
   </section>
 </template>
 

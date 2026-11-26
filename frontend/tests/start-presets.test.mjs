@@ -94,7 +94,7 @@ test('온보딩·환경설정은 같은 고르기 화면을 쓰고, 묶음 버�
   const picker = read('components/StartPresetPicker.vue')
   assert.match(picker, /숨기거나 지우는 메뉴, 끄는 위젯은 없어요/)
   assert.match(picker, /묶음 제목을 누르면 다시 펼쳐져요/)
-  assert.equal((picker.match(/선택됨<\/em>/g) ?? []).length, 2)
+  assert.equal((picker.match(/tr\('선택됨'\) \}\}<\/em>/g) ?? []).length, 2)
   const app = read('App.vue')
   assert.match(app, /:aria-expanded="group\.label === '플래너' \? undefined : !isGroupCollapsed\(group\.label\)"/)
   assert.match(read('store/startPreset.js'), /export const KEEP_OPEN = \['메인'\]/)

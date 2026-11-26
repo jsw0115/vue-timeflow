@@ -1,5 +1,6 @@
 ﻿<!-- 지원 범위가 명시된 수동 백업 다운로드와 미리보기 기반 병합 복원을 제공한다. -->
 <script setup>
+import { bodyLocale, tr } from '../../store/locale'
 import { computed, ref, watch, onBeforeUnmount } from 'vue'
 import { session } from '../../features/auth/session.js'
 import { apiRequest } from '../../features/auth/apiRequest.js'
@@ -53,32 +54,34 @@ async function restore() {
     const value = await client.status(); if (current()) status.value = value
   })
 }
+// 마지막 백업·복원 시각은 본문 언어 형식이다(예전에는 늘 ko-KR)
+const when = (iso) => new Date(iso).toLocaleString(bodyLocale.value === 'ko' ? 'ko-KR' : 'en-US')
 </script>
 
 <template>
   <section class="card setting-content" :aria-busy="busy">
-    <h2>수동 백업과 복원</h2>
-    <p>서버에 저장된 일기·메모·디데이·가계부·회고·완료한 집중/실제 기록과 개인 첨부를 JSON 파일로 보관합니다.</p>
-    <p>최대 기록 500개, 첨부 50개·합계 5 MiB, 백업 JSON 8 MiB입니다. 한도를 넘으면 일부 자료를 누락한 파일을 만들지 않습니다.</p>
-    <details><summary>포함되지 않는 자료 확인</summary><ul><li>브라우저 로컬·시연 자료와 진행 중인 기록.</li><li>일정·할 일·루틴·기존 플래너 항목·업무·경력·소셜·채팅 자료.</li><li>프로필·설정·토큰·비밀키·공유 권한과 공유 그룹·만료 첨부.</li></ul></details>
-    <p>자동 백업은 제공하지 않습니다. 백업 생성 시각은 서버에서 파일을 만든 시각이며 기기에 저장됐다는 확인은 아닙니다.</p>
-    <div class="trow"><b>마지막 파일 생성</b><span>{{ status?.lastExport?.finishedAt ? new Date(status.lastExport.finishedAt).toLocaleString('ko-KR') : '확인된 기록 없음' }}</span></div>
-    <div class="trow"><b>마지막 복원 완료</b><span>{{ status?.lastRestore?.finishedAt ? new Date(status.lastRestore.finishedAt).toLocaleString('ko-KR') : '확인된 기록 없음' }}</span></div>
-    <button type="button" class="primary" :disabled="busy || !session.userId" @click="download">JSON 백업 다운로드</button>
-    <button type="button" class="review" :disabled="busy || !session.userId" @click="load">처리 이력 다시 확인</button>
-    <h3>파일 확인 후 병합 복원</h3>
-    <label for="backup-file">복원할 JSON 백업 파일</label>
+    <h2>{{ tr('수동 백업과 복원') }}</h2>
+    <p>{{ tr('서버에 저장된 일기·메모·디데이·가계부·회고·완료한 집중/실제 기록과 개인 첨부를 JSON 파일로 보관합니다.') }}</p>
+    <p>{{ tr('최대 기록 500개, 첨부 50개·합계 5 MiB, 백업 JSON 8 MiB입니다. 한도를 넘으면 일부 자료를 누락한 파일을 만들지 않습니다.') }}</p>
+    <details><summary>{{ tr('포함되지 않는 자료 확인') }}</summary><ul><li>{{ tr('브라우저 로컬·시연 자료와 진행 중인 기록.') }}</li><li>{{ tr('일정·할 일·루틴·기존 플래너 항목·업무·경력·소셜·채팅 자료.') }}</li><li>{{ tr('프로필·설정·토큰·비밀키·공유 권한과 공유 그룹·만료 첨부.') }}</li></ul></details>
+    <p>{{ tr('자동 백업은 제공하지 않습니다. 백업 생성 시각은 서버에서 파일을 만든 시각이며 기기에 저장됐다는 확인은 아닙니다.') }}</p>
+    <div class="trow"><b>{{ tr('마지막 파일 생성') }}</b><span>{{ status?.lastExport?.finishedAt ? when(status.lastExport.finishedAt) : tr('확인된 기록 없음') }}</span></div>
+    <div class="trow"><b>{{ tr('마지막 복원 완료') }}</b><span>{{ status?.lastRestore?.finishedAt ? when(status.lastRestore.finishedAt) : tr('확인된 기록 없음') }}</span></div>
+    <button type="button" class="primary" :disabled="busy || !session.userId" @click="download">{{ tr('JSON 백업 다운로드') }}</button>
+    <button type="button" class="review" :disabled="busy || !session.userId" @click="load">{{ tr('처리 이력 다시 확인') }}</button>
+    <h3>{{ tr('파일 확인 후 병합 복원') }}</h3>
+    <label for="backup-file">{{ tr('복원할 JSON 백업 파일') }}</label>
     <input id="backup-file" ref="fileInput" type="file" accept=".json,application/json" :disabled="busy" @change="choose" />
-    <button type="button" class="review" :disabled="busy || !selectedFile || !session.userId" @click="inspect">복원 미리보기</button>
-    <p v-if="busy" role="status">서버에서 확인하고 있습니다.</p>
-    <p v-if="error" role="alert">{{ error }}</p>
-    <p v-if="message" role="status">{{ message }}</p>
-    <section v-if="preview" class="review" aria-label="복원 미리보기">
-      <h3>{{ preview.state === 'COMPLETED' ? '이미 완료한 복원 결과' : '복원 예정 내용' }}</h3>
-      <p>새로 생성 {{ creates }}개 · 기존 자료 보존 {{ skips }}개. 새 ID와 현재 계정 소유권을 사용하며 공유 권한은 복원하지 않습니다.</p>
-      <ul><li v-for="item in preview.items" :key="item.kind + ':' + item.sourceId"><b>{{ item.title }}</b> · {{ item.kind }} · {{ item.action === 'SKIP' ? '건너뛰기' : '새로 생성' }}<p>{{ item.reason }}</p></li></ul>
-      <button type="button" class="primary" :disabled="busy || preview.state === 'COMPLETED'" @click="restore">확인한 내용으로 병합 복원</button>
-      <p>연결이 끊기면 같은 파일과 미리보기로 다시 시도할 수 있습니다. 완료한 작업은 중복 실행하지 않습니다.</p>
+    <button type="button" class="review" :disabled="busy || !selectedFile || !session.userId" @click="inspect">{{ tr('복원 미리보기') }}</button>
+    <p v-if="busy" role="status">{{ tr('서버에서 확인하고 있습니다.') }}</p>
+    <p v-if="error" role="alert">{{ tr(error) }}</p>
+    <p v-if="message" role="status">{{ tr(message) }}</p>
+    <section v-if="preview" class="review" :aria-label="tr('복원 미리보기')">
+      <h3>{{ preview.state === 'COMPLETED' ? tr('이미 완료한 복원 결과') : tr('복원 예정 내용') }}</h3>
+      <p>{{ tr('새로 생성 {n}개 · 기존 자료 보존 {m}개. 새 ID와 현재 계정 소유권을 사용하며 공유 권한은 복원하지 않습니다.', { n: creates, m: skips }) }}</p>
+      <ul><li v-for="item in preview.items" :key="item.kind + ':' + item.sourceId"><b>{{ item.title }}</b> · {{ tr(item.kind) }} · {{ item.action === 'SKIP' ? tr('건너뛰기') : tr('새로 생성') }}<p>{{ tr(item.reason) }}</p></li></ul>
+      <button type="button" class="primary" :disabled="busy || preview.state === 'COMPLETED'" @click="restore">{{ tr('확인한 내용으로 병합 복원') }}</button>
+      <p>{{ tr('연결이 끊기면 같은 파일과 미리보기로 다시 시도할 수 있습니다. 완료한 작업은 중복 실행하지 않습니다.') }}</p>
     </section>
   </section>
 </template>
