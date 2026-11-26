@@ -1,5 +1,6 @@
 <!-- 새 커뮤니티를 서버에 만들고 커뮤니티 홈으로 이동한다. 로그아웃 상태에서는 로그인 안내만 보인다(PR-10 3단계). -->
 <script setup>
+import { tr } from '../store/locale'
 import { useId as modalUseId } from 'vue'
 const modalFormId1 = modalUseId()
 
@@ -35,10 +36,10 @@ const draft = ref({
 })
 
 const error = computed(() => {
-  if (!draft.value.title.trim()) return '커뮤니티 이름을 입력해주세요.'
-  if (draft.value.title.trim().length < 2) return '이름은 2자 이상이어야 해요.'
-  if (!integerBetween(draft.value.capacity, 2, 500)) return '정원은 2~500명 사이의 정수로 입력해주세요.'
-  if (draft.value.deadline && draft.value.deadline < localDate()) return '모집 마감은 오늘 이후로 선택해주세요.'
+  if (!draft.value.title.trim()) return tr('커뮤니티 이름을 입력해주세요.')
+  if (draft.value.title.trim().length < 2) return tr('이름은 2자 이상이어야 해요.')
+  if (!integerBetween(draft.value.capacity, 2, 500)) return tr('정원은 2~500명 사이의 정수로 입력해주세요.')
+  if (draft.value.deadline && draft.value.deadline < localDate()) return tr('모집 마감은 오늘 이후로 선택해주세요.')
   return ''
 })
 const busy = ref(false)
@@ -57,18 +58,18 @@ async function create() {
 </script>
 
 <template>
-  <Modal title="커뮤니티 만들기" wide @close="emit('close')">
-    <div v-if="!session.userId" class="empty-state" role="status"><p>커뮤니티는 로그인한 계정끼리 함께해요. 로그인하면 커뮤니티를 만들 수 있어요.</p></div>
+  <Modal :title="tr('커뮤니티 만들기')" wide @close="emit('close')">
+    <div v-if="!session.userId" class="empty-state" role="status"><p>{{ tr('커뮤니티는 로그인한 계정끼리 함께해요. 로그인하면 커뮤니티를 만들 수 있어요.') }}</p></div>
     <form v-else @submit.prevent="create" :id="modalFormId1">
-        <label>커뮤니티 이름<input v-model="draft.title" placeholder="예: 주말 러닝 크루" autofocus /></label>
-        <label>카테고리<select v-model="draft.category"><option v-for="c in CATEGORIES" :key="c">{{ c }}</option></select></label>
-        <label>소개 · 태그 · 멘션<TagMentionInput v-model="draft.intro" placeholder="함께할 활동을 소개해주세요. #태그 @이름" /></label>
+        <label>{{ tr('커뮤니티 이름') }}<input v-model="draft.title" :placeholder="tr('예: 주말 러닝 크루')" autofocus /></label>
+        <label>{{ tr('카테고리') }}<select v-model="draft.category"><option v-for="c in CATEGORIES" :key="c" :value="c">{{ tr(c) }}</option></select></label>
+        <label>{{ tr('소개 · 태그 · 멘션') }}<TagMentionInput v-model="draft.intro" :placeholder="tr('함께할 활동을 소개해주세요. #태그 @이름')" /></label>
         <div class="form-row">
-          <label style="flex: 1">정원(명)<input type="number" min="2" max="500" v-model.number="draft.capacity" /></label>
-          <label style="flex: 1">모집 마감<input type="date" v-model="draft.deadline" /></label>
+          <label style="flex: 1">{{ tr('정원(명)') }}<input type="number" min="2" max="500" v-model.number="draft.capacity" /></label>
+          <label style="flex: 1">{{ tr('모집 마감') }}<input type="date" v-model="draft.deadline" /></label>
         </div>
 
-        <div class="section-label">공개 설정</div>
+        <div class="section-label">{{ tr('공개 설정') }}</div>
         <div class="policy-row">
           <button
             v-for="v in VISIBILITY"
@@ -77,11 +78,11 @@ async function create() {
             :class="{ selected: draft.visibility === v.id }"
             @click="draft.visibility = v.id"
           >
-            <b>{{ v.label }}</b><small>{{ v.desc }}</small>
+            <b>{{ tr(v.label) }}</b><small>{{ tr(v.desc) }}</small>
           </button>
         </div>
 
-        <div class="section-label" style="margin-top: 18px">가입 정책</div>
+        <div class="section-label" style="margin-top: 18px">{{ tr('가입 정책') }}</div>
         <div class="policy-row">
           <button
             v-for="j in JOIN_POLICY"
@@ -90,18 +91,18 @@ async function create() {
             :class="{ selected: draft.joinPolicy === j.id }"
             @click="draft.joinPolicy = j.id"
           >
-            <b>{{ j.label }}</b><small>{{ j.desc }}</small>
+            <b>{{ tr(j.label) }}</b><small>{{ tr(j.desc) }}</small>
           </button>
         </div>
 
-        <p v-if="error" class="input-field-help">{{ error }}</p>
-        <p v-if="saveError" class="input-field-help" data-state="error" role="alert">{{ saveError }}</p>
+        <p v-if="error" class="input-field-help">{{ tr(error) }}</p>
+        <p v-if="saveError" class="input-field-help" data-state="error" role="alert">{{ tr(saveError) }}</p>
 
     </form>
 
     <template #footer>
-      <button type="button" class="modal-secondary" @click="emit('close')">취소</button>
-      <button v-if="session.userId" :form="modalFormId1" type="submit" class="primary" :disabled="Boolean(error) || busy" :aria-busy="busy ? 'true' : undefined">{{ busy ? '만드는 중' : '커뮤니티 만들기' }}</button>
+      <button type="button" class="modal-secondary" @click="emit('close')">{{ tr('취소') }}</button>
+      <button v-if="session.userId" :form="modalFormId1" type="submit" class="primary" :disabled="Boolean(error) || busy" :aria-busy="busy ? 'true' : undefined">{{ busy ? tr('만드는 중') : tr('커뮤니티 만들기') }}</button>
     </template>
   </Modal>
 </template>

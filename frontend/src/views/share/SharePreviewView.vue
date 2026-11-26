@@ -1,4 +1,5 @@
 <script setup>
+import { tr } from '../../store/locale'
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 
 /**
@@ -13,9 +14,10 @@ const SHAPES = [
 const shape = ref('square')
 const active = computed(() => SHAPES.find((s) => s.id === shape.value))
 
-const title = ref('이번 주 갓생 점수')
-const value = ref('87점')
-const caption = ref('12일 연속 기록 중 · 오전 골든타임 최적화')
+// 이미지에 넣을 예시 문구. 처음 값만 본문 언어로 넣고, 사용자가 고친 글은 그대로 그린다
+const title = ref(tr('이번 주 갓생 점수'))
+const value = ref(tr('87점'))
+const caption = ref(tr('12일 연속 기록 중 · 오전 골든타임 최적화'))
 const canvasEl = ref(null)
 const notice = ref('')
 
@@ -67,18 +69,18 @@ function download() {
     a.href = url
     a.download = 'timebar-' + shape.value + '.png'
     a.click()
-    flash('이미지를 저장했어요.')
+    flash(tr('이미지를 저장했어요.'))
   } catch {
-    flash('이미지를 만들지 못했어요. 잠시 후 다시 시도해주세요.')
+    flash(tr('이미지를 만들지 못했어요. 잠시 후 다시 시도해주세요.'))
   }
 }
 async function copyImage() {
   try {
     const blob = await new Promise((res) => canvasEl.value.toBlob(res, 'image/png'))
     await navigator.clipboard.write([new window.ClipboardItem({ 'image/png': blob })])
-    flash('클립보드에 복사했어요.')
+    flash(tr('클립보드에 복사했어요.'))
   } catch {
-    flash('이 브라우저에서는 복사를 지원하지 않아요. 저장을 이용해주세요.')
+    flash(tr('이 브라우저에서는 복사를 지원하지 않아요. 저장을 이용해주세요.'))
   }
 }
 function flash(t) {
@@ -90,25 +92,25 @@ function flash(t) {
 <template>
   <div class="modal-stage">
     <section class="card modal-preview">
-      <h3>SNS 공유 이미지 만들기</h3>
+      <h3>{{ tr('SNS 공유 이미지 만들기') }}</h3>
 
       <div class="share-canvas-wrap" :class="shape">
         <canvas ref="canvasEl" class="share-canvas"></canvas>
       </div>
 
       <div class="filter" style="margin: 14px 0">
-        <button v-for="s in SHAPES" :key="s.id" :class="{ selected: shape === s.id }" @click="shape = s.id">{{ s.label }}</button>
+        <button v-for="s in SHAPES" :key="s.id" :class="{ selected: shape === s.id }" @click="shape = s.id">{{ tr(s.label) }}</button>
       </div>
       <p class="form-note" style="margin-top: 0">{{ active.w }} × {{ active.h }} px</p>
 
-      <label>제목<input v-model="title" /></label>
-      <label>강조 숫자<input v-model="value" /></label>
-      <label>설명<input v-model="caption" /></label>
+      <label>{{ tr('제목') }}<input v-model="title" /></label>
+      <label>{{ tr('강조 숫자') }}<input v-model="value" /></label>
+      <label>{{ tr('설명') }}<input v-model="caption" /></label>
 
-      <p v-if="notice" class="badge ok" style="display: inline-block; margin-top: 8px">{{ notice }}</p>
+      <p v-if="notice" class="badge ok" style="display: inline-block; margin-top: 8px">{{ tr(notice) }}</p>
       <div class="form-row">
-        <button class="primary" style="flex: 1" @click="download">이미지 저장</button>
-        <button class="review" style="margin: 0" @click="copyImage">복사</button>
+        <button class="primary" style="flex: 1" @click="download">{{ tr('이미지 저장') }}</button>
+        <button class="review" style="margin: 0" @click="copyImage">{{ tr('복사') }}</button>
       </div>
     </section>
   </div>

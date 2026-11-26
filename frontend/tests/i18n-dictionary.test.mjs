@@ -38,9 +38,10 @@ test('영어가 없으면 한국어 원문, 자리표시를 채운다. 본문까
   assert.equal(translate(7, 'en'), '7')
   assert.equal(translate('내 분류 {x}', 'en'), '내 분류 {x}')
   for (const path of TRANSLATED_PATHS) assert.equal(documentLang('en', path), 'en')
-  // 환경설정은 12단계에서 옮겼다. 아직 옮기지 않은 공유 화면은 ko다
+  // 환경설정(12단계)·공유·커뮤니티(13단계)는 옮겼다. 아직 옮기지 않은 채팅 화면은 ko다
   assert.equal(documentLang('en', '/settings/env'), 'en')
-  assert.equal(documentLang('en', '/share'), 'ko')
+  assert.equal(documentLang('en', '/share/groups/7'), 'en')
+  assert.equal(documentLang('en', '/chat'), 'ko')
   assert.equal(documentLang('ko', '/career'), 'ko')
 })
 
@@ -155,4 +156,18 @@ test('환경설정(PR-32 12단계)이 저장소에서 꺼내 tr에 넘기는 이
     assert.deepEqual(shown.filter((ko) => !(ko in EN)), [], file)
   }
   assert.equal(documentLang('en', '/settings/profile'), 'en')
+})
+
+test('공유·커뮤니티(PR-32 13단계)가 저장소에서 꺼내 tr에 넘기는 이름표·상태·오류 문구도 사전에 있다', () => {
+  const pick = /(?:\b(?:label|desc|title|name|note|unit|domain|text|at|type|message|state|from|source|sourceKind)\s*:\s*|\.value = |return |throw new Error\(|flash\()'([^'\n]*[가-힣][^'\n]*)'/g
+  const files = [
+    'features/share/shareClient.mjs', 'features/community/communityClient.mjs', 'features/community/challengeClient.mjs', 'features/community/rankingVisibility.mjs',
+    'features/attachments/attachmentClient.mjs', 'views/share/SharePreviewView.vue', 'views/share/SharedFilesView.vue', 'views/community/CommunityFeedView.vue', 'components/CommunityCreateModal.vue',
+  ]
+  for (const file of files) {
+    const source = readFileSync(new URL('../src/' + file, import.meta.url), 'utf8').split('\n').filter((line) => !/^\s*(\/\/|\*|\/\*)/.test(line)).join('\n')
+    const shown = [...new Set([...source.matchAll(pick)].map((m) => m[1]))]
+    assert.deepEqual(shown.filter((ko) => !(ko in EN)), [], file)
+  }
+  for (const ko of ['운동', '공부', '일상', '갓생', '다시 가입 신청', '승인 대기', '초대받음']) assert.ok(ko in EN, ko)
 })

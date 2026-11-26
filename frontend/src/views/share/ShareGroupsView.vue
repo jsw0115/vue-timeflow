@@ -1,5 +1,6 @@
 <!-- 내가 속한 공유 그룹과 받은 초대를 서버에서 불러온다. 그룹을 만들고 초대를 수락·거절한다(PR-10 2단계, UF-110·UT-190). -->
 <script setup>
+import { tr } from '../../store/locale'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import Modal from '../../components/Modal.vue'
@@ -38,7 +39,7 @@ function openCreate() {
 }
 async function createGroup() {
   if (busy.value) return
-  if (!draftTitle.value.trim()) { createError.value = '그룹 이름을 입력해 주세요.'; return }
+  if (!draftTitle.value.trim()) { createError.value = tr('그룹 이름을 입력해 주세요.'); return }
   busy.value = 'create'
   createError.value = ''
   try {
@@ -54,11 +55,11 @@ async function accept(g) {
   try { await shareClient.join(g.id); router.push(`/share/groups/${encodeURIComponent(g.id)}`) } catch (e) { error.value = shareErrorText(e) } finally { busy.value = '' }
 }
 async function decline(g) {
-  if (busy.value || !window.confirm('‘' + g.title + '’ 그룹 초대를 거절할까요?')) return
+  if (busy.value || !window.confirm(tr('‘{name}’ 그룹 초대를 거절할까요?', { name: g.title }))) return
   busy.value = g.id
   error.value = ''
   notice.value = ''
-  try { await shareClient.removeMember(g.id, session.userId); notice.value = '‘' + g.title + '’ 그룹 초대를 거절했어요.'; await load() } catch (e) { error.value = shareErrorText(e) } finally { busy.value = '' }
+  try { await shareClient.removeMember(g.id, session.userId); notice.value = tr('‘{name}’ 그룹 초대를 거절했어요.', { name: g.title }); await load() } catch (e) { error.value = shareErrorText(e) } finally { busy.value = '' }
 }
 function open(g) {
   router.push(`/share/groups/${encodeURIComponent(g.id)}`)
@@ -69,51 +70,51 @@ function open(g) {
   <ShareSignIn v-if="!session.userId" />
   <template v-else>
     <div class="page-tools">
-      <span class="input-field-help" style="margin: 0">그룹마다 내 일정을 보일 범위를 따로 정해요. 처음에는 공유 안 함이에요</span>
-      <PageActions><button type="button" class="primary" @click="openCreate">+ 그룹 만들기</button></PageActions>
+      <span class="input-field-help" style="margin: 0">{{ tr('그룹마다 내 일정을 보일 범위를 따로 정해요. 처음에는 공유 안 함이에요') }}</span>
+      <PageActions><button type="button" class="primary" @click="openCreate">{{ tr('+ 그룹 만들기') }}</button></PageActions>
     </div>
-    <p v-if="notice" class="input-field-help group-message" data-state="success" role="status">{{ notice }}</p>
-    <p v-if="error && status === 'ready'" class="input-field-help group-message" data-state="error" role="alert">{{ error }}</p>
+    <p v-if="notice" class="input-field-help group-message" data-state="success" role="status">{{ tr(notice) }}</p>
+    <p v-if="error && status === 'ready'" class="input-field-help group-message" data-state="error" role="alert">{{ tr(error) }}</p>
 
-    <p v-if="status === 'loading'" class="input-field-help" role="status">그룹을 불러오는 중이에요.</p>
+    <p v-if="status === 'loading'" class="input-field-help" role="status">{{ tr('그룹을 불러오는 중이에요.') }}</p>
     <section v-else-if="status === 'error'" class="card">
-      <div class="empty-state" role="status"><p>그룹을 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요.</p><button type="button" class="button-secondary" @click="load">다시 시도</button></div>
+      <div class="empty-state" role="status"><p>{{ tr('그룹을 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요.') }}</p><button type="button" class="button-secondary" @click="load">{{ tr('다시 시도') }}</button></div>
     </section>
     <template v-else>
       <section v-if="invites.length" class="card invite-card" aria-labelledby="invite-title">
-        <div id="invite-title" class="section-label">받은 초대</div>
+        <div id="invite-title" class="section-label">{{ tr('받은 초대') }}</div>
         <div class="event" v-for="g in invites" :key="g.id">
-          <span class="group-name"><b>{{ g.title }}</b><small>{{ g.description || '설명이 없어요' }} · 멤버 {{ g.members }}명</small></span>
-          <button type="button" class="button-secondary" :disabled="!!busy" @click="decline(g)">거절</button>
-          <button type="button" class="button-secondary" :disabled="!!busy" :aria-busy="busy === g.id ? 'true' : undefined" @click="accept(g)">수락</button>
+          <span class="group-name"><b>{{ g.title }}</b><small>{{ g.description || tr('설명이 없어요') }} · {{ tr('멤버 {n}명', { n: g.members }) }}</small></span>
+          <button type="button" class="button-secondary" :disabled="!!busy" @click="decline(g)">{{ tr('거절') }}</button>
+          <button type="button" class="button-secondary" :disabled="!!busy" :aria-busy="busy === g.id ? 'true' : undefined" @click="accept(g)">{{ tr('수락') }}</button>
         </div>
       </section>
 
       <div class="comm-grid">
-        <section class="card group-card" v-for="g in joined" :key="g.id" role="button" tabindex="0" :aria-label="g.title + ' 그룹 열기'" @click="open(g)" @keyup.enter="open(g)">
+        <section class="card group-card" v-for="g in joined" :key="g.id" role="button" tabindex="0" :aria-label="tr('{name} 그룹 열기', { name: g.title })" @click="open(g)" @keyup.enter="open(g)">
           <div class="head">
             <b>{{ g.title }}</b>
-            <span class="badge">{{ g.role === 'owner' ? '방장' : '멤버' }}</span>
+            <span class="badge">{{ g.role === 'owner' ? tr('방장') : tr('멤버') }}</span>
           </div>
-          <p>{{ g.description || '설명이 없어요' }}</p>
-          <p class="input-field-help">멤버 {{ g.members }}명 · 내 공개 범위 {{ levelLabel(g.shareLevel) }}</p>
+          <p>{{ g.description || tr('설명이 없어요') }}</p>
+          <p class="input-field-help">{{ tr('멤버 {n}명 · 내 공개 범위 {level}', { n: g.members, level: tr(levelLabel(g.shareLevel)) }) }}</p>
         </section>
       </div>
       <section v-if="!joined.length" class="card">
-        <p class="empty-state">아직 들어간 캘린더 그룹이 없어요. '+ 그룹 만들기'로 그룹을 만들고 이메일로 멤버를 초대해 보세요.</p>
+        <p class="empty-state">{{ tr('아직 들어간 캘린더 그룹이 없어요. \'+ 그룹 만들기\'로 그룹을 만들고 이메일로 멤버를 초대해 보세요.') }}</p>
       </section>
     </template>
 
-    <Modal v-if="showModal" title="그룹 만들기" @close="showModal = false">
+    <Modal v-if="showModal" :title="tr('그룹 만들기')" @close="showModal = false">
       <form id="group-create" @submit.prevent="createGroup">
-        <label>그룹 이름<input v-model="draftTitle" placeholder="예: 갓생 크루" maxlength="200" autofocus /></label>
-        <label>설명(선택)<textarea v-model="draftDesc" placeholder="어떤 그룹인지 한 줄로 소개해 보세요"></textarea></label>
-        <p class="input-field-help">멤버는 그룹을 만든 뒤 그룹 화면에서 이메일로 초대해요.</p>
-        <p v-if="createError" class="input-field-help" data-state="error" role="alert">{{ createError }}</p>
+        <label>{{ tr('그룹 이름') }}<input v-model="draftTitle" :placeholder="tr('예: 갓생 크루')" maxlength="200" autofocus /></label>
+        <label>{{ tr('설명(선택)') }}<textarea v-model="draftDesc" :placeholder="tr('어떤 그룹인지 한 줄로 소개해 보세요')"></textarea></label>
+        <p class="input-field-help">{{ tr('멤버는 그룹을 만든 뒤 그룹 화면에서 이메일로 초대해요.') }}</p>
+        <p v-if="createError" class="input-field-help" data-state="error" role="alert">{{ tr(createError) }}</p>
       </form>
       <template #footer>
-        <button type="button" class="modal-secondary" @click="showModal = false">취소</button>
-        <button type="submit" form="group-create" class="primary" :disabled="busy === 'create'" :aria-busy="busy === 'create' ? 'true' : undefined">{{ busy === 'create' ? '만드는 중' : '그룹 만들기' }}</button>
+        <button type="button" class="modal-secondary" @click="showModal = false">{{ tr('취소') }}</button>
+        <button type="submit" form="group-create" class="primary" :disabled="busy === 'create'" :aria-busy="busy === 'create' ? 'true' : undefined">{{ busy === 'create' ? tr('만드는 중') : tr('그룹 만들기') }}</button>
       </template>
     </Modal>
   </template>

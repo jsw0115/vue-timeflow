@@ -1,5 +1,6 @@
 <!-- 챌린지·랭킹처럼 커뮤니티 하나를 골라야 하는 화면에서, 커뮤니티를 고르지 않고 들어왔을 때 내가 가입한 커뮤니티를 보인다(PR-10 3b-2). -->
 <script setup>
+import { bodyLocale, tr } from '../../store/locale'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { session } from '../../features/auth/session.js'
@@ -27,15 +28,15 @@ watch(() => session.userId, load, { immediate: true })
 
 <template>
   <section class="card picker">
-    <p class="picker-intro">{{ intro }}</p>
-    <p v-if="status === 'loading'" class="input-field-help" role="status">커뮤니티를 불러오는 중이에요.</p>
-    <div v-else-if="status === 'error'" class="empty-state" role="status"><p>{{ error }}</p><button type="button" class="button-secondary" @click="load">다시 시도</button></div>
+    <p class="picker-intro">{{ tr(intro) }}</p>
+    <p v-if="status === 'loading'" class="input-field-help" role="status">{{ tr('커뮤니티를 불러오는 중이에요.') }}</p>
+    <div v-else-if="status === 'error'" class="empty-state" role="status"><p>{{ tr(error) }}</p><button type="button" class="button-secondary" @click="load">{{ tr('다시 시도') }}</button></div>
     <template v-else-if="status === 'ready'">
       <div v-for="c in mine" :key="c.id" class="event picker-row">
-        <span class="picker-name"><b>{{ c.title }}</b><small>회원 <span class="figure">{{ c.members }}</span>명</small></span>
-        <button type="button" class="button-secondary" @click="router.push({ path: props.path, query: { id: c.id } })">열기</button>
+        <span class="picker-name"><b>{{ c.title }}</b><small>{{ tr('회원') }} <span class="figure">{{ c.members }}</span><template v-if="bodyLocale === 'ko'">명</template></small></span>
+        <button type="button" class="button-secondary" @click="router.push({ path: props.path, query: { id: c.id } })">{{ tr('열기') }}</button>
       </div>
-      <div v-if="!mine.length" class="empty-state"><p>아직 가입한 커뮤니티가 없어요. 커뮤니티를 찾아 가입해 보세요.</p><button type="button" class="button-secondary" @click="router.push('/community')">커뮤니티 찾기</button></div>
+      <div v-if="!mine.length" class="empty-state"><p>{{ tr('아직 가입한 커뮤니티가 없어요. 커뮤니티를 찾아 가입해 보세요.') }}</p><button type="button" class="button-secondary" @click="router.push('/community')">{{ tr('커뮤니티 찾기') }}</button></div>
     </template>
   </section>
 </template>
