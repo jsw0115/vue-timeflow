@@ -17,7 +17,10 @@ export async function refreshAdminAccess(signedIn) {
   adminAccess.metrics = result.metrics ?? null
 }
 
-/** 사용자 화면의 관리자 콘솔 버튼 표시. 같은 계정이면 다시 묻지 않는다(IMP-021). */
+/**
+ * 사용자 화면의 관리자 콘솔 버튼 표시. 같은 계정이면 다시 묻지 않는다(IMP-021).
+ * 확인하지 못했으면(연결 실패·서버 오류) 버튼을 숨기고, 다음 화면 이동 때 다시 확인한다.
+ */
 export const adminButton = reactive({ visible: false })
 let roleFor
 let roleTicket = 0
@@ -26,6 +29,8 @@ export async function refreshAdminButton(userId) {
   roleFor = userId
   const ticket = ++roleTicket
   adminButton.visible = false
-  const visible = await checkAdminRole(apiRequest, Boolean(userId))
-  if (ticket === roleTicket) adminButton.visible = visible
+  const result = await checkAdminRole(apiRequest, Boolean(userId))
+  if (ticket !== roleTicket) return
+  adminButton.visible = result === true
+  if (result === null) roleFor = undefined
 }

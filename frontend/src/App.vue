@@ -100,7 +100,7 @@ watch(() => session.userId, async (id) => {
   } catch { /* 이 브라우저 테마를 그대로 쓴다 */ }
 }, { immediate: true })
 // 관리자 콘솔 진입 버튼은 서버가 DB에서 읽어 준 내 역할(/api/auth/me)이 관리자인 계정에만 보인다(IMP-021). 메뉴 숨김은 보안 통제가 아니며 관리자 API는 서버가 매 요청 검사하고, 콘솔은 들어갈 때 권한을 다시 확인한다(docs/design 03 §8-5, 09 §2)
-watch(() => session.userId, (id) => refreshAdminButton(id), { immediate: true })
+watch([() => session.userId, () => route.path], ([id]) => refreshAdminButton(id), { immediate: true })
 const canOpenAdmin = computed(() => adminButton.visible)
 function isNavActive(item) {
   if (item.path === '/planner') return ['/planner', '/planner/daily', '/planner/weekly', '/planner/monthly', '/planner/yearly'].includes(route.path)

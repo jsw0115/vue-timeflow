@@ -169,6 +169,12 @@ test('IMP-021 관리자 버튼은 /api/auth/me의 역할로 정하고 실패하�
   assert.equal(await checkAdminRole(reply(Object.assign(new Error('x'), { status: 401 })), true), false)
   assert.equal(await checkAdminRole(reply({ role: 'ADMIN' }), false), false)
   assert.deepEqual(calls, ['/api/auth/me', '/api/auth/me', '/api/auth/me'])
+  // 연결 실패·서버 오류는 확인하지 못한 것(null)이라 다음 화면 이동 때 다시 묻는다
+  assert.equal(await checkAdminRole(reply(new TypeError('Failed to fetch')), true), null)
+  assert.equal(await checkAdminRole(reply(Object.assign(new Error('x'), { status: 503 })), true), null)
+  const admin = read('features/admin/admin.js')
+  assert.match(admin, /adminButton\.visible = result === true\n  if \(result === null\) roleFor = undefined/)
+  assert.match(read('App.vue'), /watch\(\[\(\) => session\.userId, \(\) => route\.path\], \(\[id\]\) => refreshAdminButton\(id\)/)
 })
 
 test('IMP-022 알림 설정에 없는 LMS 대체 발송을 사실처럼 적지 않는다', () => {
