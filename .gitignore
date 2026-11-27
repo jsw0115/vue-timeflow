@@ -115,3 +115,7 @@ docs/agent/records/*/raw-logs/
 __pycache__/
 *.pyc
 .agents/
+
+# AI 도구 로컬 설치물(스킬·에이전트·hook). 이미 추적 중인 .claude 파일은 계속 추적된다.
+.claude/
+.codex/
