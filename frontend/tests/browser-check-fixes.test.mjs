@@ -1,4 +1,4 @@
-// 전체 화면 점검에서 찾은 버그·개선(2026-11-26 BUG-007~BUG-011·IMP-015~IMP-018, 2026-11-27 BUG-012~BUG-014·IMP-019~IMP-022)이 되돌아가지 않는지 검사한다.
+// 전체 화면 점검에서 찾은 버그·개선(2026-11-26 BUG-007~BUG-011·IMP-015~IMP-018, 2026-11-27 BUG-012~BUG-017·IMP-019~IMP-022)이 되돌아가지 않는지 검사한다.
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
@@ -179,4 +179,25 @@ test('IMP-021 관리자 버튼은 /api/auth/me의 역할로 정하고 실패하�
 
 test('IMP-022 알림 설정에 없는 LMS 대체 발송을 사실처럼 적지 않는다', () => {
   assert.doesNotMatch(read('views/settings/SettingsNotificationsView.vue'), /LMS/)
+})
+
+test('BUG-015 서버가 세션을 끝내면(갱신 실패) 안내를 켜고, 다시 로그인하면 끈다. 사용자가 로그아웃하면 켜지 않는다', () => {
+  const session = read('features/auth/session.js')
+  assert.match(session, /export const sessionNotice = reactive\(\{ ended: false \}\)/)
+  assert.match(session, /\.catch\(\(\) => \{ if \(session\.refreshToken === original\) \{ clearSession\(\); sessionNotice\.ended = true \} return false \}\)/)
+  assert.match(session, /if \(userId\) sessionNotice\.ended = false/)
+  assert.doesNotMatch(session.match(/export async function logout[\s\S]*?\n\}/)?.[0] ?? '', /sessionNotice/)
+  const app = read('App.vue')
+  assert.match(app, /v-if="sessionNotice\.ended && !session\.userId" class="callout session-ended" role="alert"/)
+  assert.match(read('views/auth/LoginView.vue'), /v-if="sessionNotice\.ended"/)
+  assert.ok('로그인이 끝났어요. 지금 보이는 기록은 이 브라우저에 있는 것이에요. 계정 기록을 보려면 다시 로그인해 주세요.' in EN)
+})
+
+test('BUG-016 사용자·관리자 화면 모두 화면 이름을 탭 제목에 붙인다', () => {
+  assert.match(read('App.vue'), /document\.title = pageName\.value \? `\$\{pageName\.value\} · Timebar Diary`/)
+  assert.match(read('AdminApp.vue'), /document\.title = `\$\{adminAccess\.state === 'allowed' && route\.name \? tr\(route\.name\) : tr\('관리자 화면'\)\} · Timebar Diary`/)
+})
+
+test('BUG-017 미리보기 시험은 의존성 탐색을 꺼서 vite.close()가 멈추지 않는다', () => {
+  assert.match(readFileSync(new URL('./device-preview.test.mjs', import.meta.url), 'utf8'), /optimizeDeps: \{ noDiscovery: true, include: \[\] \}/)
 })

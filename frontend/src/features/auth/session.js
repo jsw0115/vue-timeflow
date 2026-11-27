@@ -6,6 +6,8 @@ function restore() {
   try { return JSON.parse(sessionStorage.getItem(key) || 'null') || {} } catch { return {} }
 }
 export const session = reactive(restore())
+/** 서버가 세션을 끝냈을 때(정지·강제 로그아웃·refresh 만료) 화면에 알리기 위한 표시. 사용자가 로그아웃하면 켜지 않는다(BUG-015) */
+export const sessionNotice = reactive({ ended: false })
 let refreshing
 function save(value) {
   // 기록 저장소는 userId를 동기로 감시해 바로 목록을 부른다. 토큰을 먼저 넣고 userId를 마지막에 넣어야 첫 요청에 토큰이 실린다.
@@ -14,6 +16,7 @@ function save(value) {
   const { userId, ...rest } = value
   Object.assign(session, rest)
   if ('userId' in value) session.userId = userId
+  if (userId) sessionNotice.ended = false
   sessionStorage.setItem(key, JSON.stringify(value))
 }
 export function clearSession() { save({}) }
@@ -43,7 +46,7 @@ async function refresh() {
     refreshing = publicRequest('refresh', { refreshToken: original }).then(tokens => {
       if (session.refreshToken !== original) return false
       save({ ...session, ...tokens }); return true
-    }).catch(() => { if (session.refreshToken === original) clearSession(); return false }).finally(() => { refreshing = null })
+    }).catch(() => { if (session.refreshToken === original) { clearSession(); sessionNotice.ended = true } return false }).finally(() => { refreshing = null })
   }
   return refreshing
 }

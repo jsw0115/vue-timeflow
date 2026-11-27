@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { adminGroups } from './router'
 import AppIcon from './components/icons/AppIcon.vue'
@@ -26,6 +26,8 @@ watch(() => [localeState.locale, route.path], () => {
   if (typeof document !== 'undefined') document.documentElement.lang = lang
 }, { immediate: true })
 const pageTitle = computed(() => (route.meta?.title ? tr(route.meta.title) : ''))
+// 페이지 제목(BUG-016): 관리자 화면도 화면 이름을 탭 제목 앞에 붙인다. 권한 확인 전에는 '관리자 화면'이다
+watchEffect(() => { if (typeof document !== 'undefined') document.title = `${adminAccess.state === 'allowed' && route.name ? tr(route.name) : tr('관리자 화면')} · Timebar Diary`})
 const collapsed = ref({})
 function toggleGroup(label) {
   collapsed.value[label] = !collapsed.value[label]

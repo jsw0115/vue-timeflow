@@ -5,6 +5,8 @@
 export const SHELL = {
   homeLink: { ko: 'Timebar Diary 오늘 화면으로', en: 'Timebar Diary, go to today' },
   skipToContent: { ko: '본문 바로가기', en: 'Skip to main content' },
+  sessionEnded: { ko: '로그인이 끝났어요. 지금 보이는 기록은 이 브라우저에 있는 것이에요. 계정 기록을 보려면 다시 로그인해 주세요.', en: "You've been signed out. The records shown now are the ones in this browser. Sign in again to see your account records." },
+  close: { ko: '닫기', en: 'Close' },
   dayMode: { ko: '하루 모드', en: 'Day mode' },
   chooseDayMode: { ko: '하루 모드 선택', en: 'Choose day mode' },
   chooseDayModeHelp: { ko: '하루를 보내는 방식을 선택하세요', en: 'Choose how you spend your day' },

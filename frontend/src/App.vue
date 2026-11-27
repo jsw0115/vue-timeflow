@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, provide, ref, watch, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { navGroups } from './router'
 import { isGroupCollapsed, setGroupCollapsed } from './store/navCollapse'
@@ -29,7 +29,7 @@ import { hasUnreadMentions } from './features/chat/model/chatStore'
 import BrandMark from './components/brand/BrandMark.vue'
 import AppIcon from './components/icons/AppIcon.vue'
 import { NAV_ICONS } from './components/icons/iconPaths.mjs'
-import { session } from './features/auth/session.js'
+import { session, sessionNotice } from './features/auth/session.js'
 import { apiRequest } from './features/auth/apiRequest.js'
 import { themeState, THEMES, ACCENTS } from './store/theme'
 import { createThemeAccount, sameTheme } from './features/settings/themeAccount.mjs'
@@ -72,6 +72,8 @@ const pageName = computed(() => {
   // 메뉴에 없는 화면(플래너 일·주·월·연 등)은 라우트 이름표를 본문 언어로 보인다
   return route.name ? tr(route.name) : route.meta?.label ? tr(route.meta.label) : ''
 })
+// 페이지 제목(BUG-016): 화면을 옮기면 탭 제목도 화면 이름으로 바꿔 화면 읽기 프로그램과 탭 목록에서 어느 화면인지 알 수 있게 한다
+watchEffect(() => { if (typeof document !== 'undefined') document.title = pageName.value ? `${pageName.value} · Timebar Diary` : 'Timebar Diary · 계획과 실제 기록' })
 const pageDesc = computed(() => {
   if (route.path.startsWith('/settings')) return ''
   const desc = route.name === '홈' ? todayLabel.value : currentNav.value ? navTitle(currentNav.value, locale.value) : route.meta?.title ? tr(route.meta.title) : ''
@@ -246,6 +248,8 @@ watch(() => route.path, () => { mobileNav.value = false; workspaceOpen.value = f
           <div id="page-actions" class="page-actions"></div>
         </div>
       </header>
+      <!-- 서버가 세션을 끝냈으면(정지·강제 로그아웃·만료) 조용히 로그아웃하지 않고 알린다(BUG-015) -->
+      <p v-if="sessionNotice.ended && !session.userId" class="callout session-ended" role="alert" :lang="locale">{{ t('sessionEnded') }} <router-link to="/auth/login" class="inline-link">{{ t('signIn') }}</router-link> <button type="button" class="button-text" @click="sessionNotice.ended = false">{{ t('close') }}</button></p>
       <NoticeBanner v-if="!isChat" />
       <p v-if="storageWarning" class="callout" role="alert">{{ storageWarning }}</p>
       <OutboxPanel />

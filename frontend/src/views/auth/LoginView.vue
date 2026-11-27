@@ -3,7 +3,7 @@ import { tr } from '../../store/locale'
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import BrandMark from '../../components/brand/BrandMark.vue'
-import { login } from '../../features/auth/session'
+import { login, sessionNotice } from '../../features/auth/session'
 
 const router = useRouter()
 const route = useRoute()
@@ -54,6 +54,7 @@ function social(provider) {
     <div class="auth-form">
       <div class="auth-form-inner">
         <h2>{{ tr('로그인') }}</h2>
+        <p v-if="sessionNotice.ended" class="input-field-help" role="status">{{ tr('로그인이 끝났어요. 지금 보이는 기록은 이 브라우저에 있는 것이에요. 계정 기록을 보려면 다시 로그인해 주세요.') }}</p>
         <p v-if="joined" class="input-field-help login-joined" data-state="success" role="status">{{ tr('가입을 마쳤어요. 가입한 이메일과 비밀번호로 로그인해 주세요.') }}</p>
         <form novalidate @submit.prevent="signIn">
           <label for="login-email">{{ tr('이메일') }}</label>

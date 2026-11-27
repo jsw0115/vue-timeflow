@@ -3441,6 +3441,12 @@ export const EN = {
   "‘{title}’ 메모를 삭제할까요?": "Delete the memo \"{title}\"?",
   "메모 저장": "Save memo",
   "본문 바로가기": "Skip to main content",
+  "로그인이 끝났어요. 지금 보이는 기록은 이 브라우저에 있는 것이에요. 계정 기록을 보려면 다시 로그인해 주세요.": "You've been signed out. The records shown now are the ones in this browser. Sign in again to see your account records.",
+  // 앱 셸 밖 화면의 탭 제목(BUG-016)
+  "비밀번호 재설정": "Reset password",
+  "소셜 로그인 연동": "Social sign-in",
+  "점검/업데이트 안내": "Maintenance and updates",
+  "권한 요청": "Permission request",
   // 서버 인증·공통 응답 문구(BUG-014). 화면은 서버 message를 tr()로 넘긴다
   "개인정보 처리방침에 동의해주세요.": "Please agree to the Privacy Policy.",
   "로그아웃되었습니다.": "You've signed out.",
