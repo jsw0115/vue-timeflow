@@ -170,7 +170,8 @@ watch(() => route.path, () => { mobileNav.value = false; workspaceOpen.value = f
 </script>
 
 <template>
-  <router-view v-if="isBare" />
+  <!-- 앱 셸 밖 화면(로그인·안내·약관·공개 포트폴리오)도 본문 영역(main) 안에 둔다(IMP-023) -->
+  <main v-if="isBare" class="bare-main"><router-view /></main>
   <div v-else class="app">
     <!-- 본문 바로가기(BUG-013): 첫 Tab에서 보이고, 누르면 사이드바를 건너뛰어 본문으로 초점을 옮긴다. 해시 주소를 바꾸지 않는다 -->
     <a class="skip-link" href="#main-content" :lang="locale" @click.prevent="skipToMain">{{ t('skipToContent') }}</a>

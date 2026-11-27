@@ -4,8 +4,8 @@ import { tr } from '../store/locale'
 import { useId as modalUseId } from 'vue'
 const modalFormId1 = modalUseId()
 
-import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import Modal from './Modal.vue'
 import TagMentionInput from './TagMentionInput.vue'
 import { integerBetween, localDate } from '../utils/postValidation.mjs'
@@ -34,6 +34,11 @@ const draft = ref({
   visibility: 'public',
   joinPolicy: 'approval',
 })
+
+// 화면이 바뀌면(뒤로 가기 포함) 입력한 것이 없을 때만 창을 닫는다(IMP-025)
+const pristine = JSON.stringify(draft.value)
+const route = useRoute()
+watch(() => route.path, () => { if (JSON.stringify(draft.value) === pristine) emit('close') })
 
 const error = computed(() => {
   if (!draft.value.title.trim()) return tr('커뮤니티 이름을 입력해주세요.')

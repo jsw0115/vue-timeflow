@@ -31,7 +31,7 @@ function skip() {
     <div class="sheet">
       <div class="grabber"></div>
       <div style="width: 56px; height: 56px; border-radius: 16px; background: var(--color-surface); color: var(--color-foreground); display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; font-size: 1.375rem">🎙</div>
-      <h2 style="font-size: 1.0625rem">{{ tr('마이크 접근을 허용해주세요') }}</h2>
+      <h1 class="heading-title-lg" style="font-size: 1.0625rem">{{ tr('마이크 접근을 허용해주세요') }}</h1>
       <p>{{ tr('음성으로 메모를 남기려면 마이크 권한이 필요해요.') }}<br />{{ tr('거부하셔도 텍스트로 계속 작성할 수 있어요.') }}</p>
       <button class="primary" @click="allow">{{ tr('권한 허용하기') }}</button>
       <button class="review" style="width: 100%; margin-top: 8px" @click="skip">{{ tr('텍스트로 계속 작성') }}</button>

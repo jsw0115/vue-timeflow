@@ -88,7 +88,7 @@ onBeforeUnmount(() => window.removeEventListener('resize', resize))
 .floating-chat-bar button { min-height: 32px; padding: 6px 10px; background: var(--color-surface); border-radius: var(--radius-full); font-size: 0.75rem; }
 .floating-chat .chat-workspace { width: 100%; }
 .floating-chat .chat-page-head { margin-bottom: 16px; }
-.floating-chat .chat-page-head h1 { font-size: 1.5rem; letter-spacing: -.02em; }
+.floating-chat .chat-page-head :is(h1, .chat-title) { font-size: 1.5rem; letter-spacing: -.02em; }
 .floating-chat .chat-page-head p:last-child { font-size: 0.75rem; }
 .floating-chat .chat-layout { grid-template-columns: 240px minmax(0, 1fr); min-height: 0; }
 .floating-chat .chat-tag-filter { padding: 8px 12px; }
@@ -97,7 +97,7 @@ onBeforeUnmount(() => window.removeEventListener('resize', resize))
 @media (max-width: 759px) {
   .floating-chat { padding: 0; }
   .floating-chat .chat-layout { min-height: 0; height: auto; }
-  .floating-chat .chat-page-head h1 { font-size: 1.375rem; }
+  .floating-chat .chat-page-head :is(h1, .chat-title) { font-size: 1.375rem; }
   .floating-chat .chat-page-head>.chat-primary { margin-top: 0; }
   .floating-chat .chat-sidebar-title { padding-top: 16px; }
 }

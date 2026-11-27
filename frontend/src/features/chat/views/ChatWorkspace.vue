@@ -169,7 +169,8 @@ onBeforeUnmount(() => { stopChat(); clearInterval(clock); clearTimeout(searchTim
 <template>
   <div class="chat-workspace chat-workspace-live" :class="{ 'in-conversation': activeRoom, 'chat-messenger': embedded }">
     <header v-if="!embedded || !activeRoom" class="chat-page-head">
-      <div><h1>{{ embedded ? tr('채팅') : tr('함께 나누는 하루') }} <span v-if="embedded && unreadChats" class="chat-count">{{ unreadChats > 99 ? '99+' : unreadChats }}</span></h1></div>
+      <div><!-- 다른 화면 위에 뜬 채팅 창의 제목은 h2(화면 제목 h1과 겹치지 않게), 채팅 화면(/chat)에서는 이 창이 본문이라 h1이다(IMP-023) -->
+      <component :is="embedded && route.path !== '/chat' ? 'h2' : 'h1'" class="chat-title">{{ embedded ? tr('채팅') : tr('함께 나누는 하루') }} <span v-if="embedded && unreadChats" class="chat-count">{{ unreadChats > 99 ? '99+' : unreadChats }}</span></component></div>
       <button class="chat-detail-button" :aria-label="tr('통합 검색')" @click="showUnifiedSearch = true">{{ tr('⌕ 검색') }}</button>
       <button class="chat-primary" @click="showNew = true"><span aria-hidden="true">＋</span> {{ tr('새 대화') }}</button>
     </header>

@@ -36,7 +36,7 @@ function changePassword() {}
       </div>
 
       <section class="card" style="text-align: center">
-        <h3>{{ tr('비밀번호를 잊으셨나요?') }}</h3>
+        <h1 class="heading-title-md">{{ tr('비밀번호를 잊으셨나요?') }}</h1>
         <p>{{ tr('가입하신 이메일 주소를 입력하시면') }}<br />{{ tr('재설정 링크를 보내드립니다.') }}</p>
         <input v-model="email" type="email" autocomplete="email" :aria-label="tr('이메일 주소')" :placeholder="tr('이메일 주소')" style="text-align: center; margin-top: 12px" @keyup.enter="sendLink" />
         <p v-if="email && emailError" class="form-note">{{ emailError }}</p>

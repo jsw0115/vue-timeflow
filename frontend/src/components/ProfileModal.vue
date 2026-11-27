@@ -1,6 +1,6 @@
 <script setup>
-import { computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import Modal from './Modal.vue'
 import { tr, bodyLocale, unit } from '../store/locale'
 import { modeText } from '../features/i18n/locale.mjs'
@@ -10,6 +10,9 @@ import { modeMeta } from '../store/modeProfiles'
 /** 어느 화면에서든 이름 옆 ⓘ를 누르면 뜨는 공통 프로필 모달 */
 const router = useRouter()
 const p = computed(() => profileOf(profileModal.name))
+// 보기 전용 창이라 화면이 바뀌면(뒤로 가기 포함) 닫는다(IMP-025)
+const route = useRoute()
+watch(() => route.path, () => { if (profileModal.open) closeProfile() })
 
 function onBlock() {
   const label = p.value.blocked ? tr('차단을 해제할까요?') : tr('{name}님을 차단할까요? 모든 그룹에서 함께 제외돼요.', { name: p.value.name })

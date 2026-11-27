@@ -1,4 +1,4 @@
-// 전체 화면 점검에서 찾은 버그·개선(2026-11-26 BUG-007~BUG-011·IMP-015~IMP-018, 2026-11-27 BUG-012~BUG-017·IMP-019~IMP-022)이 되돌아가지 않는지 검사한다.
+// 전체 화면 점검에서 찾은 버그·개선(2026-11-26 BUG-007~BUG-011·IMP-015~IMP-018, 2026-11-27 BUG-012~BUG-017·IMP-019~IMP-025)이 되돌아가지 않는지 검사한다.
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
@@ -200,4 +200,35 @@ test('BUG-016 사용자·관리자 화면 모두 화면 이름을 탭 제목에 
 
 test('BUG-017 미리보기 시험은 의존성 탐색을 꺼서 vite.close()가 멈추지 않는다', () => {
   assert.match(readFileSync(new URL('./device-preview.test.mjs', import.meta.url), 'utf8'), /optimizeDeps: \{ noDiscovery: true, include: \[\] \}/)
+})
+
+test('IMP-023 앱 셸 밖 화면도 main 안에 있고, 안내 화면 3곳은 h1, 떠 있는 채팅 창 제목은 다른 화면 위에서 h2다', () => {
+  const app = read('App.vue')
+  assert.match(app, /<main v-if="isBare" class="bare-main"><router-view \/><\/main>/)
+  const css = read('styles.css')
+  assert.match(css, /main\.bare-main\{width:auto;height:auto;padding:0;margin:0;overflow:visible;flex:none\}/)
+  assert.match(css, /main:not\(\.chat-shell,\.bare-main\)>\*\{max-width:var\(--content-max\)/)
+  // 앱 셸 밖 화면에 main이 둘이 되지 않게 공개 포트폴리오는 div로 바꿨다
+  assert.doesNotMatch(read('views/share/PublicPortfolioView.vue'), /<main/)
+  assert.match(read('views/system/MaintenanceView.vue'), /<h1 class="heading-title-lg">/)
+  assert.match(read('views/system/PermissionRequestView.vue'), /<h1 class="heading-title-lg"/)
+  assert.match(read('views/auth/PasswordResetView.vue'), /<h1 class="heading-title-md">/)
+  assert.match(read('features/chat/views/ChatWorkspace.vue'), /:is="embedded && route\.path !== '\/chat' \? 'h2' : 'h1'" class="chat-title"/)
+  assert.match(read('features/chat/styles/chat.css'), /\.chat-page-head :is\(h1, \.chat-title\) \{ font-size: var\(--type-display-size\)/)
+})
+
+test('IMP-024 작은 아이콘 버튼은 44×44, 한 줄 글자 버튼은 높이 44로 누르는 영역만 넓히고, 검색칸 지우기·캔버스 이동 버튼은 넓히지 않는다', () => {
+  const css = read('styles.css')
+  assert.ok(css.includes('.person-info:not(.list-search > .person-info, .kanban-card-move > .person-info)::after{content:"";position:absolute;left:50%;top:50%;width:44px;height:44px;transform:translate(-50%,-50%)}'))
+  assert.ok(css.includes(':is(.chat-inbox-actions :is(a,button),.wbs-caret,.head>button:not([class]),.wiki-crumb,label.start-apply)::after{content:"";position:absolute;left:0;right:0;top:50%;height:max(100%,44px);transform:translateY(-50%)}'))
+})
+
+test('IMP-025 앱 셸 창은 화면이 바뀌면 쓴 내용이 없을 때만 닫고, 주소로 여는 창은 주소를 옮긴 뒤 연다', () => {
+  const composer = read('components/PostComposer.vue')
+  assert.match(composer, /const pristine = JSON\.stringify\(drafts\)/)
+  assert.match(composer, /watch\(\(\) => route\.path, \(\) => \{ if \(JSON\.stringify\(drafts\) === pristine\) composer\.value = false \}\)/)
+  assert.match(read('components/CommunityCreateModal.vue'), /watch\(\(\) => route\.path, \(\) => \{ if \(JSON\.stringify\(draft\.value\) === pristine\) emit\('close'\) \}\)/)
+  assert.match(read('components/ProfileModal.vue'), /watch\(\(\) => route\.path, \(\) => \{ if \(profileModal\.open\) closeProfile\(\) \}\)/)
+  assert.match(read('views/community/CommunityCreateView.vue'), /await router\.replace\('\/community'\); communityComposer\.value = true/)
+  assert.match(read('views/address/ProfileCardView.vue'), /await router\.replace\('\/address'\)\n  openProfile\('이서연'\)/)
 })

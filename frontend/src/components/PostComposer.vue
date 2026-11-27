@@ -1,7 +1,7 @@
 <script setup>
 import { WORK_TYPES } from '../features/records/featureKinds.mjs'
 import { computed, nextTick, reactive, ref, useId, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import Modal from './Modal.vue'
 import EventDateFields from './EventDateFields.vue'
 import RepeatSettings from './RepeatSettings.vue'
@@ -26,6 +26,10 @@ const tabsId = useId(), formId = tabsId + '-form'
 const formRoot = ref(null)
 const drafts = reactive(Object.fromEntries(kinds.map(k => [k, makePostDraft(k)])))
 Object.assign(drafts[kind.value], composerContext.value, { title: composerSeed.value })
+// 화면이 바뀌면(뒤로 가기 포함) 쓴 내용이 없을 때만 창을 닫는다. 쓰던 내용이 있으면 잃지 않게 열어 둔다(IMP-025)
+const pristine = JSON.stringify(drafts)
+const route = useRoute()
+watch(() => route.path, () => { if (JSON.stringify(drafts) === pristine) composer.value = false })
 const draft = computed(() => drafts[kind.value])
 const error = computed(() => postDraftError(kind.value, draft.value))
 const attendeeQuery = ref('')

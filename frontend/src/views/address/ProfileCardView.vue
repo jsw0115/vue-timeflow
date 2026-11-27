@@ -9,9 +9,10 @@ import { openProfile } from '../../store/people'
  * 예전 링크로 들어오면 주소록으로 보내고 모달을 띄운다.
  */
 const router = useRouter()
-onMounted(() => {
+// 주소를 먼저 옮긴 뒤 창을 연다. 프로필 창은 화면이 바뀌면 닫힌다(IMP-025)
+onMounted(async () => {
+  await router.replace('/address')
   openProfile('이서연')
-  router.replace('/address')
 })
 </script>
 

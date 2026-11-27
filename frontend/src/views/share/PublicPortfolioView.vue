@@ -47,7 +47,7 @@ onBeforeUnmount(() => setNoIndex(false))
 </script>
 
 <template>
-  <main class="public-portfolio">
+  <div class="public-portfolio">
     <h1>{{ tr('공개 포트폴리오') }}</h1>
     <p v-if="status === 'loading'" class="input-field-help" role="status">{{ tr('포트폴리오를 불러오는 중이에요.') }}</p>
     <div v-else-if="status === 'missing'" class="empty-state" role="status"><p>{{ tr('이 링크는 닫혔거나 기간이 지났어요. 링크를 보낸 사람에게 새 링크를 받아 주세요.') }}</p></div>
@@ -73,7 +73,7 @@ onBeforeUnmount(() => setNoIndex(false))
       </article>
       <p v-if="!items.length" class="empty-state">{{ tr('공개된 항목이 없어요. 링크를 보낸 사람에게 다시 확인해 주세요.') }}</p>
     </template>
-  </main>
+  </div>
 </template>
 
 <style scoped>
