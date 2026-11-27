@@ -25,6 +25,7 @@
 | [12-decisions-and-open-issues.md](12-decisions-and-open-issues.md) | 충돌·결정 대기·추가 확인사항 | 착수 전 검토 |
 | [13-source-reconciliation.md](13-source-reconciliation.md) | 제공 문서 간 기준일·상태 충돌 정리 | 문서 통합·정합성 점검 |
 | [14-baseline-reconciliation.md](14-baseline-reconciliation.md) | 현재 소스와의 대조 결과, 1단계(IA·커리어 원장) 적용 범위 | 구현 상태 확인 |
+| [15-service-topology.md](15-service-topology.md) | 선배 플랫폼·AI 서버·관리자 통계의 서버 구성(DEC-15)과 진행 단계 | 서비스 확장 설계 |
 
 ## 적용 원칙
 
