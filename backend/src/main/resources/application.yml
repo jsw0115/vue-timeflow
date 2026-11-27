@@ -49,6 +49,11 @@ server:
   port: ${SERVER_PORT:8080}
   shutdown: graceful
   forward-headers-strategy: framework
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
 
 management:
   endpoints.web.exposure.include: health,info
@@ -62,6 +67,9 @@ logging:
   level:
     root: INFO
     org.springframework.security: WARN
+  charset:
+    console: UTF-8
+    file: UTF-8
 
 app:
   database:
