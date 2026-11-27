@@ -1,4 +1,5 @@
 <script setup>
+import { tr } from '../store/locale'
 import { useRoute, useRouter } from 'vue-router'
 
 /**
@@ -29,17 +30,17 @@ function isActive(tab) {
 
 <template>
   <div class="subpage-head">
-    <button class="review subpage-back" @click="goBack">← 뒤로</button>
+    <button class="review subpage-back" @click="goBack">{{ tr('← 뒤로') }}</button>
     <div class="subpage-title">
-      <p v-if="parent" class="eyebrow">{{ parent }}</p>
-      <h2>{{ title }}</h2>
+      <p v-if="parent" class="eyebrow">{{ tr(parent) }}</p>
+      <h2>{{ tr(title) }}</h2>
     </div>
-    <span v-if="meta" class="badge">{{ meta }}</span>
+    <span v-if="meta" class="badge">{{ tr(meta) }}</span>
     <slot name="actions" />
   </div>
   <div v-if="tabs.length" class="tabs subpage-tabs">
     <router-link v-for="t in tabs" :key="t.path" :to="t.path" custom v-slot="{ navigate }">
-      <button :class="{ selected: isActive(t) }" @click="navigate">{{ t.label }}</button>
+      <button :class="{ selected: isActive(t) }" @click="navigate">{{ tr(t.label) }}</button>
     </router-link>
   </div>
 </template>

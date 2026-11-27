@@ -1,4 +1,5 @@
 <script setup>
+import { bodyLocale, tr } from '../../../store/locale'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Modal from '../../../components/Modal.vue'
@@ -68,11 +69,11 @@ const visible = computed(() => chat.rooms.filter(room => {
   return room.name.toLocaleLowerCase().includes(query.value.trim().toLocaleLowerCase())
 }).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)))
 const typing = computed(() => activeRoom.value?.members.filter(member => member.userId !== chatUserId.value && (chat.typing[chat.selectedId]?.[member.userId] || 0) > now.value).map(member => member.nickname).join(', ') || '')
-function presenceLabel(userId) { const state = chat.presence[userId]; return isChatPreview.value ? '미리보기' : state?.validUntil > now.value ? state.active ? '메신저 활성' : '메신저 닫힘' : '상태 확인 중' }
+function presenceLabel(userId) { const state = chat.presence[userId]; return tr(isChatPreview.value ? '미리보기' : state?.validUntil > now.value ? state.active ? '메신저 활성' : '메신저 닫힘' : '상태 확인 중') }
 function isActive(userId) { return chat.presence[userId]?.validUntil > now.value && chat.presence[userId]?.active }
 const participants = computed(() => [...new Map(chat.rooms.flatMap(room => room.members).map(member => [member.userId, member])).values()])
 const activeParticipants = computed(() => participants.value.filter(member => isActive(member.userId)))
-const connection = computed(() => ({ idle: '대화를 연결해주세요', preview: '샘플 대화 미리보기', connecting: '연결하는 중', connected: '대화가 연결되었어요', reconnecting: '연결을 다시 확인하는 중' }[chat.connection]))
+const connection = computed(() => tr({ idle: '대화를 연결해주세요', preview: '샘플 대화 미리보기', connecting: '연결하는 중', connected: '대화가 연결되었어요', reconnecting: '연결을 다시 확인하는 중' }[chat.connection]))
 const dateLabel = value => new Date(value).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })
 const timeLabel = value => new Date(value).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })
 function dayStart(index) { return !index || dateLabel(displayed.value[index].createdAt) !== dateLabel(displayed.value[index - 1].createdAt) }
@@ -169,81 +170,82 @@ onBeforeUnmount(() => { stopChat(); clearInterval(clock); clearTimeout(searchTim
 <template>
   <div class="chat-workspace chat-workspace-live" :class="{ 'in-conversation': activeRoom, 'chat-messenger': embedded }">
     <header v-if="!embedded || !activeRoom" class="chat-page-head">
-      <div><h1>{{ embedded ? '채팅' : '함께 나누는 하루' }} <span v-if="embedded && unreadChats" class="chat-count">{{ unreadChats > 99 ? '99+' : unreadChats }}</span></h1></div>
-      <button class="chat-detail-button" aria-label="통합 검색" @click="showUnifiedSearch = true">⌕ 검색</button>
-      <button class="chat-primary" @click="showNew = true"><span aria-hidden="true">＋</span> 새 대화</button>
+      <div><!-- 다른 화면 위에 뜬 채팅 창의 제목은 h2(화면 제목 h1과 겹치지 않게), 채팅 화면(/chat)에서는 이 창이 본문이라 h1이다(IMP-023) -->
+      <component :is="embedded && route.path !== '/chat' ? 'h2' : 'h1'" class="chat-title">{{ embedded ? tr('채팅') : tr('함께 나누는 하루') }} <span v-if="embedded && unreadChats" class="chat-count">{{ unreadChats > 99 ? '99+' : unreadChats }}</span></component></div>
+      <button class="chat-detail-button" :aria-label="tr('통합 검색')" @click="showUnifiedSearch = true">{{ tr('⌕ 검색') }}</button>
+      <button class="chat-primary" @click="showNew = true"><span aria-hidden="true">＋</span> {{ tr('새 대화') }}</button>
     </header>
-    <nav v-if="!embedded" class="chat-nav" aria-label="채팅 기능"><router-link to="/chat" aria-current="page">대화</router-link><router-link to="/chat/mentions">멘션함</router-link><router-link to="/chat/tags">태그함</router-link><button v-if="session.accessToken" class="chat-signout" @click="signOut">로그아웃</button></nav>
-      <div v-if="chat.error" class="chat-banner" role="alert"><span>{{ chat.error }}</span><button @click="reconcile">다시 불러오기</button></div>
-      <section class="chat-layout" :class="{ 'has-room': activeRoom }" aria-label="채팅">
-        <aside class="chat-sidebar" aria-label="대화 목록">
-          <div v-if="!embedded" class="chat-sidebar-title"><h2>대화</h2><span v-if="unreadChats" class="chat-count">{{ unreadChats > 99 ? '99+' : unreadChats }}</span><small>{{ chat.rooms.length }}개</small></div>
-          <label class="chat-search"><span class="chat-sr">대화 이름 검색</span><input v-model="query" type="search" placeholder="대화 이름 검색" /></label>
-          <div class="chat-filters" aria-label="대화 필터"><button v-for="item in [{ id: 'ALL', label: '전체' }, { id: 'UNREAD', label: '안 읽음' }, { id: 'DM', label: '개인' }, { id: 'GROUP', label: '그룹' }]" :key="item.id" :aria-pressed="filter === item.id" @click="filter = item.id">{{ item.label }}</button></div>
+    <nav v-if="!embedded" class="chat-nav" :aria-label="tr('채팅 기능')"><router-link to="/chat" aria-current="page">{{ tr('대화') }}</router-link><router-link to="/chat/mentions">{{ tr('멘션함') }}</router-link><router-link to="/chat/tags">{{ tr('태그함') }}</router-link><button v-if="session.accessToken" class="chat-signout" @click="signOut">{{ tr('로그아웃') }}</button></nav>
+      <div v-if="chat.error" class="chat-banner" role="alert"><span>{{ tr(chat.error) }}</span><button @click="reconcile">{{ tr('다시 불러오기') }}</button></div>
+      <section class="chat-layout" :class="{ 'has-room': activeRoom }" :aria-label="tr('채팅')">
+        <aside class="chat-sidebar" :aria-label="tr('대화 목록')">
+          <div v-if="!embedded" class="chat-sidebar-title"><h2>{{ tr('대화') }}</h2><span v-if="unreadChats" class="chat-count">{{ unreadChats > 99 ? '99+' : unreadChats }}</span><small>{{ chat.rooms.length }}<template v-if="bodyLocale === 'ko'">개</template></small></div>
+          <label class="chat-search"><span class="chat-sr">{{ tr('대화 이름 검색') }}</span><input v-model="query" type="search" :placeholder="tr('대화 이름 검색')" /></label>
+          <div class="chat-filters" :aria-label="tr('대화 필터')"><button v-for="item in [{ id: 'ALL', label: '전체' }, { id: 'UNREAD', label: '안 읽음' }, { id: 'DM', label: '개인' }, { id: 'GROUP', label: '그룹' }]" :key="item.id" :aria-pressed="filter === item.id" @click="filter = item.id">{{ tr(item.label) }}</button></div>
           <div class="chat-room-list">
-            <p v-if="chat.loading && !chat.rooms.length" class="chat-note" role="status">대화를 불러오고 있어요…</p>
+            <p v-if="chat.loading && !chat.rooms.length" class="chat-note" role="status">{{ tr('대화를 불러오고 있어요…') }}</p>
             <button v-for="room in visible" :key="room.id" class="chat-room-item" :class="{ selected: chat.selectedId === room.id }" :aria-current="chat.selectedId === room.id ? 'true' : undefined" @click="pick(room.id)">
               <span class="chat-avatar" aria-hidden="true">{{ room.name.slice(0, 1) }}<i v-if="room.members.some(member => member.userId !== chatUserId && isActive(member.userId))" class="chat-presence-dot"></i></span>
-              <span class="chat-room-copy"><span><strong>{{ room.name }}</strong><time v-if="room.lastMessage">{{ timeLabel(room.lastMessage.createdAt) }}</time></span><small>{{ room.lastMessage?.body || '첫 이야기를 나눠보세요' }}</small><span v-if="room.kind === 'GROUP'" class="chat-room-meta">{{ room.communityId ? '커뮤니티' : '그룹' }} · {{ room.members.length }}명</span></span>
+              <span class="chat-room-copy"><span><strong>{{ room.name }}</strong><time v-if="room.lastMessage">{{ timeLabel(room.lastMessage.createdAt) }}</time></span><small>{{ room.lastMessage?.body || tr('첫 이야기를 나눠보세요') }}</small><span v-if="room.kind === 'GROUP'" class="chat-room-meta">{{ room.communityId ? tr('커뮤니티') : tr('그룹') }} · {{ tr('{n}명', { n: room.members.length }) }}</span></span>
               <span v-if="room.unreadCount" class="chat-count">{{ room.unreadCount > 99 ? '99+' : room.unreadCount }}</span>
             </button>
-            <div v-if="!visible.length && !chat.loading" class="chat-list-empty"><strong>{{ query || filter !== 'ALL' ? '조건에 맞는 대화가 없어요' : '아직 나눈 이야기가 없어요' }}</strong><p>{{ query || filter !== 'ALL' ? '검색어나 필터를 바꿔보세요.' : '새 대화에서 상대를 찾아보세요.' }}</p></div>
-            <button v-if="chat.roomCursor" class="chat-more" @click="loadRooms(true).catch(error => chat.error = error.message)">대화 더 불러오기</button>
+            <div v-if="!visible.length && !chat.loading" class="chat-list-empty"><strong>{{ query || filter !== 'ALL' ? tr('조건에 맞는 대화가 없어요') : tr('아직 나눈 이야기가 없어요') }}</strong><p>{{ query || filter !== 'ALL' ? tr('검색어나 필터를 바꿔보세요.') : tr('새 대화에서 상대를 찾아보세요.') }}</p></div>
+            <button v-if="chat.roomCursor" class="chat-more" @click="loadRooms(true).catch(error => chat.error = error.message)">{{ tr('대화 더 불러오기') }}</button>
           </div>
-          <button class="chat-sidebar-foot chat-presence-open" @click="showPresence = true">{{ isChatPreview ? '참여자 상태' : '메신저 활성 ' + activeParticipants.length + '명' }} · 확인하기</button>
+          <button class="chat-sidebar-foot chat-presence-open" @click="showPresence = true">{{ isChatPreview ? tr('참여자 상태') : tr('메신저 활성 {n}명', { n: activeParticipants.length }) }} · {{ tr('확인하기') }}</button>
         </aside>
-        <section v-if="activeRoom" class="chat-conversation" :aria-label="`${activeRoom.name} 대화`">
+        <section v-if="activeRoom" class="chat-conversation" :aria-label="tr('{name} 대화', { name: activeRoom.name })">
           <header class="chat-conversation-head">
-            <button class="chat-back" aria-label="대화 목록으로" @click="backToList">←</button><span class="chat-avatar" aria-hidden="true">{{ activeRoom.name.slice(0, 1) }}</span>
-            <div><h2>{{ activeRoom.name }}</h2><p role="status"><span class="chat-status-dot" :class="{ connected: chat.connection === 'connected' }"></span>{{ connection }} · {{ activeRoom.members.length }}명</p></div>
-            <button class="chat-detail-button" aria-label="통합 검색" @click="showUnifiedSearch = true">⌕</button>
-            <button class="chat-detail-button chat-search-toggle" aria-label="메시지 검색" :aria-expanded="showSearch" @click="showSearch = !showSearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg></button>
-            <button class="chat-detail-button" @click="showDetails = true; confirmLeave = false; detailError = ''">참여자</button>
+            <button class="chat-back" :aria-label="tr('대화 목록으로')" @click="backToList">←</button><span class="chat-avatar" aria-hidden="true">{{ activeRoom.name.slice(0, 1) }}</span>
+            <div><h2>{{ activeRoom.name }}</h2><p role="status"><span class="chat-status-dot" :class="{ connected: chat.connection === 'connected' }"></span>{{ connection }} · {{ tr('{n}명', { n: activeRoom.members.length }) }}</p></div>
+            <button class="chat-detail-button" :aria-label="tr('통합 검색')" @click="showUnifiedSearch = true">⌕</button>
+            <button class="chat-detail-button chat-search-toggle" :aria-label="tr('메시지 검색')" :aria-expanded="showSearch" @click="showSearch = !showSearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg></button>
+            <button class="chat-detail-button" @click="showDetails = true; confirmLeave = false; detailError = ''">{{ tr('참여자') }}</button>
           </header>
-          <label v-if="showSearch" class="chat-message-search"><span class="chat-sr">메시지 검색</span><input v-model="messageQuery" type="search" placeholder="이 대화에서 메시지 검색" /></label>
-          <form v-if="tagFilter" class="chat-tag-filter" @submit.prevent="filterTag(tagQuery)"><label for="chat-filter-tag">태그</label><input id="chat-filter-tag" v-model="tagQuery" maxlength="32" placeholder="태그 이름" /><button :disabled="tagBusy">찾기</button><button type="button" @click="filterTag('')">전체 메시지</button></form>
-          <p v-if="tagError" role="alert" class="chat-note">{{ tagError }}</p>
-          <div v-if="chat.searchHit?.message.roomId === chat.selectedId" class="chat-search-match"><span>검색한 메시지</span><button @click="chat.searchHit = null; bottom()">최근 대화로</button></div>
-          <p v-if="searchBusy || searchError" class="chat-note" role="status">{{ searchBusy ? '검색 중…' : searchError }}</p>
-          <p v-if="messageQuery.trim() && searchIndexing" class="chat-note" role="status">이전 메시지의 검색 색인을 준비하고 있어요. <button @click="searchMessages()">다시 검색</button></p>
-          <div ref="scroll" class="chat-message-list" role="log" aria-label="메시지" aria-live="polite" aria-relevant="additions" @scroll="scrolled">
-            <button v-if="!tagFilter && !messageQuery.trim() && !chat.searchHit && chat.older[chat.selectedId]" class="chat-more" :disabled="chat.historyLoading" @click="history">{{ chat.historyLoading ? '불러오는 중…' : '이전 메시지 보기' }}</button>
-            <button v-if="messageQuery.trim() && searchCursor" class="chat-more" :disabled="searchBusy" @click="searchMessages(true)">이전 검색 결과</button>
-            <button v-if="tagFilter && tagCursor" class="chat-more" :disabled="tagBusy" @click="filterTag(tagFilter, true)">이전 검색 결과</button>
-            <p v-if="tagFilter && !displayed.length" class="chat-note">{{ tagBusy ? '태그를 찾는 중…' : '이 태그가 포함된 메시지가 없어요.' }}</p>
-            <p v-if="messageQuery.trim() && !displayed.length && !searchBusy && !searchError && !searchIndexing" class="chat-note">검색한 메시지가 없어요.</p>
-            <p v-if="chat.loading" class="chat-note" role="status">메시지를 불러오고 있어요…</p>
-            <div v-if="!messages.length && !chat.loading" class="chat-first"><h3>이야기의 시작</h3><p>가벼운 인사부터 건네보세요.</p></div>
+          <label v-if="showSearch" class="chat-message-search"><span class="chat-sr">{{ tr('메시지 검색') }}</span><input v-model="messageQuery" type="search" :placeholder="tr('이 대화에서 메시지 검색')" /></label>
+          <form v-if="tagFilter" class="chat-tag-filter" @submit.prevent="filterTag(tagQuery)"><label for="chat-filter-tag">{{ tr('태그') }}</label><input id="chat-filter-tag" v-model="tagQuery" maxlength="32" :placeholder="tr('태그 이름')" /><button :disabled="tagBusy">{{ tr('찾기') }}</button><button type="button" @click="filterTag('')">{{ tr('전체 메시지') }}</button></form>
+          <p v-if="tagError" role="alert" class="chat-note">{{ tr(tagError) }}</p>
+          <div v-if="chat.searchHit?.message.roomId === chat.selectedId" class="chat-search-match"><span>{{ tr('검색한 메시지') }}</span><button @click="chat.searchHit = null; bottom()">{{ tr('최근 대화로') }}</button></div>
+          <p v-if="searchBusy || searchError" class="chat-note" role="status">{{ searchBusy ? tr('검색 중…') : tr(searchError) }}</p>
+          <p v-if="messageQuery.trim() && searchIndexing" class="chat-note" role="status">{{ tr('이전 메시지의 검색 색인을 준비하고 있어요.') }} <button @click="searchMessages()">{{ tr('다시 검색') }}</button></p>
+          <div ref="scroll" class="chat-message-list" role="log" :aria-label="tr('메시지')" aria-live="polite" aria-relevant="additions" @scroll="scrolled">
+            <button v-if="!tagFilter && !messageQuery.trim() && !chat.searchHit && chat.older[chat.selectedId]" class="chat-more" :disabled="chat.historyLoading" @click="history">{{ chat.historyLoading ? tr('불러오는 중…') : tr('이전 메시지 보기') }}</button>
+            <button v-if="messageQuery.trim() && searchCursor" class="chat-more" :disabled="searchBusy" @click="searchMessages(true)">{{ tr('이전 검색 결과') }}</button>
+            <button v-if="tagFilter && tagCursor" class="chat-more" :disabled="tagBusy" @click="filterTag(tagFilter, true)">{{ tr('이전 검색 결과') }}</button>
+            <p v-if="tagFilter && !displayed.length" class="chat-note">{{ tagBusy ? tr('태그를 찾는 중…') : tr('이 태그가 포함된 메시지가 없어요.') }}</p>
+            <p v-if="messageQuery.trim() && !displayed.length && !searchBusy && !searchError && !searchIndexing" class="chat-note">{{ tr('검색한 메시지가 없어요.') }}</p>
+            <p v-if="chat.loading" class="chat-note" role="status">{{ tr('메시지를 불러오고 있어요…') }}</p>
+            <div v-if="!messages.length && !chat.loading" class="chat-first"><h3>{{ tr('이야기의 시작') }}</h3><p>{{ tr('가벼운 인사부터 건네보세요.') }}</p></div>
             <template v-for="(message, index) in displayed" :key="message.id">
               <div v-if="dayStart(index)" class="chat-date"><span>{{ dateLabel(message.createdAt) }}</span></div>
               <article class="chat-message" :class="{ mine: message.senderId === chatUserId }">
                 <span v-if="message.senderId !== chatUserId && embedded" class="chat-message-avatar" aria-hidden="true">{{ message.senderName?.slice(0, 1) }}</span>
                 <span v-if="message.senderId !== chatUserId" class="chat-sender">{{ message.senderName }}</span><p>{{ message.body }}</p>
                 <div v-if="message.tags?.length" class="chat-message-tags"><button v-for="tag in message.tags" :key="tag" @click="filterTag(tag)">#{{ tag }}</button></div>
-                <small v-if="message.mentionUserIds?.includes(chatUserId)" class="chat-mention-label">나를 멘션한 메시지</small>
-                <div class="chat-message-meta"><time :datetime="message.createdAt">{{ timeLabel(message.createdAt) }}</time><span v-if="message.senderId === chatUserId">{{ unreadFor(message) ? `${unreadFor(message)}명 안 읽음` : '모두 읽음' }}</span></div>
+                <small v-if="message.mentionUserIds?.includes(chatUserId)" class="chat-mention-label">{{ tr('나를 멘션한 메시지') }}</small>
+                <div class="chat-message-meta"><time :datetime="message.createdAt">{{ timeLabel(message.createdAt) }}</time><span v-if="message.senderId === chatUserId">{{ unreadFor(message) ? tr('{n}명 안 읽음', { n: unreadFor(message) }) : tr('모두 읽음') }}</span></div>
               </article>
             </template>
-            <article v-for="message in pending" :key="message.clientMessageId" class="chat-message mine pending"><p>{{ message.body }}</p><div class="chat-message-meta"><span>{{ message.status === 'sending' ? '보내는 중…' : message.error }}</span><button v-if="message.status === 'failed'" @click="sendMessage(chat.selectedId, message.body, message)">다시 보내기</button></div></article>
+            <article v-for="message in pending" :key="message.clientMessageId" class="chat-message mine pending"><p>{{ message.body }}</p><div class="chat-message-meta"><span>{{ message.status === 'sending' ? tr('보내는 중…') : tr(message.error) }}</span><button v-if="message.status === 'failed'" @click="sendMessage(chat.selectedId, message.body, message)">{{ tr('다시 보내기') }}</button></div></article>
           </div>
-          <button v-if="hasNew" class="chat-new-messages" @click="bottom">새 메시지 ↓</button>
-          <div class="chat-typing" role="status">{{ typing ? typing + '님이 입력 중이에요…' : '' }}</div>
+          <button v-if="hasNew" class="chat-new-messages" @click="bottom">{{ tr('새 메시지 ↓') }}</button>
+          <div class="chat-typing" role="status">{{ typing ? tr('{name}님이 입력 중이에요…', { name: typing }) : '' }}</div>
           <ChatComposer v-model="draft" :disabled="chat.loading" :members="activeRoom.members.filter(member => member.userId !== chatUserId)" :mentions="mentionIds" @mention="mention" @unmention="id => mentionDrafts[chat.selectedId] = mentionIds.filter(item => item !== id)" @send="send" @typing="chatApi.typing(chat.selectedId).catch(() => {})" />
         </section>
-        <section v-else class="chat-no-selection"><span class="chat-empty-symbol" aria-hidden="true"><AppIcon name="message" :size="32" /></span><h2>오늘의 이야기를 나눠요</h2><p>대화를 선택하거나 새로 시작해보세요.<br />함께하는 계획은 조금 더 가벼워질 거예요.</p><button @click="showNew = true">새 대화 시작하기 ↗</button></section>
+        <section v-else class="chat-no-selection"><span class="chat-empty-symbol" aria-hidden="true"><AppIcon name="message" :size="32" /></span><h2>{{ tr('오늘의 이야기를 나눠요') }}</h2><p>{{ tr('대화를 선택하거나 새로 시작해보세요.') }}<br />{{ tr('함께하는 계획은 조금 더 가벼워질 거예요.') }}</p><button @click="showNew = true">{{ tr('새 대화 시작하기 ↗') }}</button></section>
       </section>
-    <Modal v-if="showUnifiedSearch" title="통합 검색" @close="showUnifiedSearch = false"><SearchPanel @room="showUnifiedSearch = false" @close="showUnifiedSearch = false" /><template #footer><button class="modal-secondary" @click="showUnifiedSearch = false">닫기</button></template></Modal>
-    <Modal v-if="showPresence" title="메신저 활성 상태" @close="showPresence = false"><p class="form-note">함께 대화하는 참여자의 메신저 상태를 표시해요.</p><ul class="chat-members"><li v-for="member in participants" :key="member.userId"><span>{{ member.nickname }}{{ member.userId === chatUserId ? ' (나)' : '' }}</span><small :class="{ 'chat-presence-active': isActive(member.userId) }">{{ presenceLabel(member.userId) }}</small></li></ul><template #footer><button class="modal-secondary" @click="showPresence = false">닫기</button></template></Modal>
+    <Modal v-if="showUnifiedSearch" :title="tr('통합 검색')" @close="showUnifiedSearch = false"><SearchPanel @room="showUnifiedSearch = false" @close="showUnifiedSearch = false" /><template #footer><button class="modal-secondary" @click="showUnifiedSearch = false">{{ tr('닫기') }}</button></template></Modal>
+    <Modal v-if="showPresence" :title="tr('메신저 활성 상태')" @close="showPresence = false"><p class="form-note">{{ tr('함께 대화하는 참여자의 메신저 상태를 표시해요.') }}</p><ul class="chat-members"><li v-for="member in participants" :key="member.userId"><span>{{ member.nickname }}{{ member.userId === chatUserId ? ' ' + tr('(나)') : '' }}</span><small :class="{ 'chat-presence-active': isActive(member.userId) }">{{ presenceLabel(member.userId) }}</small></li></ul><template #footer><button class="modal-secondary" @click="showPresence = false">{{ tr('닫기') }}</button></template></Modal>
     <NewConversationDialog v-if="showNew" @close="showNew = false" @created="created" />
-    <Modal v-if="showDetails && activeRoom" title="대화 참여자" @close="showDetails = false">
-      <ul class="chat-members"><li v-for="member in activeRoom.members" :key="member.userId"><span>{{ member.nickname }}{{ member.userId === chatUserId ? ' (나)' : '' }}</span><small :class="{ 'chat-presence-active': isActive(member.userId) }">{{ presenceLabel(member.userId) }}</small><small v-if="member.userId === activeRoom.ownerId && activeRoom.kind === 'GROUP' && !activeRoom.communityId">방장</small></li></ul>
-      <p v-if="activeRoom.communityId" class="chat-note">커뮤니티 채팅방이에요. 커뮤니티 회원이 함께하고, 커뮤니티를 나가면 이 채팅방에서도 나가져요.</p>
+    <Modal v-if="showDetails && activeRoom" :title="tr('대화 참여자')" @close="showDetails = false">
+      <ul class="chat-members"><li v-for="member in activeRoom.members" :key="member.userId"><span>{{ member.nickname }}{{ member.userId === chatUserId ? ' ' + tr('(나)') : '' }}</span><small :class="{ 'chat-presence-active': isActive(member.userId) }">{{ presenceLabel(member.userId) }}</small><small v-if="member.userId === activeRoom.ownerId && activeRoom.kind === 'GROUP' && !activeRoom.communityId">{{ tr('방장') }}</small></li></ul>
+      <p v-if="activeRoom.communityId" class="chat-note">{{ tr('커뮤니티 채팅방이에요. 커뮤니티 회원이 함께하고, 커뮤니티를 나가면 이 채팅방에서도 나가져요.') }}</p>
       <template v-if="activeRoom.kind === 'GROUP' && !activeRoom.communityId">
-        <div v-if="activeRoom.ownerId === chatUserId && activeRoom.members.length > 1" class="chat-owner"><label>방장 넘기기<select v-model="nextOwner"><option disabled value="">참여자 선택</option><option v-for="member in activeRoom.members.filter(item => item.userId !== chatUserId)" :key="member.userId" :value="member.userId">{{ member.nickname }}</option></select></label></div>
-        <p v-if="confirmLeave" class="chat-note">나가면 이 대화의 메시지를 더 이상 볼 수 없어요. 계속할까요?</p>
+        <div v-if="activeRoom.ownerId === chatUserId && activeRoom.members.length > 1" class="chat-owner"><label>{{ tr('방장 넘기기') }}<select v-model="nextOwner"><option disabled value="">{{ tr('참여자 선택') }}</option><option v-for="member in activeRoom.members.filter(item => item.userId !== chatUserId)" :key="member.userId" :value="member.userId">{{ member.nickname }}</option></select></label></div>
+        <p v-if="confirmLeave" class="chat-note">{{ tr('나가면 이 대화의 메시지를 더 이상 볼 수 없어요. 계속할까요?') }}</p>
       </template>
-      <p v-if="detailError" role="alert">{{ detailError }}</p>
-      <template #footer><button class="modal-secondary" @click="showDetails = false">닫기</button><button v-if="activeRoom.kind === 'GROUP' && !activeRoom.communityId && activeRoom.ownerId === chatUserId && activeRoom.members.length > 1" class="modal-secondary" :disabled="!nextOwner" @click="transfer">방장 넘기기</button><button v-if="activeRoom.kind === 'GROUP' && !activeRoom.communityId" class="chat-leave" @click="leave">{{ confirmLeave ? '확인하고 대화 나가기' : '대화 나가기' }}</button></template>
+      <p v-if="detailError" role="alert">{{ tr(detailError) }}</p>
+      <template #footer><button class="modal-secondary" @click="showDetails = false">{{ tr('닫기') }}</button><button v-if="activeRoom.kind === 'GROUP' && !activeRoom.communityId && activeRoom.ownerId === chatUserId && activeRoom.members.length > 1" class="modal-secondary" :disabled="!nextOwner" @click="transfer">{{ tr('방장 넘기기') }}</button><button v-if="activeRoom.kind === 'GROUP' && !activeRoom.communityId" class="chat-leave" @click="leave">{{ confirmLeave ? tr('확인하고 대화 나가기') : tr('대화 나가기') }}</button></template>
     </Modal>
     <OutboxLogoutDialog v-if="confirmSignOut" @logout="finishSignOut" @close="confirmSignOut = false" />
   </div>

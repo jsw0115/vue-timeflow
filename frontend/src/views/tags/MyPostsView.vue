@@ -1,4 +1,5 @@
 <script setup>
+import { bodyLocale, tr } from '../../store/locale'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import ListFilterBar from '../../components/ListFilterBar.vue'
@@ -51,20 +52,20 @@ const share = computed(() => (posts.value.length ? Math.round((myPosts.value.len
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 1rem">내 글 모아보기</b>
-    <span class="form-note" style="margin: 0">{{ ME }}님이 쓴 글</span>
+    <b style="font-size: 1rem">{{ tr('내 글 모아보기') }}</b>
+    <span class="form-note" style="margin: 0">{{ tr('{name}님이 쓴 글', { name: ME }) }}</span>
     <span></span>
-    <button class="review" style="margin: 0" @click="router.push('/tags')">태그로 보기</button>
+    <button class="review" style="margin: 0" @click="router.push('/tags')">{{ tr('태그로 보기') }}</button>
   </div>
 
   <div class="metrics" style="--metric-cols: 4; margin-bottom: 16px">
-    <article><span>내 글</span><b class="figure">{{ myPosts.length }}<small>개</small></b><small>전체의 {{ share }}%</small></article>
-    <article v-for="b in byKind.slice(0, 2)" :key="b.kind"><span>{{ b.kind }}</span><b class="figure">{{ b.count }}<small>개</small></b></article>
-    <article><span>사람을 언급한 글</span><b class="figure">{{ mentionedCount }}<small>개</small></b></article>
+    <article><span>{{ tr('내 글') }}</span><b class="figure">{{ myPosts.length }}<small v-if="bodyLocale === 'ko'">개</small></b><small>{{ tr('전체의 {n}%', { n: share }) }}</small></article>
+    <article v-for="b in byKind.slice(0, 2)" :key="b.kind"><span>{{ tr(b.kind) }}</span><b class="figure">{{ b.count }}<small v-if="bodyLocale === 'ko'">개</small></b></article>
+    <article><span>{{ tr('사람을 언급한 글') }}</span><b class="figure">{{ mentionedCount }}<small v-if="bodyLocale === 'ko'">개</small></b></article>
   </div>
 
   <section v-if="myTags.length" class="card" style="margin-bottom: 16px">
-    <h3>자주 쓴 태그</h3>
+    <h3>{{ tr('자주 쓴 태그') }}</h3>
     <div class="tag-cloud">
       <button v-for="[t, n] in myTags" :key="t" class="tag-chip" @click="router.push({ path: '/tags', query: { tag: t } })">
         #{{ t }}<em>{{ n }}</em>
@@ -76,7 +77,7 @@ const share = computed(() => (posts.value.length ? Math.round((myPosts.value.len
     v-model:query="query"
     v-model:filters="filters"
     :groups="FILTER_GROUPS"
-    placeholder="제목·본문 검색"
+    :placeholder="tr('제목·본문 검색')"
     :result-count="visible.length"
     :total-count="myPosts.length"
   />
@@ -84,12 +85,12 @@ const share = computed(() => (posts.value.length ? Math.round((myPosts.value.len
   <section class="card">
     <article v-for="p in visible" :key="p.id" class="post-row" @click="router.push(p.link)">
       <div class="post-row-head">
-        <span class="tag">{{ p.kind }}</span>
+        <span class="tag">{{ tr(p.kind) }}</span>
         <b>{{ p.title }}</b>
         <small class="figure" style="margin-left: auto">{{ p.at }}</small>
       </div>
       <p><RichText :text="p.body" /></p>
     </article>
-    <p v-if="!visible.length" class="empty-state" role="status">조건에 맞는 글이 없어요. 검색어나 필터를 바꿔 보세요.</p>
+    <p v-if="!visible.length" class="empty-state" role="status">{{ tr('조건에 맞는 글이 없어요. 검색어나 필터를 바꿔 보세요.') }}</p>
   </section>
 </template>

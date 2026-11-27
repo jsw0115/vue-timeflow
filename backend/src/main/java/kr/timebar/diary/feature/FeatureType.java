@@ -23,14 +23,19 @@ public enum FeatureType {
     WORK_RECORD("title body type owner projectId status startDate endDate startTime endTime half leaveDays location partner transport expense fromCompany toCompany role handover", "title type owner startDate endDate startTime endTime"),
     WBS("title body parentId md progress owner open startDate endDate", "title md progress"),
     WIKI("title body space parentId pinned", "title space"),
-    CAREER("title period role company stack achievements", "title role"),
+    CAREER("title period role company stack achievements employmentType department startDate endDate employmentStatus duties", "title role"),
     RESUME("name headline years skills education", "name"),
-    PORTFOLIO("title body kind", "title kind"),
+    // 자기소개서(PR-25, 09 Q-41): 개편안 문서 유형 표의 지원 동기·직무 역량·문제 해결·협업·성장 경험. 계정에 하나이고 회사별 제출본은 문서 버전으로 남긴다
+    COVER_LETTER("title motivation competency problemSolving collaboration growth", "title"),
+    // 포트폴리오 항목(PR-26): 개편안 4.3·문서 유형 표의 소개(body)·문제·역할·기술·과정·성과·개인 기여·결과물 링크와 근거(커리어 활동·경력) 연결
+    PORTFOLIO("title body kind role stack problem process outcome contribution links activityIds experienceId", "title kind"),
     PORTFOLIO_LINK("itemIds", "itemIds"),
     // 커리어 활동 원장(docs/design 04 FD-85 후보). 기존 경력(CAREER)을 experienceId로 참조하고 원천 기록을 복제하지 않는다
     CAREER_ACTIVITY("title body activityType date endDate experienceId role skillTags achievements links visibility tags", "title activityType date"),
     // 취업·이직 지원 관리(docs/design 04 FD-88 후보). 공고 자동 수집·자동 지원은 하지 않는다
     JOB_APPLICATION("title company postingUrl employmentType workType salaryRange deadline appliedDate interviewDate status body", "title company status"),
+    // 이력서·경력기술서·포트폴리오의 고정 버전(PR-25, docs/design 06 career_document_version). 서버가 지금 저장된 내용을 복사해 만들고 고치지 않는다
+    DOC_VERSION("document number label note language content", "document number content"),
     CONTACT("name relation email favorite accountId accountNickname", "name"),
     NOTIFICATION("title kind link read", "title kind link"),
     REPORT("title body date category parentId", "title date"),

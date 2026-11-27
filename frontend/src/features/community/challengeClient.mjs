@@ -1,5 +1,6 @@
 // 커뮤니티 챌린지·인증·랭킹 API를 부르고, 화면이 쓰는 입력 검사·규칙 문구·기간 상태·인증에 쓸 실제 기록 고르기·순위를 한곳에 둔다(PR-10 3b-2, Q-26).
 import { localDate } from '../../utils/postValidation.mjs'
+import { korean } from '../i18n/translate.mjs'
 
 const CLOCK = /^([01]\d|2[0-3]):[0-5]\d$/
 
@@ -31,9 +32,10 @@ export function challengeBody(d) {
   return body
 }
 
-export function challengeRule(c) {
-  if (c?.verify !== 'record') return '직접 인증'
-  return ['실제 기록 확인', c.windowStart && c.windowEnd ? `${c.windowStart}~${c.windowEnd}` : '', `${c.minMinutes}분 이상`, c.openRecords ? '기록 공개' : ''].filter(Boolean).join(' · ')
+/** 규칙 문구. t는 화면 표시용 번역(기본 한국어)이다. */
+export function challengeRule(c, t = korean) {
+  if (c?.verify !== 'record') return t('직접 인증')
+  return [t('실제 기록 확인'), c.windowStart && c.windowEnd ? `${c.windowStart}~${c.windowEnd}` : '', t('{n}분 이상', { n: c.minMinutes }), c.openRecords ? t('기록 공개') : ''].filter(Boolean).join(' · ')
 }
 
 function addDays(date, days) {

@@ -1,6 +1,7 @@
 // 다이어리·메모·D-Day·머니로그의 서버 필드와 화면 값 변환을 정한다(PR-07 6단계). createFeatureStore에 그대로 넘긴다.
 import { moodCode } from '../../utils/mood.mjs'
 import { dDayLabel, ddayDateLabel, legacyIsoDate } from '../../utils/dday.mjs'
+import { careerBody } from '../career/careerPeriods.mjs'
 
 /** 기분은 코드로 보내고, 서버에 남은 예전 값도 코드로 읽는다(Q-07). */
 export const diaryKind = {
@@ -31,16 +32,20 @@ export const moneyKind = {
 /** 경력기술서 성과는 입력란에서 한 줄에 하나씩 쓴다. */
 export const achievementsFromText = (text) => String(text ?? '').split('\n').map((line) => line.trim()).filter(Boolean)
 
-/** 경력 프로젝트(PR-07 7단계). 서버 필수 값은 title·role이다. */
+/** 경력 프로젝트(PR-07 7단계). 서버 필수 값은 title·role이다. 고용 형태·부서·시작일·종료일·재직 상태는 선택이다(PR-24). */
 export const careerKind = {
-  kind: 'career', path: '/api/work/career/projects', fields: ['title', 'period', 'role', 'company', 'stack', 'achievements'], demoFields: ['title'],
+  kind: 'career', path: '/api/work/career/projects',
+  fields: ['title', 'period', 'role', 'company', 'stack', 'achievements', 'employmentType', 'department', 'startDate', 'endDate', 'employmentStatus', 'duties'], demoFields: ['title'],
   toLocal: (row) => ({ ...row, achievements: row.achievements ?? [] }),
+  toBody: careerBody,
 }
 
 /** 포트폴리오 항목. 화면의 수정일은 서버 수정 시각의 날짜다. */
 export const portfolioKind = {
-  kind: 'portfolio', path: '/api/work/portfolio', fields: ['title', 'body', 'kind'], demoFields: ['title'],
-  toLocal: (row) => ({ ...row, updated: String(row.updatedAt ?? '').slice(0, 10).replaceAll('-', '.') }),
+  kind: 'portfolio', path: '/api/work/portfolio',
+  // 구성 칸·결과물 링크·근거 연결(PR-26)
+  fields: ['title', 'body', 'kind', 'role', 'stack', 'problem', 'process', 'outcome', 'contribution', 'links', 'activityIds', 'experienceId'], demoFields: ['title'],
+  toLocal: (row) => ({ ...row, links: row.links ?? [], activityIds: row.activityIds ?? [], updated: String(row.updatedAt ?? '').slice(0, 10).replaceAll('-', '.') }),
 }
 
 /** 업무 기록 종류. 서버(FeatureInput.validateWork)가 받는 다섯 가지다(PR-10 4단계). */

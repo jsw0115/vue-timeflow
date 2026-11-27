@@ -6,6 +6,7 @@ import { useRoute } from 'vue-router'
 import { defaultPlannerView, plannerViews, setDefaultPlannerView } from '../store/plannerPreferences'
 import { cursor, shift, goToday, dayLabel, weekLabel, monthLabel, yearLabel } from '../store/plannerDate'
 import { localDate } from '../utils/postValidation.mjs'
+import { tr } from '../store/locale'
 const route = useRoute()
 const current = computed(() => plannerViews.find(view => view.path === route.path)?.id)
 const PERIODS = {
@@ -18,15 +19,15 @@ const period = computed(() => PERIODS[current.value] ?? PERIODS.daily)
 </script>
 <template>
   <div class="planner-view-controls">
-    <div class="planner-period" role="group" aria-label="기간 이동">
-      <button type="button" class="icon-button" :aria-label="period.prev" :title="period.prev" @click="shift(period.unit, -1)">‹</button>
+    <div class="planner-period" role="group" :aria-label="tr('기간 이동')">
+      <button type="button" class="icon-button" :aria-label="tr(period.prev)" :title="tr(period.prev)" @click="shift(period.unit, -1)">‹</button>
       <h2 class="planner-period-label" aria-live="polite">{{ period.label.value }}</h2>
-      <button type="button" class="icon-button" :aria-label="period.next" :title="period.next" @click="shift(period.unit, 1)">›</button>
-      <button type="button" class="button-text" @click="goToday">{{ period.today }}</button>
+      <button type="button" class="icon-button" :aria-label="tr(period.next)" :title="tr(period.next)" @click="shift(period.unit, 1)">›</button>
+      <button type="button" class="button-text" @click="goToday">{{ tr(period.today) }}</button>
     </div>
     <div class="planner-view-switch">
-      <nav class="planner-mode-switch" aria-label="플래너 보기"><router-link v-for="view in plannerViews" :key="view.id" :to="{ path: view.path, query: { ...route.query, date: localDate(cursor) } }" :aria-current="current === view.id ? 'page' : undefined">{{ view.label }}</router-link></nav>
-      <button type="button" class="planner-save-default" :disabled="current === defaultPlannerView" @click="setDefaultPlannerView(current)">{{ current === defaultPlannerView ? '기본 보기' : '이 보기를 기본으로' }}</button>
+      <nav class="planner-mode-switch" :aria-label="tr('플래너 보기')"><router-link v-for="view in plannerViews" :key="view.id" :to="{ path: view.path, query: { ...route.query, date: localDate(cursor) } }" :aria-current="current === view.id ? 'page' : undefined">{{ tr(view.label) }}</router-link></nav>
+      <button type="button" class="planner-save-default" :disabled="current === defaultPlannerView" @click="setDefaultPlannerView(current)">{{ current === defaultPlannerView ? tr('기본 보기') : tr('이 보기를 기본으로') }}</button>
     </div>
   </div>
 </template>

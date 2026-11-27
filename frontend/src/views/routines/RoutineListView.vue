@@ -1,4 +1,6 @@
 <script setup>
+import { bodyLocale, tr, unit } from '../../store/locale'
+import { formatDate, modeText } from '../../features/i18n/locale.mjs'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
@@ -78,7 +80,7 @@ async function quick(run) {
   actionMessage.value = ''
   try { await run() } catch (error) {
     if (error.kind === 'stale') return
-    actionMessage.value = error.kind === 'conflict' ? '다른 곳에서 먼저 바뀌어 최신 내용으로 바꿨어요. 확인한 뒤 다시 시도해 주세요.' : saveFailureMessage(error)
+    actionMessage.value = error.kind === 'conflict' ? tr('다른 곳에서 먼저 바뀌어 최신 내용으로 바꿨어요. 확인한 뒤 다시 시도해 주세요.') : tr(saveFailureMessage(error))
   }
 }
 const DAY_PRESETS = [
@@ -152,13 +154,19 @@ async function saveRoutine() {
   if (result.ok) { showModal.value = false; return }
   if (result.error.kind === 'conflict') conflict.value = { latest: { ...(result.error.latest ?? editingBase.value) } }
 }
+// 목표 단위는 사용자가 쓴 값이다. 처음 값 '회'만 본문 언어 단위로 보이고 저장값은 그대로 둔다(IMP-017)
+function goalText(goal) {
+  const count = goal?.count ?? ''
+  const u = goal?.unit ?? ''
+  return u === '회' ? count + unit('회', Number(count)) : count + u
+}
 const compareRows = computed(() => {
   if (!conflict.value) return []
   const latest = conflict.value.latest, mine = draft.value
   return [
     { label: '루틴 이름', mine: mine.title.trim(), latest: latest.title },
     { label: '시작 시간', mine: mine.time + ' · ' + mine.duration + '분', latest: latest.time + ' · ' + (latest.duration ?? 30) + '분' },
-    { label: '목표', mine: mine.goalCount + mine.goalUnit, latest: (latest.goal?.count ?? '') + (latest.goal?.unit ?? '') },
+    { label: '목표', mine: goalText({ count: mine.goalCount, unit: mine.goalUnit }), latest: goalText(latest.goal) },
     { label: '분류', mine: mine.category, latest: latest.category },
     { label: '반복 시작일', mine: mine.startDate, latest: latest.startDate ?? '' },
   ]
@@ -206,19 +214,19 @@ const retroOver = computed(() => {
   if (!restNextRule.value) return ''
   const years = [...new Set(restDates.value.filter((date) => date < today.value).map((date) => date.slice(0, 4)))]
   const year = years.find((y) => retroSkipCount(restNextRule.value, y) > RETRO_SKIPS_PER_YEAR)
-  return year ? `지난 날짜는 한 해에 ${RETRO_SKIPS_PER_YEAR}번까지 쉬는 날로 추가할 수 있어요. ${year}년에 남은 횟수는 ${Math.max(0, RETRO_SKIPS_PER_YEAR - retroSkipCount(restTarget.value.recurrence, year))}번이에요.` : ''
+  return year ? tr('지난 날짜는 한 해에 {max}번까지 쉬는 날로 추가할 수 있어요. {year}년에 남은 횟수는 {left}번이에요.', { max: RETRO_SKIPS_PER_YEAR, year, left: Math.max(0, RETRO_SKIPS_PER_YEAR - retroSkipCount(restTarget.value.recurrence, year)) }) : ''
 })
 const restError = computed(() => {
   const r = restTarget.value
   if (!r) return ''
-  if (!restFrom.value || !restTo.value) return '시작일과 종료일을 선택해주세요.'
-  if (r.startDate && restFrom.value < r.startDate) return '루틴 시작일 이후 날짜만 쉬는 날로 정할 수 있어요.'
-  if (restTo.value < restFrom.value) return '종료일은 시작일 이후로 선택해주세요.'
-  if (!datesBetween(restFrom.value, restTo.value).length) return `기간은 최대 ${MAX_EXCEPTIONS}일까지 정할 수 있어요.`
-  if (!restDates.value.length) return '이 기간에는 예정된 회차가 없어요.'
+  if (!restFrom.value || !restTo.value) return tr('시작일과 종료일을 선택해주세요.')
+  if (r.startDate && restFrom.value < r.startDate) return tr('루틴 시작일 이후 날짜만 쉬는 날로 정할 수 있어요.')
+  if (restTo.value < restFrom.value) return tr('종료일은 시작일 이후로 선택해주세요.')
+  if (!datesBetween(restFrom.value, restTo.value).length) return tr('기간은 최대 {n}일까지 정할 수 있어요.', { n: MAX_EXCEPTIONS })
+  if (!restDates.value.length) return tr('이 기간에는 예정된 회차가 없어요.')
   const already = skipDates(r.recurrence)
-  if (restDates.value.every((date) => already.has(date))) return '이미 쉬는 날로 정한 기간이에요.'
-  if (r.done && restDates.value.includes(today.value)) return '오늘 완료한 루틴은 쉬는 날로 정할 수 없어요. 체크를 해제한 뒤 정해주세요.'
+  if (restDates.value.every((date) => already.has(date))) return tr('이미 쉬는 날로 정한 기간이에요.')
+  if (r.done && restDates.value.includes(today.value)) return tr('오늘 완료한 루틴은 쉬는 날로 정할 수 없어요. 체크를 해제한 뒤 정해주세요.')
   if (retroOver.value) return retroOver.value
   return recurrenceError(restNextRule.value, r.startDate ?? today.value)
 })
@@ -229,7 +237,7 @@ async function saveRest(recurrence) {
   restSaving.value = true
   restMessage.value = ''
   try { await routineStore.update(restTarget.value, { recurrence }) } catch (error) {
-    if (error.kind !== 'stale') restMessage.value = error.kind === 'conflict' ? '다른 곳에서 먼저 바뀌어 최신 내용으로 바꿨어요. 확인한 뒤 다시 시도해 주세요.' : saveFailureMessage(error)
+    if (error.kind !== 'stale') restMessage.value = error.kind === 'conflict' ? tr('다른 곳에서 먼저 바뀌어 최신 내용으로 바꿨어요. 확인한 뒤 다시 시도해 주세요.') : tr(saveFailureMessage(error))
   } finally { restSaving.value = false }
 }
 function addRest() {
@@ -239,11 +247,13 @@ function addRest() {
 function removeRest(date) {
   saveRest(removeSkipDate(restTarget.value.recurrence, date))
 }
+// 요일 이름(0=일)은 본문 언어로 보인다. 2024-01-07은 일요일이다
+const dayName = (index) => (bodyLocale.value === 'ko' ? ROUTINE_DAYS[index] : formatDate(new Date(2024, 0, 7 + index), bodyLocale.value, { weekday: 'short' }))
 function restLabel(date) {
-  return `${date} (${ROUTINE_DAYS[new Date(date + 'T12:00:00').getDay()]})`
+  return `${date} (${dayName(new Date(date + 'T12:00:00').getDay())})`
 }
 function removeRoutine(r) {
-  if (!window.confirm('‘' + r.title + '’ 루틴을 삭제할까요? 연속 기록도 함께 사라져요.')) return
+  if (!window.confirm(tr('‘{title}’ 루틴을 삭제할까요? 연속 기록도 함께 사라져요.', { title: r.title }))) return
   quick(() => routineStore.remove(r))
 }
 </script>
@@ -251,40 +261,40 @@ function removeRoutine(r) {
 <template>
   <div class="page-tools">
     <HelpPopover
-      title="루틴 사용법"
-      summary="반복 주기와 목표를 정해두면, 오늘 해야 할 루틴만 골라 보여주고 연속 기록을 이어줘요."
+      :title="tr('루틴 사용법')"
+      :summary="tr('반복 주기와 목표를 정해두면, 오늘 해야 할 루틴만 골라 보여주고 연속 기록을 이어줘요.')"
       :steps="[
-        '‘+ 새 루틴’으로 이름·시간·요일·목표를 정해요.',
-        '오늘 탭에서 체크하면 연속 기록이 하루 올라가요.',
-        '‘쉬는 날’에서 오늘이나 휴가 기간을 정해요. 그날은 오늘 목록에서 빠지고 연속 기록이 이어져요.',
-        '기간 없이 멈추려면 ‘중지’를 눌러요. ‘재개’하면 다시 오늘 목록에 나와요.',
-        '검색과 필터로 분류·미완료만 골라 볼 수 있어요.',
+        tr('‘+ 새 루틴’으로 이름·시간·요일·목표를 정해요.'),
+        tr('오늘 탭에서 체크하면 연속 기록이 하루 올라가요.'),
+        tr('‘쉬는 날’에서 오늘이나 휴가 기간을 정해요. 그날은 오늘 목록에서 빠지고 연속 기록이 이어져요.'),
+        tr('기간 없이 멈추려면 ‘중지’를 눌러요. ‘재개’하면 다시 오늘 목록에 나와요.'),
+        tr('검색과 필터로 분류·미완료만 골라 볼 수 있어요.'),
       ]"
       :terms="[
-        { term: '연속 기록', desc: '빠짐없이 이어온 날수예요. 체크를 해제하면 하루 줄어들어요.' },
-        { term: '쉬는 날', desc: '달성률과 연속 기록 계산에서 빼는 날이에요. 반복에 없는 날처럼 다뤄요. 오늘 이후 날짜만 정할 수 있어요.' },
-        { term: '쉬는 중', desc: '중지했거나 오늘이 쉬는 날인 루틴이에요. 오늘 목록에서 빠지고 연속 기록도 유지돼요.' },
-        { term: '최근 7일', desc: '지난 7일 중 실제로 체크한 비율이에요.' },
+        { term: tr('연속 기록'), desc: tr('빠짐없이 이어온 날수예요. 체크를 해제하면 하루 줄어들어요.') },
+        { term: tr('쉬는 날'), desc: tr('달성률과 연속 기록 계산에서 빼는 날이에요. 반복에 없는 날처럼 다뤄요. 오늘 이후 날짜만 정할 수 있어요.') },
+        { term: tr('쉬는 중'), desc: tr('중지했거나 오늘이 쉬는 날인 루틴이에요. 오늘 목록에서 빠지고 연속 기록도 유지돼요.') },
+        { term: tr('최근 7일'), desc: tr('지난 7일 중 실제로 체크한 비율이에요.') },
       ]"
-      :tips="['요일을 고르면 그 요일에만 오늘 목록에 나타나요.']"
+      :tips="[tr('요일을 고르면 그 요일에만 오늘 목록에 나타나요.')]"
     />
     <span></span>
-    <PageActions><button class="primary" @click="openModal">+ 새 루틴</button></PageActions>
+    <PageActions><button class="primary" @click="openModal">{{ tr('+ 새 루틴') }}</button></PageActions>
   </div>
 
   <div class="callout" v-if="isAutomationOn('routine-streak-alert')">
-    <b>자동화 켜짐</b>
-    <p>{{ automationParam('routine-streak-alert') }}일 이상 연속으로 놓치면 알림을 보내드려요 ·
-      <RouterLink to="/settings/automation" class="inline-link">설정 바꾸기</RouterLink>
+    <b>{{ tr('자동화 켜짐') }}</b>
+    <p>{{ tr('{n}일 이상 연속으로 놓치면 알림을 보내드려요 ·', { n: automationParam('routine-streak-alert') }) }}
+      <RouterLink to="/settings/automation" class="inline-link">{{ tr('설정 바꾸기') }}</RouterLink>
     </p>
   </div>
 
   <StorageNote :mode="routineMode" />
-  <p v-if="routineStore.notice.message || actionMessage" class="input-field-help" data-state="error" role="status">{{ routineStore.notice.message || actionMessage }}</p>
+  <p v-if="routineStore.notice.message || actionMessage" class="input-field-help" data-state="error" role="status">{{ tr(routineStore.notice.message || actionMessage) }}</p>
   <section class="card" style="margin-bottom: 16px">
     <div style="display: flex; align-items: baseline; gap: 4px; margin-bottom: 10px">
       <b class="figure" style="font-size: 1.5625rem; letter-spacing: -1px">{{ doneCount }}<small>/{{ todayList.length }}</small></b>
-      <span style="font-size: 0.875rem; color: var(--color-muted)">오늘 완료 · {{ progress }}%</span>
+      <span style="font-size: 0.875rem; color: var(--color-muted)">{{ tr('오늘 완료 · {n}%', { n: progress }) }}</span>
     </div>
     <div class="progress green"><em :style="{ width: progress + '%' }"></em></div>
   </section>
@@ -293,101 +303,101 @@ function removeRoutine(r) {
     v-model:query="query"
     v-model:filters="filters"
     :groups="FILTER_GROUPS"
-    placeholder="루틴 이름·분류 검색"
+    :placeholder="tr('루틴 이름·분류 검색')"
     :result-count="visible.length"
     :total-count="routines.length"
   />
 
   <section class="card list">
     <div class="list-head routine-grid">
-      <span>루틴</span><span>주기</span><span>목표</span><span>{{ routineMode === 'server' ? '4주 달성률' : '연속' }}</span><span>최근 7일</span><span>관리</span>
+      <span>{{ tr('루틴') }}</span><span>{{ tr('주기') }}</span><span>{{ tr('목표') }}</span><span>{{ routineMode === 'server' ? tr('4주 달성률') : tr('연속') }}</span><span>{{ tr('최근 7일') }}</span><span>{{ tr('관리') }}</span>
     </div>
     <div class="row routine-grid" v-for="r in visible" :key="r.id" :class="{ 'routine-paused': r.paused }">
       <label>
         <input type="checkbox" :checked="r.done" :disabled="r.paused || isRestToday(r)" :aria-busy="routineStore.isBusy(r) ? 'true' : undefined" @click.prevent="toggleRoutine(r)" />
         <span :class="{ done: r.done }">{{ r.title }}</span>
-        <small style="color: var(--color-muted); margin-left: 6px">{{ r.time }} · {{ r.duration ?? 30 }}분<template v-if="isRestToday(r)"> · 오늘 쉬는 날</template></small>
+        <small style="color: var(--color-muted); margin-left: 6px">{{ r.time }} · {{ tr('{n}분', { n: r.duration ?? 30 }) }}<template v-if="isRestToday(r)"> {{ tr('· 오늘 쉬는 날') }}</template></small>
       </label>
-      <span class="tag">{{ dayLabel(r) }}</span>
-      <span class="figure">{{ r.goal?.count }}{{ r.goal?.unit }}</span>
-      <span v-if="routineMode === 'server'" class="figure">{{ r.historyLoaded ? r.rate4w + '%' : '–' }}<small style="color: var(--color-muted)"> · 연속 {{ r.historyLoaded ? r.streak : '–' }}일</small></span>
-      <span v-else class="figure">{{ r.streak }}일<small style="color: var(--color-muted)"> · 최고 {{ r.best }}</small></span>
+      <span class="tag">{{ dayLabel(r, tr, dayName) }}</span>
+      <span class="figure">{{ goalText(r.goal) }}</span>
+      <span v-if="routineMode === 'server'" class="figure">{{ r.historyLoaded ? r.rate4w + '%' : '–' }}<small style="color: var(--color-muted)"> · {{ tr('연속 {n}일', { n: r.historyLoaded ? r.streak : '–' }) }}</small></span>
+      <span v-else class="figure">{{ tr('{n}일', { n: r.streak }) }}<small style="color: var(--color-muted)"> · {{ tr('최고 {n}', { n: r.best }) }}</small></span>
       <span class="week-dots">
         <i v-for="(h, i) in r.history" :key="i" :class="{ on: h }" :title="ROUTINE_DAYS[i]"></i>
         <b class="figure">{{ routineRate(r) }}%</b>
       </span>
       <span style="display: flex; flex-wrap: wrap; gap: 6px">
-        <button class="review" style="margin: 0" @click="openEdit(r)">수정</button>
-        <button class="review" style="margin: 0" :aria-label="r.title + ' 쉬는 날 정하기'" @click="openRest(r)">쉬는 날</button>
-        <button class="review" style="margin: 0" @click="togglePause(r)">{{ r.paused ? '재개' : '중지' }}</button>
-        <button class="review" style="margin: 0" @click="removeRoutine(r)">삭제</button>
+        <button class="review" style="margin: 0" @click="openEdit(r)">{{ tr('수정') }}</button>
+        <button class="review" style="margin: 0" :aria-label="tr('{name} 쉬는 날 정하기', { name: r.title })" @click="openRest(r)">{{ tr('쉬는 날') }}</button>
+        <button class="review" style="margin: 0" @click="togglePause(r)">{{ r.paused ? tr('재개') : tr('중지') }}</button>
+        <button class="review" style="margin: 0" @click="removeRoutine(r)">{{ tr('삭제') }}</button>
       </span>
     </div>
-    <p v-if="routineMode === 'server' && routineStore.state.loading && !routineStore.state.loaded" class="input-field-help" role="status">루틴을 불러오는 중이에요.</p>
-    <div v-else-if="routineMode === 'server' && routineStore.state.error && !routineStore.state.loaded" class="empty-state" role="status"><p>루틴을 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요.</p><button type="button" class="button-secondary" @click="routineStore.reload()">다시 시도</button></div>
-    <p v-else-if="!visible.length" class="empty-state" role="status">조건에 맞는 루틴이 없어요. 검색어나 필터를 바꾸거나 '+ 새 루틴'으로 만들어 보세요.</p>
+    <p v-if="routineMode === 'server' && routineStore.state.loading && !routineStore.state.loaded" class="input-field-help" role="status">{{ tr('루틴을 불러오는 중이에요.') }}</p>
+    <div v-else-if="routineMode === 'server' && routineStore.state.error && !routineStore.state.loaded" class="empty-state" role="status"><p>{{ tr('루틴을 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요.') }}</p><button type="button" class="button-secondary" @click="routineStore.reload()">{{ tr('다시 시도') }}</button></div>
+    <p v-else-if="!visible.length" class="empty-state" role="status">{{ tr('조건에 맞는 루틴이 없어요. 검색어나 필터를 바꾸거나 \'+ 새 루틴\'으로 만들어 보세요.') }}</p>
   </section>
 
-  <Modal v-if="showModal" :title="editingId ? '루틴 수정' : '새 루틴 만들기'" :edit-resource="editingId ? 'routine:' + editingId : ''" wide @close="showModal = false">
-    <p class="form-note" style="margin: 0 0 4px">{{ modeMeta(formMode).name }} 글양식이 적용돼요</p>
-    <label>루틴 이름<input v-model="draft.title" placeholder="예: 저녁 러닝 30분" autofocus /></label>
+  <Modal v-if="showModal" :title="editingId ? tr('루틴 수정') : tr('새 루틴 만들기')" :edit-resource="editingId ? 'routine:' + editingId : ''" wide @close="showModal = false">
+    <p class="form-note" style="margin: 0 0 4px">{{ tr('{mode} 글양식이 적용돼요', { mode: modeText(formMode, bodyLocale, modeMeta(formMode)).name }) }}</p>
+    <label>{{ tr('루틴 이름') }}<input v-model="draft.title" :placeholder="tr('예: 저녁 러닝 30분')" autofocus /></label>
     <div class="form-row">
-      <label style="flex: 1">시작 시간<input v-model="draft.time" type="time" /></label>
-      <label>진행 시간 (분)<input type="number" min="1" max="1440" v-model.number="draft.duration" /></label>
-      <label v-if="on('category')" style="flex: 1">분류
-        <select v-model="draft.category"><option>건강</option><option>공부</option><option>업무</option><option>휴식</option><option>개인</option></select>
+      <label style="flex: 1">{{ tr('시작 시간') }}<input v-model="draft.time" type="time" /></label>
+      <label>{{ tr('진행 시간 (분)') }}<input type="number" min="1" max="1440" v-model.number="draft.duration" /></label>
+      <label v-if="on('category')" style="flex: 1">{{ tr('분류') }}
+        <select v-model="draft.category"><option value="건강">{{ tr('건강') }}</option><option value="공부">{{ tr('공부') }}</option><option value="업무">{{ tr('업무') }}</option><option value="휴식">{{ tr('휴식') }}</option><option value="개인">{{ tr('개인') }}</option></select>
       </label>
     </div>
 
-    <label>반복 시작일<input v-model="draft.startDate" type="date" /></label>
+    <label>{{ tr('반복 시작일') }}<input v-model="draft.startDate" type="date" /></label>
     <RepeatSettings :model-value="draft.recurrence" required :start-date="draft.startDate" @update:model-value="value => { draft.recurrence = value; draft.days = value.frequency === 'weekly' ? [...value.weekdays] : [0,1,2,3,4,5,6] }" />
 
     <div class="form-row" style="margin-top: 14px">
-      <label style="flex: 1">목표 수량<input type="number" min="1" v-model.number="draft.goalCount" /></label>
-      <label style="flex: 1">단위<input v-model="draft.goalUnit" placeholder="예: 잔, 개, 분" /></label>
+      <label style="flex: 1">{{ tr('목표 수량') }}<input type="number" min="1" v-model.number="draft.goalCount" /></label>
+      <label style="flex: 1">{{ tr('단위') }}<input v-model="draft.goalUnit" :placeholder="tr('예: 잔, 개, 분')" /></label>
     </div>
 
     <label class="check-field">
       <input type="checkbox" v-model="draft.notify" />
-      <span style="flex: 1"><b>알림 받기</b><small>알림 설정을 저장해요 (실제 발송은 서버 연동 필요)</small></span>
+      <span style="flex: 1"><b>{{ tr('알림 받기') }}</b><small>{{ tr('알림 설정을 저장해요 (실제 발송은 서버 연동 필요)') }}</small></span>
     </label>
 
-    <label v-if="draft.notify">시작 전 알림 (분)<select v-model.number="draft.reminderMinutes"><option :value="0">시작 시간</option><option :value="5">5분 전</option><option :value="10">10분 전</option><option :value="30">30분 전</option></select></label>
-    <label>내용 · 태그 · 멘션<TagMentionInput v-model="draft.body" /></label>
+    <label v-if="draft.notify">{{ tr('시작 전 알림 (분)') }}<select v-model.number="draft.reminderMinutes"><option :value="0">{{ tr('시작 시간') }}</option><option :value="5">{{ tr('5분 전') }}</option><option :value="10">{{ tr('10분 전') }}</option><option :value="30">{{ tr('30분 전') }}</option></select></label>
+    <label>{{ tr('내용 · 태그 · 멘션') }}<TagMentionInput v-model="draft.body" /></label>
     <p v-if="!canSave" class="form-note">{{ validationError }}</p>
-    <p v-if="saving.state.fieldMessage" class="input-field-help" data-state="error" role="alert">{{ saving.state.fieldMessage }}</p>
+    <p v-if="saving.state.fieldMessage" class="input-field-help" data-state="error" role="alert">{{ tr(saving.state.fieldMessage) }}</p>
     <ConflictCompare v-if="conflict" :rows="compareRows" :busy="saving.state.status === 'saving'" @keep-mine="keepMine" @use-latest="useLatest" />
     <SaveStatus :state="saving.state" :mode="routineMode" @retry="saveRoutine" />
 
     <template #footer>
-      <button type="button" class="modal-secondary" @click="showModal = false">취소</button>
-      <button class="primary" :disabled="!canSave || !!conflict" :aria-busy="saving.state.status === 'saving' ? 'true' : undefined" @click="saveRoutine">{{ saving.state.status === 'saving' ? '저장하는 중' : editingId ? '변경 저장' : '루틴 만들기' }}</button>
+      <button type="button" class="modal-secondary" @click="showModal = false">{{ tr('취소') }}</button>
+      <button class="primary" :disabled="!canSave || !!conflict" :aria-busy="saving.state.status === 'saving' ? 'true' : undefined" @click="saveRoutine">{{ saving.state.status === 'saving' ? tr('저장하는 중') : editingId ? tr('변경 저장') : tr('루틴 만들기') }}</button>
     </template>
   </Modal>
 
-  <Modal v-if="restTarget" :title="'쉬는 날 · ' + restTarget.title" @close="restTargetId = null">
-    <p class="form-note" style="margin: 0">쉬는 날은 달성률과 연속 기록 계산에서 빠져요. 하루 쉬어도 연속 기록이 이어지고, 그날은 오늘 목록에 나오지 않아요.</p>
+  <Modal v-if="restTarget" :title="tr('쉬는 날 · {name}', { name: restTarget.title })" @close="restTargetId = null">
+    <p class="form-note" style="margin: 0">{{ tr('쉬는 날은 달성률과 연속 기록 계산에서 빠져요. 하루 쉬어도 연속 기록이 이어지고, 그날은 오늘 목록에 나오지 않아요.') }}</p>
     <div class="form-row rest-range">
-      <label style="flex: 1">시작일<input v-model="restFrom" type="date" :min="restTarget.startDate || undefined" aria-describedby="rest-retro-help" /></label>
-      <label style="flex: 1">종료일<input v-model="restTo" type="date" :min="restFrom || restTarget.startDate || undefined" /></label>
+      <label style="flex: 1">{{ tr('시작일') }}<input v-model="restFrom" type="date" :min="restTarget.startDate || undefined" aria-describedby="rest-retro-help" /></label>
+      <label style="flex: 1">{{ tr('종료일') }}<input v-model="restTo" type="date" :min="restFrom || restTarget.startDate || undefined" /></label>
     </div>
-    <p class="form-note" role="status">{{ restError || `예정된 회차 ${restDates.length}일을 쉬는 날로 정해요.` }}</p>
-    <p id="rest-retro-help" class="form-note">쉬는 날은 미리 정하는 게 기본이에요. 지난 날짜는 루틴마다 한 해에 {{ RETRO_SKIPS_PER_YEAR }}번까지 추가할 수 있어요. 올해 <span class="figure">{{ retroThisYear }}/{{ RETRO_SKIPS_PER_YEAR }}</span>번 썼어요.</p>
+    <p class="form-note" role="status">{{ restError || tr('예정된 회차 {n}일을 쉬는 날로 정해요.', { n: restDates.length }) }}</p>
+    <p id="rest-retro-help" class="form-note">{{ tr('쉬는 날은 미리 정하는 게 기본이에요. 지난 날짜는 루틴마다 한 해에 {max}번까지 추가할 수 있어요. 올해 {used}/{max}번 썼어요.', { max: RETRO_SKIPS_PER_YEAR, used: retroThisYear }) }}</p>
 
-    <h4 class="rest-heading">예정된 쉬는 날</h4>
+    <h4 class="rest-heading">{{ tr('예정된 쉬는 날') }}</h4>
     <ul v-if="restUpcoming.length" class="rest-list">
       <li v-for="date in restUpcoming" :key="date">
         <span class="figure">{{ restLabel(date) }}</span>
-        <button type="button" class="review" style="margin: 0" :aria-label="restLabel(date) + ' 쉬는 날 해제'" @click="removeRest(date)">해제</button>
+        <button type="button" class="review" style="margin: 0" :aria-label="tr('{date} 쉬는 날 해제', { date: restLabel(date) })" @click="removeRest(date)">{{ tr('해제') }}</button>
       </li>
     </ul>
-    <p v-else class="empty-state">예정된 쉬는 날이 없어요. 위에서 기간을 고르고 '쉬는 날 추가'를 눌러 보세요.</p>
-    <p v-if="restPastCount" class="form-note">지난 쉬는 날 {{ restPastCount }}일은 기록 계산에 그대로 반영돼요.</p>
-    <p v-if="restMessage" class="input-field-help" data-state="error" role="status">{{ restMessage }}</p>
+    <p v-else class="empty-state">{{ tr('예정된 쉬는 날이 없어요. 위에서 기간을 고르고 \'쉬는 날 추가\'를 눌러 보세요.') }}</p>
+    <p v-if="restPastCount" class="form-note">{{ tr('지난 쉬는 날 {n}일은 기록 계산에 그대로 반영돼요.', { n: restPastCount }) }}</p>
+    <p v-if="restMessage" class="input-field-help" data-state="error" role="status">{{ tr(restMessage) }}</p>
 
     <template #footer>
-      <button type="button" class="modal-secondary" @click="restTargetId = null">닫기</button>
-      <button type="button" class="primary" :disabled="!!restError || restSaving" :aria-busy="restSaving ? 'true' : undefined" @click="addRest">{{ restSaving ? '저장하는 중' : '쉬는 날 추가' }}</button>
+      <button type="button" class="modal-secondary" @click="restTargetId = null">{{ tr('닫기') }}</button>
+      <button type="button" class="primary" :disabled="!!restError || restSaving" :aria-busy="restSaving ? 'true' : undefined" @click="addRest">{{ restSaving ? tr('저장하는 중') : tr('쉬는 날 추가') }}</button>
     </template>
   </Modal>
 </template>

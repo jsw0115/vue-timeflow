@@ -1,6 +1,7 @@
 <script setup>
 // 한 줄 빠른 기록. 입력을 규칙으로 해석해 날짜·시간·종류를 미리 보여 주고, 확인한 뒤 바로 저장한다(PR-09 3단계, UF-123~UF-125).
 // 오전·오후가 모호하면 고를 때까지 일정 저장을 막는다. 해석하지 못하면 원문 그대로 메모로 둔다. 저장은 작성 창과 같은 경로(savePostDraft)다.
+import { tr } from '../store/locale'
 import { computed, onMounted, ref, watch } from 'vue'
 import SaveStatus from './SaveStatus.vue'
 import { openPostComposer } from '../store/appState'
@@ -28,8 +29,8 @@ const full = computed(() => (draft.value ? { ...makePostDraft(kind.value), ...dr
 const needsTime = computed(() => kind.value === '일정' && result.value.times.length > 1 && !chosenTime.value)
 const problem = computed(() => {
   if (!text.value.trim()) return ''
-  if (needsTime.value) return '오전인지 오후인지 골라 주세요.'
-  if (kind.value === '일정' && !draft.value) return '일정은 날짜와 시간이 필요해요. "내일 오후 3시"처럼 적거나 자세히 쓰기로 열어 주세요.'
+  if (needsTime.value) return tr('오전인지 오후인지 골라 주세요.')
+  if (kind.value === '일정' && !draft.value) return tr('일정은 날짜와 시간이 필요해요. "내일 오후 3시"처럼 적거나 자세히 쓰기로 열어 주세요.')
   return full.value ? postDraftError(kind.value, full.value) : ''
 })
 // 할 일은 시각을 하나로 정했으면 마감 시각으로 저장한다(Q-31). 오전·오후를 아직 안 골랐으면 날짜만 저장한다고 알린다
@@ -59,38 +60,38 @@ const PATHS = { '일정': '/events', '할 일': '/tasks', '메모': '/memos' }
 
 <template>
   <form class="quick-capture-form" @submit.prevent="save">
-    <label for="quick-capture-input" class="quick-label">빠른 기록</label>
+    <label for="quick-capture-input" class="quick-label">{{ tr('빠른 기록') }}</label>
     <div class="quick-row">
       <input id="quick-capture-input" v-model="text" :placeholder="placeholder" autocomplete="off" aria-describedby="quick-capture-help" @input="savedKind = ''; saving.reset()" />
       <!-- 홈의 주 버튼은 헤더의 "새 글 작성"이라 여기서는 보조 버튼이다(DESIGN.md 4장 Buttons) -->
-      <button type="submit" class="button-secondary" :disabled="!text.trim() || !!problem || saving.state.status === 'saving'" :aria-busy="saving.state.status === 'saving' ? 'true' : undefined">{{ saving.state.status === 'saving' ? '저장하는 중' : '저장' }}</button>
+      <button type="submit" class="button-secondary" :disabled="!text.trim() || !!problem || saving.state.status === 'saving'" :aria-busy="saving.state.status === 'saving' ? 'true' : undefined">{{ saving.state.status === 'saving' ? tr('저장하는 중') : tr('저장') }}</button>
     </div>
-    <p id="quick-capture-help" class="input-field-help">"내일 오후 3시 치과"처럼 적으면 날짜·시간을 찾아 미리 보여 줘요. 확인하고 저장하세요.</p>
+    <p id="quick-capture-help" class="input-field-help">{{ tr('"내일 오후 3시 치과"처럼 적으면 날짜·시간을 찾아 미리 보여 줘요. 확인하고 저장하세요.') }}</p>
 
     <div v-if="text.trim()" class="quick-preview" aria-live="polite">
-      <div class="segmented-tab quick-kinds" role="group" aria-label="저장할 종류">
-        <button v-for="k in KINDS" :key="k" type="button" :aria-pressed="kind === k" @click="pickKind(k)">{{ k }}</button>
+      <div class="segmented-tab quick-kinds" role="group" :aria-label="tr('저장할 종류')">
+        <button v-for="k in KINDS" :key="k" type="button" :aria-pressed="kind === k" @click="pickKind(k)">{{ tr(k) }}</button>
       </div>
       <dl class="quick-chips">
-        <div><dt>제목</dt><dd>{{ kind === '메모' ? result.raw.trim() : result.title }}</dd></div>
-        <div v-if="kind !== '메모' && result.date"><dt>{{ kind === '할 일' ? '마감' : '날짜' }}</dt><dd class="figure">{{ dateLabel(kind === '할 일' && result.nextDay ? draft?.date : result.date) }}</dd></div>
-        <div v-if="kind === '일정' && result.times.length === 1"><dt>시간</dt><dd class="figure">{{ result.nextDay ? '자정(00:00)' : timeLabel(result.times[0]) }} · 1시간</dd></div>
-        <div v-if="kind === '할 일' && draft?.dueTime"><dt>마감 시각</dt><dd class="figure">{{ timeLabel(draft.dueTime) }}</dd></div>
+        <div><dt>{{ tr('제목') }}</dt><dd>{{ kind === '메모' ? result.raw.trim() : result.title }}</dd></div>
+        <div v-if="kind !== '메모' && result.date"><dt>{{ kind === '할 일' ? tr('마감') : tr('날짜') }}</dt><dd class="figure">{{ dateLabel(kind === '할 일' && result.nextDay ? draft?.date : result.date) }}</dd></div>
+        <div v-if="kind === '일정' && result.times.length === 1"><dt>{{ tr('시간') }}</dt><dd class="figure">{{ result.nextDay ? tr('자정(00:00)') : timeLabel(result.times[0]) }} · {{ tr('1시간') }}</dd></div>
+        <div v-if="kind === '할 일' && draft?.dueTime"><dt>{{ tr('마감 시각') }}</dt><dd class="figure">{{ timeLabel(draft.dueTime) }}</dd></div>
       </dl>
-      <div v-if="kind !== '메모' && result.times.length > 1" class="quick-times" role="radiogroup" aria-label="시간 고르기">
-        <span class="input-field-help">{{ kind === '일정' ? '오전·오후가 없어 두 시간 중 하나를 골라 주세요.' : '오전·오후를 고르면 마감 시각도 저장해요.' }}</span>
+      <div v-if="kind !== '메모' && result.times.length > 1" class="quick-times" role="radiogroup" :aria-label="tr('시간 고르기')">
+        <span class="input-field-help">{{ kind === '일정' ? tr('오전·오후가 없어 두 시간 중 하나를 골라 주세요.') : tr('오전·오후를 고르면 마감 시각도 저장해요.') }}</span>
         <label v-for="t in result.times" :key="t" class="quick-time" :class="{ selected: chosenTime === t }">
           <input v-model="chosenTime" type="radio" name="quick-time" :value="t" />{{ timeLabel(t) }}
         </label>
       </div>
-      <p v-if="dropsTime" class="input-field-help">오전·오후를 고르지 않으면 마감 날짜만 저장돼요.</p>
-      <p v-if="!result.parsed" class="input-field-help">날짜나 시간을 찾지 못해 원문 그대로 메모로 둘게요.</p>
-      <p v-else-if="kind === '메모'" class="input-field-help">메모로 바꾸면 적은 원문 그대로 저장해요.</p>
-      <p v-if="problem" class="input-field-help" data-state="error" role="alert">{{ problem }}</p>
-      <button type="button" class="button-text quick-detail" @click="openDetail">자세히 쓰기</button>
+      <p v-if="dropsTime" class="input-field-help">{{ tr('오전·오후를 고르지 않으면 마감 날짜만 저장돼요.') }}</p>
+      <p v-if="!result.parsed" class="input-field-help">{{ tr('날짜나 시간을 찾지 못해 원문 그대로 메모로 둘게요.') }}</p>
+      <p v-else-if="kind === '메모'" class="input-field-help">{{ tr('메모로 바꾸면 적은 원문 그대로 저장해요.') }}</p>
+      <p v-if="problem" class="input-field-help" data-state="error" role="alert">{{ tr(problem) }}</p>
+      <button type="button" class="button-text quick-detail" @click="openDetail">{{ tr('자세히 쓰기') }}</button>
     </div>
     <SaveStatus :state="saving.state" :mode="storage === 'local' ? 'local' : 'server'" @retry="save" />
-    <p v-if="savedKind && saving.state.status === 'saved'" class="quick-saved"><router-link :to="PATHS[savedKind]">{{ savedKind }} 목록에서 보기</router-link></p>
+    <p v-if="savedKind && saving.state.status === 'saved'" class="quick-saved"><router-link :to="PATHS[savedKind]">{{ tr('{kind} 목록에서 보기', { kind: tr(savedKind) }) }}</router-link></p>
   </form>
 </template>
 

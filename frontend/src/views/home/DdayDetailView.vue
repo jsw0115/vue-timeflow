@@ -1,5 +1,7 @@
 <script setup>
 import AppIcon from '../../components/icons/AppIcon.vue'
+import { bodyLocale, tr } from '../../store/locale'
+import { formatDate } from '../../features/i18n/locale.mjs'
 import { computed, ref, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { findDday, togglePin, updateDday, removeDday, ddayStore, ddayNotice } from '../../store/ddays'
@@ -70,32 +72,32 @@ async function remove() {
 </script>
 
 <template>
-  <div class="crumbs"><a @click="router.push('/dday')">D-Day</a> / 상세</div>
+  <div class="crumbs"><a @click="router.push('/dday')">D-Day</a> {{ tr('/ 상세') }}</div>
   <section v-if="item" class="card" style="max-width: 480px; margin: 0 auto">
     <div class="head">
       <div>
-        <span class="badge brand">{{ item.category }}</span>
+        <span class="badge brand">{{ tr(item.category) }}</span>
         <h2 style="margin: 10px 0 4px">{{ item.title }}</h2>
-        <p>{{ item.date }}</p>
+        <p>{{ bodyLocale === 'ko' || !item.isoDate ? tr(item.date) : formatDate(item.isoDate + 'T00:00:00', bodyLocale, { month: 'short', day: 'numeric' }) }}</p>
       </div>
-      <button class="icon" :class="{ pinned: item.pinned }" :title="item.pinned ? '고정 해제' : '고정하기'" :aria-label="item.pinned ? '고정 해제' : '고정하기'" :aria-pressed="item.pinned ? 'true' : 'false'" @click="pin"><AppIcon name="star" :size="18" :class="{ filled: item.pinned }" /></button>
+      <button class="icon" :class="{ pinned: item.pinned }" :title="item.pinned ? tr('고정 해제') : tr('고정하기')" :aria-label="item.pinned ? tr('고정 해제') : tr('고정하기')" :aria-pressed="item.pinned ? 'true' : 'false'" @click="pin"><AppIcon name="star" :size="18" :class="{ filled: item.pinned }" /></button>
     </div>
     <b class="dday-num" style="display: block; margin: 12px 0">{{ item.dday }}</b>
-    <p v-if="ddayNotice.message" class="input-field-help" data-state="error" role="status">{{ ddayNotice.message }}</p>
+    <p v-if="ddayNotice.message" class="input-field-help" data-state="error" role="status">{{ tr(ddayNotice.message) }}</p>
     <StorageNote :mode="ddayMode" />
 
     <div style="margin-top: 10px; padding-top: 20px; border-top: 1px solid var(--color-hairline)">
-      <label>제목<input v-model="draft.title" /></label>
-      <label>날짜 변경<input v-model="draft.date" type="date" /></label>
-      <label>내용 · 태그 · 멘션<TagMentionInput v-model="draft.body" /></label>
-      <label>카테고리<select v-model="draft.category"><option>개인</option><option>업무</option><option>가족</option><option>건강</option><option>공부</option></select></label>
-      <p v-if="saving.state.fieldMessage" class="input-field-help" data-state="error" role="alert">{{ saving.state.fieldMessage }}</p>
+      <label>{{ tr('제목') }}<input v-model="draft.title" /></label>
+      <label>{{ tr('날짜 변경') }}<input v-model="draft.date" type="date" /></label>
+      <label>{{ tr('내용 · 태그 · 멘션') }}<TagMentionInput v-model="draft.body" /></label>
+      <label>{{ tr('카테고리') }}<select v-model="draft.category"><option value="개인">{{ tr('개인') }}</option><option value="업무">{{ tr('업무') }}</option><option value="가족">{{ tr('가족') }}</option><option value="건강">{{ tr('건강') }}</option><option value="공부">{{ tr('공부') }}</option></select></label>
+      <p v-if="saving.state.fieldMessage" class="input-field-help" data-state="error" role="alert">{{ tr(saving.state.fieldMessage) }}</p>
       <ConflictCompare v-if="conflict" :rows="compareRows" :busy="saving.state.status === 'saving'" @keep-mine="keepMine" @use-latest="useLatest" />
       <SaveStatus :state="saving.state" :mode="ddayMode" @retry="save" />
-      <button class="primary" style="width: 100%; margin-top: 16px" :disabled="!!conflict" :aria-busy="saving.state.status === 'saving' ? 'true' : undefined" @click="save">{{ saving.state.status === 'saving' ? '저장하는 중' : '저장하기' }}</button>
-      <button style="width: 100%; margin-top: 8px; color: var(--color-status-danger); font-weight: 600; padding: 10px" :aria-busy="removing.state.status === 'saving' ? 'true' : undefined" @click="remove">{{ removing.state.status === 'saving' ? '삭제하는 중' : '삭제하기' }}</button>
-      <p v-if="removeMessage" class="input-field-help" data-state="error" role="status">{{ removeMessage }}</p>
+      <button class="primary" style="width: 100%; margin-top: 16px" :disabled="!!conflict" :aria-busy="saving.state.status === 'saving' ? 'true' : undefined" @click="save">{{ saving.state.status === 'saving' ? tr('저장하는 중') : tr('저장하기') }}</button>
+      <button style="width: 100%; margin-top: 8px; color: var(--color-status-danger); font-weight: 600; padding: 10px" :aria-busy="removing.state.status === 'saving' ? 'true' : undefined" @click="remove">{{ removing.state.status === 'saving' ? tr('삭제하는 중') : tr('삭제하기') }}</button>
+      <p v-if="removeMessage" class="input-field-help" data-state="error" role="status">{{ tr(removeMessage) }}</p>
     </div>
   </section>
-  <p v-else>D-Day 항목을 찾을 수 없어요. <a @click="router.push('/dday')" style="color: var(--color-accent); font-weight: 600; cursor: pointer">목록으로 돌아가기</a></p>
+  <p v-else>{{ tr('D-Day 항목을 찾을 수 없어요.') }} <a @click="router.push('/dday')" style="color: var(--color-accent); font-weight: 600; cursor: pointer">{{ tr('목록으로 돌아가기') }}</a></p>
 </template>

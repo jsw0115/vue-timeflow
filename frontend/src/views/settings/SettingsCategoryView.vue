@@ -1,4 +1,5 @@
 <script setup>
+import { tr } from '../../store/locale'
 import { computed, ref } from 'vue'
 import Modal from '../../components/Modal.vue'
 
@@ -41,7 +42,8 @@ function save() {
   editing.value = null
 }
 function remove(c) {
-  if (!window.confirm('‘' + c.label + '’ 카테고리를 삭제할까요? 이 카테고리로 분류된 기록은 ‘기타’로 옮겨져요.')) return
+  // 이 화면의 목록은 시연이라 지워도 기록의 분류는 바뀌지 않는다(예전 확인 문구는 '기타'로 옮긴다고 했다. PR-32 12단계에서 고침)
+  if (!window.confirm(tr('‘{name}’ 카테고리를 목록에서 지울까요? 시연 화면이라 기록의 분류는 바뀌지 않아요.', { name: tr(c.label) }))) return
   cats.value = cats.value.filter((x) => x.id !== c.id)
   editing.value = null
 }
@@ -52,27 +54,28 @@ const subCount = computed(() => cats.value.reduce((a, c) => a + c.subs.length, 0
   <section class="card setting-content">
     <div class="setting-head">
       <div>
-        <h2>카테고리</h2>
-        <p>기록을 분류하는 기준이에요. 카테고리 {{ cats.length }}개 · 하위 {{ subCount }}개</p>
+        <h2>{{ tr('카테고리') }}</h2>
+        <p>{{ tr('기록을 분류하는 기준이에요. 카테고리 {n}개 · 하위 {m}개', { n: cats.length, m: subCount }) }}</p>
+        <p class="sample-label">{{ tr('이 화면의 카테고리는 시연용이에요. 바꿔도 저장되지 않고 기록의 분류도 바뀌지 않아요.') }}</p>
       </div>
-      <button type="button" class="button-secondary" @click="openAdd">+ 카테고리 추가</button>
+      <button type="button" class="button-secondary" @click="openAdd">{{ tr('+ 카테고리 추가') }}</button>
     </div>
 
     <div class="trow" v-for="c in cats" :key="c.id">
       <span style="display: flex; align-items: center; gap: 8px; flex: 1">
         <span class="cat-dot" :style="{ background: c.color }"></span>
-        <b>{{ c.label }}</b>
-        <span v-for="s in c.subs" :key="s" class="tag">{{ s }}</span>
-        <small v-if="!c.subs.length" style="color: var(--color-muted)">하위 없음</small>
+        <b>{{ tr(c.label) }}</b>
+        <span v-for="s in c.subs" :key="s" class="tag">{{ tr(s) }}</span>
+        <small v-if="!c.subs.length" style="color: var(--color-muted)">{{ tr('하위 없음') }}</small>
       </span>
-      <button class="review" style="margin: 0" @click="openEdit(c)">수정</button>
-      <button class="review" style="margin: 0" @click="remove(c)">삭제</button>
+      <button class="review" style="margin: 0" @click="openEdit(c)">{{ tr('수정') }}</button>
+      <button class="review" style="margin: 0" @click="remove(c)">{{ tr('삭제') }}</button>
     </div>
   </section>
 
-  <Modal v-if="editing" :title="editing === 'new' ? '카테고리 추가' : '카테고리 수정'" @close="editing = null">
-    <label>이름<input v-model="draft.label" placeholder="예: 사이드 프로젝트" autofocus @keyup.enter="save" /></label>
-    <label>색상</label>
+  <Modal v-if="editing" :title="editing === 'new' ? tr('카테고리 추가') : tr('카테고리 수정')" @close="editing = null">
+    <label>{{ tr('이름') }}<input v-model="draft.label" :placeholder="tr('예: 사이드 프로젝트')" autofocus @keyup.enter="save" /></label>
+    <label>{{ tr('색상') }}</label>
     <div class="swatch-row">
       <button
         v-for="s in SWATCHES"
@@ -84,11 +87,11 @@ const subCount = computed(() => cats.value.reduce((a, c) => a + c.subs.length, 0
         @click="draft.color = s"
       ></button>
     </div>
-    <label>하위 카테고리<input v-model="draft.subText" placeholder="쉼표로 구분 · 예: 회의, 개발, 문서화" /></label>
+    <label>{{ tr('하위 카테고리') }}<input v-model="draft.subText" :placeholder="tr('쉼표로 구분 · 예: 회의, 개발, 문서화')" /></label>
 
     <template #footer>
-      <button type="button" class="modal-secondary" @click="editing = null">취소</button>
-      <button class="primary" @click="save">{{ editing === 'new' ? '추가하기' : '저장하기' }}</button>
+      <button type="button" class="modal-secondary" @click="editing = null">{{ tr('취소') }}</button>
+      <button class="primary" @click="save">{{ editing === 'new' ? tr('추가하기') : tr('저장하기') }}</button>
     </template>
   </Modal>
 </template>

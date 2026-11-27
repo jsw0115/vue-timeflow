@@ -15,6 +15,31 @@ export function relativeTime(iso, now = Date.now()) {
   return `${d.getMonth() + 1}월 ${d.getDate()}일`
 }
 
+/** 한국어가 아닌 표시 언어의 상대 시각. "{n}분 전"은 사전에서 '알림 n분 전' 뜻으로 쓰여, 사전 대신 Intl로 만든다(PR-32 16단계). */
+export function relativeTimeIn(iso, locale, now = Date.now()) {
+  const at = Date.parse(iso ?? '')
+  if (!Number.isFinite(at)) return ''
+  const minutes = Math.floor((now - at) / 60000)
+  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' })
+  if (minutes < 1) return rtf.format(0, 'second')
+  if (minutes < 60) return rtf.format(-minutes, 'minute')
+  if (minutes < 1440) return rtf.format(-Math.floor(minutes / 60), 'hour')
+  if (minutes < 2880) return rtf.format(-1, 'day')
+  return new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric' }).format(new Date(at))
+}
+
+/** 저장해 둔 한국어 시각 문구("방금", "12분 전", "3시간 전", "어제")를 다른 언어로 바꾼다. 서버 시각이 없는 시연 알림용이며 모르는 문구는 그대로 둔다. */
+export function relativeLabelIn(label, locale) {
+  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' })
+  if (label === '방금') return rtf.format(0, 'second')
+  if (label === '어제') return rtf.format(-1, 'day')
+  const minutes = /^(\d+)분 전$/.exec(label ?? '')
+  if (minutes) return rtf.format(-Number(minutes[1]), 'minute')
+  const hours = /^(\d+)시간 전$/.exec(label ?? '')
+  if (hours) return rtf.format(-Number(hours[1]), 'hour')
+  return label ?? ''
+}
+
 export const fromServer = (row, now = Date.now()) => ({
   id: row.id, version: row.version, kind: row.kind ?? '알림', title: row.title ?? '', link: row.link || '/notifications', read: row.read === true,
   at: relativeTime(row.createdAt, now), createdAt: row.createdAt ?? '',

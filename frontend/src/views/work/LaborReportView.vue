@@ -1,4 +1,6 @@
 <script setup>
+import { bodyLocale, tr } from '../../store/locale'
+import { formatWon } from '../../features/i18n/locale.mjs'
 import { computed, ref } from 'vue'
 import Modal from '../../components/Modal.vue'
 import HelpPopover from '../../components/HelpPopover.vue'
@@ -28,10 +30,10 @@ function costOf(r) {
   return Math.round(r.actualMd * r.rate)
 }
 function stateOf(r) {
-  if (r.fixed) return { cls: 'ok', label: '확정' }
+  if (r.fixed) return { cls: 'ok', label: tr('확정') }
   const d = diffMd(r)
-  if (Math.abs(d) < 0.5) return { cls: '', label: '일치' }
-  return { cls: 'warn', label: d > 0 ? '초과 ' + d + ' MD' : '여유 ' + Math.abs(d) + ' MD' }
+  if (Math.abs(d) < 0.5) return { cls: '', label: tr('일치') }
+  return { cls: 'warn', label: d > 0 ? tr('초과 {n} MD', { n: d }) : tr('여유 {n} MD', { n: Math.abs(d) }) }
 }
 
 const totalPlanned = computed(() => Math.round(rows.value.reduce((a, r) => a + plannedMd(r), 0) * 10) / 10)
@@ -39,7 +41,8 @@ const totalActual = computed(() => Math.round(rows.value.reduce((a, r) => a + r.
 const totalDiff = computed(() => Math.round((totalActual.value - totalPlanned.value) * 10) / 10)
 const totalCost = computed(() => rows.value.reduce((a, r) => a + costOf(r), 0))
 const pendingCount = computed(() => rows.value.filter((r) => !r.fixed && Math.abs(diffMd(r)) >= 0.5).length)
-const won = (n) => n.toLocaleString('ko-KR') + '원'
+// 비용은 원화다. 한국어는 예전처럼 "12,000원", 다른 언어는 통화 기호로 보인다
+const won = (n) => (bodyLocale.value === 'ko' ? n.toLocaleString('ko-KR') + '원' : formatWon(n, bodyLocale.value))
 
 // 프로젝트 단위 집계
 const byProject = computed(() => {
@@ -69,7 +72,7 @@ function addRow() {
 }
 function removeRow(id) {
   const row = rows.value.find((r) => r.id === id)
-  if (row && !window.confirm('‘' + row.title + ' · ' + row.role + '’ 공수 항목을 삭제할까요?')) return
+  if (row && !window.confirm(tr('‘{name}’ 공수 항목을 삭제할까요?', { name: row.title + ' · ' + row.role }))) return
   rows.value = rows.value.filter((r) => r.id !== id)
 }
 function fixAll() {
@@ -79,88 +82,91 @@ function fixAll() {
 
 <template>
   <div class="page-tools">
-    <b style="font-size: 1rem"><TermHint term="공수" /> 계산 · 8월</b>
+    <b style="font-size: 1rem"><TermHint term="공수" /> {{ tr('계산 · 8월') }}</b>
     <HelpPopover
-      title="공수 계산 사용법"
-      summary="투입 인원과 기간으로 필요한 공수를 산정하고, 실제 투입과 비교해 편차와 비용을 확인하는 화면이에요."
-      formula="산정 MD = 인원 × 기간(일) × 투입률 ÷ 100    |    MM = MD ÷ 20    |    비용 = 실제 MD × 일단가"
+      :title="tr('공수 계산 사용법')"
+      :summary="tr('투입 인원과 기간으로 필요한 공수를 산정하고, 실제 투입과 비교해 편차와 비용을 확인하는 화면이에요.')"
+      :formula="tr('산정 MD = 인원 × 기간(일) × 투입률 ÷ 100    |    MM = MD ÷ 20    |    비용 = 실제 MD × 일단가')"
       :steps="[
-        '‘+ 공수 항목’으로 프로젝트와 역할을 추가해요.',
-        '인원·기간·투입률을 입력하면 산정 MD가 자동으로 계산돼요.',
-        '실제로 투입한 MD를 적으면 편차 배지가 초과/여유로 바뀌어요.',
-        '검토가 끝나면 ‘이번 달 확정하기’로 잠가요.',
+        tr('‘+ 공수 항목’으로 프로젝트와 역할을 추가해요.'),
+        tr('인원·기간·투입률을 입력하면 산정 MD가 자동으로 계산돼요.'),
+        tr('실제로 투입한 MD를 적으면 편차 배지가 초과/여유로 바뀌어요.'),
+        tr('검토가 끝나면 ‘이번 달 확정하기’로 잠가요.'),
       ]"
       :terms="[
-        { term: 'MD (Man-Day)', desc: '한 사람이 하루 온전히 투입했을 때의 작업량이에요.' },
-        { term: 'MM (Man-Month)', desc: '한 사람이 한 달 투입한 작업량. 이 서비스는 월 평균 근무일 20일 기준으로 MD ÷ 20으로 계산해요.' },
-        { term: '투입률', desc: '그 기간 중 이 업무에 실제로 쓴 비율이에요. 하루 4시간만 썼다면 50%예요.' },
-        { term: '일단가', desc: '1 MD당 비용이에요. 역할·등급별로 다르게 넣을 수 있어요.' },
+        { term: tr('MD (Man-Day)'), desc: tr('한 사람이 하루 온전히 투입했을 때의 작업량이에요.') },
+        { term: tr('MM (Man-Month)'), desc: tr('한 사람이 한 달 투입한 작업량. 이 서비스는 월 평균 근무일 20일 기준으로 MD ÷ 20으로 계산해요.') },
+        { term: tr('투입률'), desc: tr('그 기간 중 이 업무에 실제로 쓴 비율이에요. 하루 4시간만 썼다면 50%예요.') },
+        { term: tr('일단가'), desc: tr('1 MD당 비용이에요. 역할·등급별로 다르게 넣을 수 있어요.') },
       ]"
       :tips="[
-        '산정 MD와 실제 MD 차이가 0.5 MD 미만이면 ‘일치’로 표시돼요.',
-        '겸업으로 두 프로젝트를 함께 했다면 투입률을 나눠 각각 등록하세요.',
+        tr('산정 MD와 실제 MD 차이가 0.5 MD 미만이면 ‘일치’로 표시돼요.'),
+        tr('겸업으로 두 프로젝트를 함께 했다면 투입률을 나눠 각각 등록하세요.'),
       ]"
     />
-    <span class="form-note" style="margin: 0"><TermHint term="MD" /> = 인원 × 기간(일) × 투입률 · 1 <TermHint term="MM" /> = {{ MD_PER_MM }} MD</span>
+    <span class="form-note" style="margin: 0"><TermHint term="MD" /> {{ tr('= 인원 × 기간(일) × 투입률 · 1') }} <TermHint term="MM" /> = {{ MD_PER_MM }} MD</span>
     <div class="form-row" style="margin: 0">
-      <button class="review" style="margin: 0" @click="showAdd = true">+ 공수 항목</button>
-      <PageActions><button class="primary" @click="fixAll">이번 달 확정하기</button></PageActions>
+      <button class="review" style="margin: 0" @click="showAdd = true">{{ tr('+ 공수 항목') }}</button>
+      <PageActions><button class="primary" @click="fixAll">{{ tr('이번 달 확정하기') }}</button></PageActions>
     </div>
   </div>
 
+  <!-- 공수 항목은 화면 안에만 있는 고정 예시다. 실제 업무 기록에서 가져오지 않고 저장하지도 않는다(IMP-016) -->
+  <p class="sample-label">{{ tr('공수 항목과 실제 MD·일단가는 시연용 예시예요. 실제 업무 기록에서 가져온 값이 아니에요. 추가·확정한 내용은 저장되지 않아 화면을 다시 열면 처음 상태로 돌아가요.') }}</p>
+
   <div class="metrics" style="--metric-cols: 4; margin-bottom: 16px">
-    <article><span>산정 공수</span><b class="figure">{{ totalPlanned }}<small>MD</small></b><small>{{ (totalPlanned / MD_PER_MM).toFixed(2) }} MM</small></article>
-    <article><span>실제 공수</span><b class="figure">{{ totalActual }}<small>MD</small></b><small>{{ (totalActual / MD_PER_MM).toFixed(2) }} MM</small></article>
-    <article><span>편차</span><b class="figure">{{ totalDiff >= 0 ? '+' : '' }}{{ totalDiff }}<small>MD</small></b><small>보정 요청 {{ pendingCount }}건</small></article>
-    <article><span>예상 비용</span><b class="figure" style="font-size: 1.1875rem">{{ won(totalCost) }}</b><small>실제 공수 × 일단가</small></article>
+    <article><span>{{ tr('산정 공수') }}</span><b class="figure">{{ totalPlanned }}<small>MD</small></b><small>{{ (totalPlanned / MD_PER_MM).toFixed(2) }} MM</small></article>
+    <article><span>{{ tr('실제 공수') }}</span><b class="figure">{{ totalActual }}<small>MD</small></b><small>{{ (totalActual / MD_PER_MM).toFixed(2) }} MM</small></article>
+    <article><span>{{ tr('편차') }}</span><b class="figure">{{ totalDiff >= 0 ? '+' : '' }}{{ totalDiff }}<small>MD</small></b><small>{{ tr('보정 요청 {n}건', { n: pendingCount }) }}</small></article>
+    <article><span>{{ tr('예상 비용') }}</span><b class="figure" style="font-size: 1.1875rem">{{ won(totalCost) }}</b><small>{{ tr('실제 공수 × 일단가') }}</small></article>
   </div>
 
   <section class="card list">
-    <div class="list-head labor-grid"><span>프로젝트 · 역할</span><span>인원</span><span>기간(일)</span><span>투입률</span><span>산정 MD</span><span>실제 MD</span><span>비용</span><span>상태</span></div>
+    <div class="list-head labor-grid"><span>{{ tr('프로젝트 · 역할') }}</span><span>{{ tr('인원') }}</span><span>{{ tr('기간(일)') }}</span><span>{{ tr('투입률') }}</span><span>{{ tr('산정 MD') }}</span><span>{{ tr('실제 MD') }}</span><span>{{ tr('비용') }}</span><span>{{ tr('상태') }}</span></div>
     <div class="row labor-grid" v-for="r in rows" :key="r.id">
-      <label>{{ r.title }}<small style="display: block; color: var(--color-muted)">{{ r.role }}</small></label>
-      <span><input class="labor-input" type="number" min="1" step="1" v-model.number="r.people" /></span>
-      <span><input class="labor-input" type="number" min="1" step="1" v-model.number="r.days" /></span>
-      <span><input class="labor-input" type="number" min="10" max="100" step="10" v-model.number="r.ratio" /></span>
+      <label>{{ r.title }}<small style="display: block; color: var(--color-muted)">{{ tr(r.role) }}</small></label>
+      <span><input class="labor-input" type="number" min="1" step="1" v-model.number="r.people" :aria-label="tr('{name} 인원', { name: r.title })" /></span>
+      <span><input class="labor-input" type="number" min="1" step="1" v-model.number="r.days" :aria-label="tr('{name} 기간(일)', { name: r.title })" /></span>
+      <span><input class="labor-input" type="number" min="10" max="100" step="10" v-model.number="r.ratio" :aria-label="tr('{name} 투입률', { name: r.title })" /></span>
       <span class="figure">{{ plannedMd(r) }}</span>
-      <span><input class="labor-input" type="number" min="0" step="0.5" v-model.number="r.actualMd" /></span>
+      <span><input class="labor-input" type="number" min="0" step="0.5" v-model.number="r.actualMd" :aria-label="tr('{name} 실제 MD', { name: r.title })" /></span>
       <span class="figure">{{ won(costOf(r)) }}</span>
       <span style="display: flex; align-items: center; gap: 6px">
         <span class="badge" :class="stateOf(r).cls">{{ stateOf(r).label }}</span>
-        <button class="review" style="margin: 0; padding: 4px 8px" @click="removeRow(r.id)">삭제</button>
+        <button class="review" style="margin: 0; padding: 4px 8px" @click="removeRow(r.id)">{{ tr('삭제') }}</button>
       </span>
     </div>
   </section>
 
-  <h3 style="margin: 24px 0 12px">프로젝트별 집계</h3>
+  <h3 style="margin: 24px 0 12px">{{ tr('프로젝트별 집계') }}</h3>
   <section class="card">
     <div class="event" v-for="p in byProject" :key="p.title">
       <i></i>
-      <span style="flex: 1"><b>{{ p.title }}</b><small>산정 {{ p.planned }} MD · 실제 {{ p.actual }} MD · {{ won(p.cost) }}</small></span>
+      <span style="flex: 1"><b>{{ p.title }}</b><small>{{ tr('산정 {planned} MD · 실제 {actual} MD · {cost}', { planned: p.planned, actual: p.actual, cost: won(p.cost) }) }}</small></span>
       <span class="badge" :class="p.rate > 110 ? 'warn' : 'ok'">{{ p.rate }}%</span>
     </div>
   </section>
   <p class="form-note" style="margin-top: 12px">
-    투입률은 해당 기간 중 이 업무에 쓴 비율이에요. 하루 4시간만 투입했다면 50%로 입력하세요.
+    {{ tr('투입률은 해당 기간 중 이 업무에 쓴 비율이에요. 하루 4시간만 투입했다면 50%로 입력하세요.') }}
   </p>
 
-  <Modal v-if="showAdd" title="공수 항목 추가" wide @close="showAdd = false">
-    <label>프로젝트<input v-model="draft.title" placeholder="예: 타임바 리뉴얼" autofocus /></label>
-    <label>역할<input v-model="draft.role" placeholder="예: 프론트엔드" /></label>
+  <Modal v-if="showAdd" :title="tr('공수 항목 추가')" wide @close="showAdd = false">
+    <label>{{ tr('프로젝트') }}<input v-model="draft.title" :placeholder="tr('예: 타임바 리뉴얼')" autofocus /></label>
+    <label>{{ tr('역할') }}<input v-model="draft.role" :placeholder="tr('예: 프론트엔드')" /></label>
     <div class="form-row">
-      <label style="flex: 1">인원<input type="number" min="1" v-model.number="draft.people" /></label>
-      <label style="flex: 1">기간(일)<input type="number" min="1" v-model.number="draft.days" /></label>
-      <label style="flex: 1">투입률(%)<input type="number" min="10" max="100" step="10" v-model.number="draft.ratio" /></label>
+      <label style="flex: 1">{{ tr('인원') }}<input type="number" min="1" v-model.number="draft.people" /></label>
+      <label style="flex: 1">{{ tr('기간(일)') }}<input type="number" min="1" v-model.number="draft.days" /></label>
+      <label style="flex: 1">{{ tr('투입률(%)') }}<input type="number" min="10" max="100" step="10" v-model.number="draft.ratio" /></label>
     </div>
     <div class="form-row">
-      <label style="flex: 1">일단가(원)<input type="number" min="0" step="10000" v-model.number="draft.rate" /></label>
-      <label style="flex: 1">실제 MD<input type="number" min="0" step="0.5" v-model.number="draft.actualMd" /></label>
+      <label style="flex: 1">{{ tr('일단가(원)') }}<input type="number" min="0" step="10000" v-model.number="draft.rate" /></label>
+      <label style="flex: 1">{{ tr('실제 MD') }}<input type="number" min="0" step="0.5" v-model.number="draft.actualMd" /></label>
     </div>
-    <p class="form-note">산정 공수 {{ Math.round(draft.people * draft.days * (draft.ratio / 100) * 10) / 10 }} MD · 예상 비용 {{ won(Math.round(draft.people * draft.days * (draft.ratio / 100) * draft.rate)) }}</p>
+    <p class="form-note">{{ tr('산정 공수 {md} MD · 예상 비용 {cost}', { md: Math.round(draft.people * draft.days * (draft.ratio / 100) * 10) / 10, cost: won(Math.round(draft.people * draft.days * (draft.ratio / 100) * draft.rate)) }) }}</p>
 
     <template #footer>
-      <button type="button" class="modal-secondary" @click="showAdd = false">취소</button>
-      <button class="primary" @click="addRow">추가하기</button>
+      <button type="button" class="modal-secondary" @click="showAdd = false">{{ tr('취소') }}</button>
+      <button class="primary" @click="addRow">{{ tr('추가하기') }}</button>
     </template>
   </Modal>
 </template>

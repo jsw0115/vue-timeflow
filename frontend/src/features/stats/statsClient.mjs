@@ -1,4 +1,5 @@
 // 통계 수치와 그 수치를 만든 원본 목록을 서버 응답에서 꺼내고, 기간·시간대·기록 수 문구를 만든다(PR-10 6단계, UF-118).
+import { korean } from '../i18n/translate.mjs'
 
 export const EMPTY_TEXT = '기록이 아직 없어요.'
 
@@ -20,19 +21,20 @@ export const figureOf = (key) => FIGURES.find((figure) => figure.key === key) ??
 
 export const SOURCE_KIND = { schedule: '일정', planner: '플래너 블록', recording: '실제 기록', focus: '집중 세션', task: '할 일' }
 
-export function formatMinutes(total) {
+/** 분 수치 문구. t는 화면 표시용 번역(기본 한국어)이다. */
+export function formatMinutes(total, t = korean) {
   const n = Math.max(0, Math.round(Number(total) || 0))
   const h = Math.floor(n / 60), m = n % 60
-  if (!h) return m + '분'
-  return m ? `${h}시간 ${m}분` : `${h}시간`
+  if (!h) return t('{n}분', { n: m })
+  return m ? t('{n}시간 {m}분', { n: h, m }) : t('{n}시간', { n: h })
 }
 
 export const periodText = (stats) => (stats.from === stats.to ? stats.from : `${stats.from} ~ ${stats.to}`)
 
 /** 집계 기준 시간대와 하루 시작 시각. 하루가 0시에 시작하면 시작 시각은 적지 않는다. */
-export function zoneText(stats) {
+export function zoneText(stats, t = korean) {
   const hour = Number(stats.dayStartHour) || 0
-  return `${stats.timeZone} 기준` + (hour ? ` · 하루는 ${String(hour).padStart(2, '0')}:00에 시작` : '')
+  return t('{zone} 기준', { zone: stats.timeZone }) + (hour ? ' · ' + t('하루는 {time}에 시작', { time: String(hour).padStart(2, '0') + ':00' }) : '')
 }
 
 /** 수치의 원본 행. 할 일은 완료한 것만 수치에 들어가므로 완료한 것만 돌려준다. */
@@ -50,19 +52,19 @@ export function sourceTotal(rows, key) {
  * 수치 하나를 화면 값으로 바꾼다. 원본이 하나도 없으면 0 대신 "기록이 아직 없어요"를 보이게 empty를 켠다(UT-201).
  * 추정 문장은 만들지 않는다.
  */
-export function figureSummary(stats, key) {
+export function figureSummary(stats, key, t = korean) {
   const figure = figureOf(key)
   const rows = sourceRows(stats, key)
   const value = Number(stats?.[figure.field]) || 0
   return {
     key,
-    label: figure.label,
+    label: t(figure.label),
     value,
-    text: rows.length ? (figure.unit === 'count' ? value + '개' : formatMinutes(value)) : EMPTY_TEXT,
+    text: rows.length ? (figure.unit === 'count' ? t('{n}개', { n: value }) : formatMinutes(value, t)) : t(EMPTY_TEXT),
     count: rows.length,
     empty: rows.length === 0,
     period: periodText(stats),
-    zone: zoneText(stats),
+    zone: zoneText(stats, t),
   }
 }
 

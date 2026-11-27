@@ -29,6 +29,8 @@ test('empty-state 문구는 두 문장 이상이고 느낌표·장식 이모지�
   for (const { name, source } of vues) {
     for (const [, text] of source.matchAll(/class="empty-state"[^>]*>([^<]+)</g)) {
       found.push(text)
+      // 언어별 문구({{ t('…') }})는 템플릿에 글자가 없다. 그 문구는 i18n-shell 시험이 언어마다 두 문장인지 본다(PR-32)
+      if (/^\s*\{\{[^}]*\}\}\s*$/.test(text)) continue
       const sentences = text.trim().split(/(?<=[.?])\s+/).filter(Boolean)
       assert.ok(sentences.length >= 2, `${name}: 다음 행동 문장이 없다 — ${text}`)
       assert.doesNotMatch(text, /!|\p{Extended_Pictographic}/u, `${name}: ${text}`)

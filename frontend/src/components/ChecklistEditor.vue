@@ -1,4 +1,5 @@
 <script setup>
+import { tr } from '../store/locale'
 import { computed, ref, useId } from 'vue'
 import { contacts, isBlocked } from '../store/contacts'
 import { assignableContacts } from '../store/accountContacts'
@@ -12,14 +13,14 @@ function update(item, patch) { emit('update:modelValue', props.modelValue.map(va
 function add() { if (!title.value.trim()) return; emit('update:modelValue', [...props.modelValue, { id: crypto.randomUUID(), title: title.value.trim(), done: false, assigneeId: null }]); title.value = '' }
 </script>
 <template>
-  <fieldset class="checklist-editor"><legend>체크리스트 <span>{{ done }}/{{ modelValue.length }}</span></legend>
+  <fieldset class="checklist-editor"><legend>{{ tr('체크리스트') }} <span>{{ done }}/{{ modelValue.length }}</span></legend>
     <ol><li v-for="(item, index) in modelValue" :key="item.id">
-      <input type="checkbox" :aria-label="item.title + ' 완료'" :checked="item.done" @change="update(item, { done: $event.target.checked })" />
-      <div class="checklist-item-fields"><input :aria-label="'항목 ' + (index + 1)" :value="item.title" maxlength="200" @input="update(item, { title: $event.target.value })" /><select :aria-label="item.title + ' 담당자'" :value="item.assigneeId ?? ''" @change="update(item, { assigneeId: $event.target.value || null })"><option value="">담당자 없음</option><option value="self">나</option><option v-for="person in people" :key="person.id" :value="String(person.id)">{{ person.name }}</option><option v-if="item.assigneeId && item.assigneeId !== 'self' && !people.some(person => String(person.id) === String(item.assigneeId))" :value="item.assigneeId">기존 담당자</option></select></div>
-      <button type="button" :aria-label="item.title + ' 항목 삭제'" @click="emit('update:modelValue', modelValue.filter(value => value.id !== item.id))">×</button>
+      <input type="checkbox" :aria-label="tr('{name} 완료', { name: item.title })" :checked="item.done" @change="update(item, { done: $event.target.checked })" />
+      <div class="checklist-item-fields"><input :aria-label="tr('항목 {n}', { n: index + 1 })" :value="item.title" maxlength="200" @input="update(item, { title: $event.target.value })" /><select :aria-label="tr('{name} 담당자', { name: item.title })" :value="item.assigneeId ?? ''" @change="update(item, { assigneeId: $event.target.value || null })"><option value="">{{ tr('담당자 없음') }}</option><option value="self">{{ tr('나') }}</option><option v-for="person in people" :key="person.id" :value="String(person.id)">{{ person.name }}</option><option v-if="item.assigneeId && item.assigneeId !== 'self' && !people.some(person => String(person.id) === String(item.assigneeId))" :value="item.assigneeId">{{ tr('기존 담당자') }}</option></select></div>
+      <button type="button" :aria-label="tr('{name} 항목 삭제', { name: item.title })" @click="emit('update:modelValue', modelValue.filter(value => value.id !== item.id))">×</button>
     </li></ol>
-    <p v-if="accountOnly" class="input-field-help checklist-assignee-note">담당자는 '나'와, 주소록에서 계정과 연결한 사람만 고를 수 있어요. <router-link to="/address">주소록에서 연결하기</router-link></p>
-    <div class="checklist-add"><input :id="id" v-model="title" aria-label="새 체크리스트 항목" placeholder="작은 단계로 나눠보세요" maxlength="200" @keydown.enter.prevent="add" /><button type="button" :disabled="!title.trim()" @click="add">추가</button></div>
+    <p v-if="accountOnly" class="input-field-help checklist-assignee-note">{{ tr('담당자는 \'나\'와, 주소록에서 계정과 연결한 사람만 고를 수 있어요.') }} <router-link to="/address">{{ tr('주소록에서 연결하기') }}</router-link></p>
+    <div class="checklist-add"><input :id="id" v-model="title" :aria-label="tr('새 체크리스트 항목')" :placeholder="tr('작은 단계로 나눠보세요')" maxlength="200" @keydown.enter.prevent="add" /><button type="button" :disabled="!title.trim()" @click="add">{{ tr('추가') }}</button></div>
   </fieldset>
 </template>
 <style>

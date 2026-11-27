@@ -1,5 +1,6 @@
 <!-- 챌린지 인증 랭킹과 인증 내역. 인증 일수와 실제 기록으로 확인한 일수로 순위를 매기고, 회원이 서로의 인증 방식을 점검할 수 있게 한다. 개인 기록은 집계하지 않는다(PR-10 3b-2, Q-26). -->
 <script setup>
+import { tr, unit } from '../../store/locale'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import SubPageHeader from '../../components/SubPageHeader.vue'
@@ -53,7 +54,7 @@ const visibilityState = ref('idle')
 const visibilityMessage = ref('')
 async function loadVisibility() {
   if (!session.userId) return
-  try { rankingVisible.value = await visibility.load(); visibilityState.value = 'ready' } catch { visibilityState.value = 'error'; visibilityMessage.value = '랭킹 참여 설정을 불러오지 못했어요.' }
+  try { rankingVisible.value = await visibility.load(); visibilityState.value = 'ready' } catch { visibilityState.value = 'error'; visibilityMessage.value = tr('랭킹 참여 설정을 불러오지 못했어요.') }
 }
 watch(() => session.userId, loadVisibility, { immediate: true })
 // 저장 중에도 체크박스를 disabled로 만들지 않는다. 그러면 키보드 포커스가 페이지 처음으로 빠져나간다. 대신 겹친 요청만 막는다
@@ -64,7 +65,7 @@ async function changeVisibility(event) {
   try {
     rankingVisible.value = await visibility.save(next)
     visibilityState.value = 'saved'
-    visibilityMessage.value = rankingVisible.value ? '다른 회원의 랭킹에 다시 보여요.' : '다른 회원의 랭킹에서 빠졌어요. 내 인증 기록은 그대로예요.'
+    visibilityMessage.value = rankingVisible.value ? tr('다른 회원의 랭킹에 다시 보여요.') : tr('다른 회원의 랭킹에서 빠졌어요. 내 인증 기록은 그대로예요.')
     if (current.value) ranking.value = (await challengeClient.ranking(id.value, challengeId.value)) ?? []
   } catch (e) {
     event.target.checked = rankingVisible.value
@@ -82,71 +83,71 @@ function clock(iso) {
 <template>
   <ShareSignIn v-if="!session.userId" message="랭킹은 커뮤니티 챌린지 참여자끼리 봐요. 로그인하면 내 커뮤니티의 챌린지 랭킹을 볼 수 있어요." />
   <CommunityPicker v-else-if="!id" path="/community/ranking" intro="랭킹은 챌린지마다 따로 매겨요. 랭킹을 볼 커뮤니티를 골라 주세요." />
-  <p v-else-if="status === 'loading'" class="input-field-help" role="status">커뮤니티를 불러오는 중이에요.</p>
+  <p v-else-if="status === 'loading'" class="input-field-help" role="status">{{ tr('커뮤니티를 불러오는 중이에요.') }}</p>
   <section v-else-if="status === 'missing'" class="card">
-    <div class="empty-state" role="status"><p>커뮤니티를 찾을 수 없어요. 비공개이거나 없어진 커뮤니티일 수 있어요.</p><button type="button" class="button-secondary" @click="router.push('/community')">커뮤니티 목록으로</button></div>
+    <div class="empty-state" role="status"><p>{{ tr('커뮤니티를 찾을 수 없어요. 비공개이거나 없어진 커뮤니티일 수 있어요.') }}</p><button type="button" class="button-secondary" @click="router.push('/community')">{{ tr('커뮤니티 목록으로') }}</button></div>
   </section>
   <section v-else-if="status === 'error'" class="card">
-    <div class="empty-state" role="status"><p>커뮤니티를 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요.</p><button type="button" class="button-secondary" @click="load">다시 시도</button></div>
+    <div class="empty-state" role="status"><p>{{ tr('커뮤니티를 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요.') }}</p><button type="button" class="button-secondary" @click="load">{{ tr('다시 시도') }}</button></div>
   </section>
   <template v-else-if="community">
-    <SubPageHeader title="챌린지 랭킹" :parent="community.title" fallback="/community" :tabs="tabs" />
+    <SubPageHeader :title="tr('챌린지 랭킹')" :parent="community.title" fallback="/community" :tabs="tabs" />
     <section v-if="!isMember" class="card">
-      <div class="empty-state" role="status"><p>랭킹은 회원만 볼 수 있어요. 커뮤니티 홈에서 가입하면 챌린지 랭킹을 볼 수 있어요.</p><button type="button" class="button-secondary" @click="router.push({ path: '/community/home', query: { id } })">커뮤니티 홈으로</button></div>
+      <div class="empty-state" role="status"><p>{{ tr('랭킹은 회원만 볼 수 있어요. 커뮤니티 홈에서 가입하면 챌린지 랭킹을 볼 수 있어요.') }}</p><button type="button" class="button-secondary" @click="router.push({ path: '/community/home', query: { id } })">{{ tr('커뮤니티 홈으로') }}</button></div>
     </section>
-    <p v-else-if="dataStatus === 'loading'" class="input-field-help" role="status">챌린지를 불러오는 중이에요.</p>
+    <p v-else-if="dataStatus === 'loading'" class="input-field-help" role="status">{{ tr('챌린지를 불러오는 중이에요.') }}</p>
     <section v-else-if="dataStatus === 'error'" class="card">
-      <div class="empty-state" role="status"><p>{{ error }}</p><button type="button" class="button-secondary" @click="loadChallenges">다시 시도</button></div>
+      <div class="empty-state" role="status"><p>{{ tr(error) }}</p><button type="button" class="button-secondary" @click="loadChallenges">{{ tr('다시 시도') }}</button></div>
     </section>
     <template v-else-if="dataStatus === 'ready'">
-      <div v-if="!challenges.length" class="card empty-state"><p>아직 열린 챌린지가 없어요. 챌린지 탭에서 첫 챌린지를 만들어 보세요.</p><button type="button" class="button-secondary" @click="router.push({ path: '/community/challenge', query: { id } })">챌린지로 가기</button></div>
+      <div v-if="!challenges.length" class="card empty-state"><p>{{ tr('아직 열린 챌린지가 없어요. 챌린지 탭에서 첫 챌린지를 만들어 보세요.') }}</p><button type="button" class="button-secondary" @click="router.push({ path: '/community/challenge', query: { id } })">{{ tr('챌린지로 가기') }}</button></div>
       <template v-else>
-        <label class="ranking-pick">챌린지
+        <label class="ranking-pick">{{ tr('챌린지') }}
           <select :value="challengeId" @change="pick">
-            <option value="">챌린지를 골라 주세요</option>
+            <option value="">{{ tr('챌린지를 골라 주세요') }}</option>
             <option v-for="c in challenges" :key="c.id" :value="c.id">{{ c.title }}</option>
           </select>
         </label>
-        <p v-if="!current" class="empty-state" role="status">아직 고른 챌린지가 없어요. 위 목록에서 랭킹을 볼 챌린지를 골라 주세요.</p>
+        <p v-if="!current" class="empty-state" role="status">{{ tr('아직 고른 챌린지가 없어요. 위 목록에서 랭킹을 볼 챌린지를 골라 주세요.') }}</p>
         <template v-else>
-          <p class="ranking-rule"><b>{{ challengeRule(current) }}</b> · <span class="figure">{{ current.days }}</span>일</p>
-          <p class="input-field-help">순위는 인증한 날 수로 매기고, 같으면 실제 기록으로 확인한 날이 많은 쪽이 앞서요. 개인 기록은 집계하지 않아요.</p>
+          <p class="ranking-rule"><b>{{ challengeRule(current, tr) }}</b> · <span class="figure">{{ current.days }}</span>{{ unit('일', current.days) }}</p>
+          <p class="input-field-help">{{ tr('순위는 인증한 날 수로 매기고, 같으면 실제 기록으로 확인한 날이 많은 쪽이 앞서요. 개인 기록은 집계하지 않아요.') }}</p>
 
           <section class="card ranking">
-            <h3>순위</h3>
+            <h3>{{ tr('순위') }}</h3>
             <label class="ranking-visibility">
-              <input type="checkbox" :checked="rankingVisible" :disabled="visibilityState === 'idle'" :aria-busy="visibilityState === 'saving' ? 'true' : undefined" aria-describedby="ranking-visibility-help" @change="changeVisibility" />랭킹에 나를 보이기
+              <input type="checkbox" :checked="rankingVisible" :disabled="visibilityState === 'idle'" :aria-busy="visibilityState === 'saving' ? 'true' : undefined" aria-describedby="ranking-visibility-help" @change="changeVisibility" />{{ tr('랭킹에 나를 보이기') }}
             </label>
-            <p id="ranking-visibility-help" class="input-field-help" role="status" :data-state="visibilityState === 'error' ? 'error' : visibilityState === 'saved' ? 'success' : undefined">{{ visibilityState === 'saving' ? '저장하는 중이에요.' : visibilityMessage || '끄면 다른 회원의 랭킹에 내 이름과 인증 일수가 보이지 않아요. 계정 설정이라 모든 챌린지에 같이 적용돼요.' }}</p>
+            <p id="ranking-visibility-help" class="input-field-help" role="status" :data-state="visibilityState === 'error' ? 'error' : visibilityState === 'saved' ? 'success' : undefined">{{ visibilityState === 'saving' ? tr('저장하는 중이에요.') : tr(visibilityMessage) || tr('끄면 다른 회원의 랭킹에 내 이름과 인증 일수가 보이지 않아요. 계정 설정이라 모든 챌린지에 같이 적용돼요.') }}</p>
             <div v-for="r in rows" :key="r.userId" class="event ranking-row" :class="{ mine: r.me }">
               <b class="figure ranking-rank">{{ r.rank ?? '–' }}</b>
-              <span class="ranking-name">{{ r.nickname || '이름 없음' }}<small v-if="r.me"> · 나</small><small v-if="r.rankingHidden"> · 순위에서 빠짐(다른 회원에게 안 보여요)</small></span>
-              <span class="ranking-count"><b class="figure">{{ r.doneDays }}</b>일 인증<small> · 기록 확인 <span class="figure">{{ r.verifiedDays }}</span>일</small></span>
+              <span class="ranking-name">{{ r.nickname || tr('이름 없음') }}<small v-if="r.me"> {{ tr('· 나') }}</small><small v-if="r.rankingHidden"> {{ tr('· 순위에서 빠짐(다른 회원에게 안 보여요)') }}</small></span>
+              <span class="ranking-count"><b class="figure">{{ r.doneDays }}</b>{{ tr('일 인증') }}<small> {{ tr('· 기록 확인') }} <span class="figure">{{ r.verifiedDays }}</span>{{ tr('일') }}</small></span>
             </div>
-            <p v-if="!rows.length" class="empty-state">아직 참여한 회원이 없어요. 챌린지 탭에서 참여하면 순위에 보여요.</p>
+            <p v-if="!rows.length" class="empty-state">{{ tr('아직 참여한 회원이 없어요. 챌린지 탭에서 참여하면 순위에 보여요.') }}</p>
           </section>
 
           <section class="card ranking">
             <div class="ranking-log-head">
-              <h3>인증 내역</h3>
-              <label class="ranking-pick">참여자
+              <h3>{{ tr('인증 내역') }}</h3>
+              <label class="ranking-pick">{{ tr('참여자') }}
                 <select v-model="who">
-                  <option value="">모두</option>
-                  <option v-for="r in rows" :key="r.userId" :value="r.userId">{{ r.nickname || '이름 없음' }}</option>
+                  <option value="">{{ tr('모두') }}</option>
+                  <option v-for="r in rows" :key="r.userId" :value="r.userId">{{ r.nickname || tr('이름 없음') }}</option>
                 </select>
               </label>
             </div>
-            <p class="input-field-help">{{ current.openRecords ? '기록 공개에 동의한 참여자의 기록 제목과 시각이 보여요.' : '다른 회원에게는 인증한 날과 방식만 보여요. 기록 제목과 시각은 본인에게만 보여요.' }}</p>
-            <p v-if="logStatus === 'loading'" class="input-field-help" role="status">인증 내역을 불러오는 중이에요.</p>
-            <p v-else-if="logStatus === 'error'" class="input-field-help" data-state="error" role="alert">{{ error }}</p>
+            <p class="input-field-help">{{ current.openRecords ? tr('기록 공개에 동의한 참여자의 기록 제목과 시각이 보여요.') : tr('다른 회원에게는 인증한 날과 방식만 보여요. 기록 제목과 시각은 본인에게만 보여요.') }}</p>
+            <p v-if="logStatus === 'loading'" class="input-field-help" role="status">{{ tr('인증 내역을 불러오는 중이에요.') }}</p>
+            <p v-else-if="logStatus === 'error'" class="input-field-help" data-state="error" role="alert">{{ tr(error) }}</p>
             <template v-else>
               <div v-for="c in checkins" :key="c.userId + c.date" class="event ranking-row">
                 <span class="figure ranking-date">{{ c.date }}</span>
-                <span class="ranking-name">{{ c.nickname || '이름 없음' }}</span>
-                <span class="tag">{{ c.method === 'record' ? '기록 확인' : '직접 인증' }}</span>
-                <small v-if="c.startedAt" class="ranking-detail"><span class="figure">{{ clock(c.startedAt) }}~{{ clock(c.endedAt) }}</span> · <span class="figure">{{ c.minutes }}</span>분<template v-if="c.title"> · {{ c.title }}</template></small>
+                <span class="ranking-name">{{ c.nickname || tr('이름 없음') }}</span>
+                <span class="tag">{{ c.method === 'record' ? tr('기록 확인') : tr('직접 인증') }}</span>
+                <small v-if="c.startedAt" class="ranking-detail"><span class="figure">{{ clock(c.startedAt) }}~{{ clock(c.endedAt) }}</span> · <span class="figure">{{ c.minutes }}</span>{{ tr('분') }}<template v-if="c.title"> · {{ c.title }}</template></small>
               </div>
-              <p v-if="!checkins.length" class="empty-state" role="status">아직 남긴 인증이 없어요. 챌린지 탭에서 인증하면 여기에 쌓여요.</p>
+              <p v-if="!checkins.length" class="empty-state" role="status">{{ tr('아직 남긴 인증이 없어요. 챌린지 탭에서 인증하면 여기에 쌓여요.') }}</p>
             </template>
           </section>
         </template>

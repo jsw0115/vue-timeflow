@@ -1,5 +1,6 @@
 <!-- 환경설정 > 화면 테마. 표면 모드와 색상 분위기를 고르면 미리보기에만 먼저 반영하고, 적용하기에서 계정(로그인)·이 브라우저에 저장한다(DESIGN.md 4장 Settings: theme customization). -->
 <script setup>
+import { tr } from '../../store/locale'
 import { computed, reactive, ref, watch } from 'vue'
 import { THEMES, ACCENTS, CUSTOM_ACCENT, themeState, resolveTheme } from '../../store/theme'
 import { appearance, DENSITIES, FONT_SIZES } from '../../store/appearance'
@@ -34,12 +35,12 @@ const previewStyle = computed(() => {
 })
 const optionTokens = (surface, accent = draft.accent) => resolveTheme(surface, accent, draft.customAccent).tokens
 
-const appliedLabel = computed(() => `${themeState.followSystem ? '시스템 설정 따름' : THEMES[themeState.theme].label} · ${themeState.accent === CUSTOM_ACCENT ? '사용자 지정' : ACCENTS[themeState.accent].label}`)
+const appliedLabel = computed(() => `${themeState.followSystem ? tr('시스템 설정 따름') : tr(THEMES[themeState.theme].label)} · ${themeState.accent === CUSTOM_ACCENT ? tr('사용자 지정') : tr(ACCENTS[themeState.accent].label)}`)
 
 /** 미리보기 조합의 대비. DESIGN.md 2장 Theme contrast rules의 기준과 함께 보인다. */
 const checks = computed(() => {
   const t = preview.value.tokens
-  const row = (label, a, b, min) => { const value = contrast(a, b); return { label, value: value.toFixed(2), pass: value >= min, min } }
+  const row = (label, a, b, min) => { const value = contrast(a, b); return { label: tr(label), value: value.toFixed(2), pass: value >= min, min } }
   return [
     row('본문 글자 / 바탕', t['--color-foreground'], t['--color-canvas'], 4.5),
     row('보조 글자 / 구획', t['--color-muted'], t['--color-surface'], 4.5),
@@ -52,7 +53,7 @@ const checks = computed(() => {
 const customNote = computed(() => {
   if (draft.accent !== CUSTOM_ACCENT || !preview.value.adjusted) return ''
   const used = preview.value.tokens['--color-accent']
-  return `고른 색 ${draft.customAccent}는 대비 기준에 못 미쳐 ${used}로 ${luminance(used) < luminance(draft.customAccent) ? '어둡게' : '밝게'} 맞춰 써요.`
+  return luminance(used) < luminance(draft.customAccent) ? tr('고른 색 {picked}는 대비 기준에 못 미쳐 {used}로 어둡게 맞춰 써요.', { picked: draft.customAccent, used }) : tr('고른 색 {picked}는 대비 기준에 못 미쳐 {used}로 밝게 맞춰 써요.', { picked: draft.customAccent, used })
 })
 
 function pickCustom(value) {
@@ -87,16 +88,16 @@ async function apply() {
   <section class="card setting-content theme-settings">
     <div class="setting-head">
       <div>
-        <h2>화면 테마</h2>
-        <p>배경과 포인트 색을 조합해 나에게 편한 화면을 만들어 보세요.</p>
+        <h2>{{ tr('화면 테마') }}</h2>
+        <p>{{ tr('배경과 포인트 색을 조합해 나에게 편한 화면을 만들어 보세요.') }}</p>
       </div>
-      <span class="tag applied">지금 적용 중 · {{ appliedLabel }}</span>
+      <span class="tag applied">{{ tr('지금 적용 중 · {name}', { name: appliedLabel }) }}</span>
     </div>
 
     <div class="theme-layout">
       <div class="theme-controls">
         <fieldset class="option-group">
-          <legend>표면 모드</legend>
+          <legend>{{ tr('표면 모드') }}</legend>
           <div class="surface-options">
             <label v-for="(t, key) in THEMES" :key="key" class="option-card" :class="{ selected: draft.theme === key }">
               <input v-model="draft.theme" class="option-input" type="radio" name="surface" :value="key" :aria-describedby="`surface-desc-${key}`" />
@@ -104,82 +105,83 @@ async function apply() {
                 <i class="swatch-card" :style="{ background: optionTokens(key)['--color-card'], borderColor: optionTokens(key)['--color-hairline'] }"><em :style="{ background: optionTokens(key)['--color-foreground'] }"></em><em :style="{ background: optionTokens(key)['--color-muted'] }"></em></i>
                 <i class="swatch-button" :style="{ background: optionTokens(key)['--color-accent'] }"></i>
               </span>
-              <span class="option-text"><b>{{ t.label }}</b><small :id="`surface-desc-${key}`">{{ t.desc }}</small></span>
+              <span class="option-text"><b>{{ tr(t.label) }}</b><small :id="`surface-desc-${key}`">{{ tr(t.desc) }}</small></span>
               <svg v-if="draft.theme === key" class="option-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
             </label>
           </div>
-          <label class="follow-system"><input v-model="draft.followSystem" type="checkbox" /> 기기의 다크 모드 설정 따르기<small>켜면 기기가 다크 모드일 때 다크 표면을 써요.</small></label>
+          <label class="follow-system"><input v-model="draft.followSystem" type="checkbox" /> {{ tr('기기의 다크 모드 설정 따르기') }}<small>{{ tr('켜면 기기가 다크 모드일 때 다크 표면을 써요.') }}</small></label>
         </fieldset>
 
         <fieldset class="option-group">
-          <legend>색상 분위기</legend>
+          <legend>{{ tr('색상 분위기') }}</legend>
           <div class="accent-options">
             <label v-for="(a, key) in ACCENTS" :key="key" class="option-card accent-card" :class="{ selected: draft.accent === key }">
               <input v-model="draft.accent" class="option-input" type="radio" name="accent" :value="key" :aria-describedby="`accent-desc-${key}`" />
               <span class="accent-chips" aria-hidden="true"><i :style="{ background: optionTokens(previewSurface, key)['--color-accent'] }"></i><i :style="{ background: optionTokens(previewSurface, key)['--color-data'] }"></i></span>
-              <span class="option-text"><b>{{ a.label }}</b><small :id="`accent-desc-${key}`">{{ a.desc }}</small></span>
+              <span class="option-text"><b>{{ tr(a.label) }}</b><small :id="`accent-desc-${key}`">{{ tr(a.desc) }}</small></span>
               <svg v-if="draft.accent === key" class="option-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
             </label>
           </div>
           <details class="custom-accent" :open="draft.accent === CUSTOM_ACCENT">
-            <summary>고급 설정 · 직접 고른 색</summary>
+            <summary>{{ tr('고급 설정 · 직접 고른 색') }}</summary>
             <label class="custom-row" :class="{ selected: draft.accent === CUSTOM_ACCENT }">
               <input type="color" :value="draft.customAccent" aria-describedby="custom-accent-help" @input="pickCustom($event.target.value)" />
-              <span>직접 고른 색 쓰기 <span class="figure">{{ draft.customAccent }}</span></span>
+              <span>{{ tr('직접 고른 색 쓰기') }} <span class="figure">{{ draft.customAccent }}</span></span>
             </label>
-            <p id="custom-accent-help" class="input-field-help">{{ customNote || '고른 색이 대비 기준에 못 미치면 밝기만 맞춰 쓰고 여기서 알려 드려요.' }}</p>
+            <p id="custom-accent-help" class="input-field-help">{{ customNote || tr('고른 색이 대비 기준에 못 미치면 밝기만 맞춰 쓰고 여기서 알려 드려요.') }}</p>
           </details>
         </fieldset>
       </div>
 
       <div class="live-col">
-        <p class="preview-state" role="status">{{ dirty ? '아직 저장되지 않은 테마를 미리 보고 있어요.' : '지금 적용 중인 테마예요.' }}</p>
+        <p class="preview-state" role="status">{{ dirty ? tr('아직 저장되지 않은 테마를 미리 보고 있어요.') : tr('지금 적용 중인 테마예요.') }}</p>
         <!-- 실제 앱 요소로 만든 미리보기. 눌리지 않도록 inert로 둔다. -->
         <div class="live-preview" :style="previewStyle" inert>
           <div class="pv-shell">
             <div class="pv-side">
               <span class="pv-brand"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5v15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" /><path d="M9 8h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="2.2 2.2" /><path d="M9 16h6.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" /><circle cx="18" cy="16" r="2" fill="currentColor" /></svg>Timebar</span>
-              <span class="pv-nav active">오늘</span><span class="pv-nav">일간 플래너</span><span class="pv-nav">할 일</span>
+              <span class="pv-nav active">{{ tr('오늘') }}</span><span class="pv-nav">{{ tr('일간 플래너') }}</span><span class="pv-nav">{{ tr('할 일') }}</span>
             </div>
             <div class="pv-main">
-              <div class="pv-head"><div><small>메인</small><b>오늘</b></div><span class="pv-primary">새 글 작성</span></div>
+              <div class="pv-head"><div><small>{{ tr('메인') }}</small><b>{{ tr('오늘') }}</b></div><span class="pv-primary">{{ tr('새 글 작성') }}</span></div>
               <div class="pv-card">
-                <div class="pv-card-head"><b>오늘의 흐름</b><span class="pv-tag">진행 중</span></div>
-                <p>계획과 실제 기록을 같은 시간축에서 비교해요.</p>
-                <div class="pv-block pv-plan">계획 · 디자인 리뷰 <span class="figure">10:00</span></div>
-                <div class="pv-block pv-actual">실제 기록 · 디자인 리뷰 <span class="figure">48분</span></div>
+                <div class="pv-card-head"><b>{{ tr('오늘의 흐름') }}</b><span class="pv-tag">{{ tr('진행 중') }}</span></div>
+                <p>{{ tr('계획과 실제 기록을 같은 시간축에서 비교해요.') }}</p>
+                <div class="pv-block pv-plan">{{ tr('계획 · 디자인 리뷰') }} <span class="figure">10:00</span></div>
+                <div class="pv-block pv-actual">{{ tr('실제 기록 · 디자인 리뷰') }} <span class="figure">{{ tr('48분') }}</span></div>
                 <div class="pv-progress"><em></em></div>
-                <div class="pv-row"><span class="pv-input">메모를 적어 주세요</span><span class="pv-secondary">취소</span></div>
-                <div class="pv-row"><span class="pv-seg"><i class="on">오늘</i><i>이번 주</i></span><span class="pv-link">자세히 보기</span><span class="pv-status">저장 실패 · 다시 시도</span></div>
+                <div class="pv-row"><span class="pv-input">{{ tr('메모를 적어 주세요') }}</span><span class="pv-secondary">{{ tr('취소') }}</span></div>
+                <div class="pv-row"><span class="pv-seg"><i class="on">{{ tr('오늘') }}</i><i>{{ tr('이번 주') }}</i></span><span class="pv-link">{{ tr('자세히 보기') }}</span><span class="pv-status">{{ tr('저장 실패 · 다시 시도') }}</span></div>
               </div>
             </div>
           </div>
         </div>
-        <ul class="contrast-list" aria-label="미리보기 테마의 대비">
-          <li v-for="item in checks" :key="item.label"><span>{{ item.label }}</span><b class="figure">{{ item.value }}:1</b><em :class="{ fail: !item.pass }">{{ item.pass ? `통과 (기준 ${item.min}:1)` : `기준 ${item.min}:1 미달` }}</em></li>
+        <ul class="contrast-list" :aria-label="tr('미리보기 테마의 대비')">
+          <li v-for="item in checks" :key="item.label"><span>{{ item.label }}</span><b class="figure">{{ item.value }}:1</b><em :class="{ fail: !item.pass }">{{ item.pass ? tr('통과 (기준 {min}:1)', { min: item.min }) : tr('기준 {min}:1 미달', { min: item.min }) }}</em></li>
         </ul>
       </div>
     </div>
 
     <div class="theme-actions">
-      <button type="button" class="button-text" :disabled="status === 'saving'" @click="restoreDefault">기본값으로 복원</button>
-      <p v-if="message" class="theme-message" :class="status" :role="status === 'error' ? 'alert' : 'status'">{{ message }}</p>
+      <button type="button" class="button-text" :disabled="status === 'saving'" @click="restoreDefault">{{ tr('기본값으로 복원') }}</button>
+      <p v-if="message" class="theme-message" :class="status" :role="status === 'error' ? 'alert' : 'status'">{{ tr(message) }}</p>
       <span class="theme-action-buttons">
-        <button type="button" class="button-secondary" :disabled="!dirty || status === 'saving'" @click="cancel">취소</button>
-        <button type="button" class="primary" :disabled="!dirty" :aria-busy="status === 'saving' ? 'true' : undefined" @click="apply">{{ status === 'saving' ? '적용하는 중' : '적용하기' }}</button>
+        <button type="button" class="button-secondary" :disabled="!dirty || status === 'saving'" @click="cancel">{{ tr('취소') }}</button>
+        <button type="button" class="primary" :disabled="!dirty" :aria-busy="status === 'saving' ? 'true' : undefined" @click="apply">{{ status === 'saving' ? tr('적용하는 중') : tr('적용하기') }}</button>
       </span>
     </div>
-    <p class="storage-note">{{ session.userId ? '적용하면 계정 환경설정에 저장돼요. 이 브라우저에도 함께 저장해 다음 실행 때 바로 보여요.' : '로그아웃 상태라 이 브라우저에만 저장돼요. 로그인하면 계정에 저장할 수 있어요.' }}</p>
+    <p class="storage-note">{{ session.userId ? tr('적용하면 계정 환경설정에 저장돼요. 이 브라우저에도 함께 저장해 다음 실행 때 바로 보여요.') : tr('로그아웃 상태라 이 브라우저에만 저장돼요. 로그인하면 계정에 저장할 수 있어요.') }}</p>
 
-    <div class="section-label theme-extra">화면 밀도 · 글자 크기</div>
+    <div class="section-label theme-extra">{{ tr('화면 밀도 · 글자 크기') }}</div>
     <p class="form-note">
-      지금 <b>{{ DENSITIES[appearance.density].label }}</b> · <b>{{ FONT_SIZES[appearance.fontSize].label }}</b>로 설정돼 있어요. 자세한 조절은 환경 설정에서 할 수 있어요.
+      <!-- 영어 어순이 달라 한 문장으로 옮긴다(PR-32 12단계) -->
+      {{ tr('지금 {density} · {size}로 설정돼 있어요. 자세한 조절은 환경 설정에서 할 수 있어요.', { density: tr(DENSITIES[appearance.density].label), size: tr(FONT_SIZES[appearance.fontSize].label) }) }}
     </p>
 
-    <div class="section-label theme-extra">다이어리 스티커 팩</div>
+    <div class="section-label theme-extra">{{ tr('다이어리 스티커 팩') }}</div>
     <div class="sticker-packs">
       <div v-for="p in stickerPacks" :key="p.id" class="sticker-pack">
-        <b>{{ p.label }}</b>
+        <b>{{ tr(p.label) }}</b>
         <span>{{ p.items.join(' ') }}</span>
       </div>
     </div>

@@ -24,7 +24,22 @@ export async function checkAdminAccess(request, signedIn) {
   }
 }
 
-export const USER_STATUS = { ACTIVE: '활성', SUSPENDED: '정지', DELETED: '삭제' }
+/**
+ * 사용자 화면의 관리자 콘솔 버튼을 보일지 정한다. 서버가 DB에서 읽은 내 역할(GET /api/auth/me)을 쓰고 로그인 정보에 적힌 역할은 쓰지 않는다.
+ * 관리자 지표를 부르지 않아 일반 사용자가 403을 받지 않는다. 콘솔에 들어가면 checkAdminAccess로 다시 확인한다(IMP-021).
+ * 돌려주는 값: true(관리자), false(관리자 아님·로그인 만료), null(연결 실패·서버 오류로 확인하지 못함. 다음에 다시 확인한다).
+ */
+export async function checkAdminRole(request, signedIn) {
+  if (!signedIn) return false
+  try {
+    return (await request('/api/auth/me'))?.role === 'ADMIN'
+  } catch (error) {
+    return error?.status === 401 || error?.status === 403 || error?.status === 404 ? false : null
+  }
+}
+
+// 삭제 상태는 '삭제됨'이다. '삭제'는 버튼 이름(영어 "Delete")과 겹친다(PR-32 14단계)
+export const USER_STATUS = { ACTIVE: '활성', SUSPENDED: '정지', DELETED: '삭제됨' }
 export const USER_ROLE = { USER: '일반', ADMIN: '관리자' }
 
 /** 서버 사용자 행을 화면 행으로 바꾼다. */

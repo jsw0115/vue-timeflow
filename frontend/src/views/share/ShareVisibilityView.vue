@@ -1,5 +1,6 @@
 <!-- 들어간 공유 그룹마다 내 일정을 보일 범위를 서버에 저장한다. 공유 안 함이 철회다(PR-10 2단계, UF-112·UF-113). -->
 <script setup>
+import { tr } from '../../store/locale'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import ShareSignIn from '../../components/share/ShareSignIn.vue'
@@ -30,7 +31,7 @@ async function setLevel(g, level) {
   try {
     await shareClient.setLevel(g.id, level)
     g.shareLevel = level
-    notice.value = `‘${g.title}’ 그룹에 보일 범위를 '${levelLabel(level)}'으로 저장했어요.`
+    notice.value = tr('‘{name}’ 그룹에 보일 범위를 \'{level}\'(으)로 저장했어요.', { name: g.title, level: tr(levelLabel(level)) })
   } catch (e) { error.value = shareErrorText(e) } finally { busy.value = '' }
 }
 </script>
@@ -41,27 +42,27 @@ async function setLevel(g, level) {
     <section class="card form-card">
       <div class="setting-head">
         <div>
-          <h2>공개 범위 설정</h2>
-          <p>그룹마다 내 일정이 어떻게 보일지 정해요. 고른 범위 밖의 내용은 서버가 보내지 않아요.</p>
+          <h2>{{ tr('공개 범위 설정') }}</h2>
+          <p>{{ tr('그룹마다 내 일정이 어떻게 보일지 정해요. 고른 범위 밖의 내용은 서버가 보내지 않아요.') }}</p>
         </div>
       </div>
 
       <dl class="level-guide">
-        <template v-for="level in SHARE_LEVELS" :key="level.id"><dt>{{ level.label }}</dt><dd>{{ level.desc }}</dd></template>
+        <template v-for="level in SHARE_LEVELS" :key="level.id"><dt>{{ tr(level.label) }}</dt><dd>{{ tr(level.desc) }}</dd></template>
       </dl>
-      <p v-if="notice" class="input-field-help" data-state="success" role="status">{{ notice }}</p>
-      <p v-if="error && status === 'ready'" class="input-field-help" data-state="error" role="alert">{{ error }}</p>
+      <p v-if="notice" class="input-field-help" data-state="success" role="status">{{ tr(notice) }}</p>
+      <p v-if="error && status === 'ready'" class="input-field-help" data-state="error" role="alert">{{ tr(error) }}</p>
 
-      <p v-if="status === 'loading'" class="input-field-help" role="status">그룹을 불러오는 중이에요.</p>
-      <div v-else-if="status === 'error'" class="empty-state" role="status"><p>그룹을 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요.</p><button type="button" class="button-secondary" @click="load">다시 시도</button></div>
+      <p v-if="status === 'loading'" class="input-field-help" role="status">{{ tr('그룹을 불러오는 중이에요.') }}</p>
+      <div v-else-if="status === 'error'" class="empty-state" role="status"><p>{{ tr('그룹을 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요.') }}</p><button type="button" class="button-secondary" @click="load">{{ tr('다시 시도') }}</button></div>
       <template v-else>
         <div v-for="g in joined" :key="g.id" class="level-row">
-          <div :id="'level-' + g.id" class="level-name"><b>{{ g.title }}</b><small>멤버 {{ g.members }}명</small></div>
+          <div :id="'level-' + g.id" class="level-name"><b>{{ g.title }}</b><small>{{ tr('멤버 {n}명', { n: g.members }) }}</small></div>
           <div class="segmented-tab level-tabs" role="group" :aria-labelledby="'level-' + g.id">
-            <button v-for="level in SHARE_LEVELS" :key="level.id" type="button" :aria-pressed="(g.shareLevel ?? 'none') === level.id" :disabled="busy === g.id" @click="setLevel(g, level.id)">{{ level.label }}</button>
+            <button v-for="level in SHARE_LEVELS" :key="level.id" type="button" :aria-pressed="(g.shareLevel ?? 'none') === level.id" :disabled="busy === g.id" @click="setLevel(g, level.id)">{{ tr(level.label) }}</button>
           </div>
         </div>
-        <div v-if="!joined.length" class="empty-state"><p>아직 들어간 캘린더 그룹이 없어요. 캘린더 그룹 화면에서 그룹을 만들거나 받은 초대를 수락해 보세요.</p><button type="button" class="button-secondary" @click="router.push('/share/groups')">캘린더 그룹으로</button></div>
+        <div v-if="!joined.length" class="empty-state"><p>{{ tr('아직 들어간 캘린더 그룹이 없어요. 캘린더 그룹 화면에서 그룹을 만들거나 받은 초대를 수락해 보세요.') }}</p><button type="button" class="button-secondary" @click="router.push('/share/groups')">{{ tr('캘린더 그룹으로') }}</button></div>
       </template>
     </section>
   </div>

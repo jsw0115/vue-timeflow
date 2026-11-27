@@ -25,3 +25,6 @@ export function legacyIsoDate(text, today = localDate()) {
   const pad = (value) => String(value).padStart(2, '0')
   return `${today.slice(0, 4)}-${pad(match[1])}-${pad(match[2])}`
 }
+
+/** 달력 날짜 칸에 넣을 ISO 날짜. isoDate가 없는 시연·예전 로컬 D-Day는 날짜 문구를 오늘의 연도로 읽는다(ddayKind.prepare와 같은 규칙). */
+export const ddayCellDate = (item, today = localDate()) => item?.isoDate || legacyIsoDate(item?.date, today)

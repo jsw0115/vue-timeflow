@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import { localCollection } from './localCollection'
 import { localDate } from '../utils/postValidation.mjs'
+import { korean } from '../features/i18n/translate.mjs'
 import { occurrenceDates, skipDates, datesBetween, makeRecurrence } from '../utils/recurrence.mjs'
 import { createTaskStore } from '../features/records/taskStore.mjs'
 import * as offlineQueue from '../features/offline/offlineQueue.js'
@@ -68,14 +69,17 @@ export function routineRate(routine) {
   if (!h.length) return 0
   return Math.round((h.filter(Boolean).length / h.length) * 100)
 }
-export function dayLabel(routine) {
+/** 반복 이름. t는 화면 표시용 번역, dayName은 요일 번호(0=일)의 이름이다. 기본값은 한국어다. */
+export function dayLabel(routine, t = korean, dayName = (x) => ROUTINE_DAYS[x]) {
   const rule = routine.recurrence
-  if (rule && (rule.frequency !== 'weekly' || rule.interval !== 1)) return `${rule.interval}${({ daily: '일', weekly: '주', monthly: '개월', yearly: '년' })[rule.frequency] ?? ''}마다`
+  const every = { daily: '{n}일마다', weekly: '{n}주마다', monthly: '{n}개월마다', yearly: '{n}년마다' }[rule?.frequency]
+  // 간격 1은 따로 둔다(영어 "Every 1 days" 방지). 한국어 표시는 "1일마다" 그대로다
+  if (rule && (rule.frequency !== 'weekly' || rule.interval !== 1)) return every ? t(rule.interval === 1 ? every.replace('{n}', '1') : every, { n: rule.interval }) : t('{n}마다', { n: rule.interval })
   const d = routine.days ?? []
-  if (!d.length || d.length === 7) return '매일'
-  if (d.length === 5 && [1, 2, 3, 4, 5].every((x) => d.includes(x))) return '평일'
-  if (d.length === 2 && [0, 6].every((x) => d.includes(x))) return '주말'
-  return d.slice().sort().map((x) => ROUTINE_DAYS[x]).join('·')
+  if (!d.length || d.length === 7) return t('매일')
+  if (d.length === 5 && [1, 2, 3, 4, 5].every((x) => d.includes(x))) return t('평일')
+  if (d.length === 2 && [0, 6].every((x) => d.includes(x))) return t('주말')
+  return d.slice().sort().map((x) => dayName(x)).join('·')
 }
 /** 체크할 때 연속 기록도 함께 갱신한다 */
 /** 오늘 완료 토글. 로그인 상태는 서버 수행 기록에 저장하고 이력을 다시 불러온다(PR-07 5단계). */

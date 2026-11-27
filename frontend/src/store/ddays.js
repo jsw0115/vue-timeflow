@@ -4,6 +4,7 @@ import { createFeatureStore } from '../features/records/featureStore.mjs'
 import { ddayKind } from '../features/records/featureKinds.mjs'
 import { saveFailureMessage } from '../features/records/saveState.mjs'
 import { dDayLabel, ddayDateLabel } from '../utils/dday.mjs'
+import { korean } from '../features/i18n/translate.mjs'
 
 // 남은 날 계산은 utils/dday.mjs에 있다. 예전 계산은 ISO 날짜를 UTC로 읽어 한국 시간에서 오늘을 D-1로 보였다(PR-07 6단계에서 바로잡음)
 export { dDayLabel }
@@ -51,13 +52,14 @@ export const NOTIFY_OPTIONS = [
   { days: 14, label: '2주 전' },
   { days: 30, label: '한 달 전' },
 ]
-export function notifyLabel(item) {
+/** 알림 시점 이름. t는 화면 표시용 번역(기본 한국어)이다. */
+export function notifyLabel(item, t = korean) {
   const list = item?.notifyDays ?? []
-  if (!list.length) return '알림 없음'
+  if (!list.length) return t('알림 없음')
   return list
     .slice()
     .sort((a, b) => b - a)
-    .map((d) => NOTIFY_OPTIONS.find((o) => o.days === d)?.label ?? d + '일 전')
+    .map((d) => { const label = NOTIFY_OPTIONS.find((o) => o.days === d)?.label; return label ? t(label) : t('{n}일 전', { n: d }) })
     .join(' · ')
 }
 export function toggleNotifyDay(item, days) {

@@ -1,5 +1,6 @@
 // 서버 감사 로그(FeatureType.AUDIT: action·target·actor·detail)의 화면 이름·분류, 조회, CSV 내보내기를 정한다(PR-10 UF-117 7-4).
 // 동작 이름은 AdminService가 실제로 남기는 코드만 적는다. 모르는 코드는 원래 코드 그대로 보인다.
+import { korean } from '../i18n/translate.mjs'
 
 export const AUDIT_ACTIONS = {
   USER_CREATE: { category: '계정', label: '계정 만들기' },
@@ -19,16 +20,16 @@ export const AUDIT_CATEGORIES = [...new Set(Object.values(AUDIT_ACTIONS).map((ac
 
 const DETAIL_VALUES = {
   role: { USER: '일반', ADMIN: '관리자' },
-  status: { ACTIVE: '사용 중', SUSPENDED: '정지', DELETED: '삭제', OPEN: '접수', IN_PROGRESS: '처리 중', ANSWERED: '답변 완료', HOLD: '보류' },
+  status: { ACTIVE: '사용 중', SUSPENDED: '정지', DELETED: '삭제됨', OPEN: '접수', IN_PROGRESS: '처리 중', ANSWERED: '답변 완료', HOLD: '보류' },
   action: { REMOVE: '게시글 삭제', IGNORE: '문제없음' },
 }
 const DETAIL_NAMES = { role: '역할', status: '상태', action: '처리' }
 
-/** 한 행을 화면 값으로 바꾼다. */
-export function describeAudit(row) {
+/** 한 행을 화면 값으로 바꾼다. t는 상세(detail) 문구의 번역(기본 한국어)이다. 분류·동작 이름은 필터·CSV가 쓰는 한국어 값 그대로 두고 화면에서 옮긴다. */
+export function describeAudit(row, t = korean) {
   const known = AUDIT_ACTIONS[row?.action]
   const detail = row?.detail && typeof row.detail === 'object' && !Array.isArray(row.detail)
-    ? Object.entries(row.detail).map(([key, value]) => `${DETAIL_NAMES[key] ?? key}: ${DETAIL_VALUES[key]?.[value] ?? value}`).join(', ')
+    ? Object.entries(row.detail).map(([key, value]) => `${t(DETAIL_NAMES[key] ?? key)}: ${t(DETAIL_VALUES[key]?.[value] ?? String(value))}`).join(', ')
     : ''
   return { category: known?.category ?? '기타', label: known?.label ?? String(row?.action ?? ''), detail, at: String(row?.createdAt ?? '').replace('T', ' ').slice(0, 19) }
 }

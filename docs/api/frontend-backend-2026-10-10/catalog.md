@@ -1,6 +1,6 @@
 # API 목록
 
-기준 2026-10-10. 총 314개 매핑이며 wildcard 경로는 허용된 값을 선택한다. 채팅은 CHAT_ENABLED=true 조건부 등록이다. 구현·검증 범위는 [검증 기록](verification.md)을 확인한다.
+기준 2026-10-10. 총 334개 매핑이며 wildcard 경로는 허용된 값을 선택한다. 채팅은 CHAT_ENABLED=true 조건부 등록이다. 구현·검증 범위는 [검증 기록](verification.md)을 확인한다.
 
 | 메서드 | 경로 | 인증 | 처리 | 소스 |
 |---|---|---|---|---|
@@ -48,11 +48,21 @@
 | DELETE | `/api/career/activities/{id}` | JWT | 실제 처리 소스 있음 | CareerController |
 | GET | `/api/career/activities/{id}` | JWT | 실제 처리 소스 있음 | CareerController |
 | PUT | `/api/career/activities/{id}` | JWT | 실제 처리 소스 있음 | CareerController |
+| GET | `/api/career/activities/{id}/sources` | JWT | 실제 처리 소스 있음 | ActivitySourceController |
+| POST | `/api/career/activities/{id}/sources` | JWT | 실제 처리 소스 있음 | ActivitySourceController |
+| DELETE | `/api/career/activities/{id}/sources/{kind}/{sourceId}` | JWT | 실제 처리 소스 있음 | ActivitySourceController |
 | GET | `/api/career/applications` | JWT | 실제 처리 소스 있음 | CareerController |
 | POST | `/api/career/applications` | JWT | 실제 처리 소스 있음 | CareerController |
 | DELETE | `/api/career/applications/{id}` | JWT | 실제 처리 소스 있음 | CareerController |
 | GET | `/api/career/applications/{id}` | JWT | 실제 처리 소스 있음 | CareerController |
 | PUT | `/api/career/applications/{id}` | JWT | 실제 처리 소스 있음 | CareerController |
+| GET | `/api/career/applications/{id}/documents` | JWT | 실제 처리 소스 있음 | DocumentVersionController |
+| POST | `/api/career/applications/{id}/documents` | JWT | 실제 처리 소스 있음 | DocumentVersionController |
+| DELETE | `/api/career/applications/{id}/documents/{versionId}` | JWT | 실제 처리 소스 있음 | DocumentVersionController |
+| GET | `/api/career/document-versions` | JWT | 실제 처리 소스 있음 | DocumentVersionController |
+| POST | `/api/career/document-versions` | JWT | 실제 처리 소스 있음 | DocumentVersionController |
+| DELETE | `/api/career/document-versions/{id}` | JWT | 실제 처리 소스 있음 | DocumentVersionController |
+| GET | `/api/career/document-versions/{id}` | JWT | 실제 처리 소스 있음 | DocumentVersionController |
 | PUT | `/api/chat/communities/{communityId}/room` | JWT | 실제 처리 소스 있음 | ChatController |
 | GET | `/api/chat/events` | JWT | 실제 처리 소스 있음 | ChatController |
 | GET | `/api/chat/mentions` | JWT | 실제 처리 소스 있음 | ChatController |
@@ -181,6 +191,8 @@
 | POST | `/api/planner/recordings/{id}/resume` | JWT | 실제 처리 소스 있음 | ActualRecordingController |
 | GET | `/api/planner/recordings/current` | JWT | 실제 처리 소스 있음 | ActualRecordingController |
 | POST | `/api/planner/recordings/start` | JWT | 실제 처리 소스 있음 | ActualRecordingController |
+| POST | `/api/planner/reschedule/apply` | JWT | 실제 처리 소스 있음 | RescheduleController |
+| POST | `/api/planner/reschedule/preview` | JWT | 실제 처리 소스 있음 | RescheduleController |
 | DELETE | `/api/planner/reviews/{date}` | JWT | 실제 처리 소스 있음 | RecordActionsController |
 | GET | `/api/planner/reviews/{date}` | JWT | 실제 처리 소스 있음 | RecordActionsController |
 | PUT | `/api/planner/reviews/{date}` | JWT | 실제 처리 소스 있음 | RecordActionsController |
@@ -194,6 +206,7 @@
 | GET | `/api/planner/weekly` | JWT | 실제 처리 소스 있음 | PlannerViewController |
 | GET | `/api/planner/yearly` | JWT | 실제 처리 소스 있음 | PlannerViewController |
 | GET | `/api/public/portfolios/{token}` | 공개 | 실제 처리 소스 있음 | PortfolioLinkController |
+| POST | `/api/public/portfolios/{token}/unlock` | JWT | 실제 처리 소스 있음 | PortfolioLinkController |
 | GET | `/api/record-links` | JWT | 실제 처리 소스 있음 | RecordLinkController |
 | GET | `/api/reports/{reportKey}` | JWT | 실제 처리 소스 있음 | ReportController |
 | POST | `/api/reports/{reportKey}` | JWT | 실제 처리 소스 있음 | ReportController |
@@ -251,6 +264,7 @@
 | GET | `/api/share/people` | JWT | 실제 처리 소스 있음 | ShareController |
 | GET | `/api/stat/category` | JWT | 실제 처리 소스 있음 | InsightController |
 | GET | `/api/stat/dashboard` | JWT | 실제 처리 소스 있음 | InsightController |
+| GET | `/api/stat/execution` | JWT | 실제 처리 소스 있음 | ExecutionRateController |
 | GET | `/api/stat/focus` | JWT | 실제 처리 소스 있음 | InsightController |
 | GET | `/api/stat/plan-actual` | JWT | 실제 처리 소스 있음 | InsightController |
 | GET | `/api/support/tickets` | JWT | 실제 처리 소스 있음 | SupportController |
@@ -291,6 +305,8 @@
 | DELETE | `/api/work/career/projects/{id}` | JWT | 실제 처리 소스 있음 | WorkController |
 | GET | `/api/work/career/projects/{id}` | JWT | 실제 처리 소스 있음 | WorkController |
 | PUT | `/api/work/career/projects/{id}` | JWT | 실제 처리 소스 있음 | WorkController |
+| GET | `/api/work/cover-letter` | JWT | 실제 처리 소스 있음 | RecordActionsController |
+| PUT | `/api/work/cover-letter` | JWT | 실제 처리 소스 있음 | RecordActionsController |
 | GET | `/api/work/portfolio` | JWT | 실제 처리 소스 있음 | WorkController |
 | POST | `/api/work/portfolio` | JWT | 실제 처리 소스 있음 | WorkController |
 | GET | `/api/work/portfolio-links` | JWT | 실제 처리 소스 있음 | PortfolioLinkController |
@@ -299,6 +315,10 @@
 | DELETE | `/api/work/portfolio/{id}` | JWT | 실제 처리 소스 있음 | WorkController |
 | GET | `/api/work/portfolio/{id}` | JWT | 실제 처리 소스 있음 | WorkController |
 | PUT | `/api/work/portfolio/{id}` | JWT | 실제 처리 소스 있음 | WorkController |
+| GET | `/api/work/projects/{projectId}/actuals` | JWT | 실제 처리 소스 있음 | ProjectReportController |
+| POST | `/api/work/projects/{projectId}/actuals` | JWT | 실제 처리 소스 있음 | ProjectReportController |
+| DELETE | `/api/work/projects/{projectId}/actuals/{actualId}` | JWT | 실제 처리 소스 있음 | ProjectReportController |
+| GET | `/api/work/projects/{projectId}/report-draft` | JWT | 실제 처리 소스 있음 | ProjectReportController |
 | GET | `/api/work/records` | JWT | 실제 처리 소스 있음 | WorkController |
 | POST | `/api/work/records` | JWT | 실제 처리 소스 있음 | WorkController |
 | DELETE | `/api/work/records/{id}` | JWT | 실제 처리 소스 있음 | WorkController |

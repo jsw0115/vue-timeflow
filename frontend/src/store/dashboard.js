@@ -1,5 +1,5 @@
 import { reactive, watch } from 'vue'
-import { modeState } from './modeProfiles'
+import { modeState } from './modeProfiles.js'
 
 const STORAGE_PREFIX = 'timeflow.dashboard.v2.'
 const SIZE_ORDER = ['sm', 'md', 'lg']

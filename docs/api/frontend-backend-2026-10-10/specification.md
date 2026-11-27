@@ -530,6 +530,45 @@ activityType은 회사 업무(work)·인턴(intern)·아르바이트(part-time)�
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 
+## GET /api/career/activities/{id}/sources
+
+인증은 JWT이며 소스는 ActivitySourceController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | id | String | 예 | 없음 |
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## POST /api/career/activities/{id}/sources
+
+인증은 JWT이며 소스는 ActivitySourceController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | id | String | 예 | 없음 |
+
+| 본문 필드 | 타입 | 필수 | 제약 |
+|---|---|---|---|
+| kind | string | 예 | schedule/actual/wbs |
+| id | string | 예 | 길이 ≤ 100 |
+
+커리어 활동에 근거 원본(일정·실제 기록·WBS 작업)을 잇는다(PR-24). 같은 계정의 기록만, 활동마다 50개까지(넘으면 409). 없는 원본·다른 계정 원본은 같은 404. 응답은 근거 목록이고, 지워진 원본은 title 없이 broken=true로 보인다.
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## DELETE /api/career/activities/{id}/sources/{kind}/{sourceId}
+
+인증은 JWT이며 소스는 ActivitySourceController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | id | String | 예 | 없음 |
+| path | kind | String | 예 | 없음 |
+| path | sourceId | String | 예 | 없음 |
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
 ## GET /api/career/applications
 
 인증은 JWT이며 소스는 CareerController.java다. 성공 HTTP는 200다.
@@ -616,6 +655,88 @@ status는 관심(interested)·준비 중(preparing)·지원 완료(applied)·서
 | version | integer | 예 | 최소 1 |
 
 status는 관심(interested)·준비 중(preparing)·지원 완료(applied)·서류 통과(screening-passed)·면접 예정(interview)·최종 합격(accepted)·불합격(rejected)·보류(on-hold)·철회(withdrawn). 상태 전이 제한은 없다. postingUrl은 http/https 절대 주소(최대 2000자)이며 서버가 공고를 가져오지 않는다.
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## GET /api/career/applications/{id}/documents
+
+인증은 JWT이며 소스는 DocumentVersionController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | id | String | 예 | 없음 |
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## POST /api/career/applications/{id}/documents
+
+인증은 JWT이며 소스는 DocumentVersionController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | id | String | 예 | 없음 |
+
+| 본문 필드 | 타입 | 필수 | 제약 |
+|---|---|---|---|
+| versionId | string | 예 | 길이 ≤ 100 |
+
+지원 건에 문서 버전을 제출본으로 잇는다(PR-25). 지원마다 문서 종류별 하나이며 같은 종류의 다른 버전이 있으면 이 버전으로 바꾼다. 없거나 다른 계정의 지원·버전은 같은 404.
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## DELETE /api/career/applications/{id}/documents/{versionId}
+
+인증은 JWT이며 소스는 DocumentVersionController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | id | String | 예 | 없음 |
+| path | versionId | String | 예 | 없음 |
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## GET /api/career/document-versions
+
+인증은 JWT이며 소스는 DocumentVersionController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| query | document | String | 아니오 | 없음 |
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## POST /api/career/document-versions
+
+인증은 JWT이며 소스는 DocumentVersionController.java다. 성공 HTTP는 201다.
+
+| 본문 필드 | 타입 | 필수 | 제약 |
+|---|---|---|---|
+| document | string | 예 | resume/career/portfolio/cover-letter |
+| label | string | 아니오 | 길이 ≤ 100 |
+| note | string | 아니오 | 길이 ≤ 500 |
+| language | string | 아니오 | ko/en |
+
+language는 버전 언어 표시다(PR-32, 09 Q-38 (3)). 빼면 ko다. 번역문이 원문을 덮어쓰지 않도록 언어별 내용을 새 버전으로 남긴다. 지금 저장된 이력서(resume)·경력기술서 항목(career)·포트폴리오 항목(portfolio)·자기소개서(cover-letter)를 서버가 복사해 고정 버전을 만든다(PR-25). 내용은 요청으로 받지 않는다. 번호는 문서마다 1부터 늘고 ID는 "문서-번호"다. 저장된 내용이 없거나 문서마다 100개를 넘으면 409. 버전은 고치는 경로가 없다.
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## DELETE /api/career/document-versions/{id}
+
+인증은 JWT이며 소스는 DocumentVersionController.java다. 성공 HTTP는 204다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | id | String | 예 | 없음 |
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## GET /api/career/document-versions/{id}
+
+인증은 JWT이며 소스는 DocumentVersionController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | id | String | 예 | 없음 |
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 
@@ -2305,6 +2426,32 @@ KRW 정수. type=in은 양수, out은 음수. 0은 거부한다.
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 
+## POST /api/planner/reschedule/apply
+
+인증은 JWT이며 소스는 RescheduleController.java다. 성공 HTTP는 200다.
+
+| 본문 필드 | 타입 | 필수 | 제약 |
+|---|---|---|---|
+| moves | array | 예 | 기능 규약 참조 |
+
+고른 항목만 옮긴다. 항목마다 version이 지금 값과 다르면 옮기지 않고 conflicts(reason changed·missing)에 넣고, 나머지는 옮긴다. 되돌리기도 같은 경로로 원래 시각과 옮긴 뒤 version을 보낸다. 같은 순간의 동시 쓰기는 요청 전체가 409일 수 있다.
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## POST /api/planner/reschedule/preview
+
+인증은 JWT이며 소스는 RescheduleController.java다. 성공 HTTP는 200다.
+
+| 본문 필드 | 타입 | 필수 | 제약 |
+|---|---|---|---|
+| date | string | 예 | date |
+| from | string | 예 | 이 시각 이후 시작하는 계획 블록과 이후 마감인 할 일만 옮긴다 |
+| delayMinutes | integer | 예 | 최소 5 · 최대 480 |
+
+재배치안(PR-19 UF-137, Q-36). 아무것도 바꾸지 않는다. 계획 블록은 (원래 시작+밀린 분)과 앞 블록 끝 중 늦은 때에 놓고, 일정·그 전에 시작한 블록과 겹치면 그 뒤로 민다. 마감 시각 있는 할 일은 마감을 밀린 분만큼 늦춘다. 자정을 넘으면 unplaced. 일정(SCHEDULE)은 옮기지 않는다.
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
 ## DELETE /api/planner/reviews/{date}
 
 인증은 JWT이며 소스는 RecordActionsController.java다. 성공 HTTP는 204다.
@@ -2458,6 +2605,22 @@ KRW 정수. type=in은 양수, out은 음수. 0은 거부한다.
 | 위치 | 이름 | 타입 | 필수 | 기본값 |
 |---|---|---|---|---|
 | path | token | String | 예 | 없음 |
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## POST /api/public/portfolios/{token}/unlock
+
+인증은 JWT이며 소스는 PortfolioLinkController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | token | String | 예 | 없음 |
+
+| 본문 필드 | 타입 | 필수 | 제약 |
+|---|---|---|---|
+| password | string | 예 | 길이 ≤ 100 |
+
+비밀번호가 걸린 링크 열기(Q-39). 맞으면 공개 항목, 틀리면 401, 틀린 횟수가 10번이 되면 403(잠김). 비밀번호가 없는 링크는 바로 내용을 준다. 만료·닫힘은 404.
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 
@@ -3175,6 +3338,17 @@ JSON 최대 깊이 8, 객체 100필드, 배열 500항목, 저장 크기 128 KiB.
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 
+## GET /api/stat/execution
+
+인증은 JWT이며 소스는 ExecutionRateController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| query | from | String | 예 | 없음 |
+| query | to | String | 예 | 없음 |
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
 ## GET /api/stat/focus
 
 인증은 JWT이며 소스는 InsightController.java다. 성공 HTTP는 200다.
@@ -3601,6 +3775,14 @@ file을 multipart/form-data로 전달한다. boundary는 HTTP 클라이언트가
 | company | string 또는 null | 아니오 | 기능 규약 참조 |
 | stack | string 또는 null | 아니오 | 기능 규약 참조 |
 | achievements | array 또는 null | 아니오 | 기능 규약 참조 |
+| employmentType | string 또는 null | 아니오 | 기능 규약 참조 |
+| department | string 또는 null | 아니오 | 기능 규약 참조 |
+| startDate | string 또는 null | 아니오 | 기능 규약 참조 |
+| endDate | string 또는 null | 아니오 | 기능 규약 참조 |
+| employmentStatus | string 또는 null | 아니오 | 기능 규약 참조 |
+| duties | string 또는 null | 아니오 | 기능 규약 참조 |
+
+고용 형태 employmentType은 정규직(full-time)·계약직(contract)·인턴(intern)·아르바이트(part-time)·프리랜서(freelance)·기타(other). 재직 상태 employmentStatus는 재직 중(current)·종료(ended). endDate는 startDate 이후. current이면 endDate를 비우고, ended이면 endDate가 필요하다. 상세 필드는 모두 선택이며 예전 자유 기간(period)도 받는다. 담당 업무 duties는 20000자까지다(REQ-F25). 기간 겹침·공백은 서버가 막지 않는다.
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 
@@ -3641,7 +3823,37 @@ file을 multipart/form-data로 전달한다. boundary는 HTTP 클라이언트가
 | company | string 또는 null | 아니오 | 기능 규약 참조 |
 | stack | string 또는 null | 아니오 | 기능 규약 참조 |
 | achievements | array 또는 null | 아니오 | 기능 규약 참조 |
+| employmentType | string 또는 null | 아니오 | 기능 규약 참조 |
+| department | string 또는 null | 아니오 | 기능 규약 참조 |
+| startDate | string 또는 null | 아니오 | 기능 규약 참조 |
+| endDate | string 또는 null | 아니오 | 기능 규약 참조 |
+| employmentStatus | string 또는 null | 아니오 | 기능 규약 참조 |
+| duties | string 또는 null | 아니오 | 기능 규약 참조 |
 | version | integer | 예 | 최소 1 |
+
+고용 형태 employmentType은 정규직(full-time)·계약직(contract)·인턴(intern)·아르바이트(part-time)·프리랜서(freelance)·기타(other). 재직 상태 employmentStatus는 재직 중(current)·종료(ended). endDate는 startDate 이후. current이면 endDate를 비우고, ended이면 endDate가 필요하다. 상세 필드는 모두 선택이며 예전 자유 기간(period)도 받는다. 담당 업무 duties는 20000자까지다(REQ-F25). 기간 겹침·공백은 서버가 막지 않는다.
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## GET /api/work/cover-letter
+
+인증은 JWT이며 소스는 RecordActionsController.java다. 성공 HTTP는 200다.
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## PUT /api/work/cover-letter
+
+인증은 JWT이며 소스는 RecordActionsController.java다. 성공 HTTP는 200다.
+
+| 본문 필드 | 타입 | 필수 | 제약 |
+|---|---|---|---|
+| title | string | 예 | 길이 ≤ 200 |
+| motivation | string 또는 null | 아니오 | 기능 규약 참조 |
+| competency | string 또는 null | 아니오 | 기능 규약 참조 |
+| problemSolving | string 또는 null | 아니오 | 기능 규약 참조 |
+| collaboration | string 또는 null | 아니오 | 기능 규약 참조 |
+| growth | string 또는 null | 아니오 | 기능 규약 참조 |
+| version | integer | 아니오 | 최소 1 |
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 
@@ -3669,6 +3881,17 @@ file을 multipart/form-data로 전달한다. boundary는 HTTP 클라이언트가
 | title | string | 예 | 길이 ≤ 200 |
 | body | string 또는 null | 아니오 | 기능 규약 참조 |
 | kind | string | 예 | 길이 ≤ 200 |
+| role | string 또는 null | 아니오 | 기능 규약 참조 |
+| stack | string 또는 null | 아니오 | 기능 규약 참조 |
+| problem | string 또는 null | 아니오 | 기능 규약 참조 |
+| process | string 또는 null | 아니오 | 기능 규약 참조 |
+| outcome | string 또는 null | 아니오 | 기능 규약 참조 |
+| contribution | string 또는 null | 아니오 | 기능 규약 참조 |
+| links | array 또는 null | 아니오 | 기능 규약 참조 |
+| activityIds | array 또는 null | 아니오 | 기능 규약 참조 |
+| experienceId | string 또는 null | 아니오 | 기능 규약 참조 |
+
+포트폴리오 항목(PR-26). body는 프로젝트 소개, problem·process·outcome·contribution은 문제·과정·성과·개인 기여(각 20000자), role·stack은 역할·기술(200자). links는 결과물 http/https 주소 최대 10개. activityIds(최대 20)와 experienceId는 본인 커리어 활동·경력만 남고, 지워졌거나 다른 계정의 ID는 오류 없이 저장에서 빠진다. 공개 링크에는 activityIds·experienceId가 나가지 않는다.
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 
@@ -3687,8 +3910,9 @@ file을 multipart/form-data로 전달한다. boundary는 HTTP 클라이언트가
 | itemIds | array | 예 | 기능 규약 참조 |
 | scope | string | 아니오 | public/link |
 | expiresInDays | integer | 아니오 | 1/7/30 |
+| password | string | 아니오 | 길이 ≤ 100 |
 
-고른 포트폴리오 항목만 여는 링크(Q-22). scope 기본 link: 1·7·30일(기본 7) 뒤 만료, 주소는 이 응답에서 한 번만 보인다. public: 만료 없음, 목록에서 주소를 다시 보인다. 열린 링크는 20개까지(넘으면 409).
+고른 포트폴리오 항목만 여는 링크(Q-22). scope 기본 link: 1·7·30일(기본 7) 뒤 만료, 주소는 이 응답에서 한 번만 보인다. public: 만료 없음, 목록에서 주소를 다시 보인다. 열린 링크는 20개까지(넘으면 409). password(Q-39)는 link에만 선택으로 받고 해시만 저장한다. public에 보내면 400.
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 
@@ -3736,7 +3960,69 @@ file을 multipart/form-data로 전달한다. boundary는 HTTP 클라이언트가
 | title | string | 예 | 길이 ≤ 200 |
 | body | string 또는 null | 아니오 | 기능 규약 참조 |
 | kind | string | 예 | 길이 ≤ 200 |
+| role | string 또는 null | 아니오 | 기능 규약 참조 |
+| stack | string 또는 null | 아니오 | 기능 규약 참조 |
+| problem | string 또는 null | 아니오 | 기능 규약 참조 |
+| process | string 또는 null | 아니오 | 기능 규약 참조 |
+| outcome | string 또는 null | 아니오 | 기능 규약 참조 |
+| contribution | string 또는 null | 아니오 | 기능 규약 참조 |
+| links | array 또는 null | 아니오 | 기능 규약 참조 |
+| activityIds | array 또는 null | 아니오 | 기능 규약 참조 |
+| experienceId | string 또는 null | 아니오 | 기능 규약 참조 |
 | version | integer | 예 | 최소 1 |
+
+포트폴리오 항목(PR-26). body는 프로젝트 소개, problem·process·outcome·contribution은 문제·과정·성과·개인 기여(각 20000자), role·stack은 역할·기술(200자). links는 결과물 http/https 주소 최대 10개. activityIds(최대 20)와 experienceId는 본인 커리어 활동·경력만 남고, 지워졌거나 다른 계정의 ID는 오류 없이 저장에서 빠진다. 공개 링크에는 activityIds·experienceId가 나가지 않는다.
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## GET /api/work/projects/{projectId}/actuals
+
+인증은 JWT이며 소스는 ProjectReportController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | projectId | String | 예 | 없음 |
+| query | from | String | 예 | 없음 |
+| query | to | String | 예 | 없음 |
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## POST /api/work/projects/{projectId}/actuals
+
+인증은 JWT이며 소스는 ProjectReportController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | projectId | String | 예 | 없음 |
+
+| 본문 필드 | 타입 | 필수 | 제약 |
+|---|---|---|---|
+| actualId | string | 예 | 길이 ≤ 100 |
+
+끝낸 실제 기록을 프로젝트(최상위 WBS 작업)에 잇는다(PR-19 UF-138, Q-35). 실제 기록 하나는 프로젝트 하나에만 속해, 다른 프로젝트에 이어져 있었으면 옮긴다. 하위 작업·진행 중 기록은 400, 없거나 다른 계정의 프로젝트·기록은 404.
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## DELETE /api/work/projects/{projectId}/actuals/{actualId}
+
+인증은 JWT이며 소스는 ProjectReportController.java다. 성공 HTTP는 204다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | projectId | String | 예 | 없음 |
+| path | actualId | String | 예 | 없음 |
+
+응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
+
+## GET /api/work/projects/{projectId}/report-draft
+
+인증은 JWT이며 소스는 ProjectReportController.java다. 성공 HTTP는 200다.
+
+| 위치 | 이름 | 타입 | 필수 | 기본값 |
+|---|---|---|---|---|
+| path | projectId | String | 예 | 없음 |
+| query | from | String | 예 | 없음 |
+| query | to | String | 예 | 없음 |
 
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 

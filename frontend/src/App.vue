@@ -1,7 +1,11 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, provide, reactive, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, provide, ref, watch, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { navGroups } from './router'
+import { isGroupCollapsed, setGroupCollapsed } from './store/navCollapse'
+import { localeState, setBodyLocale, tr } from './store/locale'
+import { formatDate, groupLabel, modeText, navName, navTitle, shellText } from './features/i18n/locale.mjs'
+import { documentLang } from './features/i18n/translatedRoutes.mjs'
 import { composer, openPostComposer } from './store/appState'
 import PostComposer from './components/PostComposer.vue'
 import LocalMigrationPrompt from './components/LocalMigrationPrompt.vue'
@@ -25,12 +29,12 @@ import { hasUnreadMentions } from './features/chat/model/chatStore'
 import BrandMark from './components/brand/BrandMark.vue'
 import AppIcon from './components/icons/AppIcon.vue'
 import { NAV_ICONS } from './components/icons/iconPaths.mjs'
-import { session } from './features/auth/session.js'
+import { session, sessionNotice } from './features/auth/session.js'
 import { apiRequest } from './features/auth/apiRequest.js'
 import { themeState, THEMES, ACCENTS } from './store/theme'
 import { createThemeAccount, sameTheme } from './features/settings/themeAccount.mjs'
 import { unreadMentions as unreadPostMentions } from './store/tagging'
-import { adminAccess, refreshAdminAccess } from './features/admin/admin.js'
+import { adminButton, refreshAdminButton } from './features/admin/admin.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -46,24 +50,46 @@ provide('pageActionSlot', {
 })
 // 페이지 헤더(DESIGN.md 5장 Page composition): 현재 위치(메뉴 묶음) → 화면 이름 제목 → 짧은 설명.
 // 예전에는 제목 자리에 화면 문구(meta.title)를 보였다. 이제 문구는 설명으로 내리고 제목은 화면 이름이다.
-const todayLabel = new Intl.DateTimeFormat('ko-KR', { dateStyle: 'full' }).format(new Date())
+// 표시 언어(PR-32 1단계): 사이드바·머리글 문구만 바꾸고 화면 본문은 한국어 그대로다. 바뀐 부분에만 lang을 붙인다
+const locale = computed(() => localeState.locale)
+const t = (key, vars) => shellText(key, locale.value, vars)
+// 본문 바로가기: 주소(해시 라우터 포함)를 건드리지 않고 본문 영역으로 초점만 옮긴다
+const skipToMain = () => document.getElementById('main-content')?.focus()
+// 본문까지 옮긴 화면에서만 문서 언어와 본문 문구(tr)를 바꾼다(대화 상자 포함). 나머지 화면은 본문이 한국어라 ko다
+watch(() => [locale.value, route.path], () => {
+  const lang = documentLang(locale.value, route.path)
+  setBodyLocale(lang)
+  if (typeof document !== 'undefined') document.documentElement.lang = lang
+}, { immediate: true })
+const todayLabel = computed(() => formatDate(new Date(), locale.value))
+const currentNav = computed(() => navGroups.flatMap((group) => group.items).find((item) => item.path === route.path))
+const modeName = (mode) => modeText(mode, locale.value, modeMeta(mode)).name
 const pageName = computed(() => {
-  if (route.name === '화면 상세') return route.params.id ? `${route.params.id} 화면 미리보기` : '화면 상세'
-  if (route.name === '홈') return '오늘'
-  return route.name ?? route.meta?.label ?? ''
+  if (route.name === '화면 상세') return route.params.id ? tr('{id} 화면 미리보기', { id: route.params.id }) : tr('화면 상세')
+  if (route.name === '홈') return t('today')
+  if (route.path.startsWith('/settings')) return t('settings')
+  if (currentNav.value) return navName(currentNav.value, locale.value)
+  // 메뉴에 없는 화면(플래너 일·주·월·연 등)은 라우트 이름표를 본문 언어로 보인다
+  return route.name ? tr(route.name) : route.meta?.label ? tr(route.meta.label) : ''
 })
+// 페이지 제목(BUG-016): 화면을 옮기면 탭 제목도 화면 이름으로 바꿔 화면 읽기 프로그램과 탭 목록에서 어느 화면인지 알 수 있게 한다
+watchEffect(() => { if (typeof document !== 'undefined') document.title = pageName.value ? `${pageName.value} · Timebar Diary` : 'Timebar Diary · 계획과 실제 기록' })
 const pageDesc = computed(() => {
-  const desc = route.name === '홈' ? todayLabel : route.meta?.title ?? ''
+  if (route.path.startsWith('/settings')) return ''
+  const desc = route.name === '홈' ? todayLabel.value : currentNav.value ? navTitle(currentNav.value, locale.value) : route.meta?.title ? tr(route.meta.title) : ''
   return desc === pageName.value ? '' : desc
 })
 const pageGroup = computed(() => {
-  if (route.path.startsWith('/settings')) return '환경설정'
+  if (route.path.startsWith('/settings')) return t('settings')
   // 정확히 일치하는 메뉴의 묶음을 먼저 찾는다. 상세 화면처럼 메뉴에 없는 경로만 접두어로 찾는다(/work/history가 /work 묶음으로 잡히지 않게)
   return (navGroups.find((group) => group.items.some((item) => isNavActive(item)))
     ?? navGroups.find((group) => group.items.some((item) => route.path.startsWith(item.path + '/'))))?.label ?? ''
 })
+const pageGroupText = computed(() => groupLabel(pageGroup.value, locale.value))
+// 머리글은 메뉴에 있는 화면·홈·환경설정만 옮긴다. 상세 화면 제목은 한국어 그대로라 그때는 lang을 붙이지 않는다
+const headingLang = computed(() => (locale.value !== 'ko' && (currentNav.value || route.name === '홈' || route.path.startsWith('/settings')) ? locale.value : undefined))
 // 사이드바 계정 영역은 로그인한 계정만 보인다. 로그아웃이면 로그인 안내다(시연 계정을 실제 계정처럼 보이지 않는다).
-const accountName = computed(() => session.nickname || session.email || '내 계정')
+const accountName = computed(() => session.nickname || session.email || tr('내 계정'))
 const accountInitial = computed(() => (accountName.value || '나').trim().slice(0, 1).toUpperCase())
 
 // 계정에 저장한 화면 테마가 있으면 로그인할 때 그 테마를 쓴다(다른 기기에서 적용한 테마). 저장한 적이 없거나 서버에 닿지 못하면 이 브라우저 테마를 그대로 둔다.
@@ -75,9 +101,9 @@ watch(() => session.userId, async (id) => {
     if (saved && session.userId === id && !sameTheme(saved, themeState)) Object.assign(themeState, saved)
   } catch { /* 이 브라우저 테마를 그대로 쓴다 */ }
 }, { immediate: true })
-// 관리자 콘솔 진입 버튼은 서버가 관리자 권한을 확인한 계정에만 보인다. 메뉴 숨김은 보안 통제가 아니며 관리자 API는 서버가 매 요청 검사한다(docs/design 03 §8-5, 09 §2)
-watch(() => session.userId, (id) => refreshAdminAccess(Boolean(id)), { immediate: true })
-const canOpenAdmin = computed(() => adminAccess.state === 'allowed')
+// 관리자 콘솔 진입 버튼은 서버가 DB에서 읽어 준 내 역할(/api/auth/me)이 관리자인 계정에만 보인다(IMP-021). 메뉴 숨김은 보안 통제가 아니며 관리자 API는 서버가 매 요청 검사하고, 콘솔은 들어갈 때 권한을 다시 확인한다(docs/design 03 §8-5, 09 §2)
+watch([() => session.userId, () => route.path], ([id]) => refreshAdminButton(id), { immediate: true })
+const canOpenAdmin = computed(() => adminButton.visible)
 function isNavActive(item) {
   if (item.path === '/planner') return ['/planner', '/planner/daily', '/planner/weekly', '/planner/monthly', '/planner/yearly'].includes(route.path)
   return route.path === item.path
@@ -87,51 +113,21 @@ function isNavActive(item) {
 initNavFavorites(navGroups)
 const favorites = computed(() => favoriteMenus())
 
-const COLLAPSED_GROUPS_KEY = 'timeflow.nav.collapsedGroups'
-function loadCollapsedGroups() {
-  try {
-    const raw = localStorage.getItem(COLLAPSED_GROUPS_KEY)
-    return raw ? new Set(JSON.parse(raw)) : defaultCollapsedGroups()
-  } catch {
-    return defaultCollapsedGroups()
-  }
-}
-// 처음 쓰는 사람은 '메인' 묶음만 펼친다. 메뉴 50여 개를 한 번에 늘어놓지 않고(점진적 공개),
-// 지금 보고 있는 화면의 묶음은 아래 watch가 펼친다. 한 번 펼치고 접은 상태는 저장해 그대로 쓴다.
-function defaultCollapsedGroups() {
-  return new Set(navGroups.slice(1).map((group) => group.label))
-}
-const collapsedGroups = reactive(loadCollapsedGroups())
-function persistCollapsedGroups() {
-  try {
-    localStorage.setItem(COLLAPSED_GROUPS_KEY, JSON.stringify([...collapsedGroups]))
-  } catch {
-    // localStorage를 쓸 수 없는 환경(시크릿 모드 등)에서는 세션 내 상태만 유지
-  }
-}
-function isGroupCollapsed(label) {
-  return collapsedGroups.has(label)
-}
+// 묶음 접힘은 store/navCollapse.js가 이 브라우저에 저장한다(시작 구성과 함께 쓴다)
 function toggleGroup(label) {
   if (label === '플래너') {
-    collapsedGroups.delete(label)
-    persistCollapsedGroups()
+    setGroupCollapsed(label, false)
     void router.push('/planner')
     return
   }
-  if (collapsedGroups.has(label)) collapsedGroups.delete(label)
-  else collapsedGroups.add(label)
-  persistCollapsedGroups()
+  setGroupCollapsed(label, !isGroupCollapsed(label))
 }
 // 지금 보고 있는 화면이 속한 그룹은 접혀 있어도 자동으로 펼쳐서, 현재 위치를 놓치지 않게 한다
 watch(
   () => route.path,
   () => {
     const activeGroup = navGroups.find((g) => g.items.some((item) => isNavActive(item)))
-    if (activeGroup && collapsedGroups.has(activeGroup.label)) {
-      collapsedGroups.delete(activeGroup.label)
-      persistCollapsedGroups()
-    }
+    if (activeGroup && isGroupCollapsed(activeGroup.label)) setGroupCollapsed(activeGroup.label, false)
   },
   { immediate: true },
 )
@@ -174,34 +170,37 @@ watch(() => route.path, () => { mobileNav.value = false; workspaceOpen.value = f
 </script>
 
 <template>
-  <router-view v-if="isBare" />
+  <!-- 앱 셸 밖 화면(로그인·안내·약관·공개 포트폴리오)도 본문 영역(main) 안에 둔다(IMP-023) -->
+  <main v-if="isBare" class="bare-main"><router-view /></main>
   <div v-else class="app">
-    <aside class="sidebar" :class="{ open: mobileNav }">
-      <router-link to="/" class="brand" aria-label="Timebar Diary 오늘 화면으로"><BrandMark class="brand-mark" label="" /><span class="brand-name">Timebar Diary</span></router-link>
+    <!-- 본문 바로가기(BUG-013): 첫 Tab에서 보이고, 누르면 사이드바를 건너뛰어 본문으로 초점을 옮긴다. 해시 주소를 바꾸지 않는다 -->
+    <a class="skip-link" href="#main-content" :lang="locale" @click.prevent="skipToMain">{{ t('skipToContent') }}</a>
+    <aside class="sidebar" :class="{ open: mobileNav }" :lang="locale">
+      <router-link to="/" class="brand" :aria-label="t('homeLink')"><BrandMark class="brand-mark" label="" /><span class="brand-name">Timebar Diary</span></router-link>
       <div class="workspace-switcher" @keydown.esc.stop="workspaceOpen = false" @focusout="!$event.currentTarget.contains($event.relatedTarget) && (workspaceOpen = false)">
-      <button class="workspace" aria-controls="workspace-options" :aria-expanded="workspaceOpen" @click="workspaceOpen = !workspaceOpen"><i>{{ modeState.activeMode }}</i><span><b>하루 모드</b><small>{{ modeMeta(modeState.activeMode).name }}</small></span><em class="workspace-chev" aria-hidden="true"><AppIcon name="chevronDown" :size="16" /></em></button>
-      <div v-if="workspaceOpen" id="workspace-options" class="workspace-options" aria-label="하루 모드 선택">
-        <p>하루를 보내는 방식을 선택하세요</p>
-        <button v-for="mode in ['J', 'P', 'B']" :key="mode" :aria-pressed="modeState.activeMode === mode" @click="changeMode(mode)">{{ modeMeta(mode).name }}<span v-if="modeState.activeMode === mode">선택됨</span></button>
+      <button class="workspace" aria-controls="workspace-options" :aria-expanded="workspaceOpen" @click="workspaceOpen = !workspaceOpen"><i>{{ modeState.activeMode }}</i><span><b>{{ t('dayMode') }}</b><small>{{ modeName(modeState.activeMode) }}</small></span><em class="workspace-chev" aria-hidden="true"><AppIcon name="chevronDown" :size="16" /></em></button>
+      <div v-if="workspaceOpen" id="workspace-options" class="workspace-options" :aria-label="t('chooseDayMode')">
+        <p>{{ t('chooseDayModeHelp') }}</p>
+        <button v-for="mode in ['J', 'P', 'B']" :key="mode" :aria-pressed="modeState.activeMode === mode" @click="changeMode(mode)">{{ modeName(mode) }}<span v-if="modeState.activeMode === mode">{{ t('selected') }}</span></button>
       </div></div>
       <nav>
         <template v-if="favorites.length">
-          <div class="nav-section nav-favorites-head">즐겨찾기<router-link to="/settings/menu" class="nav-favorites-edit" aria-label="즐겨찾기 편집" @click="mobileNav = false">편집</router-link></div>
+          <div class="nav-section nav-favorites-head">{{ t('favorites') }}<router-link to="/settings/menu" class="nav-favorites-edit" :aria-label="t('editFavorites')" @click="mobileNav = false">{{ t('edit') }}</router-link></div>
           <router-link v-for="item in favorites" :key="'fav:' + item.path" :to="item.path" custom v-slot="{ navigate }">
             <button :class="{ active: isNavActive(item) }" :aria-current="isNavActive(item) ? 'page' : undefined" @click="navigate(); mobileNav = false">
-              <span class="nav-icon"><AppIcon :name="NAV_ICONS[item.path]" :fallback="item.icon" /></span><span class="nav-text">{{ item.name }}</span>
+              <span class="nav-icon"><AppIcon :name="NAV_ICONS[item.path]" :fallback="item.icon" /></span><span class="nav-text">{{ navName(item, locale) }}</span>
             </button>
           </router-link>
         </template>
         <template v-for="group in navGroups" :key="group.label">
-          <button type="button" class="nav-section" :class="{ collapsed: isGroupCollapsed(group.label) }" :aria-expanded="!isGroupCollapsed(group.label)" @click="toggleGroup(group.label)">
-            {{ group.label }}<i class="chev" aria-hidden="true"><AppIcon name="chevronDown" :size="14" /></i>
+          <button type="button" class="nav-section" :class="{ collapsed: isGroupCollapsed(group.label) }" :aria-expanded="group.label === '플래너' ? undefined : !isGroupCollapsed(group.label)" @click="toggleGroup(group.label)">
+            {{ groupLabel(group.label, locale) }}<i class="chev" aria-hidden="true"><AppIcon name="chevronDown" :size="14" /></i>
           </button>
           <template v-if="!isGroupCollapsed(group.label)">
             <template v-for="item in group.items.filter(item => !['/chat', '/planner'].includes(item.path))" :key="item.path">
               <router-link :to="item.path" custom v-slot="{ navigate }">
                 <button :class="{ active: isNavActive(item) }" :aria-current="isNavActive(item) ? 'page' : undefined" @click="item.path === '/community/new' ? (communityComposer = true) : navigate(); mobileNav = false">
-                  <span class="nav-icon"><AppIcon :name="NAV_ICONS[item.path]" :fallback="item.icon" /></span><span class="nav-text">{{ item.name }}</span>
+                  <span class="nav-icon"><AppIcon :name="NAV_ICONS[item.path]" :fallback="item.icon" /></span><span class="nav-text">{{ navName(item, locale) }}</span>
                 </button>
               </router-link>
             </template>
@@ -214,49 +213,51 @@ watch(() => route.path, () => { mobileNav.value = false; workspaceOpen.value = f
         <!-- 환경설정은 항목을 LNB에 늘어놓지 않고 버튼 하나로 들어간다 -->
         <router-link to="/settings" custom v-slot="{ navigate }">
           <button class="nav-link" :class="{ active: route.path.startsWith('/settings') }" :aria-current="route.path.startsWith('/settings') ? 'page' : undefined" @click="navigate(); mobileNav = false">
-            <span class="nav-icon"><AppIcon name="sliders" /></span><span class="nav-text">환경설정</span>
+            <span class="nav-icon"><AppIcon name="sliders" /></span><span class="nav-text">{{ t('settings') }}</span>
           </button>
         </router-link>
         <!-- 관리자 콘솔은 사용자 화면과 분리된 별도 창으로 연다 -->
         <button v-if="canOpenAdmin" class="nav-link" @click="openAdmin('/admin'); mobileNav = false">
-          <span class="nav-icon"><AppIcon name="shield" /></span><span class="nav-text">관리자 콘솔</span><small class="nav-ext" aria-label="새 창"><AppIcon name="external" :size="14" /></small>
+          <span class="nav-icon"><AppIcon name="shield" /></span><span class="nav-text">{{ t('adminConsole') }}</span><small class="nav-ext" :aria-label="t('newWindow')"><AppIcon name="external" :size="14" /></small>
         </button>
       </div>
-      <router-link v-if="session.userId" to="/settings/profile" class="account"><i aria-hidden="true">{{ accountInitial }}</i><span><b>{{ accountName }}</b><small>{{ session.email || '프로필 보기' }}</small></span></router-link>
-      <router-link v-else to="/auth/login" class="account"><i aria-hidden="true">?</i><span><b>로그인</b><small>기록을 계정에 저장하려면 로그인하세요</small></span></router-link>
+      <router-link v-if="session.userId" to="/settings/profile" class="account"><i aria-hidden="true">{{ accountInitial }}</i><span><b>{{ accountName }}</b><small>{{ session.email || t('viewProfile') }}</small></span></router-link>
+      <router-link v-else to="/auth/login" class="account"><i aria-hidden="true">?</i><span><b>{{ t('signIn') }}</b><small>{{ t('signInHelp') }}</small></span></router-link>
     </aside>
     <div v-if="mobileNav" class="scrim" @click="mobileNav = false"></div>
-    <main :class="{ 'chat-shell': isChat }">
-      <div v-if="isChat" class="chat-mobile-menu"><button aria-label="전체 메뉴 열기" @click="mobileNav = true"><AppIcon name="menu" /></button><span>Timebar Diary · 대화</span></div>
+    <main id="main-content" tabindex="-1" :class="{ 'chat-shell': isChat }">
+      <div v-if="isChat" class="chat-mobile-menu"><button :aria-label="t('openFullMenu')" @click="mobileNav = true"><AppIcon name="menu" /></button><span :lang="locale">{{ t('chatTitle') }}</span></div>
       <header v-else>
-        <button class="hamburger" aria-label="메뉴 열기" @click="mobileNav = true"><AppIcon name="menu" /></button>
-        <div class="page-heading">
-          <p v-if="pageGroup" class="eyebrow">{{ pageGroup }}</p>
+        <button class="hamburger" :aria-label="t('openMenu')" @click="mobileNav = true"><AppIcon name="menu" /></button>
+        <div class="page-heading" :lang="headingLang">
+          <p v-if="pageGroup" class="eyebrow">{{ pageGroupText }}</p>
           <h1>{{ pageName }}</h1>
           <p v-if="pageDesc" class="page-desc">{{ pageDesc }}</p>
         </div>
-        <div class="actions">
-          <button class="icon" title="통합 검색" aria-label="통합 검색" @click="goSearch"><AppIcon name="search" /></button>
-          <button class="icon icon-badge" title="알림" :aria-label="unreadNotifications ? `알림, 안 읽은 알림 ${unreadNotifications}개` : '알림'" @click="togglePanel('notif')">
+        <div class="actions" :lang="locale">
+          <button class="icon" :title="t('search')" :aria-label="t('search')" @click="goSearch"><AppIcon name="search" /></button>
+          <button class="icon icon-badge" :title="t('notifications')" :aria-label="unreadNotifications ? t('unreadNotifications', { n: unreadNotifications }) : t('notifications')" @click="togglePanel('notif')">
             <AppIcon name="bell" /><em v-if="unreadNotifications">{{ unreadNotifications }}</em>
           </button>
           <router-link to="/mentions" custom v-slot="{ navigate }">
-            <button class="icon icon-badge" title="멘션함" :aria-label="hasUnreadMentions || unreadPostMentions ? '멘션함, 안 읽은 멘션 있음' : '멘션함'" @click="navigate">
-              <AppIcon name="at" /><em v-if="hasUnreadMentions || unreadPostMentions" aria-label="안 읽은 멘션 있음">N</em>
+            <button class="icon icon-badge" :title="t('mentions')" :aria-label="hasUnreadMentions || unreadPostMentions ? t('mentionsUnread') : t('mentions')" @click="navigate">
+              <AppIcon name="at" /><em v-if="hasUnreadMentions || unreadPostMentions" :aria-label="t('unreadMentions')">N</em>
             </button>
           </router-link>
           <!-- 화면당 주 버튼 하나(DESIGN.md 4장 Buttons). 홈에서만 주 버튼이고, 다른 화면에서는 그 화면의 주 행동을 가리지 않도록 보조 버튼이다 -->
           <!-- 화면이 자기 주 행동을 내놓으면 '새 글 작성'은 같은 줄의 다른 도구처럼 아이콘 버튼으로 물러난다(+ 버튼 두 개가 나란히 경쟁하지 않게) -->
-          <button v-if="pageActionCount > 0" class="icon compose-icon" title="새 글 작성" aria-label="새 글 작성" @click="openComposer"><AppIcon name="pen" /></button>
-          <button v-else :class="route.name === '홈' ? 'primary' : 'button-secondary'" @click="openComposer"><AppIcon name="plus" :size="16" />새 글 작성</button>
+          <button v-if="pageActionCount > 0" class="icon compose-icon" :title="t('newPost')" :aria-label="t('newPost')" @click="openComposer"><AppIcon name="pen" /></button>
+          <button v-else :class="route.name === '홈' ? 'primary' : 'button-secondary'" @click="openComposer"><AppIcon name="plus" :size="16" />{{ t('newPost') }}</button>
           <div id="page-actions" class="page-actions"></div>
         </div>
       </header>
+      <!-- 서버가 세션을 끝냈으면(정지·강제 로그아웃·만료) 조용히 로그아웃하지 않고 알린다(BUG-015) -->
+      <p v-if="sessionNotice.ended && !session.userId" class="callout session-ended" role="alert" :lang="locale">{{ t('sessionEnded') }} <router-link to="/auth/login" class="inline-link">{{ t('signIn') }}</router-link> <button type="button" class="button-text" @click="sessionNotice.ended = false">{{ t('close') }}</button></p>
       <NoticeBanner v-if="!isChat" />
       <p v-if="storageWarning" class="callout" role="alert">{{ storageWarning }}</p>
       <OutboxPanel />
       <PlannerViewSettings v-if="['/planner/daily', '/planner/weekly', '/planner/monthly', '/planner/yearly'].includes(route.path)" />
-      <p v-if="route.path === '/chat'" class="callout">채팅은 이동 가능한 대화 버튼에서 열 수 있어요.</p>
+      <p v-if="route.path === '/chat'" class="callout" :lang="locale">{{ t('chatCallout') }}</p>
       <router-view v-else />
     </main>
     <GlobalSearchModal v-if="showSearch" @close="showSearch = false" />

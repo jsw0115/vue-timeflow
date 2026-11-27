@@ -1,4 +1,5 @@
 <script setup>
+import { tr } from '../store/locale'
 import { computed, nextTick, ref, watch, useId } from 'vue'
 import { mentionCandidates, parseTags, parseMentions, tagCounts } from '../store/tagging'
 
@@ -8,7 +9,7 @@ import { mentionCandidates, parseTags, parseMentions, tagCounts } from '../store
  */
 const props = defineProps({
   modelValue: { type: String, default: '' },
-  placeholder: { type: String, default: '내용을 입력하세요. #태그 와 @이름 을 쓸 수 있어요' },
+  placeholder: { type: String, default: '' },
   rows: { type: Number, default: 4 },
 })
 const emit = defineEmits(['update:modelValue'])
@@ -48,7 +49,7 @@ const suggestions = computed(() => {
   return tagCounts.value
     .filter((x) => !t.word || x.tag.includes(t.word))
     .slice(0, 6)
-    .map((x) => ({ label: x.tag, hint: x.count + '회 사용' }))
+    .map((x) => ({ label: x.tag, hint: tr('{n}회 사용', { n: x.count }) }))
 })
 
 function onInput(e) {
@@ -85,18 +86,18 @@ const mentions = computed(() => parseMentions(props.modelValue))
       ref="el"
       :value="modelValue"
       :rows="rows"
-      aria-label="본문 · 태그와 멘션 입력"
+      :aria-label="tr('본문 · 태그와 멘션 입력')"
       aria-autocomplete="list"
       :aria-controls="showSuggestions ? listId : undefined"
       :aria-activedescendant="showSuggestions ? listId + '-' + activeIndex : undefined"
       @keydown="onKey"
-      :placeholder="placeholder"
+      :placeholder="placeholder || tr('내용을 입력하세요. #태그 와 @이름 을 쓸 수 있어요')"
       @input="onInput"
       @click="syncCaret"
       @keyup="syncCaret"
     ></textarea>
 
-    <div v-if="showSuggestions" :id="listId" class="tag-suggest" role="listbox" aria-label="태그·멘션 추천">
+    <div v-if="showSuggestions" :id="listId" class="tag-suggest" role="listbox" :aria-label="tr('태그·멘션 추천')">
       <button v-for="(s, index) in suggestions" :key="s.label" :id="listId + '-' + index" type="button" role="option" :aria-selected="activeIndex === index" tabindex="-1" @mousedown.prevent @click="pick(s)">
         <b>{{ token.sign }}{{ s.label }}</b><small>{{ s.hint }}</small>
       </button>
@@ -106,6 +107,6 @@ const mentions = computed(() => parseMentions(props.modelValue))
       <span v-for="t in tags" :key="'t' + t" class="rt-tag">#{{ t }}</span>
       <span v-for="m in mentions" :key="'m' + m" class="rt-mention">@{{ m }}</span>
     </p>
-    <p v-else class="form-note" style="margin: 6px 0 0">#으로 태그를, @로 사람을 언급할 수 있어요.</p>
+    <p v-else class="form-note" style="margin: 6px 0 0">{{ tr('#으로 태그를, @로 사람을 언급할 수 있어요.') }}</p>
   </div>
 </template>

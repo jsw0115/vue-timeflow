@@ -1,5 +1,7 @@
 // 공유 첨부 API를 부르고, 업로드 전 크기 확인·보관 기간 표시·화면 행 변환을 한곳에 둔다(PR-10 5단계, UF-116).
 
+import { korean } from '../i18n/translate.mjs'
+
 /** 서버 한도와 같다(records/AttachmentController MAX_BYTES, IM-02). */
 export const MAX_FILE_BYTES = 10 * 1024 * 1024
 export const FILE_LIMIT_TEXT = '파일당 10 MiB까지 올릴 수 있어요.'
@@ -50,12 +52,13 @@ export function daysLeft(row, now = Date.now()) {
   if (isExpired(row, now)) return -1
   return dayNumber(localDate(row.expiresAt)) - dayNumber(localDate(now))
 }
-export function expiryLabel(row, now = Date.now()) {
+/** 남은 기간 문구. t는 화면 표시용 번역(기본 한국어)이다. */
+export function expiryLabel(row, now = Date.now(), t = korean) {
   const d = daysLeft(row, now)
-  if (d === null) return '무기한'
-  if (d < 0) return '만료됨'
-  if (d === 0) return '오늘까지'
-  return d + '일 남음'
+  if (d === null) return t('무기한')
+  if (d < 0) return t('만료됨')
+  if (d === 0) return t('오늘까지')
+  return d === 1 ? t('1일 남음') : t('{n}일 남음', { n: d })
 }
 export const expiryDate = (row) => (row.expiresAt ? localDate(row.expiresAt) : '')
 

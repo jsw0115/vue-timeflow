@@ -1,4 +1,5 @@
 <script setup>
+import { tr, unitWord } from '../../store/locale'
 import { computed, ref } from 'vue'
 
 /**
@@ -42,7 +43,7 @@ const series = computed(() => {
 const labels = computed(() => {
   const unit = activeRange.value.unit
   const n = series.value.length
-  return series.value.map((_, i) => (i === n - 1 ? '이번 ' + unit : n - 1 - i + unit + ' 전'))
+  return series.value.map((_, i) => (i === n - 1 ? tr('이번 {unit}', { unit: unitWord(unit) }) : n - 1 - i === 1 ? tr('1{unit} 전', { unit: unitWord(unit) }) : tr('{n}{unit} 전', { n: n - 1 - i, unit: unitWord(unit) })))
 })
 
 const rates = computed(() => series.value.map((s) => s.rate))
@@ -102,31 +103,31 @@ const drill = computed(() => {
   })
 })
 function hm(min) {
-  return Math.floor(min / 60) + '시간 ' + (min % 60) + '분'
+  return tr('{n}시간 {m}분', { n: Math.floor(min / 60), m: min % 60 })
 }
 </script>
 
 <template>
   <div class="page-tools">
     <div class="filter">
-      <button v-for="r in RANGES" :key="r.key" :class="{ selected: range === r.key }" @click="range = r.key">{{ r.label }}</button>
+      <button v-for="r in RANGES" :key="r.key" :class="{ selected: range === r.key }" @click="range = r.key">{{ tr(r.label) }}</button>
     </div>
     <label style="display: flex; align-items: center; gap: 8px; margin: 0; font-size: 0.875rem">
-      목표 달성률
+      {{ tr('목표 달성률') }}
       <input type="range" min="60" max="120" step="5" v-model.number="target" style="width: 140px" />
       <b class="figure">{{ target }}%</b>
     </label>
   </div>
 
   <div class="metrics" style="--metric-cols: 4; margin: 16px 0">
-    <article><span>싱크로율(누적)</span><b class="figure">{{ syncRate }}<small>%</small></b></article>
-    <article><span>평균 달성률</span><b class="figure">{{ Math.round(mean) }}<small>%</small></b></article>
+    <article><span>{{ tr('싱크로율(누적)') }}</span><b class="figure">{{ syncRate }}<small>%</small></b></article>
+    <article><span>{{ tr('평균 달성률') }}</span><b class="figure">{{ Math.round(mean) }}<small>%</small></b></article>
     <article>
-      <span>추세</span>
-      <b class="figure">{{ slope >= 0 ? '+' : '' }}{{ slope.toFixed(1) }}<small>%p/{{ activeRange.unit }}</small></b>
+      <span>{{ tr('추세') }}</span>
+      <b class="figure">{{ slope >= 0 ? '+' : '' }}{{ slope.toFixed(1) }}<small>{{ tr('%p/{unit}', { unit: unitWord(activeRange.unit) }) }}</small></b>
     </article>
     <article>
-      <span>다음 {{ activeRange.unit }} 목표 달성 확률</span>
+      <span>{{ tr('다음 {unit} 목표 달성 확률', { unit: unitWord(activeRange.unit) }) }}</span>
       <b class="figure">{{ probability }}<small>%</small></b>
     </article>
   </div>
@@ -134,10 +135,10 @@ function hm(min) {
   <section class="card" style="margin-bottom: 16px">
     <div class="head">
       <div>
-        <h3 style="margin: 0">계획 대비 실제 · {{ activeRange.label }}</h3>
-        <p style="margin: 4px 0 0">막대는 계획·실제 기록 시간, 아래 선은 달성률 추이예요</p>
+        <h3 style="margin: 0">{{ tr('계획 대비 실제 · {range}', { range: tr(activeRange.label) }) }}</h3>
+        <p style="margin: 4px 0 0">{{ tr('막대는 계획·실제 기록 시간, 아래 선은 달성률 추이예요') }}</p>
       </div>
-      <span class="badge ok">계획 {{ hm(totalPlanned) }} · 실제 {{ hm(totalActual) }}</span>
+      <span class="badge ok">{{ tr('계획 {plan} · 실제 {actual}', { plan: hm(totalPlanned), actual: hm(totalActual) }) }}</span>
     </div>
 
     <svg :viewBox="'0 0 ' + W + ' ' + H" class="compare-chart" preserveAspectRatio="none">
@@ -157,28 +158,28 @@ function hm(min) {
       <span v-for="(l, i) in labels" :key="'l' + i">{{ range === 'day' && i % 3 !== 0 ? '' : l }}</span>
     </div>
     <div class="chart-legend">
-      <span><i class="swatch plan"></i>계획</span>
-      <span><i class="swatch actual"></i>실제 기록</span>
-      <span><i class="swatch dashed"></i>목표선 {{ target }}%</span>
+      <span><i class="swatch plan"></i>{{ tr('계획') }}</span>
+      <span><i class="swatch actual"></i>{{ tr('실제 기록') }}</span>
+      <span><i class="swatch dashed"></i>{{ tr('목표선 {n}%', { n: target }) }}</span>
     </div>
   </section>
 
   <section class="card">
-    <h3>카테고리별 오차 드릴다운</h3>
+    <h3>{{ tr('카테고리별 오차 드릴다운') }}</h3>
     <div class="list" style="margin-top: 10px">
-      <div class="list-head" style="grid-template-columns: 1fr 1fr 1fr 1.2fr"><span>카테고리</span><span>계획</span><span>실제 기록</span><span>달성률</span></div>
+      <div class="list-head" style="grid-template-columns: 1fr 1fr 1fr 1.2fr"><span>{{ tr('카테고리') }}</span><span>{{ tr('계획') }}</span><span>{{ tr('실제 기록') }}</span><span>{{ tr('달성률') }}</span></div>
       <div class="row" style="grid-template-columns: 1fr 1fr 1fr 1.2fr" v-for="d in drill" :key="d.name">
-        <label>{{ d.name }}</label>
+        <label>{{ tr(d.name) }}</label>
         <span class="figure">{{ hm(d.planned) }}</span>
         <span class="figure">{{ hm(d.actual) }}</span>
         <span>
           <b class="figure">{{ d.rate }}%</b>
-          <small style="color: var(--color-muted)"> · {{ d.diff >= 0 ? '+' : '' }}{{ d.diff }}분</small>
+          <small style="color: var(--color-muted)"> · {{ tr('{n}분', { n: (d.diff >= 0 ? '+' : '') + d.diff }) }}</small>
         </span>
       </div>
     </div>
     <p class="form-note" style="margin-top: 12px">
-      달성 확률은 최근 {{ series.length }}개 구간의 달성률 평균({{ Math.round(mean) }}%)과 표준편차({{ Math.round(stdev) }}%p)를 정규분포로 근사해 추정한 값이에요.
+      {{ tr('달성 확률은 최근 {n}개 구간의 달성률 평균({mean}%)과 표준편차({sd}%p)를 정규분포로 근사해 추정한 값이에요.', { n: series.length, mean: Math.round(mean), sd: Math.round(stdev) }) }}
     </p>
   </section>
 </template>

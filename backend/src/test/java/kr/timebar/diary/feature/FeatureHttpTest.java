@@ -46,6 +46,7 @@ class FeatureHttpTest {
     @Autowired RecordLinks links;
     @Autowired UserRepository users;
     @Autowired ObjectMapper mapper;
+    @Autowired org.springframework.security.crypto.password.PasswordEncoder encoder;
     @Autowired JdbcTemplate jdbc;
     MockMvc mvc;
     String owner;
@@ -59,7 +60,7 @@ class FeatureHttpTest {
         var actions = new RecordActionsController(records, store, mock(TaskService.class), mock(kr.timebar.diary.planner.PlannerService.class), work);
         mvc = MockMvcBuilders.standaloneSetup(new RecordsController(records), new ContactsController(records), new WorkController(records, work), actions,
                 new EventDiaryMemoController(records), new SettingsController(settings), new UserProfileController(settings), new ShareController(social, shareCalendar, peopleFinder),
-                new CommunityController(social, challenges), new AdminController(admin), new SupportController(records, store), new IntegrationController(admin), new AttachmentController(jdbc, social), new ScheduleController(records, schedules, links), new PortfolioLinkController(store, users))
+                new CommunityController(social, challenges), new AdminController(admin), new SupportController(records, store), new IntegrationController(admin), new AttachmentController(jdbc, social), new ScheduleController(records, schedules, links), new PortfolioLinkController(store, users, encoder))
                 .setControllerAdvice(new ApiExceptionHandler()).build();
     }
     @AfterEach void clear() { SecurityContextHolder.clearContext(); }
@@ -170,6 +171,37 @@ class FeatureHttpTest {
         mvc.perform(get("/api/public/portfolios/" + token)).andExpect(status().isOk()).andExpect(jsonPath("$.data.items.length()").value(1)).andExpect(jsonPath("$.data.items[0].kind").value("사례"));
         authenticate(owner, "USER"); mvc.perform(delete("/api/work/portfolio-links/" + id)).andExpect(status().isNoContent());
         mvc.perform(get("/api/public/portfolios/" + token)).andExpect(status().isNotFound());
+    }
+    /** Q-39: 링크 공개에 비밀번호를 걸면 GET은 항목 없이 protected만, 맞는 비밀번호로 열어야 내용이 나온다. 해시는 목록·응답에 없고, 10번 틀리면 잠긴다. 전체 공개에는 걸 수 없다. */
+    @Test void passwordProtectedLinksNeedThePassword() throws Exception {
+        var item = work.create(owner, FeatureType.PORTFOLIO, Map.of("title", "결제 개선", "kind", "케이스 스터디"));
+        String token = mapper.readTree(mvc.perform(post("/api/work/portfolio-links").contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsString(Map.of("itemIds", List.of(item.get("id")), "password", "secret-1")))).andExpect(status().isCreated())
+                .andExpect(jsonPath("$.data.protected").value(true)).andExpect(jsonPath("$.data.passwordHash").doesNotExist()).andReturn().getResponse().getContentAsString()).path("data").path("token").asText();
+        mvc.perform(get("/api/work/portfolio-links")).andExpect(jsonPath("$.data[0].protected").value(true)).andExpect(jsonPath("$.data[0].passwordHash").doesNotExist());
+        mvc.perform(post("/api/work/portfolio-links").contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsString(Map.of("itemIds", List.of(item.get("id")), "scope", "public", "password", "secret-1")))).andExpect(status().isBadRequest());
+        mvc.perform(post("/api/work/portfolio-links").contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsString(Map.of("itemIds", List.of(item.get("id")), "password", "abc")))).andExpect(status().isBadRequest());
+        SecurityContextHolder.clearContext();
+        mvc.perform(get("/api/public/portfolios/" + token)).andExpect(status().isOk()).andExpect(jsonPath("$.data.protected").value(true)).andExpect(jsonPath("$.data.items.length()").value(0));
+        mvc.perform(post("/api/public/portfolios/" + token + "/unlock").contentType(MediaType.APPLICATION_JSON).content("{\"password\":\"wrong\"}")).andExpect(status().isUnauthorized());
+        mvc.perform(post("/api/public/portfolios/" + token + "/unlock").contentType(MediaType.APPLICATION_JSON).content("{\"password\":\"secret-1\"}")).andExpect(status().isOk()).andExpect(jsonPath("$.data.items[0].title").value("결제 개선"));
+        for (int i = 1; i < 10; i++) mvc.perform(post("/api/public/portfolios/" + token + "/unlock").contentType(MediaType.APPLICATION_JSON).content("{\"password\":\"nope\"}")).andExpect(status().isUnauthorized());
+        mvc.perform(post("/api/public/portfolios/" + token + "/unlock").contentType(MediaType.APPLICATION_JSON).content("{\"password\":\"secret-1\"}")).andExpect(status().isForbidden());
+    }
+    /** PR-26: 공개 화면에는 정한 공개 필드만 나가고, 근거 연결 ID(activityIds·experienceId)는 나가지 않는다. */
+    @Test void publicPortfolioShowsOnlyPublicFields() throws Exception {
+        var activity = store.create(owner, FeatureType.CAREER_ACTIVITY, Map.of("title", "사내 결제 개선", "activityType", "work", "date", "2026-10-01", "visibility", "private"));
+        var career = work.create(owner, FeatureType.CAREER, Map.of("title", "민감한 경력", "role", "개발"));
+        var item = work.create(owner, FeatureType.PORTFOLIO, Map.of("title", "결제 개선", "kind", "케이스 스터디", "problem", "결제 실패율", "outcome", "실패율 30% 감소",
+                "links", List.of("https://example.com/demo"), "activityIds", List.of(activity.get("id")), "experienceId", career.get("id")));
+        String token = mapper.readTree(mvc.perform(post("/api/work/portfolio-links").contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsString(Map.of("itemIds", List.of(item.get("id"))))))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString()).path("data").path("token").asText();
+        SecurityContextHolder.clearContext();
+        mvc.perform(get("/api/public/portfolios/" + token)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.items[0].problem").value("결제 실패율"))
+                .andExpect(jsonPath("$.data.items[0].links[0]").value("https://example.com/demo"))
+                .andExpect(jsonPath("$.data.items[0].activityIds").doesNotExist())
+                .andExpect(jsonPath("$.data.items[0].experienceId").doesNotExist())
+                .andExpect(jsonPath("$.data.items[0].id").doesNotExist());
     }
     /** Q-22: 링크 공개는 만료가 있고 목록에 주소가 없으며, 전체 공개는 만료 없이 목록에 주소가 남는다. 남의 링크는 목록에 없고 닫을 수 없다. */
     @Test void portfolioLinksHaveTwoScopesAndAreListedOnlyToTheirOwner() throws Exception {

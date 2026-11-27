@@ -1,4 +1,5 @@
 <script setup>
+import { tr } from '../../store/locale'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { tasks, taskStore, eventStore } from '../../store/appState'
@@ -154,78 +155,78 @@ async function startRecord() {
 
 async function remove() {
   if (!task.value) return
-  if (!window.confirm('‘' + task.value.title + '’ 할 일을 삭제할까요? 하위 항목도 함께 사라져요.')) return
+  if (!window.confirm(tr('‘{title}’ 할 일을 삭제할까요? 하위 항목도 함께 사라져요.', { title: task.value.title }))) return
   const result = await removing.run(() => taskStore.remove({ ...task.value, version: base.value?.version ?? task.value.version }))
   if (result.ok || result.error?.kind === 'notFound') router.push('/tasks')
 }
 </script>
 
 <template>
-  <div class="crumbs"><a @click="router.push('/tasks')">할 일</a> / 상세</div>
+  <div class="crumbs"><a @click="router.push('/tasks')">{{ tr('할 일') }}</a> {{ tr('/ 상세') }}</div>
   <section v-if="task" class="card" style="max-width: 520px; margin: 0 auto">
     <EditPresence :resource="'task:' + task.id" />
     <div class="head">
       <div>
-        <span class="tag">{{ task.category }}</span>
+        <span class="tag">{{ tr(task.category) }}</span>
         <h2 style="margin: 10px 0 4px">{{ task.title }}</h2>
-        <p>{{ task.done ? '완료됨' : '진행중' }}</p>
+        <p>{{ task.done ? tr('완료됨') : tr('진행중') }}</p>
       </div>
       <label style="display: flex; align-items: center; gap: 8px; font-size: 0.8125rem; font-weight: 600">
-        <input type="checkbox" :checked="task.done" :aria-busy="taskStore.isPending(task) ? 'true' : undefined" @click.prevent="toggleDone" />완료
+        <input type="checkbox" :checked="task.done" :aria-busy="taskStore.isPending(task) ? 'true' : undefined" @click.prevent="toggleDone" />{{ tr('완료') }}
       </label>
     </div>
-    <p v-if="taskStore.notice.message" class="input-field-help" data-state="error" role="status">{{ taskStore.notice.message }}</p>
+    <p v-if="taskStore.notice.message" class="input-field-help" data-state="error" role="status">{{ tr(taskStore.notice.message) }}</p>
     <StorageNote :mode="taskMode" />
 
     <div style="margin-top: 16px; padding-top: 20px; border-top: 1px solid var(--color-hairline)">
-      <label>제목<input v-model="draft.title" :aria-invalid="saving.state.field === 'title' ? 'true' : undefined" :aria-describedby="saving.state.field === 'title' ? 'task-title-error' : undefined" /><span v-if="saving.state.field === 'title'" id="task-title-error" class="input-field-help" data-state="error">{{ saving.state.fieldMessage }}</span></label>
-      <label>카테고리<select v-model="draft.category"><option>업무</option><option>공부</option><option>건강</option><option>휴식</option><option>개인</option></select></label>
-      <label>마감일<input type="date" v-model="draft.date" :aria-invalid="saving.state.field === 'date' ? 'true' : undefined" :aria-describedby="saving.state.field === 'date' ? 'task-date-error' : undefined" /><span v-if="saving.state.field === 'date'" id="task-date-error" class="input-field-help" data-state="error">{{ saving.state.fieldMessage }}</span></label>
-      <label>마감 시각 (선택)<input type="time" v-model="draft.dueTime" :disabled="!draft.date" /></label>
-      <label>우선순위<select v-model="draft.priority"><option>높음</option><option>보통</option><option>낮음</option></select></label>
-      <label>내용 · 태그 · 멘션<TagMentionInput v-model="draft.body" /></label>
-      <p v-if="checklist.status === 'loading'" class="input-field-help" role="status">체크리스트를 불러오는 중이에요.</p>
+      <label>{{ tr('제목') }}<input v-model="draft.title" :aria-invalid="saving.state.field === 'title' ? 'true' : undefined" :aria-describedby="saving.state.field === 'title' ? 'task-title-error' : undefined" /><span v-if="saving.state.field === 'title'" id="task-title-error" class="input-field-help" data-state="error">{{ tr(saving.state.fieldMessage) }}</span></label>
+      <label>{{ tr('카테고리') }}<select v-model="draft.category"><option value="업무">{{ tr('업무') }}</option><option value="공부">{{ tr('공부') }}</option><option value="건강">{{ tr('건강') }}</option><option value="휴식">{{ tr('휴식') }}</option><option value="개인">{{ tr('개인') }}</option></select></label>
+      <label>{{ tr('마감일') }}<input type="date" v-model="draft.date" :aria-invalid="saving.state.field === 'date' ? 'true' : undefined" :aria-describedby="saving.state.field === 'date' ? 'task-date-error' : undefined" /><span v-if="saving.state.field === 'date'" id="task-date-error" class="input-field-help" data-state="error">{{ tr(saving.state.fieldMessage) }}</span></label>
+      <label>{{ tr('마감 시각 (선택)') }}<input type="time" v-model="draft.dueTime" :disabled="!draft.date" /></label>
+      <label>{{ tr('우선순위') }}<select v-model="draft.priority"><option value="높음">{{ tr('높음') }}</option><option value="보통">{{ tr('보통') }}</option><option value="낮음">{{ tr('낮음') }}</option></select></label>
+      <label>{{ tr('내용 · 태그 · 멘션') }}<TagMentionInput v-model="draft.body" /></label>
+      <p v-if="checklist.status === 'loading'" class="input-field-help" role="status">{{ tr('체크리스트를 불러오는 중이에요.') }}</p>
       <div v-else-if="checklist.status === 'error'" role="status">
-        <p class="input-field-help" data-state="error">체크리스트를 불러오지 못했어요. 불러온 뒤에 저장할 수 있어요.</p>
-        <button type="button" class="button-secondary" @click="begin(task.id)">다시 불러오기</button>
+        <p class="input-field-help" data-state="error">{{ tr('체크리스트를 불러오지 못했어요. 불러온 뒤에 저장할 수 있어요.') }}</p>
+        <button type="button" class="button-secondary" @click="begin(task.id)">{{ tr('다시 불러오기') }}</button>
       </div>
       <ChecklistEditor v-else v-model="draft.subtasks" :account-only="taskMode === 'server'" />
       <ConflictCompare v-if="conflict" :rows="compareRows" :busy="saving.state.status === 'saving'" @keep-mine="keepMine" @use-latest="useLatest" />
-      <p v-if="!canSave && checklist.status === 'ready'" class="form-note" role="status">제목과 체크리스트 항목 이름을 입력해주세요.</p>
+      <p v-if="!canSave && checklist.status === 'ready'" class="form-note" role="status">{{ tr('제목과 체크리스트 항목 이름을 입력해주세요.') }}</p>
       <SaveStatus :state="saving.state" :mode="taskMode" :saved-text="base?.offline ? '연결이 없어 이 기기에 보관했어요. 연결되면 자동으로 보내요.' : ''" @retry="save" />
-      <button class="primary" :disabled="!canSave || !!conflict" :aria-busy="saving.state.status === 'saving' ? 'true' : undefined" style="width: 100%; margin-top: 14px" @click="save">{{ saving.state.status === 'saving' ? '저장하는 중' : '저장하기' }}</button>
+      <button class="primary" :disabled="!canSave || !!conflict" :aria-busy="saving.state.status === 'saving' ? 'true' : undefined" style="width: 100%; margin-top: 14px" @click="save">{{ saving.state.status === 'saving' ? tr('저장하는 중') : tr('저장하기') }}</button>
     </div>
 
 
-    <p v-if="taskMode === 'server' && isOfflineId(String(task.id))" class="form-note">아직 보내지 않은 할 일이에요. 보낸 뒤에 일정 배치와 실제 기록 연결을 쓸 수 있어요.</p>
+    <p v-if="taskMode === 'server' && isOfflineId(String(task.id))" class="form-note">{{ tr('아직 보내지 않은 할 일이에요. 보낸 뒤에 일정 배치와 실제 기록 연결을 쓸 수 있어요.') }}</p>
     <section v-else-if="taskMode === 'server'" class="task-links" aria-labelledby="task-links-title">
-      <h3 id="task-links-title">일정과 실제 기록</h3>
+      <h3 id="task-links-title">{{ tr('일정과 실제 기록') }}</h3>
       <fieldset class="form-fieldset">
-        <legend>일정에 배치</legend>
-        <label>날짜<input v-model="slot.date" type="date" /></label>
+        <legend>{{ tr('일정에 배치') }}</legend>
+        <label>{{ tr('날짜') }}<input v-model="slot.date" type="date" /></label>
         <div class="form-row">
-          <label>시작 시간<input v-model="slot.startTime" type="time" /></label>
-          <label>종료 시간<input v-model="slot.endTime" type="time" /></label>
+          <label>{{ tr('시작 시간') }}<input v-model="slot.startTime" type="time" /></label>
+          <label>{{ tr('종료 시간') }}<input v-model="slot.endTime" type="time" /></label>
         </div>
       </fieldset>
-      <p v-if="slotError" class="form-note" role="status">{{ slotError }}</p>
+      <p v-if="slotError" class="form-note" role="status">{{ tr(slotError) }}</p>
       <SaveStatus :state="placing.state" saved-text="일정에 넣었어요. 아래 연결된 기록에서 열 수 있어요." @retry="place" />
       <div class="task-link-actions">
-        <button type="button" class="button-secondary" :disabled="!!slotError" :aria-busy="placing.state.status === 'saving' ? 'true' : undefined" @click="place">{{ placing.state.status === 'saving' ? '일정에 넣는 중' : '일정에 배치' }}</button>
-        <button type="button" class="button-secondary" :aria-busy="recordStart.state.status === 'saving' ? 'true' : undefined" @click="startRecord">{{ recordStart.state.status === 'saving' ? '기록을 시작하는 중' : '이 할 일 기록 시작' }}</button>
+        <button type="button" class="button-secondary" :disabled="!!slotError" :aria-busy="placing.state.status === 'saving' ? 'true' : undefined" @click="place">{{ placing.state.status === 'saving' ? tr('일정에 넣는 중') : tr('일정에 배치') }}</button>
+        <button type="button" class="button-secondary" :aria-busy="recordStart.state.status === 'saving' ? 'true' : undefined" @click="startRecord">{{ recordStart.state.status === 'saving' ? tr('기록을 시작하는 중') : tr('이 할 일 기록 시작') }}</button>
       </div>
-      <p v-if="recordRunning" role="status">진행 중인 기록이 있어 새로 시작하지 않았어요. <RouterLink to="/planner/daily">플래너에서 먼저 끝내기</RouterLink></p>
-      <p v-if="recordStart.state.status === 'failed'" class="input-field-help" data-state="error" role="status">{{ recordStart.state.error?.message }}</p>
+      <p v-if="recordRunning" role="status">{{ tr('진행 중인 기록이 있어 새로 시작하지 않았어요.') }} <RouterLink class="inline-link" to="/planner/daily">{{ tr('플래너에서 먼저 끝내기') }}</RouterLink></p>
+      <p v-if="recordStart.state.status === 'failed'" class="input-field-help" data-state="error" role="status">{{ tr(recordStart.state.error?.message ?? '') }}</p>
       <LinkedRecords kind="task" :id="String(task.id)" :refresh-key="linkVersion" />
     </section>
-    <p v-else class="form-note">로그인하면 이 할 일을 일정에 배치하고 실제 기록과 연결할 수 있어요.</p>
+    <p v-else class="form-note">{{ tr('로그인하면 이 할 일을 일정에 배치하고 실제 기록과 연결할 수 있어요.') }}</p>
 
-    <button style="width: 100%; margin-top: 20px; color: var(--color-status-danger); font-weight: 600; padding: 10px" :aria-busy="removing.state.status === 'saving' ? 'true' : undefined" @click="remove">{{ removing.state.status === 'saving' ? '삭제하는 중' : '삭제하기' }}</button>
-    <p v-if="removeMessage" class="input-field-help" data-state="error" role="status">{{ removeMessage }}</p>
+    <button style="width: 100%; margin-top: 20px; color: var(--color-status-danger); font-weight: 600; padding: 10px" :aria-busy="removing.state.status === 'saving' ? 'true' : undefined" @click="remove">{{ removing.state.status === 'saving' ? tr('삭제하는 중') : tr('삭제하기') }}</button>
+    <p v-if="removeMessage" class="input-field-help" data-state="error" role="status">{{ tr(removeMessage) }}</p>
   </section>
-  <p v-else-if="taskMode === 'server' && !taskStore.state.loaded && !taskStore.state.error" role="status">할 일을 불러오는 중이에요.</p>
-  <div v-else-if="taskMode === 'server' && taskStore.state.error" class="empty-state" role="status"><p>할 일을 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요.</p><button type="button" class="button-secondary" @click="taskStore.reload()">다시 시도</button></div>
-  <p v-else>할 일을 찾을 수 없어요. <a @click="router.push('/tasks')" style="color: var(--color-accent); font-weight: 600; cursor: pointer">목록으로 돌아가기</a></p>
+  <p v-else-if="taskMode === 'server' && !taskStore.state.loaded && !taskStore.state.error" role="status">{{ tr('할 일을 불러오는 중이에요.') }}</p>
+  <div v-else-if="taskMode === 'server' && taskStore.state.error" class="empty-state" role="status"><p>{{ tr('할 일을 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요.') }}</p><button type="button" class="button-secondary" @click="taskStore.reload()">{{ tr('다시 시도') }}</button></div>
+  <p v-else>{{ tr('할 일을 찾을 수 없어요.') }} <a @click="router.push('/tasks')" style="color: var(--color-accent); font-weight: 600; cursor: pointer">{{ tr('목록으로 돌아가기') }}</a></p>
 </template>
 
 <style scoped>

@@ -1,4 +1,5 @@
 <script setup>
+import { tr } from '../store/locale'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { session } from '../features/auth/session'
 import { ME } from '../store/tagging'
@@ -32,7 +33,7 @@ onMounted(() => {
 onBeforeUnmount(() => { clearInterval(heartbeat); document.removeEventListener('visibilitychange', visibility); if (announced) channel?.postMessage({ type: 'editor', clientId, name: name.value, resource: '', expiresAt: 0 }); channel?.close() })
 </script>
 <template>
-  <div v-if="others.length || active" class="edit-presence" role="status"><i aria-hidden="true"></i><span>{{ others.length ? [...new Set(others.map(peer => peer.name))].join(', ') + '님이 다른 창에서 수정 중이에요.' : name + '님이 수정 중이에요.' }}<small v-if="others.length">다른 창의 변경 내용을 확인한 뒤 저장해주세요.</small></span></div>
+  <div v-if="others.length || active" class="edit-presence" role="status"><i aria-hidden="true"></i><span>{{ others.length ? tr('{names}님이 다른 창에서 수정 중이에요.', { names: [...new Set(others.map(peer => peer.name))].join(', ') }) : tr('{name}님이 수정 중이에요.', { name }) }}<small v-if="others.length">{{ tr('다른 창의 변경 내용을 확인한 뒤 저장해주세요.') }}</small></span></div>
 </template>
 <style>
 .edit-presence { display: flex; gap: 8px; align-items: flex-start; padding: 10px 16px; font-size: .8125rem; color: var(--color-accent); background: var(--color-surface); border-bottom: 1px solid var(--color-hairline); flex-shrink: 0; }

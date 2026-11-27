@@ -31,6 +31,8 @@ test('preview rejects writes; API proxy preserves path and authorization', async
       root: fileURLToPath(new URL('../', import.meta.url)),
       configFile: fileURLToPath(new URL('../vite.config.js', import.meta.url)),
       server: { port: 15173, strictPort: false, open: false },
+      // 의존성 최적화가 돌고 있을 때 vite.close()가 끝나지 않아 시험이 멈췄다. 이 시험은 미리보기 경로만 보므로 의존성 탐색을 끈다
+      optimizeDeps: { noDiscovery: true, include: [] },
       logLevel: 'error',
     })
     await vite.listen()

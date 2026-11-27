@@ -2,6 +2,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { session } from '../features/auth/session.js'
+import { tr } from '../store/locale'
 import { KIND_LABEL, createLinkClient, linkRoute, originOf } from '../features/records/recordLinks.mjs'
 
 const props = defineProps({
@@ -35,22 +36,22 @@ const others = computed(() => state.value.links.filter((link) => !(origin.value 
 </script>
 
 <template>
-  <section v-if="session.userId" class="linked-records" aria-label="연결된 기록">
-    <div class="section-label">연결된 기록</div>
-    <p v-if="state.status === 'loading' && !state.links.length" class="input-field-help" role="status">연결된 기록을 불러오는 중이에요.</p>
+  <section v-if="session.userId" class="linked-records" :aria-label="tr('연결된 기록')">
+    <div class="section-label">{{ tr('연결된 기록') }}</div>
+    <p v-if="state.status === 'loading' && !state.links.length" class="input-field-help" role="status">{{ tr('연결된 기록을 불러오는 중이에요.') }}</p>
     <div v-else-if="state.status === 'error'" role="status">
-      <p class="input-field-help" data-state="error">연결된 기록을 불러오지 못했어요.</p>
-      <button type="button" class="button-secondary" @click="load">다시 불러오기</button>
+      <p class="input-field-help" data-state="error">{{ tr('연결된 기록을 불러오지 못했어요.') }}</p>
+      <button type="button" class="button-secondary" @click="load">{{ tr('다시 불러오기') }}</button>
     </div>
     <template v-else-if="state.status === 'ready'">
-      <p v-if="origin">원본 {{ KIND_LABEL[origin.kind] }} ·
+      <p v-if="origin">{{ tr('원본 {kind}', { kind: tr(KIND_LABEL[origin.kind]) }) }} ·
         <span v-if="origin.deleted">{{ origin.title }}</span>
-        <RouterLink v-else :to="linkRoute(origin)">{{ origin.title }}</RouterLink>
+        <RouterLink v-else class="inline-link" :to="linkRoute(origin)">{{ origin.title }}</RouterLink>
       </p>
       <ul v-if="others.length">
-        <li v-for="link in others" :key="link.kind + ':' + link.id">{{ KIND_LABEL[link.kind] }} · <RouterLink :to="linkRoute(link)">{{ link.title }}</RouterLink></li>
+        <li v-for="link in others" :key="link.kind + ':' + link.id">{{ tr(KIND_LABEL[link.kind]) }} · <RouterLink class="inline-link" :to="linkRoute(link)">{{ link.title }}</RouterLink></li>
       </ul>
-      <p v-else-if="!origin" class="empty-state">아직 연결된 기록이 없어요. 할 일이나 일정에서 기록을 시작하면 여기에 보여요.</p>
+      <p v-else-if="!origin" class="empty-state">{{ tr('아직 연결된 기록이 없어요. 할 일이나 일정에서 기록을 시작하면 여기에 보여요.') }}</p>
     </template>
   </section>
 </template>

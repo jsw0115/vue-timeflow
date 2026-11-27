@@ -29,7 +29,7 @@ test('빠른 입력: "내일 오후 3시 치과"를 할 일로 바꾸면 마감 
 
 test('작성 창·상세 화면에 선택 입력란이 있고 마감일 없이는 막는다', () => {
   const composer = read('../src/components/PostComposer.vue')
-  assert.match(composer, /마감 시각 \(선택\)<input v-model="draft\.dueTime" type="time" :disabled="!draft\.date"/)
+  assert.match(composer, /\{\{ tr\('마감 시각 \(선택\)'\) \}\}<input v-model="draft\.dueTime" type="time" :disabled="!draft\.date"/)
   assert.match(read('../src/views/tasks/TaskDetailView.vue'), /v-model="draft\.dueTime" :disabled="!draft\.date"/)
   assert.match(read('../src/store/postComposer.js'), /마감 시각은 마감일과 함께 정해 주세요/)
 })

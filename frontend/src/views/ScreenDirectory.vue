@@ -1,4 +1,5 @@
 <script setup>
+import { tr } from '../store/locale'
 import { ref, computed } from 'vue'
 import { DOMAINS, SCREENS } from '../data/screens'
 
@@ -34,16 +35,16 @@ function linkOf(s) {
 
 <template>
   <div class="sitemap-tools">
-    <div class="filter"><button v-for="t in phaseTabs" :key="t.v" :class="{ selected: phase === t.v }" @click="phase = t.v">{{ t.label }}</button></div>
-    <input v-model="search" placeholder="화면 ID, 이름, 기능으로 검색 (예: PLAN, 캘린더, 채팅)" />
+    <div class="filter"><button v-for="t in phaseTabs" :key="t.v" :class="{ selected: phase === t.v }" @click="phase = t.v">{{ tr(t.label) }}</button></div>
+    <input v-model="search" :aria-label="tr('화면 검색')" :placeholder="tr('화면 ID, 이름, 기능으로 검색 (예: PLAN, 캘린더, 채팅)')" />
   </div>
-  <p style="margin-bottom:18px">design-implementation-plan.md 기준 22개 기능 도메인 · 총 {{ SCREENS.length }}개 화면 중 {{ filtered.length }}개 표시 · 9개는 이미 만들어진 화면으로 바로 연결됩니다.</p>
+  <p style="margin-bottom:18px">{{ tr('design-implementation-plan.md 기준 기능 도메인 {d}개 · 전체 화면 {total}개 중 {n}개 표시 · 카드를 누르면 실제 화면으로 이동해요.', { d: DOMAINS.length, total: SCREENS.length, n: filtered.length }) }}</p>
 
   <section class="domain-group card" v-for="g in groups" :key="g.id">
     <div class="domain-group-head">
-      <h3>{{ g.label }}</h3>
+      <h3>{{ tr(g.label) }}</h3>
       <span class="phase-badge" :class="'p' + g.phase">Phase {{ g.phase }}</span>
-      <small>{{ g.screens.length }}개 화면</small>
+      <small>{{ tr('{n}개 화면', { n: g.screens.length }) }}</small>
     </div>
     <div class="screen-grid">
       <router-link class="screen-card" v-for="s in g.screens" :key="s.id" :to="linkOf(s)">
@@ -55,7 +56,7 @@ function linkOf(s) {
         <p>{{ s.role }}</p>
         <div class="sc-tags">
           <span class="tag">{{ s.type }}</span>
-          <span class="tag">{{ s.existingPath ? '구현됨' : s.pattern }}</span>
+          <span class="tag">{{ s.existingPath ? tr('구현됨') : s.pattern }}</span>
         </div>
       </router-link>
     </div>

@@ -1,4 +1,5 @@
 <script setup>
+import { tr } from '../../store/locale'
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { openProfile } from '../../store/people'
@@ -8,15 +9,16 @@ import { openProfile } from '../../store/people'
  * 예전 링크로 들어오면 주소록으로 보내고 모달을 띄운다.
  */
 const router = useRouter()
-onMounted(() => {
+// 주소를 먼저 옮긴 뒤 창을 연다. 프로필 창은 화면이 바뀌면 닫힌다(IMP-025)
+onMounted(async () => {
+  await router.replace('/address')
   openProfile('이서연')
-  router.replace('/address')
 })
 </script>
 
 <template>
   <section class="card">
-    <p>주소록으로 이동하고 있어요. 사람 이름 옆 ⓘ 를 누르면 언제든 프로필을 볼 수 있어요.</p>
-    <button class="primary" @click="router.replace('/address')">주소록으로 가기</button>
+    <p>{{ tr('주소록으로 이동하고 있어요. 사람 이름 옆 ⓘ 를 누르면 언제든 프로필을 볼 수 있어요.') }}</p>
+    <button class="primary" @click="router.replace('/address')">{{ tr('주소록으로 가기') }}</button>
   </section>
 </template>

@@ -18,7 +18,7 @@ for (const file of walk(source).filter(name => name.endsWith('Controller.java'))
     const route = prefix + (match[2]?.match(/"([^"]*)"/)?.[1] || '')
     const method = match[1].toUpperCase()
     const status = implementationStatus(controller, java, method, route)
-    const publicRoute = ['/api/auth/signup', '/api/auth/login', '/api/auth/refresh', '/api/public/portfolios/{token}'].includes(route)
+    const publicRoute = ['/api/auth/signup', '/api/auth/login', '/api/auth/refresh', '/api/public/portfolios/{token}', '/api/public/portfolios/{token}/unlock'].includes(route)
     rows.push({ method, route, status, controller, auth: publicRoute ? '공개' : route.startsWith('/api/admin/') ? 'JWT + ADMIN' : 'JWT' })
   }
 }

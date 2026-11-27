@@ -45,8 +45,11 @@ public class FeatureTestConfig {
     @Bean BackupService backups(FeatureStore store, JdbcTemplate jdbc, ObjectMapper mapper) { return new BackupService(store, jdbc, mapper); }
     @Bean ScheduleService schedules(FeatureStore store) { return new ScheduleService(store); }
     @Bean DayPolicy days(UserRepository users, FeatureStore store) { return new DayPolicy(users, store); }
+    @Bean kr.timebar.diary.records.ProjectActuals projectActuals(FeatureStore store, RecordLinks links, JdbcTemplate jdbc, DayPolicy days) { return new kr.timebar.diary.records.ProjectActuals(store, links, jdbc, days); }
     @Bean WorkService work(FeatureStore store, kr.timebar.diary.common.IdempotencyKeys idempotency) { return new WorkService(store, idempotency); }
-    @Bean kr.timebar.diary.career.CareerService career(FeatureStore store, kr.timebar.diary.common.IdempotencyKeys idempotency) { return new kr.timebar.diary.career.CareerService(store, idempotency); }
+    @Bean kr.timebar.diary.career.CareerService career(FeatureStore store, kr.timebar.diary.common.IdempotencyKeys idempotency, RecordLinks links) { return new kr.timebar.diary.career.CareerService(store, idempotency, links); }
+    @Bean kr.timebar.diary.career.ActivitySources activitySources(RecordLinks links, JdbcTemplate jdbc) { return new kr.timebar.diary.career.ActivitySources(links, jdbc); }
+    @Bean kr.timebar.diary.career.DocumentVersions documentVersions(FeatureStore store, RecordLinks links, JdbcTemplate jdbc) { return new kr.timebar.diary.career.DocumentVersions(store, links, jdbc); }
     @Bean UserRepository users() { return mock(UserRepository.class); }
     @Bean RefreshTokenRepository tokens() { return mock(RefreshTokenRepository.class); }
     @Bean PasswordEncoder encoder() { return new BCryptPasswordEncoder(); }

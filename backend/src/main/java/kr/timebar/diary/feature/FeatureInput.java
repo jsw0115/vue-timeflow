@@ -13,7 +13,11 @@ import java.util.*;
 public final class FeatureInput {
     private static final Set<String> BOOLEANS = Set.of("pinned", "actionable", "open", "favorite", "read", "live", "published", "popup", "paused", "notify", "completed", "openRecords");
     private static final Set<String> NUMBERS = Set.of("amount", "duration", "alarm", "leaveDays", "expense", "md", "progress", "years", "capacity", "reminderMinutes", "days", "minMinutes");
-    private static final Set<String> ARRAYS = Set.of("tags", "notifyDays", "blocks", "columns", "cards", "achievements", "attendeeIds", "itemIds", "skillTags", "links");
+    private static final Set<String> ARRAYS = Set.of("tags", "notifyDays", "blocks", "columns", "cards", "achievements", "attendeeIds", "itemIds", "skillTags", "links", "activityIds");
+    /** 20000자까지 받는 긴 글 필드. 포트폴리오의 문제·과정·성과·개인 기여(PR-26)를 더했다. */
+    private static final Set<String> LONG_TEXTS = Set.of("body", "handover", "problem", "process", "outcome", "contribution", "duties", "motivation", "competency", "problemSolving", "collaboration", "growth");
+    /** 포트폴리오 항목 하나에 이을 수 있는 커리어 활동 수. 원문에 없는 제안값이다. */
+    public static final int PORTFOLIO_ACTIVITY_LIMIT = 20;
     private static final Set<String> DATES = Set.of("date", "startDate", "endDate", "from", "to", "deadline", "appliedDate", "interviewDate");
     /** 커리어 활동 유형. 회사 업무·인턴·아르바이트·프리랜서·개인 프로젝트·학습·커뮤니티 활동(docs/design 04 FD-85). */
     public static final List<String> ACTIVITY_TYPES = List.of("work", "intern", "part-time", "freelance", "project", "study", "community");
@@ -46,7 +50,7 @@ public final class FeatureInput {
             else {
                 if (!(value instanceof String)) fail(key + "는 문자열이어야 합니다.");
                 String text = (String) value;
-                if (text.length() > (key.equals("body") || key.equals("handover") ? 20000 : key.equals("postingUrl") ? URL_LIMIT : 200)) fail(key + " 길이가 너무 깁니다.");
+                if (text.length() > (LONG_TEXTS.contains(key) ? 20000 : key.equals("postingUrl") ? URL_LIMIT : 200)) fail(key + " 길이가 너무 깁니다.");
                 if (key.equals("title") || key.equals("name")) body.put(key, text.trim());
                 if (DATES.contains(key) && !text.isEmpty()) date(text);
                 if (key.equals("startTime") || key.equals("endTime")) time(text);
@@ -100,6 +104,8 @@ public final class FeatureInput {
             case COMMUNITY -> { choice(body, "joinPolicy", "open", "approval"); choice(body, "visibility", "public", "private"); number(body, "capacity", 2, 500, true); }
             case CHALLENGE -> validateChallenge(body);
             case CAREER_ACTIVITY -> validateActivity(body);
+            case PORTFOLIO -> validatePortfolio(body);
+            case CAREER -> validateCareer(body);
             case JOB_APPLICATION -> {
                 choice(body, "status", APPLICATION_STATUSES.toArray(String[]::new));
                 if (!text(body, "postingUrl").isEmpty()) webUrl(text(body, "postingUrl"));
@@ -130,11 +136,31 @@ public final class FeatureInput {
      * 커리어 활동은 기본 비공개다. 공유 기능이 아직 없어 private만 받는다(docs/design 09 §3).
      * 근거 링크는 http/https 주소만 저장하고 서버가 그 주소를 호출하지 않는다(docs/design 07 §1-4).
      */
-    private static void validateActivity(Map<String, Object> body) {
-        choice(body, "activityType", ACTIVITY_TYPES.toArray(String[]::new));
-        if (!text(body, "endDate").isEmpty()) range(text(body, "date"), text(body, "endDate"));
-        if (text(body, "visibility").isEmpty()) body.put("visibility", "private");
-        choice(body, "visibility", "private");
+    /** 경력 고용 형태(REQ-F25, design 04 FD-86). 화면 이름은 정규직·계약직·인턴·아르바이트·프리랜서·기타다. */
+    public static final List<String> EMPLOYMENT_TYPES = List.of("full-time", "contract", "intern", "part-time", "freelance", "other");
+
+    /**
+     * 경력 상세(PR-24): 고용 형태·재직 상태는 허용값만, 종료일은 시작일 이후, 재직 중이면 종료일이 없고 종료면 종료일이 있다.
+     * 예전 기록의 자유 기간(period)은 그대로 받는다.
+     */
+    private static void validateCareer(Map<String, Object> body) {
+        if (body.get("employmentType") != null) choice(body, "employmentType", EMPLOYMENT_TYPES.toArray(String[]::new));
+        if (body.get("employmentStatus") != null) choice(body, "employmentStatus", "current", "ended");
+        if (!text(body, "startDate").isEmpty() && !text(body, "endDate").isEmpty()) range(text(body, "startDate"), text(body, "endDate"));
+        if ("current".equals(body.get("employmentStatus")) && !text(body, "endDate").isEmpty()) fail("재직 중인 경력은 종료일을 비워 주세요.");
+        if ("ended".equals(body.get("employmentStatus")) && text(body, "endDate").isEmpty()) fail("종료한 경력은 종료일이 필요해요.");
+    }
+
+    /** 포트폴리오 항목(PR-26): 결과물 링크는 활동과 같은 규칙(http·https, 10개), 근거 활동 ID는 문자열 20개까지. 소유 확인은 WorkService가 한다. */
+    private static void validatePortfolio(Map<String, Object> body) {
+        validateLinks(body);
+        if (body.get("activityIds") instanceof List<?> ids) {
+            if (ids.size() > PORTFOLIO_ACTIVITY_LIMIT) fail("근거 활동은 최대 " + PORTFOLIO_ACTIVITY_LIMIT + "개입니다.");
+            for (Object id : ids) if (!(id instanceof String text) || text.isBlank() || text.length() > 100) fail("activityIds는 활동 ID 문자열 배열입니다.");
+        }
+    }
+
+    private static void validateLinks(Map<String, Object> body) {
         if (body.get("links") instanceof List<?> links) {
             if (links.size() > LINK_COUNT) fail("근거 링크는 최대 " + LINK_COUNT + "개입니다.");
             for (Object link : links) {
@@ -143,6 +169,14 @@ public final class FeatureInput {
                 webUrl(url);
             }
         }
+    }
+
+    private static void validateActivity(Map<String, Object> body) {
+        choice(body, "activityType", ACTIVITY_TYPES.toArray(String[]::new));
+        if (!text(body, "endDate").isEmpty()) range(text(body, "date"), text(body, "endDate"));
+        if (text(body, "visibility").isEmpty()) body.put("visibility", "private");
+        choice(body, "visibility", "private");
+        validateLinks(body);
     }
 
     /** http·https 절대 주소만 받는다. javascript: 같은 스킴과 호스트 없는 주소를 거부한다. */

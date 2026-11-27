@@ -1,5 +1,7 @@
 <script setup>
 import AppIcon from '../../components/icons/AppIcon.vue'
+import { bodyLocale, tr, unit } from '../../store/locale'
+import { formatDate } from '../../features/i18n/locale.mjs'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { appearance } from '../../store/appearance'
@@ -47,6 +49,8 @@ const PLAN_ACTUAL = [
   { label: '공부', plan: 30, actual: 18 },
   { label: '휴식', plan: 20, actual: 22 },
 ]
+// 요일 이름(월요일부터)은 본문 언어로 보인다. 2024-01-01은 월요일이다
+const weekdayName = (i) => (bodyLocale.value === 'ko' ? WEEKDAYS[i].d : formatDate(new Date(2024, 0, 1 + i), bodyLocale.value, { weekday: 'short' }))
 const bestStreak = computed(() => Math.max(0, ...routines.value.map((r) => r.streak ?? 0)))
 const bestEver = computed(() => Math.max(0, ...routines.value.map((r) => r.best ?? 0)))
 const todayRoutines = computed(() => routines.value.filter((r) => isRoutineToday(r)))
@@ -95,33 +99,33 @@ function onDrop(id) {
     <!-- 오늘 띠: 빠른 할 일 입력(주요 행동)과 오늘 수치를 한 구획에 둔다. 안에 카드를 겹치지 않는다(DESIGN.md 4장 Cards). -->
     <div class="today-band">
       <div class="quick-capture">
-        <h2 class="today-question" v-html="content.heroTitle"></h2>
+        <h2 class="today-question" v-html="tr(content.heroTitle)"></h2>
         <!-- 빠른 기록(PR-09 3단계): 해석 미리보기를 확인한 뒤 바로 저장한다. 오전·오후가 모호하면 고르기 전에는 일정으로 저장하지 않는다 -->
-        <QuickCapture :placeholder="content.heroPlaceholder" />
+        <QuickCapture :placeholder="tr(content.heroPlaceholder)" />
       </div>
       <div class="today-side">
-        <dl class="today-glance" aria-label="오늘 한눈에">
-          <div><dt>오늘 일정</dt><dd class="figure">{{ todayEvents.length }}</dd></div>
-          <div><dt>남은 할 일</dt><dd class="figure">{{ pendingTasks }}</dd></div>
-          <div><dt>오늘 루틴</dt><dd class="figure">{{ routineDone }}<small>/{{ todayRoutines.length }}</small></dd></div>
+        <dl class="today-glance" :aria-label="tr('오늘 한눈에')">
+          <div><dt>{{ tr('오늘 일정') }}</dt><dd class="figure">{{ todayEvents.length }}</dd></div>
+          <div><dt>{{ tr('남은 할 일') }}</dt><dd class="figure">{{ pendingTasks }}</dd></div>
+          <div><dt>{{ tr('오늘 루틴') }}</dt><dd class="figure">{{ routineDone }}<small>/{{ todayRoutines.length }}</small></dd></div>
         </dl>
-        <figure v-if="quote" class="today-quote" aria-label="오늘의 문장">
+        <figure v-if="quote" class="today-quote" :aria-label="tr('오늘의 문장')">
           <blockquote>{{ quote.text }}</blockquote>
           <figcaption v-if="quote.by">{{ quote.by }}</figcaption>
         </figure>
-        <div class="today-links"><button type="button" class="button-text" @click="openPostComposer('일정')">일정 추가</button><button type="button" class="button-text" @click="router.push('/routines')">루틴 확인</button><button type="button" class="button-text" @click="openPostComposer('다이어리')">하루 회고</button></div>
+        <div class="today-links"><button type="button" class="button-text" @click="openPostComposer('일정')">{{ tr('일정 추가') }}</button><button type="button" class="button-text" @click="router.push('/routines')">{{ tr('루틴 확인') }}</button><button type="button" class="button-text" @click="openPostComposer('다이어리')">{{ tr('하루 회고') }}</button></div>
       </div>
     </div>
 
     <section class="dashboard" aria-labelledby="dashboard-title">
     <div class="widget-toolbar">
-      <div class="widget-toolbar-copy"><h2 id="dashboard-title">나의 대시보드</h2><p>{{ dashboardState.editing ? '이동 버튼이나 드래그로 순서를 바꾸세요. 숨긴 카드는 위젯 관리에서 복원할 수 있어요.' : '오늘의 할 일을 한눈에 보고 바로 실행하세요.' }}</p></div>
+      <div class="widget-toolbar-copy"><h2 id="dashboard-title">{{ tr('나의 대시보드') }}</h2><p>{{ dashboardState.editing ? tr('이동 버튼이나 드래그로 순서를 바꾸세요. 숨긴 카드는 위젯 관리에서 복원할 수 있어요.') : tr('오늘의 할 일을 한눈에 보고 바로 실행하세요.') }}</p></div>
       <div class="filter">
-        <button :class="{ selected: !dashboardState.editing }" @click="dashboardState.editing = false">보기</button>
-        <button :class="{ selected: dashboardState.editing }" @click="dashboardState.editing = true">화면 편집</button>
+        <button :class="{ selected: !dashboardState.editing }" @click="dashboardState.editing = false">{{ tr('보기') }}</button>
+        <button :class="{ selected: dashboardState.editing }" @click="dashboardState.editing = true">{{ tr('화면 편집') }}</button>
       </div>
-      <button v-if="dashboardState.editing" class="icon" title="위젯 관리" aria-label="위젯 관리" @click="router.push('/settings/widgets')">▦</button>
-      <button v-if="dashboardState.editing" class="icon" title="레이아웃 초기화" aria-label="레이아웃 초기화" @click="resetLayout">↺</button>
+      <button v-if="dashboardState.editing" class="icon" :title="tr('위젯 관리')" :aria-label="tr('위젯 관리')" @click="router.push('/settings/widgets')">▦</button>
+      <button v-if="dashboardState.editing" class="icon" :title="tr('레이아웃 초기화')" :aria-label="tr('레이아웃 초기화')" @click="resetLayout">↺</button>
     </div>
 
     <div class="widget-grid" :class="{ editing: dashboardState.editing }">
@@ -140,95 +144,95 @@ function onDrop(id) {
       >
         <div v-if="dashboardState.editing" class="widget-editbar">
           <span class="grip">⠿</span>
-          <span style="flex: 1">{{ WIDGET_CATALOG[w.id]?.title }}</span>
-          <button class="review" :disabled="visibleWidgets[0]?.id === w.id" :aria-label="WIDGET_CATALOG[w.id]?.title + ' 앞으로 이동'" @click="shiftWidget(w.id, -1)">앞으로</button>
-          <button class="review" :disabled="visibleWidgets.at(-1)?.id === w.id" :aria-label="WIDGET_CATALOG[w.id]?.title + ' 뒤로 이동'" @click="shiftWidget(w.id, 1)">뒤로</button>
-          <button class="icon" style="width: 26px; height: 26px; font-size: 0.875rem" title="크기 변경" aria-label="크기 변경" @click="cycleSize(w.id)">⤢</button>
-          <button class="icon" title="숨기기" aria-label="숨기기" @click="toggleVisible(w.id)"><AppIcon name="close" :size="16" /></button>
+          <span style="flex: 1">{{ tr(WIDGET_CATALOG[w.id]?.title) }}</span>
+          <button class="review" :disabled="visibleWidgets[0]?.id === w.id" :aria-label="tr('{name} 앞으로 이동', { name: tr(WIDGET_CATALOG[w.id]?.title) })" @click="shiftWidget(w.id, -1)">{{ tr('앞으로') }}</button>
+          <button class="review" :disabled="visibleWidgets.at(-1)?.id === w.id" :aria-label="tr('{name} 뒤로 이동', { name: tr(WIDGET_CATALOG[w.id]?.title) })" @click="shiftWidget(w.id, 1)">{{ tr('뒤로') }}</button>
+          <button class="icon" style="width: 26px; height: 26px; font-size: 0.875rem" :title="tr('크기 변경')" :aria-label="tr('크기 변경')" @click="cycleSize(w.id)">⤢</button>
+          <button class="icon" :title="tr('숨기기')" :aria-label="tr('숨기기')" @click="toggleVisible(w.id)"><AppIcon name="close" :size="16" /></button>
         </div>
 
-        <span v-if="['focusTime', 'dday', 'categoryDonut', 'weekdayBar', 'planVsActual'].includes(w.id)" class="sample-label">시연용 예시 데이터</span>
+        <span v-if="['focusTime', 'dday', 'categoryDonut', 'weekdayBar', 'planVsActual'].includes(w.id)" class="sample-label">{{ tr('시연용 예시 데이터') }}</span>
         <template v-if="w.id === 'events'">
-          <div class="head"><div><h3>오늘의 흐름</h3><p>계획과 실제 기록을 확인하세요</p></div><button @click="router.push('/planner')">플래너 열기 →</button></div>
-          <div class="event" v-for="event in todayEvents" :key="event.title"><time>{{ event.time }}</time><i></i><span><b>{{ event.title }}</b><small>{{ event.tag }} · {{ event.endDate && event.endDate !== localDate() ? event.endDate.slice(5) + ' ' : '' }}{{ event.endTime }}까지</small></span></div>
-          <p v-if="!todayEvents.length" class="empty-state">오늘 예정된 일정이 없어요. '플래너 열기'에서 하루를 계획해 보세요.</p>
+          <div class="head"><div><h3>{{ tr('오늘의 흐름') }}</h3><p>{{ tr('계획과 실제 기록을 확인하세요') }}</p></div><button @click="router.push('/planner')">{{ tr('플래너 열기 →') }}</button></div>
+          <div class="event" v-for="event in todayEvents" :key="event.title"><time>{{ event.time }}</time><i></i><span><b>{{ event.title }}</b><small>{{ tr(event.tag) }} · {{ tr('{time}까지', { time: (event.endDate && event.endDate !== localDate() ? event.endDate.slice(5) + ' ' : '') + event.endTime }) }}</small></span></div>
+          <p v-if="!todayEvents.length" class="empty-state">{{ tr('오늘 예정된 일정이 없어요. \'플래너 열기\'에서 하루를 계획해 보세요.') }}</p>
         </template>
 
         <template v-else-if="w.id === 'routine'">
-          <div class="head"><div><h3>오늘의 루틴</h3><p>작은 반복이 하루를 만들어요</p></div><button @click="router.push('/routines')">전체 보기 →</button></div>
-          <label v-for="item in todayRoutines" :key="item.id"><input type="checkbox" :checked="item.done" :aria-busy="routineStore.isBusy(item) ? 'true' : undefined" @click.prevent="toggleRoutine(item)" /><span :class="{ done: item.done }">{{ item.title }}</span><small>{{ item.time }} · {{ item.streak }}일 연속</small></label>
-          <p v-if="!todayRoutines.length" class="empty-state">오늘 예정된 루틴이 없어요. '전체 보기'에서 루틴을 만들거나 쉬는 날을 확인해 보세요.</p>
+          <div class="head"><div><h3>{{ tr('오늘의 루틴') }}</h3><p>{{ tr('작은 반복이 하루를 만들어요') }}</p></div><button @click="router.push('/routines')">{{ tr('전체 보기 →') }}</button></div>
+          <label v-for="item in todayRoutines" :key="item.id"><input type="checkbox" :checked="item.done" :aria-busy="routineStore.isBusy(item) ? 'true' : undefined" @click.prevent="toggleRoutine(item)" /><span :class="{ done: item.done }">{{ item.title }}</span><small>{{ item.time }} · {{ tr('{n}일 연속', { n: item.streak }) }}</small></label>
+          <p v-if="!todayRoutines.length" class="empty-state">{{ tr('오늘 예정된 루틴이 없어요. \'전체 보기\'에서 루틴을 만들거나 쉬는 날을 확인해 보세요.') }}</p>
         </template>
 
         <template v-else-if="w.id === 'tasksProgress'">
-          <span>할 일 진행</span><b>{{ doneRate }}<small>%</small></b>
+          <span>{{ tr('할 일 진행') }}</span><b>{{ doneRate }}<small>%</small></b>
           <div class="progress"><em :style="{ width: doneRate + '%' }"></em></div>
-          <p>{{ tasks.filter((x) => x.done).length }}/{{ tasks.length }} 완료</p>
+          <p>{{ tr('{done}/{all} 완료', { done: tasks.filter((x) => x.done).length, all: tasks.length }) }}</p>
         </template>
 
         <template v-else-if="w.id === 'routineRate'">
-          <span>루틴 달성률</span><b>{{ routinePercent }}<small>%</small></b>
-          <div class="progress green"><em :style="{ width: routinePercent + '%' }"></em></div><p>{{ routineDone }}/{{ todayRoutines.length }} 완료</p>
+          <span>{{ tr('루틴 달성률') }}</span><b>{{ routinePercent }}<small>%</small></b>
+          <div class="progress green"><em :style="{ width: routinePercent + '%' }"></em></div><p>{{ tr('{done}/{all} 완료', { done: routineDone, all: todayRoutines.length }) }}</p>
         </template>
 
         <template v-else-if="w.id === 'focusTime'">
-          <span>집중 시간</span><b>2<small>h 40m</small></b><p>어제보다 24분 더 집중했어요</p>
+          <span>{{ tr('집중 시간') }}</span><b>2<small>h 40m</small></b><p>{{ tr('어제보다 24분 더 집중했어요') }}</p>
         </template>
 
         <template v-else-if="w.id === 'eventsCount'">
-          <span>오늘 일정</span><b>{{ todayEvents.length }}<small>개</small></b><p>{{ todayEvents[0] ? todayEvents[0].time + ' · ' + todayEvents[0].title : '등록된 일정이 없어요' }}</p>
+          <span>{{ tr('오늘 일정') }}</span><b>{{ todayEvents.length }}<small v-if="bodyLocale === 'ko'">개</small></b><p>{{ todayEvents[0] ? todayEvents[0].time + ' · ' + todayEvents[0].title : tr('등록된 일정이 없어요') }}</p>
         </template>
 
         <template v-else-if="w.id === 'categoryDonut'">
-          <div class="head"><div><h3>카테고리 비중</h3><p>이번 주 기록 시간</p></div><button @click="router.push('/stats')">통계 →</button></div>
+          <div class="head"><div><h3>{{ tr('카테고리 비중') }}</h3><p>{{ tr('이번 주 기록 시간') }}</p></div><button @click="router.push('/stats')">{{ tr('통계 →') }}</button></div>
           <div class="donut-wrap">
             <div class="donut" :style="{ background: 'conic-gradient(' + donutStops + ')' }"><span class="figure">{{ Math.round(totalMinutes / 60) }}h</span></div>
             <ul class="donut-legend">
-              <li v-for="c in CATEGORIES" :key="c.label"><i :style="{ background: c.color }"></i>{{ c.label }}<b class="figure">{{ Math.round((c.minutes / totalMinutes) * 100) }}%</b></li>
+              <li v-for="c in CATEGORIES" :key="c.label"><i :style="{ background: c.color }"></i>{{ tr(c.label) }}<b class="figure">{{ Math.round((c.minutes / totalMinutes) * 100) }}%</b></li>
             </ul>
           </div>
         </template>
 
         <template v-else-if="w.id === 'weekdayBar'">
-          <div class="head"><div><h3>요일별 패턴</h3><p>어느 요일에 잘 기록했는지</p></div></div>
+          <div class="head"><div><h3>{{ tr('요일별 패턴') }}</h3><p>{{ tr('어느 요일에 잘 기록했는지') }}</p></div></div>
           <div class="chart" style="height: 150px">
-            <div v-for="d in WEEKDAYS" :key="d.d"><b :style="{ height: d.v + '%' }"></b><small>{{ d.d }}</small></div>
+            <div v-for="(d, i) in WEEKDAYS" :key="d.d"><b :style="{ height: d.v + '%' }"></b><small>{{ weekdayName(i) }}</small></div>
           </div>
         </template>
 
         <template v-else-if="w.id === 'planVsActual'">
-          <div class="head"><div><h3>계획 대비 실제</h3><p>이번 주 카테고리별</p></div><button @click="router.push('/stats/compare')">비교 분석 →</button></div>
+          <div class="head"><div><h3>{{ tr('계획 대비 실제') }}</h3><p>{{ tr('이번 주 카테고리별') }}</p></div><button @click="router.push('/stats/compare')">{{ tr('비교 분석 →') }}</button></div>
           <div class="chart" style="height: 150px">
-            <div v-for="b in PLAN_ACTUAL" :key="b.label"><i :style="{ height: b.plan + '%' }"></i><b :style="{ height: b.actual + '%' }"></b><small>{{ b.label }}</small></div>
+            <div v-for="b in PLAN_ACTUAL" :key="b.label"><i :style="{ height: b.plan + '%' }"></i><b :style="{ height: b.actual + '%' }"></b><small>{{ tr(b.label) }}</small></div>
           </div>
-          <div class="chart-legend"><span><i class="swatch plan"></i>계획</span><span><i class="swatch actual"></i>실제 기록</span></div>
+          <div class="chart-legend"><span><i class="swatch plan"></i>{{ tr('계획') }}</span><span><i class="swatch actual"></i>{{ tr('실제 기록') }}</span></div>
         </template>
 
         <template v-else-if="w.id === 'streak'">
-          <span>연속 기록</span><b class="figure">{{ bestStreak }}<small>일</small></b>
-          <p>가장 긴 루틴 · 최고 {{ bestEver }}일</p>
+          <span>{{ tr('연속 기록') }}</span><b class="figure">{{ bestStreak }}<small>{{ unit('일', bestStreak) }}</small></b>
+          <p>{{ tr('가장 긴 루틴 · 최고 {n}일', { n: bestEver }) }}</p>
         </template>
 
         <template v-else-if="w.id === 'godlifeScore'">
-          <span>갓생 점수</span><b class="figure">{{ godlifeScore }}<small>점</small></b>
-          <p>루틴 50% + 할 일 50%</p>
+          <span>{{ tr('갓생 점수') }}</span><b class="figure">{{ godlifeScore }}<small>{{ unit('점', godlifeScore) }}</small></b>
+          <p>{{ tr('루틴 50% + 할 일 50%') }}</p>
         </template>
 
         <template v-else-if="w.id === 'career'">
-          <div class="head"><div><h3>커리어 요약</h3><p>14일 안 지원 마감·면접과 최근 활동</p></div><button @click="router.push('/career')">커리어 대시보드 →</button></div>
-          <p v-if="!session.userId" class="empty-state">로그인하면 지원 마감과 최근 활동을 볼 수 있어요. 로그아웃 상태에서는 커리어 기록을 저장하지 않아요.</p>
+          <div class="head"><div><h3>{{ tr('커리어 요약') }}</h3><p>{{ tr('14일 안 지원 마감·면접과 최근 활동') }}</p></div><button @click="router.push('/career')">{{ tr('커리어 대시보드 →') }}</button></div>
+          <p v-if="!session.userId" class="empty-state">{{ tr('로그인하면 지원 마감과 최근 활동을 볼 수 있어요. 로그아웃 상태에서는 커리어 기록을 저장하지 않아요.') }}</p>
           <template v-else>
             <div v-for="row in careerUpcoming" :key="row.id" class="event"><time class="figure">{{ row.date.slice(5) }}</time><i></i><span><b>{{ row.company }} · {{ row.title }}</b><small>{{ row.label }} · {{ dueLabel(row.days) }}</small></span></div>
-            <p v-if="!careerUpcoming.length" class="empty-state">14일 안에 다가오는 지원 마감이나 면접이 없어요. 취업·이직 지원에서 마감 날짜를 넣으면 여기에 보여요.</p>
-            <p v-if="careerRecent" class="career-recent"><span class="tag">{{ activityTypeLabel(careerRecent.activityType) }}</span> 최근 활동 · {{ careerRecent.title }} <span class="figure">{{ careerRecent.date }}</span></p>
+            <p v-if="!careerUpcoming.length" class="empty-state">{{ tr('14일 안에 다가오는 지원 마감이나 면접이 없어요. 취업·이직 지원에서 마감 날짜를 넣으면 여기에 보여요.') }}</p>
+            <p v-if="careerRecent" class="career-recent"><span class="tag">{{ tr(activityTypeLabel(careerRecent.activityType)) }}</span> {{ tr('최근 활동') }} · {{ careerRecent.title }} <span class="figure">{{ careerRecent.date }}</span></p>
           </template>
         </template>
         <template v-else-if="w.id === 'dday'">
-          <span class="eyebrow">다가오는 날</span>
-          <h3>엄마 생신까지</h3>
+          <span class="eyebrow">{{ tr('다가오는 날') }}</span>
+          <h3>{{ tr('엄마 생신까지') }}</h3>
           <b>D-7</b>
-          <p>8월 22일 · 저녁 식사</p>
-          <button @click="router.push('/dday')">일정 보기 →</button>
+          <p>{{ tr('8월 22일 · 저녁 식사') }}</p>
+          <button @click="router.push('/dday')">{{ tr('일정 보기 →') }}</button>
         </template>
       </article>
     </div>

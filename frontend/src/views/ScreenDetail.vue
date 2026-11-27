@@ -1,4 +1,5 @@
 <script setup>
+import { tr } from '../store/locale'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { SCREENS, domainLabel } from '../data/screens'
@@ -42,29 +43,29 @@ const related = computed(() =>
 <template>
   <template v-if="screen">
     <div class="crumbs">
-      <router-link to="/sitemap">전체 화면</router-link>
+      <router-link to="/sitemap">{{ tr('전체 화면') }}</router-link>
       <span>›</span>
-      <router-link :to="`/sitemap`">{{ domainLabel(screen.domain) }}</router-link>
+      <router-link :to="`/sitemap`">{{ tr(domainLabel(screen.domain)) }}</router-link>
       <span>›</span>
       <span>{{ screen.name }}</span>
     </div>
     <div class="screen-head">
       <div>
-        <p class="eyebrow">{{ screen.id }} · {{ domainLabel(screen.domain) }}</p>
+        <p class="eyebrow">{{ screen.id }} · {{ tr(domainLabel(screen.domain)) }}</p>
         <h1 style="font-size:1.375rem">{{ screen.name }}</h1>
         <p>{{ screen.role }}</p>
       </div>
       <div class="sc-tags">
         <span class="phase-badge" :class="'p' + screen.phase">Phase {{ screen.phase }}</span>
         <span class="tag">{{ screen.type }}</span>
-        <span class="tag">{{ screen.pattern }} 패턴</span>
+        <span class="tag">{{ tr('{pattern} 패턴', { pattern: screen.pattern }) }}</span>
       </div>
     </div>
 
     <component :is="patternComp" :screen="screen" />
 
     <section class="related-nav" v-if="related.length">
-      <h3>{{ domainLabel(screen.domain) }} 도메인의 다른 화면</h3>
+      <h3>{{ tr('{domain} 도메인의 다른 화면', { domain: tr(domainLabel(screen.domain)) }) }}</h3>
       <div class="screen-grid">
         <router-link class="screen-card" v-for="s in related" :key="s.id" :to="s.existingPath ?? `/screens/${s.id}`">
           <div class="sc-top"><span class="sc-id">{{ s.id }}</span></div>
@@ -74,5 +75,5 @@ const related = computed(() =>
       </div>
     </section>
   </template>
-  <p v-else>존재하지 않는 화면 ID입니다.</p>
+  <p v-else>{{ tr('존재하지 않는 화면 ID입니다.') }}</p>
 </template>

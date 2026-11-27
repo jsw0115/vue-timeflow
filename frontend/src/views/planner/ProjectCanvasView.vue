@@ -1,5 +1,7 @@
 <script setup>
 import AppIcon from '../../components/icons/AppIcon.vue'
+import { bodyLocale, storedDefault, tr } from '../../store/locale'
+// 지표 단위 "개"는 한국어에만 붙인다(영어는 숫자만 보인다)
 import PageActions from '../../components/PageActions.vue'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -108,7 +110,7 @@ function save() {
 }
 function onRemove() {
   if (editing.value === 'new') return
-  if (!window.confirm('‘' + editing.value.title + '’ 카드를 삭제할까요?')) return
+  if (!window.confirm(tr('‘{title}’ 카드를 삭제할까요?', { title: editing.value.title }))) return
   removeCard(editing.value.id)
   editing.value = null
 }
@@ -121,11 +123,11 @@ function createColumn() {
   newColumn.value = ''
 }
 function onRemoveColumn(col) {
-  if (!window.confirm('‘' + col.title + '’ 컬럼과 그 안의 카드 ' + countOf(col.id) + '개를 모두 삭제할까요?')) return
+  if (!window.confirm(tr('‘{title}’ 컬럼과 그 안의 카드 {n}개를 모두 삭제할까요?', { title: storedDefault(col.title), n: countOf(col.id) }))) return
   removeColumn(col.id)
 }
 function onReset() {
-  if (!window.confirm('보드를 초기 상태로 되돌릴까요? 지금까지 만든 카드가 사라져요.')) return
+  if (!window.confirm(tr('보드를 초기 상태로 되돌릴까요? 지금까지 만든 카드가 사라져요.'))) return
   resetBoard()
 }
 function priorityLabel(id) {
@@ -136,44 +138,44 @@ function priorityLabel(id) {
 <template>
   <div class="page-tools">
     <HelpPopover
-      title="프로젝트 캔버스 사용법"
-      summary="작업을 카드로 만들어 상태별 컬럼에 놓고, 끌어다 옮기며 진행 상황을 관리하는 보드예요."
+      :title="tr('프로젝트 캔버스 사용법')"
+      :summary="tr('작업을 카드로 만들어 상태별 컬럼에 놓고, 끌어다 옮기며 진행 상황을 관리하는 보드예요.')"
       :steps="[
-        '컬럼 아래 ‘+ 카드 추가’로 작업을 만들어요.',
-        '카드를 끌어서 다른 컬럼에 놓으면 상태가 바뀌어요. (← → 버튼으로도 옮길 수 있어요)',
-        '카드를 클릭하면 담당자·마감·우선순위·체크리스트를 편집할 수 있어요.',
-        '‘컬럼 관리’에서 컬럼을 추가하거나 WIP 제한을 걸 수 있어요.',
+        tr('컬럼 아래 ‘+ 카드 추가’로 작업을 만들어요.'),
+        tr('카드를 끌어서 다른 컬럼에 놓으면 상태가 바뀌어요. (← → 버튼으로도 옮길 수 있어요)'),
+        tr('카드를 클릭하면 담당자·마감·우선순위·체크리스트를 편집할 수 있어요.'),
+        tr('‘컬럼 관리’에서 컬럼을 추가하거나 WIP 제한을 걸 수 있어요.'),
       ]"
       :terms="[
-        { term: 'WIP 제한', desc: '한 컬럼에 동시에 둘 수 있는 카드 수예요. 넘으면 컬럼 머리글이 경고로 바뀌어요.' },
-        { term: '지연', desc: '마감일이 지났는데 완료 컬럼에 없는 카드예요.' },
-        { term: '플래너 연동', desc: '카드에 시간을 적어두면 그날 플래너 타임블록과 연결해 볼 수 있어요.' },
+        { term: tr('WIP 제한'), desc: tr('한 컬럼에 동시에 둘 수 있는 카드 수예요. 넘으면 컬럼 머리글이 경고로 바뀌어요.') },
+        { term: tr('지연'), desc: tr('마감일이 지났는데 완료 컬럼에 없는 카드예요.') },
+        { term: tr('플래너 연동'), desc: tr('카드에 시간을 적어두면 그날 플래너 타임블록과 연결해 볼 수 있어요.') },
       ]"
-      :tips="['필터를 걸어도 카드 개수(컬럼 머리글)는 전체 기준으로 세요.', '보드 상태는 이 브라우저에 저장돼요.']"
+      :tips="[tr('필터를 걸어도 카드 개수(컬럼 머리글)는 전체 기준으로 세요.'), tr('보드 상태는 이 브라우저에 저장돼요.')]"
     />
     <span></span>
-    <button class="review" style="margin: 0" @click="showColumns = true">컬럼 관리</button>
-    <PageActions><button class="primary" @click="openAdd(board.columns[0].id)">+ 카드 추가</button></PageActions>
+    <button class="review" style="margin: 0" @click="showColumns = true">{{ tr('컬럼 관리') }}</button>
+    <PageActions><button class="primary" @click="openAdd(board.columns[0].id)">{{ tr('+ 카드 추가') }}</button></PageActions>
   </div>
 
   <div class="metrics" style="--metric-cols: 4; margin-bottom: 16px">
-    <article><span>전체 카드</span><b class="figure">{{ progress.total }}<small>개</small></b></article>
-    <article><span>완료</span><b class="figure">{{ progress.done }}<small>개</small></b><small>{{ progress.pct }}%</small></article>
-    <article><span>지연</span><b class="figure">{{ overdueCount }}<small>개</small></b><small>마감 초과</small></article>
-    <article><span>컬럼</span><b class="figure">{{ board.columns.length }}<small>개</small></b></article>
+    <article><span>{{ tr('전체 카드') }}</span><b class="figure">{{ progress.total }}<small v-if="bodyLocale === 'ko'">개</small></b></article>
+    <article><span>{{ tr('완료') }}</span><b class="figure">{{ progress.done }}<small v-if="bodyLocale === 'ko'">개</small></b><small>{{ progress.pct }}%</small></article>
+    <article><span>{{ tr('지연') }}</span><b class="figure">{{ overdueCount }}<small v-if="bodyLocale === 'ko'">개</small></b><small>{{ tr('마감 초과') }}</small></article>
+    <article><span>{{ tr('컬럼') }}</span><b class="figure">{{ board.columns.length }}<small v-if="bodyLocale === 'ko'">개</small></b></article>
   </div>
 
   <ListFilterBar
     v-model:query="query"
     v-model:filters="filterModel"
     :groups="FILTER_GROUPS"
-    placeholder="카드 제목·담당자·라벨 검색"
+    :placeholder="tr('카드 제목·담당자·라벨 검색')"
     :result-count="visibleTotal"
     :total-count="progress.total"
   >
     <template #actions>
       <button class="review" style="margin: 0" :class="{ 'chip-on': filters.overdue }" @click="toggleOverdue">
-        지연만 보기{{ overdueCount ? ' (' + overdueCount + ')' : '' }}
+        {{ overdueCount ? tr('지연만 보기 ({n})', { n: overdueCount }) : tr('지연만 보기') }}
       </button>
     </template>
   </ListFilterBar>
@@ -189,7 +191,7 @@ function priorityLabel(id) {
       @drop="onDropColumn(col.id)"
     >
       <div class="kanban-col-head" :class="{ 'wip-over': isWipExceeded(col) }">
-        {{ col.title }}
+        {{ storedDefault(col.title) }}
         <span>{{ countOf(col.id) }}<template v-if="col.wip"> / {{ col.wip }}</template></span>
       </div>
 
@@ -206,99 +208,99 @@ function priorityLabel(id) {
       >
         <div class="kanban-card-top">
           <b>{{ c.title }}</b>
-          <span class="prio" :class="c.priority">{{ priorityLabel(c.priority) }}</span>
+          <span class="prio" :class="c.priority">{{ tr(priorityLabel(c.priority)) }}</span>
         </div>
         <div class="kanban-card-labels">
-          <span v-for="l in c.labels" :key="l" class="tag">{{ l }}</span>
+          <span v-for="l in c.labels" :key="l" class="tag">{{ tr(l) }}</span>
           <span v-if="c.plannerBlock" class="tag">▦ {{ c.plannerBlock }}</span>
         </div>
         <div class="kanban-card-meta">
           <PersonTag v-if="c.assignee" :name="c.assignee" />
-          <small v-else style="color: var(--color-muted)">담당자 미정</small>
+          <small v-else style="color: var(--color-muted)">{{ tr('담당자 미정') }}</small>
           <small v-if="c.due" class="figure" :class="{ 'sla-over': isOverdue(c) }">{{ c.due.slice(5) }}</small>
-          <small v-if="checklistOf(c).total" class="figure with-icon"><AppIcon name="check" :size="14" />{{ checklistOf(c).done }}/{{ checklistOf(c).total }}<span class="sr-only">체크리스트 완료</span></small>
+          <small v-if="checklistOf(c).total" class="figure with-icon"><AppIcon name="check" :size="14" />{{ checklistOf(c).done }}/{{ checklistOf(c).total }}<span class="sr-only">{{ tr('체크리스트 완료') }}</span></small>
         </div>
         <div class="kanban-card-move">
-          <button class="person-info" title="왼쪽 컬럼으로" aria-label="왼쪽 컬럼으로" @click.stop="shift(c, -1)">←</button>
-          <button class="person-info" title="오른쪽 컬럼으로" aria-label="오른쪽 컬럼으로" @click.stop="shift(c, 1)">→</button>
+          <button class="person-info" :title="tr('왼쪽 컬럼으로')" :aria-label="tr('왼쪽 컬럼으로')" @click.stop="shift(c, -1)">←</button>
+          <button class="person-info" :title="tr('오른쪽 컬럼으로')" :aria-label="tr('오른쪽 컬럼으로')" @click.stop="shift(c, 1)">→</button>
         </div>
       </article>
 
-      <button class="kanban-add" @click="openAdd(col.id)">+ 카드 추가</button>
+      <button class="kanban-add" @click="openAdd(col.id)">{{ tr('+ 카드 추가') }}</button>
     </div>
   </div>
 
   <section class="card" style="margin-top: 16px; display: flex; align-items: center; gap: 14px">
     <span>▦</span>
     <p style="margin: 0; flex: 1">
-      플래너 연동이 설정된 카드는 카드에 ▦ 시간이 표시돼요. 오늘 플래너에서 같은 시간대 블록과 함께 볼 수 있어요.
+      {{ tr('플래너 연동이 설정된 카드는 카드에 ▦ 시간이 표시돼요. 오늘 플래너에서 같은 시간대 블록과 함께 볼 수 있어요.') }}
     </p>
-    <button class="review" style="margin: 0" @click="router.push('/planner')">플래너에서 보기 →</button>
+    <button class="review" style="margin: 0" @click="router.push('/planner')">{{ tr('플래너에서 보기 →') }}</button>
   </section>
 
   <!-- 카드 추가 · 상세 -->
-  <Modal v-if="editing" :title="editing === 'new' ? '카드 추가' : '카드 상세'" wide @close="editing = null">
-    <label>제목<input v-model="draft.title" placeholder="예: 릴리즈 노트 작성" autofocus /></label>
+  <Modal v-if="editing" :title="editing === 'new' ? tr('카드 추가') : tr('카드 상세')" wide @close="editing = null">
+    <label>{{ tr('제목') }}<input v-model="draft.title" :placeholder="tr('예: 릴리즈 노트 작성')" autofocus /></label>
     <div class="form-row">
-      <label style="flex: 1">담당자<input v-model="draft.assignee" placeholder="예: 지수" /></label>
-      <label style="flex: 1">마감일<input type="date" v-model="draft.due" /></label>
-      <label style="flex: 1">컬럼
-        <select v-model="draft.columnId"><option v-for="c in board.columns" :key="c.id" :value="c.id">{{ c.title }}</option></select>
+      <label style="flex: 1">{{ tr('담당자') }}<input v-model="draft.assignee" :placeholder="tr('예: 지수')" /></label>
+      <label style="flex: 1">{{ tr('마감일') }}<input type="date" v-model="draft.due" /></label>
+      <label style="flex: 1">{{ tr('컬럼') }}
+        <select v-model="draft.columnId"><option v-for="c in board.columns" :key="c.id" :value="c.id">{{ storedDefault(c.title) }}</option></select>
       </label>
     </div>
 
-    <div class="section-label">우선순위</div>
+    <div class="section-label">{{ tr('우선순위') }}</div>
     <div class="filter" style="width: fit-content; margin: 6px 0 12px">
-      <button v-for="p in PRIORITIES" :key="p.id" type="button" :class="{ selected: draft.priority === p.id }" @click="draft.priority = p.id">{{ p.label }}</button>
+      <button v-for="p in PRIORITIES" :key="p.id" type="button" :class="{ selected: draft.priority === p.id }" @click="draft.priority = p.id">{{ tr(p.label) }}</button>
     </div>
 
-    <div class="section-label">라벨</div>
+    <div class="section-label">{{ tr('라벨') }}</div>
     <div class="filter" style="width: fit-content; margin: 6px 0 12px">
-      <button v-for="l in LABELS" :key="l" type="button" :class="{ selected: draft.labels.includes(l) }" @click="toggleDraftLabel(l)">{{ l }}</button>
+      <button v-for="l in LABELS" :key="l" type="button" :class="{ selected: draft.labels.includes(l) }" @click="toggleDraftLabel(l)">{{ tr(l) }}</button>
     </div>
 
-    <label>플래너 타임블록<input v-model="draft.plannerBlock" placeholder="예: 09:00~11:00 (선택)" /></label>
+    <label>{{ tr('플래너 타임블록') }}<input v-model="draft.plannerBlock" :placeholder="tr('예: 09:00~11:00 (선택)')" /></label>
 
-    <div class="section-label">체크리스트</div>
+    <div class="section-label">{{ tr('체크리스트') }}</div>
     <label class="task" v-for="(item, i) in draft.checklist" :key="i" style="border-bottom: 1px solid var(--color-hairline)">
       <input type="checkbox" v-model="item.done" />
       <span style="flex: 1" :class="{ done: item.done }">{{ item.text }}</span>
-      <button class="person-info" type="button" title="삭제" aria-label="삭제" @click.prevent="draft.checklist.splice(i, 1)">×</button>
+      <button class="person-info" type="button" :title="tr('삭제')" :aria-label="tr('삭제')" @click.prevent="draft.checklist.splice(i, 1)">×</button>
     </label>
     <div class="form-row">
-      <input v-model="checklistInput" placeholder="항목 추가 후 Enter" style="flex: 1" @keyup.enter="addChecklistItem" />
-      <button class="review" style="margin: 0" @click="addChecklistItem">추가</button>
+      <input v-model="checklistInput" :placeholder="tr('항목 추가 후 Enter')" style="flex: 1" @keyup.enter="addChecklistItem" />
+      <button class="review" style="margin: 0" @click="addChecklistItem">{{ tr('추가') }}</button>
     </div>
 
-    <p v-if="!canSave" class="form-note">제목을 입력하면 저장할 수 있어요.</p>
+    <p v-if="!canSave" class="form-note">{{ tr('제목을 입력하면 저장할 수 있어요.') }}</p>
 
     <template #footer>
-      <button type="button" class="modal-secondary" @click="editing = null">취소</button>
+      <button type="button" class="modal-secondary" @click="editing = null">{{ tr('취소') }}</button>
       <div class="form-row">
-      <button class="primary" style="flex: 1" :disabled="!canSave" @click="save">{{ editing === 'new' ? '카드 추가하기' : '변경 저장' }}</button>
-      <button v-if="editing !== 'new'" class="review" style="margin: 0" @click="onRemove">삭제</button>
+      <button class="primary" style="flex: 1" :disabled="!canSave" @click="save">{{ editing === 'new' ? tr('카드 추가하기') : tr('변경 저장') }}</button>
+      <button v-if="editing !== 'new'" class="review" style="margin: 0" @click="onRemove">{{ tr('삭제') }}</button>
           </div>
     </template>
   </Modal>
 
   <!-- 컬럼 관리 -->
-  <Modal v-if="showColumns" title="컬럼 관리" wide @close="showColumns = false">
-    <p class="form-note" style="margin-top: 0">WIP 제한을 0으로 두면 제한 없이 쌓을 수 있어요.</p>
+  <Modal v-if="showColumns" :title="tr('컬럼 관리')" wide @close="showColumns = false">
+    <p class="form-note" style="margin-top: 0">{{ tr('WIP 제한을 0으로 두면 제한 없이 쌓을 수 있어요.') }}</p>
     <div class="column-row" v-for="col in board.columns" :key="col.id">
-      <input :value="col.title" @change="renameColumn(col.id, $event.target.value)" />
+      <input :value="storedDefault(col.title)" @change="renameColumn(col.id, $event.target.value)" />
       <label class="wip-field">WIP<input type="number" min="0" max="20" :value="col.wip" @change="setWip(col.id, $event.target.value)" /></label>
-      <span class="badge" :class="isWipExceeded(col) ? 'danger' : ''">카드 {{ countOf(col.id) }}개</span>
-      <button class="review" style="margin: 0" :disabled="board.columns.length <= 1" @click="onRemoveColumn(col)">삭제</button>
+      <span class="badge" :class="isWipExceeded(col) ? 'danger' : ''">{{ tr('카드 {n}개', { n: countOf(col.id) }) }}</span>
+      <button class="review" style="margin: 0" :disabled="board.columns.length <= 1" @click="onRemoveColumn(col)">{{ tr('삭제') }}</button>
     </div>
     <div class="form-row" style="margin-top: 12px">
-      <input v-model="newColumn" placeholder="새 컬럼 이름" style="flex: 1" @keyup.enter="createColumn" />
-      <button class="review" style="margin: 0" @click="createColumn">컬럼 추가</button>
+      <input v-model="newColumn" :placeholder="tr('새 컬럼 이름')" style="flex: 1" @keyup.enter="createColumn" />
+      <button class="review" style="margin: 0" @click="createColumn">{{ tr('컬럼 추가') }}</button>
     </div>
 
     <template #footer>
       <div class="form-row">
-      <button class="review" style="margin: 0" @click="onReset">보드 초기화</button>
-      <button class="primary" style="flex: 1" @click="showColumns = false">완료</button>
+      <button class="review" style="margin: 0" @click="onReset">{{ tr('보드 초기화') }}</button>
+      <button class="primary" style="flex: 1" @click="showColumns = false">{{ tr('완료') }}</button>
           </div>
     </template>
   </Modal>

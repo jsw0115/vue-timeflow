@@ -63,7 +63,8 @@ test('narrow and short viewport guards are present', () => {
   assert.ok(media.some(m => m.params === '(max-height: 600px)' && m.toString().includes('overflow-y: auto')))
 })
 test('dynamic tag text and diary inline fields follow shared font preferences', () => {
-  assert.match(read('views/tags/TagBoardView.vue'), /fontSize:.*'rem'/)
+  // 예전 태그 보드(TagBoardView)는 쓰이지 않아 지웠다. 지금 태그 화면(UnifiedInbox)은 글자 크기를 px로 직접 정하지 않는다
+  assert.doesNotMatch(read('features/inbox/views/UnifiedInbox.vue'), /fontSize\s*:|font-size\s*:\s*\d+px/)
   assert.doesNotMatch(read('views/diary/DiaryEntryView.vue'), /<input[^>]*font-size:/)
   assert.equal(declarations('.modal-head h3')['font-size'], '1.125rem')
 })

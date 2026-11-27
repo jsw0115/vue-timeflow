@@ -13,6 +13,10 @@
 .form-fieldset { margin: 16px 0 0; padding: 0; border: 0; min-width: 0; }
 .form-fieldset legend { font-size: 0.875rem; font-weight: 600; }
 .modal-card .form-fieldset .form-row label { margin-top: 0; }
+/* 모달 본문 바로 아래 줄: 첫 라벨만 위 여백이 0이라 같은 줄 라벨 높이가 어긋나던 것을 줄 단위 여백으로 맞춘다. 좁은 화면에서 접혀도 라벨 간격(14px)은 같다. */
+.modal-body > .form-row { row-gap: 14px; margin-top: 14px; }
+.modal-body > .form-row:first-child { margin-top: 0; }
+.modal-body > .form-row > label { margin-top: 0; }
 .modal-card :is(input, select, textarea) { min-width: 0; max-width: 100%; font-size: 0.875rem; color: var(--color-foreground); }
 .modal-card input:is([type="checkbox"], [type="radio"]) { appearance: auto; display: inline-block; width: 18px; height: 18px; padding: 0; margin: 0; flex: 0 0 18px; accent-color: var(--color-foreground); }
 .modal-card :is(.check-field, .task, .picker-row) { display: flex; flex-direction: row; align-items: center; gap: 12px; }

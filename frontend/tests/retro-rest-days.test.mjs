@@ -30,7 +30,7 @@ test('쉬는 날 창은 지난 날짜를 받되 한도를 넘으면 남은 횟�
   assert.doesNotMatch(view, /오늘 이후 날짜만 쉬는 날로 정할 수 있어요/)
   assert.match(view, /addSkipDates\(routineRule\(restTarget\.value\), restDates\.value, \{ today: today\.value \}\)/)
   assert.match(view, /if \(retroOver\.value\) return retroOver\.value/)
-  assert.match(view, /올해 <span class="figure">\{\{ retroThisYear \}\}\/\{\{ RETRO_SKIPS_PER_YEAR \}\}<\/span>번 썼어요/)
+  assert.match(view, /올해 \{used\}\/\{max\}번 썼어요\.', \{ max: RETRO_SKIPS_PER_YEAR, used: retroThisYear \}/)
 })
 
 test('중지 시작일과 중지 기간은 서버가 정하므로 화면은 보내지 않는다', () => {
