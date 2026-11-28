@@ -35,6 +35,8 @@ function toggleGroup(label) {
 
 // 권한은 서버가 정한다. 관리자 지표 API가 403이면 화면과 메뉴를 보이지 않고 안내만 둔다(PR-10 5단계, UF-117·UT-199)
 watch(() => session.userId, (id) => refreshAdminAccess(Boolean(id)), { immediate: true })
+// 사용자 창에서 로그아웃했거나 세션이 끝나 이 창의 세션이 비면, 사용자 창이 연 관리자 창은 닫는다
+watch(() => session.userId, (id, previous) => { if (!id && previous && window.opener) window.close() })
 const allowed = computed(() => adminAccess.state === 'allowed')
 const skipToMain = () => document.getElementById('main-content')?.focus()
 // 서버에 연결한 관리 화면. 나머지는 아직 시연 데이터라 화면 위에 알린다

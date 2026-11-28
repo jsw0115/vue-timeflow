@@ -20,6 +20,13 @@ function save(value) {
   sessionStorage.setItem(key, JSON.stringify(value))
 }
 export function clearSession() { save({}) }
+// 같은 기기의 다른 창에도 로그아웃을 알린다. window.open으로 연 관리자 창은 토큰이 든 sessionStorage 사본을 따로 갖고,
+// 먼저 갱신했다면 이 창이 모르는 refresh 토큰을 들고 있다. 알림을 받은 창은 자기 토큰을 서버에서 폐기한 뒤 지운다
+const authChannel = typeof BroadcastChannel === 'undefined' ? null : new BroadcastChannel('timeflow.auth.v1')
+authChannel?.unref?.()
+if (authChannel) authChannel.onmessage = ({ data }) => {
+  if (data?.type === 'logout' && data.userId && data.userId === session.userId) endSession().catch(() => {})
+}
 async function publicRequest(path, body) {
   let response
   try {
@@ -35,9 +42,14 @@ async function publicRequest(path, body) {
 }
 export async function login(email, password) { save(await publicRequest('login', { email, password })) }
 export async function signup(body) { return publicRequest('signup', body) }
-export async function logout() {
+async function endSession() {
   try { await authorizedFetch('/api/auth/logout', { method: 'POST', body: JSON.stringify({ refreshToken: session.refreshToken }) }) }
   finally { clearSession() }
+}
+export async function logout() {
+  const userId = session.userId
+  try { await endSession() }
+  finally { authChannel?.postMessage({ type: 'logout', userId }) }
 }
 async function refresh() {
   if (!session.refreshToken) return false
