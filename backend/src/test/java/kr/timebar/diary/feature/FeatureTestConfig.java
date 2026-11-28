@@ -24,7 +24,7 @@ import static org.mockito.Mockito.mock;
 @EnableTransactionManagement
 public class FeatureTestConfig {
     @Bean DataSource dataSource() {
-        var source = new DriverManagerDataSource("jdbc:h2:mem:features_" + java.util.UUID.randomUUID() + ";MODE=MySQL;DB_CLOSE_DELAY=-1", "sa", "");
+        var source = new DriverManagerDataSource("jdbc:h2:mem:features_" + java.util.UUID.randomUUID() + ";MODE=MySQL;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000", "sa", "");
         var jdbc = new JdbcTemplate(source);
         jdbc.execute("CREATE TABLE users(id VARCHAR(36) PRIMARY KEY)");
         jdbc.execute("CREATE TABLE planner_item(id BIGINT PRIMARY KEY,date DATE)");

@@ -6,6 +6,7 @@ import kr.timebar.diary.common.*;
 import kr.timebar.diary.security.CurrentUser;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
+import org.springframework.transaction.annotation.Transactional;
 import java.security.SecureRandom;
 import java.time.*;
 import java.util.*;
@@ -97,9 +98,12 @@ public class PortfolioLinkController {
 
     /** 비밀번호가 걸린 링크 열기(Q-39). 틀리면 401, 틀린 횟수가 10번이 되면 링크를 잠가 403이다. 비밀번호 없는 링크는 바로 내용을 준다. */
     @PostMapping("/public/portfolios/{token}/unlock")
+    @Transactional(noRollbackFor = ApiException.class)
     public ApiResponse<?> unlock(@PathVariable String token, @RequestBody(required = false) Map<String,Object> body) {
         var row = openLink(token);
         if (row.get("passwordHash") == null) return ApiResponse.ok(content(row));
+        // 틀린 횟수는 행을 잠근 채 다시 읽고 센다. 동시에 보낸 추측이 버전 충돌(409)로 빠져 세지지 않으면 잠금을 넘길 수 있다
+        row = store.lock(FeatureStore.SYSTEM, FeatureType.PORTFOLIO_LINK, row.get("id").toString());
         int failed = row.get("failedAttempts") instanceof Number n ? n.intValue() : 0;
         if (failed >= MAX_FAILED) throw new ApiException(ErrorCode.FORBIDDEN, "비밀번호를 여러 번 틀려 이 링크를 잠갔어요. 링크를 보낸 사람에게 새 링크를 받아 주세요.");
         String password = body == null ? "" : Objects.toString(body.get("password"), "");
