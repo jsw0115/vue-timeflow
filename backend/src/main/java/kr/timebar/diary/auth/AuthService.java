@@ -79,7 +79,7 @@ public class AuthService {
         user.recordLogin();
 
         String accessToken = jwtTokenProvider.createAccessToken(user.getId(), user.getEmail(), user.getRole().name(), user.getAuthVersion());
-        String refreshToken = issueRefreshToken(user.getId());
+        String refreshToken = issueRefreshToken(user);
         return new LoginResponse(user.getId(), user.getEmail(), user.getNickname(), user.getRole().name(), accessToken, refreshToken);
     }
 
@@ -98,20 +98,29 @@ public class AuthService {
         String tokenHash = TokenHashSupporter.sha256Hex(refreshToken);
         RefreshTokenEntity stored = refreshTokenRepository.findByTokenHash(tokenHash)
                 .orElseThrow(() -> new ApiException(ErrorCode.TOKEN_INVALID));
+        String userId = claims.getSubject();
+        if (!stored.getUserId().equals(userId)) {
+            throw new ApiException(ErrorCode.TOKEN_INVALID);
+        }
         if (!stored.isActive()) {
             throw new ApiException(ErrorCode.TOKEN_EXPIRED);
         }
-        String userId = claims.getSubject();
         UserEntity user = userRepository.findById(userId).orElseThrow(() -> new ApiException(ErrorCode.TOKEN_INVALID));
         if (!user.isActive()) {
             throw new ApiException(ErrorCode.ACCOUNT_DISABLED);
         }
-
-        stored.revoke();
-        refreshTokenRepository.save(stored);
+        // 비밀번호 변경·강제 로그아웃은 계정 버전을 올린다. 그 전에 발급된 토큰과 버전이 없는 옛 토큰은 다시 로그인하게 한다.
+        Number version = claims.get("av", Number.class);
+        if (version == null || version.longValue() != user.getAuthVersion()) {
+            throw new ApiException(ErrorCode.TOKEN_EXPIRED);
+        }
+        // 조건부 폐기로 한 번만 소비한다. 동시에 들어온 갱신이나 그사이 폐기된 토큰은 0건이 되어 거부된다.
+        if (refreshTokenRepository.revokeByTokenHash(tokenHash, LocalDateTime.now()) != 1) {
+            throw new ApiException(ErrorCode.TOKEN_EXPIRED);
+        }
 
         String newAccessToken = jwtTokenProvider.createAccessToken(user.getId(), user.getEmail(), user.getRole().name(), user.getAuthVersion());
-        String newRefreshToken = issueRefreshToken(user.getId());
+        String newRefreshToken = issueRefreshToken(user);
         return new TokenPairResponse(newAccessToken, newRefreshToken);
     }
 
@@ -121,10 +130,10 @@ public class AuthService {
         return new MeResponse(user.getId(), user.getEmail(), user.getNickname(), user.getRole().name());
     }
 
-    private String issueRefreshToken(String userId) {
-        String refreshToken = jwtTokenProvider.createRefreshToken(userId);
+    private String issueRefreshToken(UserEntity user) {
+        String refreshToken = jwtTokenProvider.createRefreshToken(user.getId(), user.getAuthVersion());
         RefreshTokenEntity entity = new RefreshTokenEntity(
-                userId,
+                user.getId(),
                 TokenHashSupporter.sha256Hex(refreshToken),
                 LocalDateTime.now().plusSeconds(jwtTokenProvider.refreshTtlSeconds()));
         refreshTokenRepository.save(entity);

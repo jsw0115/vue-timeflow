@@ -18,7 +18,8 @@ import java.util.Date;
 
 /**
  * jjwt 0.11.5 기반 Access/Refresh 토큰 발급·검증. 액세스 토큰은 subject=userId, 클레임에
- * email/role을 담고, 리프레시 토큰은 subject만 담아 회전(rotate)·폐기(revoke) 대상 식별에만 쓴다.
+ * email/role을 담고, 리프레시 토큰은 subject와 계정 버전(av)만 담아 회전(rotate)·폐기(revoke) 대상 식별과
+ * 비밀번호 변경·강제 로그아웃 이전 세션 거부에 쓴다.
  */
 @Component
 @EnableConfigurationProperties(JwtProperties.class)
@@ -54,12 +55,13 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    public String createRefreshToken(String userId) {
+    public String createRefreshToken(String userId, long authVersion) {
         Instant now = Instant.now();
         return Jwts.builder()
                 .setId(java.util.UUID.randomUUID().toString())
                 .setSubject(userId)
                 .setIssuer(properties.getIssuer())
+                .claim("av", authVersion)
                 .claim("typ", "refresh")
                 .setIssuedAt(Date.from(now))
                 .setExpiration(Date.from(now.plusSeconds(properties.getRefreshTtlSeconds())))
