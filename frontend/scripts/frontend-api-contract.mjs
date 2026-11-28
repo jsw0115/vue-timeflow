@@ -167,7 +167,7 @@ const custom = {
   'PUT /api/routine-records/{id}/history/{date}': object({ completed: boolean, version: integer(1) }, ['completed']),
   'POST /api/settings': ref('SETTINGUpsert'), 'POST /api/settings/{section}': ref('SETTINGUpsert'), 'PUT /api/admin/settings': ref('SETTINGUpsert'),
   'PUT /api/user/profile': object({ nickname: string(80), timeZone: string(64), intro: string(), mode: choice('J', 'P', 'B'), dayStartHour: { ...integer(0, 6), description: '하루 경계 시각(정시). 기본 0. 통계·오늘의 날짜 배정에만 쓰고 저장된 시각은 바꾸지 않는다. intro·mode처럼 보내지 않으면 저장값에서 빠진다.' } }, ['nickname']),
-  'PUT /api/user/password': object({ currentPassword: string(72), newPassword: { ...string(72), minLength: 8 } }, ['currentPassword', 'newPassword']),
+  'PUT /api/user/password': { ...object({ currentPassword: string(72), newPassword: { ...string(72), minLength: 8 } }, ['currentPassword', 'newPassword']), description: '현재 비밀번호를 확인한 뒤 바꾸고 이 계정의 refresh 토큰을 모두 폐기한다. 현재 비밀번호가 틀리면 401이다. 확인 실패는 로그인과 따로 계정별로 세어 5번 틀리면 15분 동안 403(잠김)이며, 이 잠금은 로그인을 막지 않는다.' },
   'POST /api/admin/users': object({ email: { type: 'string', format: 'email', maxLength: 200 }, nickname: string(80), password: { ...string(72), minLength: 8 }, role: choice('USER', 'ADMIN') }, ['email', 'nickname', 'password']),
   'PUT /api/admin/users/{id}': object({ nickname: string(80), role: choice('USER', 'ADMIN'), status: choice('ACTIVE', 'SUSPENDED', 'DELETED') }),
   'PUT /api/admin/tickets/{id}': object({ userId: string(36), version: integer(1), reply: string(20000), status: choice('OPEN', 'IN_PROGRESS', 'ANSWERED', 'HOLD') }, ['userId', 'version', 'status']),

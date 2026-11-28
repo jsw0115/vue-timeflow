@@ -60,5 +60,6 @@ public class FeatureTestConfig {
     @Bean kr.timebar.diary.social.PeopleFinder peopleFinder(UserRepository users, SocialService social) { return new kr.timebar.diary.social.PeopleFinder(users, social); }
     @Bean kr.timebar.diary.records.ContactAccounts contactAccounts(FeatureStore store, kr.timebar.diary.social.PeopleFinder people) { return new kr.timebar.diary.records.ContactAccounts(store, people); }
     @Bean AdminService admin(UserRepository users, FeatureStore store, RefreshTokenRepository tokens, PasswordEncoder encoder, PasswordPolicy passwords) { return new AdminService(users, store, tokens, encoder, passwords); }
-    @Bean SettingsService settings(FeatureStore store, UserRepository users, PasswordEncoder encoder, PasswordPolicy passwords, RefreshTokenRepository tokens) { return new SettingsService(store, users, encoder, passwords, tokens); }
+    @Bean LoginThrottleRepository throttles() { return mock(LoginThrottleRepository.class); }
+    @Bean SettingsService settings(FeatureStore store, UserRepository users, PasswordEncoder encoder, PasswordPolicy passwords, RefreshTokenRepository tokens, LoginThrottleRepository throttles) { return new SettingsService(store, users, encoder, passwords, tokens, throttles); }
 }

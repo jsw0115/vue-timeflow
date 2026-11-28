@@ -23,8 +23,9 @@ public class SettingsService {
     private final PasswordEncoder encoder;
     private final PasswordPolicy passwords;
     private final RefreshTokenRepository tokens;
-    public SettingsService(FeatureStore store, UserRepository users, PasswordEncoder encoder, PasswordPolicy passwords, RefreshTokenRepository tokens) {
-        this.store = store; this.users = users; this.encoder = encoder; this.passwords = passwords; this.tokens = tokens;
+    private final LoginThrottleRepository throttles;
+    public SettingsService(FeatureStore store, UserRepository users, PasswordEncoder encoder, PasswordPolicy passwords, RefreshTokenRepository tokens, LoginThrottleRepository throttles) {
+        this.store = store; this.users = users; this.encoder = encoder; this.passwords = passwords; this.tokens = tokens; this.throttles = throttles;
     }
     public Map<String,Object> get(String user, String section) {
         section(section);
@@ -73,10 +74,21 @@ public class SettingsService {
         else store.replace(user, FeatureType.SETTING, "profile", ((Number) previous.get().get("version")).longValue(), Map.of("value", extra));
         return profile(user);
     }
+    /**
+     * 현재 비밀번호를 확인하고 바꾼다. 확인 실패는 로그인과 따로 계정별로 세어 5번 틀리면 15분 동안 변경만 막는다(로그인은 막지 않는다).
+     * 계정 행을 잠가 같은 계정의 시도를 한 줄로 세운다. 실패 횟수가 남도록 오류 응답에도 커밋한다.
+     */
+    @Transactional(noRollbackFor = ApiException.class)
     public void password(String user, Map<String,Object> body) {
         FeatureInput.keys(body, Set.of("currentPassword", "newPassword"));
-        UserEntity account = account(user);
-        if (!encoder.matches(FeatureInput.requiredText(body, "currentPassword"), account.getPasswordHash())) throw new ApiException(ErrorCode.INVALID_CREDENTIALS);
+        UserEntity account = users.findByIdForUpdate(user).orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND));
+        LoginThrottleEntity throttle = throttles.findForUpdate(ThrottleKeyType.PASSWORD, user).orElseGet(() -> new LoginThrottleEntity(ThrottleKeyType.PASSWORD, user));
+        if (throttle.isLocked()) throw new ApiException(ErrorCode.ACCOUNT_LOCKED, "현재 비밀번호를 여러 번 틀려 비밀번호 변경을 잠시 막았어요. 15분 뒤에 다시 시도해 주세요.");
+        if (!encoder.matches(FeatureInput.requiredText(body, "currentPassword"), account.getPasswordHash())) {
+            throttle.recordFailure(); throttles.save(throttle);
+            throw new ApiException(ErrorCode.INVALID_CREDENTIALS);
+        }
+        if (throttle.getFailCount() > 0) { throttle.recordSuccess(); throttles.save(throttle); }
         String password = FeatureInput.requiredText(body, "newPassword"); passwords.validateOrThrow(password);
         account.changePassword(encoder.encode(password)); tokens.revokeAllActiveByUserId(user, LocalDateTime.now(ZoneOffset.UTC));
     }

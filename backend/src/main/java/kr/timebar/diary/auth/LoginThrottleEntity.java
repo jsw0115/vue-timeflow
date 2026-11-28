@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-/** 기존 auth_db.login_throttle 테이블 매핑. 이메일 또는 IP 기준 로그인 실패 횟수를 세어 5회 실패 시 15분 잠근다. */
+/** 기존 auth_db.login_throttle 테이블 매핑. 이메일 또는 IP 기준 로그인 실패 횟수와, 계정 ID 기준 비밀번호 변경 확인 실패 횟수를 따로 세어 5회 실패 시 15분 잠근다. */
 @Getter
 @NoArgsConstructor
 @Entity

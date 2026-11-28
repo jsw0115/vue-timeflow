@@ -3684,6 +3684,8 @@ file을 multipart/form-data로 전달한다. boundary는 HTTP 클라이언트가
 | currentPassword | string | 예 | 길이 ≤ 72 |
 | newPassword | string | 예 | 길이 ≤ 72 |
 
+현재 비밀번호를 확인한 뒤 바꾸고 이 계정의 refresh 토큰을 모두 폐기한다. 현재 비밀번호가 틀리면 401이다. 확인 실패는 로그인과 따로 계정별로 세어 5번 틀리면 15분 동안 403(잠김)이며, 이 잠금은 로그인을 막지 않는다.
+
 응답 schema는 OpenAPI의 해당 operation을 확인한다. 오류는 HTTP 상태와 `{success:false,data:null,message}`로 구분한다. 내부 ErrorCode 이름은 JSON에 포함되지 않는다.
 
 ## GET /api/user/profile

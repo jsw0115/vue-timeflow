@@ -650,7 +650,7 @@ Core·workspace 마이그레이션 이력.
 | 컬럼 | DB 타입 | NULL 허용 | 기본값 | 키·추가 속성 | 의미 |
 | --- | --- | --- | --- | --- | --- |
 | `id` | varchar(26) | NO | NULL | PRI | 행 식별자 |
-| `key_type` | varchar(10) | NO | NULL | MUL | 로그인 제한 키의 종류 |
+| `key_type` | varchar(10) | NO | NULL | MUL | 제한 키의 종류. 로그인은 `EMAIL`·`IP`, 비밀번호 변경의 현재 비밀번호 확인은 `PASSWORD`(키 값은 계정 ID)로 따로 센다 |
 | `key_val` | varchar(255) | NO | NULL | 없음 | 로그인 제한 키 값 |
 | `fail_cnt` | int | NO | 0 | 없음 | 실패 횟수 |
 | `lock_utc` | datetime(6) | YES | NULL | MUL | 잠금 종료 UTC 시각 |
