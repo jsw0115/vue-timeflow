@@ -47,6 +47,35 @@ Docker named pipe 접근 거부는 엔진 미준비·계정 권한을 먼저 확
 
 ## macOS 개발 도구 설치
 
+### 직접 설치하는 도구
+
+| 구분 | 항목 | 버전 | 용도 | 설치 명령 | 확인 명령 |
+| --- | --- | --- | --- | --- | --- |
+| 필수 | Xcode Command Line Tools | 최신 | git·컴파일 도구 | `xcode-select --install` | `git --version` |
+| 필수 | Homebrew | 최신 | 아래 도구 설치 | [Homebrew](https://brew.sh) 안내의 설치 명령 | `brew --version` |
+| 필수 | Node.js(fnm으로 관리) | 22.12 이상, npm 10 이상(`frontend/.nvmrc` 22) | 화면(Vue) 개발·빌드 | `brew install fnm`, `fnm install 22`, `fnm use 22` | `node --version`, `frontend`에서 `npm run check:node` |
+| 필수 | JDK(Temurin) | 17 | 메인 API(Spring Boot 3.5.16) | `brew install --cask temurin@17` | `java -version` |
+| 필수 | Docker Desktop | 최신 | 격리 MySQL 8.4·Redis 7.4 | [Docker Desktop Mac 안내](https://docs.docker.com/desktop/setup/install/mac-install/)에서 칩에 맞게 설치 | `docker compose version` |
+| 필수 | Python | 3.10 이상 | 문서·에이전트 보조 스크립트 | `brew install python@3.12` | `python3 --version` |
+| 선택 | Xcode + CocoaPods | 최신 | iOS 앱(`frontend/ios/App/Podfile`) | App Store에서 Xcode, `brew install cocoapods` | `pod --version` |
+| 선택 | Android Studio | 최신 | Android 앱 | [Android Studio](https://developer.android.com/studio) | Android Studio 실행 |
+| 선택 | VS Code + Vue - Official 확장 | 최신 | 코드 편집 | `brew install --cask visual-studio-code` | - |
+| 선택 | python-docx | - | 핸드북 Word 문서 생성·검사(`scripts/docs/build_handbook.py`·`verify_handbook.py`)만 | `python3 -m pip install python-docx` | - |
+
+JDK는 `~/.zshrc`에 `export JAVA_HOME=$(/usr/libexec/java_home -v 17)`을 더합니다. Command Line Tools의 기본 `python3`는 3.9라 따로 설치합니다.
+
+### 따로 설치하지 않는 것(프로젝트 명령이 받음)
+
+| 항목 | 받는 시점 | 내용 |
+| --- | --- | --- |
+| 화면 패키지 | `frontend`에서 `npm ci` | Vue 3.5·Vue Router 4.6·Vite 6·Capacitor 7·Electron 41 등(`package-lock.json` 기준) |
+| Gradle·서버 라이브러리 | `backend`에서 `./gradlew` 첫 실행 | Gradle 8.14.3(Wrapper), Spring Boot 3.5.16 의존성 |
+| MySQL·Redis | `docker compose -f infra/chat/compose.yml up -d --wait` 첫 실행 | `mysql:8.4`, `redis:7.4-alpine` 이미지 |
+
+설치 순서: Xcode Command Line Tools → Homebrew → Node 22 → JDK 17 → Docker Desktop → Python 3.10 이상 → 저장소 clone → `npm ci` → `./gradlew` → `docker compose up`. 아래는 단계별 설명입니다.
+
+### 단계별 설명
+
 명령은 macOS 기본 셸(zsh) 기준입니다. 이미 다른 프로젝트용 Node·Java가 있으면 버전 관리 도구로 이 프로젝트 버전만 고르고, 전역 설정을 함부로 바꾸지 않습니다.
 
 1. Xcode Command Line Tools를 설치합니다(git 포함): `xcode-select --install`. 이어서 [Homebrew](https://brew.sh) 안내의 설치 명령을 실행합니다.
