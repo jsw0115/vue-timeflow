@@ -33,7 +33,8 @@ public class ChatService {
     }
     public Person lookup(String user, String email) {
         active(user);
-        return identity.findByEmail(email).filter(p -> !p.id().equals(user)).orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND,"대화할 사용자를 찾지 못했습니다."));
+        // 어느 쪽이든 차단한 사용자는 없는 사용자와 같은 404로 답한다
+        return identity.findByEmail(email).filter(p -> !p.id().equals(user) && !identity.blocked(user, p.id())).orElseThrow(() -> new ApiException(ErrorCode.NOT_FOUND,"대화할 사용자를 찾지 못했습니다."));
     }
     @Transactional public Room create(String user, String kind, String name, List<String> others) {
         active(user);
@@ -41,6 +42,8 @@ public class ChatService {
         if (ids.size()!=others.size() || ids.contains(user) || ids.isEmpty() || ids.size()>19 || !("DM".equals(kind)||"GROUP".equals(kind)) || ("DM".equals(kind)&&ids.size()!=1))
             throw new ApiException(ErrorCode.VALIDATION_FAILED,"참여자를 확인해주세요. 개인 대화는 상대 한 명, 그룹은 전체 20명까지입니다.");
         if ("GROUP".equals(kind) && (name==null||name.isBlank()||name.strip().length()>80)) throw new ApiException(ErrorCode.VALIDATION_FAILED,"그룹 이름을 입력해주세요.");
+        // 어느 쪽이든 차단한 사용자와는 새 대화를 시작하지 않는다. 이미 있는 개인 대화를 다시 여는 요청도 같고, 기존 그룹방은 그대로 둔다
+        for (var other : ids) if (identity.blocked(user, other)) throw new ApiException(ErrorCode.FORBIDDEN,"대화할 수 없는 사용자가 포함되어 있습니다.");
         ids.add(user);
         // Lock identities in a stable order, serializing concurrent DM creation.
         for (var id : ids) repo.syncPerson(identity.requireActive(id));
@@ -90,6 +93,9 @@ public class ChatService {
             if(!existing.get().body().equals(body.strip())||!new TreeSet<>(existing.get().mentionUserIds()).equals(mentions)) throw new ApiException(ErrorCode.CONFLICT,"같은 요청 ID로 다른 메시지를 보낼 수 없습니다.");
             return existing.get();
         }
+        // 개인 대화는 어느 쪽이든 차단하면 새 메시지를 받지 않는다. 같은 요청 ID의 재시도는 위에서 처음 결과를 돌려준다
+        if("DM".equals(locked.get("kind"))) for(String member:Objects.toString(locked.get("direct_key"),"").split(":"))
+            if(!member.isEmpty()&&!member.equals(user)&&identity.blocked(user,member)) throw new ApiException(ErrorCode.FORBIDDEN,"이 대화에는 더 이상 메시지를 보낼 수 없습니다.");
         for(String member:mentions) { identity.requireActive(member);repo.requireMember(room,member); }
         var tags=ChatTags.extract(body);
         long seq=((Number)locked.get("last_sequence")).longValue()+1;

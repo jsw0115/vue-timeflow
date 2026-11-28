@@ -6,6 +6,7 @@ import kr.timebar.diary.chat.application.ChatIdentity;
 import kr.timebar.diary.chat.domain.ChatModels.Person;
 import kr.timebar.diary.common.ApiException;
 import kr.timebar.diary.common.ErrorCode;
+import kr.timebar.diary.social.SocialService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import java.util.Locale;
@@ -15,7 +16,8 @@ import java.util.Optional;
 @ConditionalOnProperty(name = "app.chat.enabled", havingValue = "true")
 public class CoreChatIdentity implements ChatIdentity {
     private final UserRepository users;
-    public CoreChatIdentity(UserRepository users) { this.users = users; }
+    private final SocialService social;
+    public CoreChatIdentity(UserRepository users, SocialService social) { this.users = users; this.social = social; }
     private boolean active(UserEntity user) { return user.isActive() && !Integer.valueOf(0).equals(user.getIsEnabled()); }
     @Override public Person requireActive(String id) {
         return users.findById(id).filter(this::active).map(u -> new Person(u.getId(), u.getNickname()))
@@ -25,4 +27,6 @@ public class CoreChatIdentity implements ChatIdentity {
         return users.findByEmail(email.trim().toLowerCase(Locale.ROOT)).filter(this::active)
                 .map(u -> new Person(u.getId(), u.getNickname()));
     }
+    /** 차단 목록(feature_block)은 소셜 도메인이 가진다. 채팅 SQL은 이 표를 직접 읽지 않는다. */
+    @Override public boolean blocked(String userId, String otherId) { return social.blocked(userId, otherId); }
 }
