@@ -4,7 +4,7 @@
 - 작성일: 2026-11-27
 - 수정일: 2026-11-27(DEC-16~DEC-23 결정 반영, DEC-24 저장소 구성)
 - 상태: 구성 방향(DEC-15), 세부 항목(DEC-16~DEC-23), 저장소 구성(DEC-24) 승인. **설계안이며 아직 구현하지 않았다.**
-- 관련 문서: [05 시스템 아키텍처](05-system-architecture.md), [08 AI 아키텍처](08-ai-architecture.md), [09 보안·개인정보](09-security-and-privacy.md), [12 결정 기록](12-decisions-and-open-issues.md)
+- 관련 문서: [05 시스템 아키텍처](05-system-architecture.md), [08 AI 아키텍처](08-ai-architecture.md), [09 보안·개인정보](09-security-and-privacy.md), [12 결정 기록](12-decisions-and-open-issues.md), [질의응답 정리](15-service-topology-qna.md)
 
 ## 1. 배경
 

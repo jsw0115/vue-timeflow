@@ -26,6 +26,7 @@
 | [13-source-reconciliation.md](13-source-reconciliation.md) | 제공 문서 간 기준일·상태 충돌 정리 | 문서 통합·정합성 점검 |
 | [14-baseline-reconciliation.md](14-baseline-reconciliation.md) | 현재 소스와의 대조 결과, 1단계(IA·커리어 원장) 적용 범위 | 구현 상태 확인 |
 | [15-service-topology.md](15-service-topology.md) | 선배 플랫폼·AI 서버·관리자 통계의 서버 구성(DEC-15)과 진행 단계 | 서비스 확장 설계 |
+| [15-service-topology-qna.md](15-service-topology-qna.md) | 15 문서를 정한 질의응답 정리(2026-11-27~28, 질문 6개) | 결정 과정 확인 |
 
 ## 적용 원칙
 
